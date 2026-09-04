@@ -3,6 +3,7 @@ const path=require('path');
 
 const OWNER_MODULES=[
   '/owner-login-theme.js?v=20260904-1',
+  '/owner-login-guard.js?v=20260904-1',
   '/owner-calendar-ui.js?v=20260904-3',
   '/owner-calendar-theme.js?v=20260904-3',
   '/owner-dashboard-ui.js?v=20260904-3',
