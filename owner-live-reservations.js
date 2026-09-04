@@ -69,6 +69,8 @@
     try{
       const data=await liveApi();
       const blocks=Array.isArray(data.blocks)?data.blocks:[];
+      window.CJTLiveReservations=blocks;
+      window.dispatchEvent(new CustomEvent('cjt:live-reservations-updated',{detail:{blocks}}));
       updateTopCount(blocks.length);
       if(!blocks.length){
         list.innerHTML='<div class="live-res-empty">No live direct-booking blocks are currently being published.</div>';
@@ -84,6 +86,8 @@
       }
       list.innerHTML='';list.appendChild(host);
     }catch(error){
+      window.CJTLiveReservations=[];
+      window.dispatchEvent(new CustomEvent('cjt:live-reservations-updated',{detail:{blocks:[]}}));
       updateTopCount(0);
       list.innerHTML=`<div class="live-res-error"><strong>Live reservation controls could not load.</strong><div class="meta" style="margin-top:5px">${esc(error.message)}</div></div>`;
     }finally{
