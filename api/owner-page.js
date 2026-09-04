@@ -10,6 +10,10 @@ module.exports=async function(req,res){
       const theme=fs.readFileSync(path.join(process.cwd(),'owner-calendar-theme.js'),'utf8');
       html=html.replace('</body>',`<script>${theme}</script>\n</body>`);
     }
+    if(!html.includes('opsDashboardLoaded')){
+      const dashboard=fs.readFileSync(path.join(process.cwd(),'owner-dashboard-ui.js'),'utf8');
+      html=html.replace('</body>',`<script>${dashboard}</script>\n</body>`);
+    }
     res.setHeader('Content-Type','text/html; charset=utf-8');
     res.setHeader('Cache-Control','no-store, max-age=0');
     return res.status(200).send(html);
