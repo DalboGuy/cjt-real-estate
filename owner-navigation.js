@@ -13,10 +13,35 @@
   `;
   document.head.appendChild(style);
 
+  function setActiveState(tabId){
+    const button=document.querySelector(`.tab[data-tab="${tabId}"]`);
+    const panel=document.getElementById(tabId);
+    if(!button||!panel)return false;
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+    button.classList.add('active');
+    panel.classList.add('active');
+    return true;
+  }
+
   function activateTab(tabId){
     const button=document.querySelector(`.tab[data-tab="${tabId}"]`);
-    if(!button)return false;
-    button.click();
+    const panel=document.getElementById(tabId);
+    if(!button||!panel)return false;
+
+    // Make the UI move immediately instead of depending on whichever module
+    // originally registered the tab's click handler.
+    setActiveState(tabId);
+
+    // Still fire the tab's native/module handler so lazy data loading and other
+    // tab-specific work continues to run.
+    try{button.click()}catch{}
+
+    // A third-party/module handler should never be able to leave navigation in
+    // a visually stale state. Reassert the requested destination after click.
+    queueMicrotask(()=>{
+      if(!button.classList.contains('active')||!panel.classList.contains('active'))setActiveState(tabId);
+    });
     return true;
   }
 
@@ -55,7 +80,7 @@
     openTab('dashboard',{target:selector});
   }
 
-  window.CJTOwnerNav={openTab,focusTarget};
+  window.CJTOwnerNav={openTab,focusTarget,setActiveState};
 
   function bind(el,handler,label){
     if(!el||el.dataset.ownerNavBound==='1')return;
@@ -88,6 +113,18 @@
     bindKpiByValueId('opsPayout90',()=>openTab('bookingCalendar',{target:'#bkFinancialList',intent:'expected-payout'}),'Open booking financial ledger for expected payouts');
     bindKpiByValueId('opsMatchPct',()=>openTab('bookingCalendar',{target:'#bkUnmatched',intent:'unmatched-revenue'}),'Open unmatched booking revenue records');
   }
+
+  // Delegated tab fallback covers both static tabs from owner.html and tabs
+  // inserted later by dashboard/finance/calendar modules.
+  document.addEventListener('click',e=>{
+    const tab=e.target.closest('.tab[data-tab]');
+    if(!tab)return;
+    const id=tab.dataset.tab;
+    queueMicrotask(()=>{
+      const panel=document.getElementById(id);
+      if(panel&&(!tab.classList.contains('active')||!panel.classList.contains('active')))setActiveState(id);
+    });
+  });
 
   bindPhaseTwo();
   const observer=new MutationObserver(bindPhaseTwo);
