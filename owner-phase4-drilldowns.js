@@ -14,7 +14,7 @@
   `;
   document.head.appendChild(style);
 
-  const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[m]));
   const channel=v=>({'airbnb':'Airbnb','vrbo':'Vrbo','booking.com':'Booking.com','houfy':'Houfy',direct:'CJT Direct',other:'Other / verify'}[v]||v||'Unknown');
   const activeFinancial=f=>f&&f.status!=='cancelled';
   let calendarCache=null,calendarCacheAt=0,calendarPromise=null;
@@ -144,6 +144,7 @@
     host.dataset.phase4Capture='1';
     loadCalendar().catch(()=>{});
     host.addEventListener('click',e=>{
+      if(e.target.closest('.market-event-chip,.market-month-chip'))return;
       const cell=e.target.closest('.booking-day');
       if(!cell||!cell.classList.contains('has-money')||!calendarCache)return;
       const date=dateFromCalendarCell(cell,'bkTitle','.booking-day-number');if(!date)return;
@@ -167,6 +168,7 @@
     if(!host||host.dataset.phase4Capture==='1')return;
     host.dataset.phase4Capture='1';loadCalendar().catch(()=>{});
     host.addEventListener('click',e=>{
+      if(e.target.closest('.market-event-chip,.market-month-chip'))return;
       const cell=e.target.closest('.day.blocked');if(!cell||!calendarCache)return;
       const date=dateFromCalendarCell(cell,'calendarTitle','.daynum');if(!date)return;
       const fin=(calendarCache.financials||[]).find(f=>activeFinancial(f)&&f.checkin<=date&&f.checkout>date);
