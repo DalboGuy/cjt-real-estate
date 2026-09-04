@@ -86,3 +86,5 @@
   </footer>
 </body>
 </html>
+
+<!-- Booking V2 preview redeploy after owner portal secret configuration -->
