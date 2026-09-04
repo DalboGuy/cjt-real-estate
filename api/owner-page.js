@@ -7,7 +7,8 @@ const OWNER_MODULES=[
   '/owner-calendar-theme.js?v=20260904-3',
   '/owner-dashboard-ui.js?v=20260904-3',
   '/owner-finance-ui.js?v=20260904-1',
-  '/owner-finance-v2.js?v=20260904-1'
+  '/owner-finance-v2.js?v=20260904-1',
+  '/owner-booking-settings.js?v=20260904-1'
 ];
 
 module.exports=async function(req,res){
