@@ -1,19 +1,19 @@
 const fs=require('fs');
 const path=require('path');
 
+const OWNER_MODULES=[
+  '/owner-calendar-ui.js?v=20260904-3',
+  '/owner-calendar-theme.js?v=20260904-3',
+  '/owner-dashboard-ui.js?v=20260904-3',
+  '/owner-finance-ui.js?v=20260904-1'
+];
+
 module.exports=async function(req,res){
   try{
     const file=path.join(process.cwd(),'owner.html');
     let html=fs.readFileSync(file,'utf8');
-    if(!html.includes('/owner-calendar-ui.js'))html=html.replace('</body>','<script src="/owner-calendar-ui.js?v=20260904-2"></script>\n</body>');
-    if(!html.includes('calendarThemeLoaded')){
-      const theme=fs.readFileSync(path.join(process.cwd(),'owner-calendar-theme.js'),'utf8');
-      html=html.replace('</body>',`<script>${theme}</script>\n</body>`);
-    }
-    if(!html.includes('opsDashboardLoaded')){
-      const dashboard=fs.readFileSync(path.join(process.cwd(),'owner-dashboard-ui.js'),'utf8');
-      html=html.replace('</body>',`<script>${dashboard}</script>\n</body>`);
-    }
+    const tags=OWNER_MODULES.map(src=>`<script src="${src}"></script>`).join('\n');
+    html=html.replace('</body>',`<!-- Owner portal modules -->\n${tags}\n</body>`);
     res.setHeader('Content-Type','text/html; charset=utf-8');
     res.setHeader('Cache-Control','no-store, max-age=0');
     return res.status(200).send(html);
