@@ -1,6 +1,15 @@
 const crypto=require('crypto');
 const { db, ensureSchema }=require('../lib/db');
 
+const VERIFIED_TAX_DEFAULTS={
+  configured:false,
+  cleaning_fee:0,
+  tax_pct:15,
+  taxable_cleaning:true,
+  deposit_pct:0,
+  tax_note:'Galveston lodging tax: 6% Texas state HOT + 9% City of Galveston HOT. Cleaning/readiness charges are included in the taxable room amount under Texas hotel occupancy tax rules.'
+};
+
 function parseCookies(header=''){return Object.fromEntries(header.split(';').map(v=>v.trim()).filter(Boolean).map(v=>{const i=v.indexOf('=');return [decodeURIComponent(v.slice(0,i)),decodeURIComponent(v.slice(i+1))];}));}
 function tokenHash(v){return crypto.createHash('sha256').update(String(v||'')).digest('hex');}
 function number(v){const n=Number(v);return Number.isFinite(n)?n:null;}
@@ -27,7 +36,15 @@ module.exports=async function(req,res){
     const sql=db();
     if(req.method==='GET'){
       const rows=await sql`SELECT value,updated_at FROM site_config WHERE key='booking_fees' LIMIT 1`;
-      const value=rows[0]&&rows[0].value||{configured:false,cleaning_fee:0,tax_pct:0,taxable_cleaning:false,deposit_pct:0};
+      const stored=rows[0]&&rows[0].value||{};
+      const value={...VERIFIED_TAX_DEFAULTS,...stored};
+      if(!rows.length){
+        await sql`
+          INSERT INTO site_config(key,value,updated_at)
+          VALUES ('booking_fees',${JSON.stringify(value)}::jsonb,now())
+          ON CONFLICT (key) DO NOTHING
+        `;
+      }
       return res.status(200).json({user:{id:user.id,name:user.name,role:user.role},config:value,updatedAt:rows[0]&&rows[0].updated_at||null});
     }
     if(req.method==='POST'){
@@ -42,7 +59,8 @@ module.exports=async function(req,res){
         cleaning_fee:Math.round(cleaning*100)/100,
         tax_pct:Math.round(tax*10000)/10000,
         taxable_cleaning:body.taxable_cleaning===true,
-        deposit_pct:Math.round(deposit*10000)/10000
+        deposit_pct:Math.round(deposit*10000)/10000,
+        tax_note:VERIFIED_TAX_DEFAULTS.tax_note
       };
       await sql`
         INSERT INTO site_config(key,value,updated_by_user_id,updated_at)
