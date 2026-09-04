@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Reservation Status | Sand & Sea Manor</title>
+  <style>
+    :root{--deep:#0d2b31;--ink:#14343a;--muted:#6b7d80;--paper:#fffdf9;--cream:#f7f1e7;--line:#dfe6e4;--good:#edf7f1;--warn:#fff8df}
+    *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif}.wrap{width:min(760px,calc(100% - 28px));margin:auto}.top{background:var(--deep);color:#fff;padding:28px 0}.top a{color:#fff;text-decoration:none;font-weight:800}.hero{padding:58px 0 22px}.eyebrow{text-transform:uppercase;letter-spacing:.14em;font-size:.72rem;font-weight:800;color:var(--muted)}h1{font-family:Georgia,serif;font-size:clamp(2.4rem,7vw,4.4rem);font-weight:500;line-height:1;margin:.45rem 0}.lead{color:var(--muted);font-size:1.05rem}.card{border:1px solid var(--line);border-radius:22px;background:#fff;padding:24px;margin:20px 0;box-shadow:0 16px 40px rgba(13,43,49,.07)}.status-pill{display:inline-block;padding:8px 12px;border-radius:999px;background:var(--good);font-weight:800}.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px}.item{border-top:1px solid var(--line);padding-top:13px}.item span{display:block;color:var(--muted);font-size:.8rem}.item strong{display:block;margin-top:3px}.steps{display:grid;gap:10px;margin-top:18px}.step{display:flex;gap:12px;align-items:flex-start;padding:12px;border-radius:14px;background:#fafcfb}.step .dot{width:13px;height:13px;border-radius:50%;background:#cfd8d6;margin-top:5px;flex:0 0 auto}.step.done .dot{background:var(--deep)}.step.active{background:var(--warn)}.quote{display:grid;gap:7px;margin-top:12px}.row{display:flex;justify-content:space-between;gap:14px}.row.total{border-top:1px solid var(--line);padding-top:10px;margin-top:5px;font-weight:900}.message{padding:16px;border-radius:14px;background:var(--cream);color:var(--muted)}footer{padding:34px 0 60px;color:var(--muted);font-size:.86rem}@media(max-width:600px){.grid{grid-template-columns:1fr}.card{padding:19px}}
+  </style>
+</head>
+<body>
+  <div class="top"><div class="wrap"><a href="/">SAND & SEA MANOR</a></div></div>
+  <main class="wrap">
+    <section class="hero"><div class="eyebrow">Direct booking</div><h1>Your reservation status</h1><p class="lead">Use this private link to see where your Sand & Sea Manor booking stands.</p></section>
+    <div id="content" class="card"><p>Loading reservation…</p></div>
+  </main>
+  <footer><div class="wrap">CJT Real Estate Holdings LLC · 1720 Avenue M, Galveston, TX · cjtrealestateholdings@gmail.com</div></footer>
+  <script>
+    const el=document.getElementById('content');
+    const token=new URLSearchParams(location.search).get('token');
+    const money=v=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(Number(v||0));
+    const date=s=>s?new Date(String(s).includes('T')?s:s+'T00:00:00').toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'}):'—';
+    const time=s=>s?new Date(s).toLocaleString():'—';
+    const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    function stepHtml(r){
+      const order=['inquiry_hold','hold_verified','contract_sent','contract_signed','confirmed'];
+      const labels=['Dates held','CJT review','Agreement sent','Agreement signed','Reservation confirmed'];
+      const current=order.indexOf(r.status);
+      if(['expired','released','cancelled'].includes(r.status))return `<div class="message">This reservation is currently marked <strong>${esc(r.statusLabel)}</strong>. Contact CJT if you need help.</div>`;
+      return `<div class="steps">${labels.map((label,i)=>`<div class="step ${i<current?'done':''} ${i===current?'active':''}"><span class="dot"></span><div><strong>${label}</strong>${i===current?'<br><small>Current step</small>':''}</div></div>`).join('')}</div>`;
+    }
+    function quoteHtml(q){if(!q)return '';let rows=`<div class="quote"><div class="row"><span>Nightly stay</span><strong>${money(q.nightlySubtotal)}</strong></div>`;if(Number(q.discountAmount)>0)rows+=`<div class="row"><span>${esc(q.discountName||'Discount')}</span><strong>−${money(q.discountAmount)}</strong></div>`;if(q.pricingReady){rows+=`<div class="row"><span>Cleaning</span><strong>${money(q.cleaningFee)}</strong></div><div class="row"><span>Taxes</span><strong>${money(q.taxes)}</strong></div><div class="row total"><span>Total stay</span><strong>${money(q.total)}</strong></div>`;if(q.depositDue!=null)rows+=`<div class="row"><span>Deposit due</span><strong>${money(q.depositDue)}</strong></div>`}return rows+'</div>'}
+    async function load(){
+      if(!token){el.innerHTML='<div class="message">This reservation link is incomplete.</div>';return}
+      try{
+        const r=await fetch('/api/reservation-status?token='+encodeURIComponent(token),{cache:'no-store'});const d=await r.json();if(!r.ok)throw new Error(d.message||'Unable to load reservation.');const x=d.reservation;
+        el.innerHTML=`<span class="status-pill">${esc(x.statusLabel)}</span><div class="grid"><div class="item"><span>Reservation</span><strong>${esc(x.id)}</strong></div><div class="item"><span>Guests</span><strong>${esc(x.guests)}</strong></div><div class="item"><span>Check-in</span><strong>${date(x.checkin)}</strong></div><div class="item"><span>Check-out</span><strong>${date(x.checkout)}</strong></div>${x.holdExpiresAt?`<div class="item"><span>Temporary hold expires</span><strong>${time(x.holdExpiresAt)}</strong></div>`:''}</div>${stepHtml(x)}${quoteHtml(d.quote)}`;
+      }catch(e){el.innerHTML=`<div class="message">${esc(e.message)}</div>`}
+    }
+    load();
+  </script>
+</body>
+</html>
