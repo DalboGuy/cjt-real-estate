@@ -14,7 +14,7 @@ module.exports=async function(req,res){
     const body=typeof req.body==='string'?JSON.parse(req.body||'{}'):(req.body||{});
     const guest_name=clean(body.name,120),guest_email=clean(body.email,180),guest_phone=clean(body.phone,60),notes=clean(body.message,2000);
     const checkin=clean(body.checkin,10),checkout=clean(body.checkout,10),guests=Number(body.guests);
-    if(!guest_name||!guest_email.includes('@')||!validDate(checkin)||!validDate(checkout)||!Number.isInteger(guests)||guests<1||guests>12){
+    if(!guest_name||!guest_email.includes('@')||!validDate(checkin)||!validDate(checkout)||!Number.isInteger(guests)||guests<1||guests>14){
       return res.status(400).json({error:'invalid_request',message:'Please complete all required booking fields.'});
     }
     if(checkout<=checkin) return res.status(400).json({error:'invalid_dates',message:'Check-out must be after check-in.'});
