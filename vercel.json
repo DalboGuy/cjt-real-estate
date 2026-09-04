@@ -6,6 +6,8 @@
   ],
   "functions": {
     "api/calendar.js": { "maxDuration": 10 },
-    "api/direct-bookings.js": { "maxDuration": 10 }
+    "api/direct-bookings.js": { "maxDuration": 10 },
+    "api/inquiries.js": { "maxDuration": 10 },
+    "api/owner.js": { "maxDuration": 10 }
   }
 }
