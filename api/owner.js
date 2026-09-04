@@ -172,6 +172,18 @@ module.exports=async function(req,res){
       return res.status(201).json({ok:true});
     }
 
+    if(req.method==='POST'&&body.action==='user_reset_password'){
+      if(user.role!=='admin')return res.status(403).json({error:'admin_required'});
+      const targetId=Number(body.user_id),password=body.password;
+      if(!Number.isInteger(targetId)||targetId===Number(user.id)||!validPassword(password))return res.status(400).json({error:'invalid_reset'});
+      const target=await sql`SELECT id,name,email,active FROM owner_users WHERE id=${targetId} LIMIT 1`;
+      if(!target.length||!target[0].active)return res.status(404).json({error:'user_not_found'});
+      const salt=crypto.randomBytes(16).toString('hex'),hash=passwordHash(password,salt);
+      await sql`UPDATE owner_users SET password_salt=${salt},password_hash=${hash},must_change_password=true,updated_at=now() WHERE id=${targetId}`;
+      await sql`DELETE FROM owner_sessions WHERE user_id=${targetId}`;
+      return res.status(200).json({ok:true,user:{id:target[0].id,name:target[0].name,email:target[0].email}});
+    }
+
     if(req.method==='POST'&&body.action==='promo_update'){
       if(user.role!=='admin')return res.status(403).json({error:'admin_required'});
       const key=clean(body.key,60);
