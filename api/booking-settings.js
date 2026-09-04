@@ -13,6 +13,7 @@ const VERIFIED_TAX_DEFAULTS={
 function parseCookies(header=''){return Object.fromEntries(header.split(';').map(v=>v.trim()).filter(Boolean).map(v=>{const i=v.indexOf('=');return [decodeURIComponent(v.slice(0,i)),decodeURIComponent(v.slice(i+1))];}));}
 function tokenHash(v){return crypto.createHash('sha256').update(String(v||'')).digest('hex');}
 function number(v){const n=Number(v);return Number.isFinite(n)?n:null;}
+function isLegacyPlaceholder(v={}){return v.configured!==true&&Number(v.cleaning_fee||0)===0&&Number(v.deposit_pct||0)===0;}
 
 async function authUser(req){
   const token=parseCookies(req.headers.cookie||'').cjt_owner_session;
@@ -37,15 +38,16 @@ module.exports=async function(req,res){
     if(req.method==='GET'){
       const rows=await sql`SELECT value,updated_at FROM site_config WHERE key='booking_fees' LIMIT 1`;
       const stored=rows[0]&&rows[0].value||{};
-      const value={...VERIFIED_TAX_DEFAULTS,...stored};
-      if(!rows.length){
+      const shouldMigrate=!rows.length||isLegacyPlaceholder(stored);
+      const value=shouldMigrate?VERIFIED_TAX_DEFAULTS:{...VERIFIED_TAX_DEFAULTS,...stored};
+      if(shouldMigrate){
         await sql`
           INSERT INTO site_config(key,value,updated_at)
           VALUES ('booking_fees',${JSON.stringify(value)}::jsonb,now())
-          ON CONFLICT (key) DO NOTHING
+          ON CONFLICT (key) DO UPDATE SET value=EXCLUDED.value,updated_at=now()
         `;
       }
-      return res.status(200).json({user:{id:user.id,name:user.name,role:user.role},config:value,updatedAt:rows[0]&&rows[0].updated_at||null});
+      return res.status(200).json({user:{id:user.id,name:user.name,role:user.role},config:value,updatedAt:shouldMigrate?new Date().toISOString():rows[0]&&rows[0].updated_at||null});
     }
     if(req.method==='POST'){
       if(user.role!=='admin')return res.status(403).json({error:'admin_required'});
