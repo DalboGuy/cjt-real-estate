@@ -6,11 +6,8 @@ const OWNER_MODULES=[
   '/owner-calendar-ui.js?v=20260904-3',
   '/owner-calendar-theme.js?v=20260904-3',
   '/owner-dashboard-ui.js?v=20260904-3',
-  '/owner-finance-ui.js?v=20260904-1',
-  '/owner-finance-v2.js?v=20260904-1',
-  '/owner-finance-reconciliation.js?v=20260904-1',
-  '/owner-finance-periods.js?v=20260904-1',
-  '/owner-finance-import.js?v=20260904-1',
+  '/owner-finance-ui.js?v=20260904-4',
+  '/owner-finance-import.js?v=20260904-2',
   '/owner-booking-settings.js?v=20260904-2'
 ];
 
