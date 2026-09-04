@@ -14,7 +14,8 @@ const OWNER_MODULES=[
   '/owner-booking-settings.js?v=20260904-2',
   '/owner-detail-drawer.js?v=20260904-1',
   '/owner-phase4-drilldowns.js?v=20260904-2',
-  '/owner-phase5-state.js?v=20260904-1'
+  '/owner-phase5-state.js?v=20260904-1',
+  '/owner-phase5-ux-fixes.js?v=20260904-1'
 ];
 
 module.exports=async function(req,res){
