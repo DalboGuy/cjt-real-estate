@@ -149,10 +149,15 @@ module.exports=async function(req,res){
     }
 
     if(req.method==='POST'&&body.action==='task_create'){
-      const title=clean(body.title,180),description=clean(body.description,2000),priority=clean(body.priority||'normal',20),category=clean(body.category||'general',30),recurrence=clean(body.recurrence||'none',30),reservationId=clean(body.reservation_id,80)||null;
+      const title=clean(body.title,180),description=clean(body.description,2000),priority=clean(body.priority||'normal',20),category=clean(body.category||'general',30),recurrence=clean(body.recurrence||'none',30),rawReservationId=clean(body.reservation_id,80);
+      const reservationId=!rawReservationId||['none','null','n/a','na'].includes(rawReservationId.toLowerCase())?null:rawReservationId;
       const assigned=body.assigned_user_id?Number(body.assigned_user_id):null;
       const due=body.due_at?new Date(body.due_at):null;
       if(!title||!['low','normal','high','urgent'].includes(priority)||!['general','turnover','maintenance','guest','admin','pricing'].includes(category)||!['none','weekly','monthly','quarterly','annual'].includes(recurrence)||assigned!==null&&!Number.isInteger(assigned)||due&&Number.isNaN(due.getTime()))return res.status(400).json({error:'invalid_task'});
+      if(reservationId){
+        const reservation=await sql`SELECT id FROM reservations WHERE id=${reservationId} LIMIT 1`;
+        if(!reservation.length)return res.status(400).json({error:'invalid_reservation_reference'});
+      }
       const rows=await sql`
         INSERT INTO tasks(title,description,priority,category,recurrence,due_at,assigned_user_id,reservation_id,created_by_user_id)
         VALUES (${title},${description||null},${priority},${category},${recurrence},${due?due.toISOString():null},${assigned},${reservationId},${user.id}) RETURNING id
