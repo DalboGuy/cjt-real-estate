@@ -14,7 +14,7 @@
   `;
   document.head.appendChild(style);
 
-  const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[m]));
   const channel=v=>({'airbnb':'Airbnb','vrbo':'Vrbo','booking.com':'Booking.com','houfy':'Houfy',direct:'CJT Direct',other:'Other / verify'}[v]||v||'Unknown');
   const activeFinancial=f=>f&&f.status!=='cancelled';
   let calendarCache=null,calendarCacheAt=0,calendarPromise=null;
@@ -74,7 +74,7 @@
     try{
       const data=await loadCalendar();
       const year=financeYear(),records=dedupFinancials(data,year),rows=[...document.querySelectorAll('#finTable tbody tr')];
-      rows.forEach((row,i)=>row.classList.toggle('phase4-fin-hidden',Number(String(records[i]?.checkin||'').slice(5,7))!==month));
+      rows.forEach(row=>row.classList.toggle('phase4-fin-hidden',Number(String(row.dataset.phase4Checkin||'').slice(5,7))!==month));
       const table=document.getElementById('finTable');
       if(!table)return;
       let banner=document.getElementById('phase4FinFilter');
@@ -105,7 +105,7 @@
       const data=await loadCalendar(),records=dedupFinancials(data);
       [...document.querySelectorAll('#finTable tbody tr')].forEach((row,i)=>{
         const record=records[i];
-        if(record)bind(row,()=>window.CJTOwnerDetail?.open('booking',record),`Open ${channel(record.channel)} booking details`);
+        if(record){row.dataset.phase4Checkin=record.checkin||'';row.dataset.phase4BookingKey=record.booking_key||'';bind(row,()=>window.CJTOwnerDetail?.open('booking',record),`Open ${channel(record.channel)} booking details`)}
       });
     }catch{}
   }
@@ -191,10 +191,7 @@
     head.appendChild(btn);
   }
 
-  function bindAll(){
-    bindFinance();bindBookingKpis();installBookingDayCapture();bindHealth();installPricingBlockedCapture();bindPricingSource();addQuotePreview();
-  }
-
+  function bindAll(){bindFinance();bindBookingKpis();installBookingDayCapture();bindHealth();installPricingBlockedCapture();bindPricingSource();addQuotePreview()}
   bindAll();
   new MutationObserver(bindAll).observe(document.body,{childList:true,subtree:true});
   setInterval(()=>loadCalendar(true).catch(()=>{}),30000);
