@@ -14,7 +14,7 @@
   `;
   document.head.appendChild(style);
 
-  const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[m]));
+  const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   const channel=v=>({'airbnb':'Airbnb','vrbo':'Vrbo','booking.com':'Booking.com','houfy':'Houfy',direct:'CJT Direct',other:'Other / verify'}[v]||v||'Unknown');
   const activeFinancial=f=>f&&f.status!=='cancelled';
   let calendarCache=null,calendarCacheAt=0,calendarPromise=null;
