@@ -9,6 +9,7 @@ const OWNER_MODULES=[
   '/owner-dashboard-ui.js?v=20260904-3',
   '/owner-finance-ui.js?v=20260904-4',
   '/owner-finance-import.js?v=20260904-2',
+  '/owner-live-reservations.js?v=20260904-1',
   '/owner-booking-settings.js?v=20260904-2'
 ];
 
