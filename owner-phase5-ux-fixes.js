@@ -96,3 +96,5 @@
     setTimeout(()=>confirmCompletion(info),260);
   },true);
 })();
+
+// Build marker: includes owner-page module registration.
