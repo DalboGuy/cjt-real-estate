@@ -16,7 +16,7 @@ async function authUser(req){
   if(!token)return null;
   const sql=db();
   const rows=await sql`
-    SELECT u.id,u.name,u.email,u.role,u.active
+    SELECT u.id,u.name,u.email,u.role,u.active,u.must_change_password
     FROM owner_sessions s JOIN owner_users u ON u.id=s.user_id
     WHERE s.token_hash=${tokenHash(token)} AND s.expires_at>now() AND u.active=true
     LIMIT 1
@@ -51,24 +51,47 @@ module.exports=async function(req,res){
       if(!name||!mail.includes('@')||!validPassword(password))return res.status(400).json({error:'invalid_owner'});
       const salt=crypto.randomBytes(16).toString('hex');
       const hash=passwordHash(password,salt);
-      const rows=await sql`INSERT INTO owner_users(name,email,password_salt,password_hash,role) VALUES (${name},${mail},${salt},${hash},'admin') RETURNING id,name,email,role`;
+      const rows=await sql`INSERT INTO owner_users(name,email,password_salt,password_hash,role,must_change_password) VALUES (${name},${mail},${salt},${hash},'admin',false) RETURNING id,name,email,role,must_change_password`;
       await createSession(sql,res,rows[0].id);
       return res.status(201).json({ok:true,user:rows[0]});
     }
 
     if(req.method==='POST'&&body.action==='login'){
       const mail=email(body.email),password=String(body.password||'');
-      const rows=await sql`SELECT id,name,email,role,password_salt,password_hash,active FROM owner_users WHERE email=${mail} LIMIT 1`;
+      const rows=await sql`SELECT id,name,email,role,password_salt,password_hash,active,must_change_password FROM owner_users WHERE email=${mail} LIMIT 1`;
       const user=rows[0];
       if(!user||!user.active||!validPassword(password))return res.status(401).json({error:'invalid_login'});
       const candidate=passwordHash(password,user.password_salt);
       if(!safeEqual(candidate,user.password_hash))return res.status(401).json({error:'invalid_login'});
       await createSession(sql,res,user.id);
-      return res.status(200).json({ok:true,user:{id:user.id,name:user.name,email:user.email,role:user.role}});
+      return res.status(200).json({ok:true,user:{id:user.id,name:user.name,email:user.email,role:user.role,must_change_password:user.must_change_password}});
     }
 
     const user=await authUser(req);
     if(!user)return res.status(401).json({error:'unauthorized'});
+
+    if(req.method==='POST'&&body.action==='logout'){
+      const token=parseCookies(req.headers.cookie||'').cjt_owner_session;
+      if(token)await sql`DELETE FROM owner_sessions WHERE token_hash=${tokenHash(token)}`;
+      clearSessionCookie(res);
+      return res.status(200).json({ok:true});
+    }
+
+    if(req.method==='POST'&&body.action==='change_password'){
+      const newPassword=body.newPassword;
+      if(!validPassword(newPassword))return res.status(400).json({error:'invalid_password'});
+      const current=await sql`SELECT password_salt,password_hash FROM owner_users WHERE id=${user.id} LIMIT 1`;
+      if(!current.length)return res.status(404).json({error:'user_not_found'});
+      const same=passwordHash(newPassword,current[0].password_salt);
+      if(safeEqual(same,current[0].password_hash))return res.status(400).json({error:'password_must_be_new'});
+      const salt=crypto.randomBytes(16).toString('hex'),hash=passwordHash(newPassword,salt);
+      await sql`UPDATE owner_users SET password_salt=${salt},password_hash=${hash},must_change_password=false,updated_at=now() WHERE id=${user.id}`;
+      return res.status(200).json({ok:true});
+    }
+
+    if(user.must_change_password){
+      return res.status(428).json({error:'password_change_required',user:{id:user.id,name:user.name,email:user.email,role:user.role}});
+    }
 
     if(req.method==='GET'){
       await expireHolds();
@@ -88,18 +111,11 @@ module.exports=async function(req,res){
                  t.due_at NULLS LAST,t.created_at DESC
         LIMIT 300
       `;
-      const users=await sql`SELECT id,name,email,role,active,created_at FROM owner_users ORDER BY name ASC`;
+      const users=await sql`SELECT id,name,email,role,active,must_change_password,created_at FROM owner_users ORDER BY name ASC`;
       const configRows=await sql`SELECT key,value,updated_at FROM site_config`;
       const siteConfig=Object.fromEntries(configRows.map(r=>[r.key,r.value]));
       const events=await sql`SELECT reservation_id,event_type,actor,metadata,created_at FROM booking_events ORDER BY created_at DESC LIMIT 100`;
       return res.status(200).json({user,reservations,tasks,users,siteConfig,events});
-    }
-
-    if(req.method==='POST'&&body.action==='logout'){
-      const token=parseCookies(req.headers.cookie||'').cjt_owner_session;
-      if(token)await sql`DELETE FROM owner_sessions WHERE token_hash=${tokenHash(token)}`;
-      clearSessionCookie(res);
-      return res.status(200).json({ok:true});
     }
 
     if(req.method==='POST'&&body.action==='reservation_update'){
@@ -151,7 +167,7 @@ module.exports=async function(req,res){
       if(!name||!mail.includes('@')||!validPassword(password)||!['admin','owner','manager'].includes(role))return res.status(400).json({error:'invalid_owner'});
       const salt=crypto.randomBytes(16).toString('hex'),hash=passwordHash(password,salt);
       try{
-        await sql`INSERT INTO owner_users(name,email,password_salt,password_hash,role) VALUES (${name},${mail},${salt},${hash},${role})`;
+        await sql`INSERT INTO owner_users(name,email,password_salt,password_hash,role,must_change_password) VALUES (${name},${mail},${salt},${hash},${role},true)`;
       }catch(e){if(String(e.message||'').toLowerCase().includes('unique'))return res.status(409).json({error:'email_exists'});throw e;}
       return res.status(201).json({ok:true});
     }
