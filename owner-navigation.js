@@ -33,7 +33,8 @@
   }
 
   function openTab(tabId,options={}){
-    const detail={tab:tabId,...options};
+    const from=document.querySelector('.tab.active')?.dataset.tab||'';
+    const detail={from,tab:tabId,...options};
     const opened=activateTab(tabId);
     if(!opened){
       let tries=0;
@@ -78,9 +79,9 @@
   }
 
   function bindPhaseTwo(){
-    bindKpiByValueId('kpiReservations',()=>openTab('reservations'),'Open active reservations');
-    bindKpiByValueId('kpiTasks',()=>openTab('tasks'),'Open task board');
-    bindKpiByValueId('kpiArrivals',()=>openTab('bookingCalendar',{target:'#bkCalendar'}),'Open upcoming arrivals in Booking Calendar');
+    bindKpiByValueId('kpiReservations',()=>openTab('reservations',{filter:'active'}),'Open active reservations');
+    bindKpiByValueId('kpiTasks',()=>openTab('tasks',{filter:'open'}),'Open open tasks');
+    bindKpiByValueId('kpiArrivals',()=>openTab('bookingCalendar',{target:'#bkCalendar',range:'next14'}),'Open upcoming arrivals in Booking Calendar');
     bindKpiByValueId('kpiUsers',()=>openTab('team'),'Open team members');
 
     bindKpiByValueId('opsAttentionCount',()=>scrollWithinDashboard('#opsAttention'),'Review items needing attention');
