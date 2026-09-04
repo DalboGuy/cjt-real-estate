@@ -4,6 +4,7 @@
   "rewrites": [
     { "source": "/", "destination": "/v3.html" },
     { "source": "/owner", "destination": "/api/owner-page" },
+    { "source": "/owner-mobile", "destination": "/api/owner-page" },
     { "source": "/direct-bookings.ics", "destination": "/api/direct-bookings" },
     { "source": "/bookingcom.ics", "destination": "/api/direct-bookings?bookingcom=1" }
   ],
