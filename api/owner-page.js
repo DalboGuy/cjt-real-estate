@@ -13,7 +13,7 @@ const OWNER_MODULES=[
   '/owner-live-reservations.js?v=20260904-2',
   '/owner-booking-settings.js?v=20260904-2',
   '/owner-detail-drawer.js?v=20260904-1',
-  '/owner-phase4-drilldowns.js?v=20260904-1'
+  '/owner-phase4-drilldowns.js?v=20260904-2'
 ];
 
 module.exports=async function(req,res){
