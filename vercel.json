@@ -1,0 +1,11 @@
+{
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "rewrites": [
+    { "source": "/direct-bookings.ics", "destination": "/api/direct-bookings" }
+  ],
+  "functions": {
+    "api/calendar.js": { "maxDuration": 10 },
+    "api/direct-bookings.js": { "maxDuration": 10 }
+  }
+}
