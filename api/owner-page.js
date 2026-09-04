@@ -4,7 +4,7 @@ const path=require('path');
 const OWNER_MODULES=[
   '/owner-login-theme.js?v=20260904-1',
   '/owner-login-guard.js?v=20260904-1',
-  '/owner-navigation.js?v=20260904-3',
+  '/owner-nav-core.js?v=20260904-1',
   '/owner-calendar-ui.js?v=20260904-3',
   '/owner-calendar-theme.js?v=20260904-3',
   '/owner-dashboard-ui.js?v=20260904-3',
@@ -14,10 +14,8 @@ const OWNER_MODULES=[
   '/owner-booking-settings.js?v=20260904-2',
   '/owner-detail-drawer.js?v=20260904-1',
   '/owner-phase4-drilldowns.js?v=20260904-3',
-  '/owner-phase5-state.js?v=20260904-1',
   '/owner-phase5-ux-fixes.js?v=20260904-1',
-  '/owner-market-events.js?v=20260904-1',
-  '/owner-interaction-rescue.js?v=20260904-1'
+  '/owner-market-events.js?v=20260904-1'
 ];
 
 module.exports=async function(req,res){
