@@ -3,11 +3,13 @@ const { db, ensureSchema, expireHolds } = require('../lib/db');
 const { getOtaBlockedDates, eachDate } = require('../lib/availability');
 const { calculateQuote } = require('../lib/pricing');
 const { createGuestAccessToken } = require('../lib/guest-access');
+const { syncDirectReservation } = require('../lib/airtable');
 
 const MAX_GUESTS=14;
 function clean(v,max=500){return String(v||'').trim().slice(0,max);}
 function validDate(v){return /^\d{4}-\d{2}-\d{2}$/.test(String(v||''));}
 function makeId(checkin){return `DB-${String(checkin).replace(/-/g,'')}-${crypto.randomBytes(3).toString('hex').toUpperCase()}`;}
+function tripTypeFromNotes(notes){const m=String(notes||'').match(/^Trip type:\s*(.+)$/m);return m?clean(m[1],120):'';}
 
 module.exports=async function(req,res){
   if(req.method!=='POST') return res.status(405).json({error:'method_not_allowed'});
@@ -16,9 +18,8 @@ module.exports=async function(req,res){
     await expireHolds();
     const body=typeof req.body==='string'?JSON.parse(req.body||'{}'):(req.body||{});
     const guest_name=clean(body.name,120),guest_email=clean(body.email,180),guest_phone=clean(body.phone,60),notes=clean(body.message,2000);
-    const checkin=clean(body.checkin,10),checkout=clean(body.checkout,10),guests=Number(body.guests);
-    const hasTripType=/^Trip type:\s*.+/m.test(notes);
-    if(!guest_name||!guest_email.includes('@')||!guest_phone||!hasTripType||!validDate(checkin)||!validDate(checkout)||!Number.isInteger(guests)||guests<1||guests>MAX_GUESTS){
+    const checkin=clean(body.checkin,10),checkout=clean(body.checkout,10),guests=Number(body.guests),tripType=tripTypeFromNotes(notes);
+    if(!guest_name||!guest_email.includes('@')||!guest_phone||!tripType||!validDate(checkin)||!validDate(checkout)||!Number.isInteger(guests)||guests<1||guests>MAX_GUESTS){
       return res.status(400).json({error:'invalid_request',message:'Please complete all required booking fields, including phone and trip type.'});
     }
     if(checkout<=checkin) return res.status(400).json({error:'invalid_dates',message:'Check-out must be after check-in.'});
@@ -60,7 +61,7 @@ module.exports=async function(req,res){
       }
       throw e;
     }
-    await sql`INSERT INTO booking_events (reservation_id,event_type,actor,metadata) VALUES (${id},'inquiry_created','guest',${JSON.stringify({guests,quote})}::jsonb)`;
+    await sql`INSERT INTO booking_events (reservation_id,event_type,actor,metadata) VALUES (${id},'inquiry_created','guest',${JSON.stringify({guests,tripType,quote})}::jsonb)`;
 
     let statusUrl=null;
     try{
@@ -68,6 +69,17 @@ module.exports=async function(req,res){
       statusUrl=`/reservation.html?token=${encodeURIComponent(token)}`;
     }catch(tokenError){
       console.error('guest status token error',tokenError);
+    }
+
+    try{
+      const sync=await syncDirectReservation({
+        name:guest_name,email:guest_email,phone:guest_phone,tripType,notes,
+        reservation:{...rows[0],guest_name,guest_email,guest_phone,guests},quote,statusUrl
+      });
+      await sql`INSERT INTO booking_events (reservation_id,event_type,actor,metadata) VALUES (${id},${sync.skipped?'airtable_sync_skipped':'airtable_synced'},'system',${JSON.stringify(sync)}::jsonb)`;
+    }catch(syncError){
+      console.error('airtable sync error',syncError);
+      await sql`INSERT INTO booking_events (reservation_id,event_type,actor,metadata) VALUES (${id},'airtable_sync_failed','system',${JSON.stringify({message:String(syncError.message||syncError).slice(0,500)})}::jsonb)`;
     }
 
     res.setHeader('Cache-Control','no-store');
