@@ -3,6 +3,7 @@ const { db, ensureSchema, expireHolds } = require('../lib/db');
 const { getOtaBlockedDates, eachDate } = require('../lib/availability');
 const { calculateQuote } = require('../lib/pricing');
 
+const MAX_GUESTS=14;
 function clean(v,max=500){return String(v||'').trim().slice(0,max);}
 function validDate(v){return /^\d{4}-\d{2}-\d{2}$/.test(String(v||''));}
 function makeId(checkin){return `DB-${String(checkin).replace(/-/g,'')}-${crypto.randomBytes(3).toString('hex').toUpperCase()}`;}
@@ -15,7 +16,7 @@ module.exports=async function(req,res){
     const body=typeof req.body==='string'?JSON.parse(req.body||'{}'):(req.body||{});
     const guest_name=clean(body.name,120),guest_email=clean(body.email,180),guest_phone=clean(body.phone,60),notes=clean(body.message,2000);
     const checkin=clean(body.checkin,10),checkout=clean(body.checkout,10),guests=Number(body.guests);
-    if(!guest_name||!guest_email.includes('@')||!validDate(checkin)||!validDate(checkout)||!Number.isInteger(guests)||guests<1||guests>12){
+    if(!guest_name||!guest_email.includes('@')||!validDate(checkin)||!validDate(checkout)||!Number.isInteger(guests)||guests<1||guests>MAX_GUESTS){
       return res.status(400).json({error:'invalid_request',message:'Please complete all required booking fields.'});
     }
     if(checkout<=checkin) return res.status(400).json({error:'invalid_dates',message:'Check-out must be after check-in.'});
