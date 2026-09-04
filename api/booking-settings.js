@@ -2,11 +2,11 @@ const crypto=require('crypto');
 const { db, ensureSchema }=require('../lib/db');
 
 const VERIFIED_TAX_DEFAULTS={
-  configured:false,
-  cleaning_fee:0,
+  configured:true,
+  cleaning_fee:240,
   tax_pct:15,
   taxable_cleaning:true,
-  deposit_pct:0,
+  deposit_pct:35,
   tax_note:'Galveston lodging tax: 6% Texas state HOT + 9% City of Galveston HOT. Cleaning/readiness charges are included in the taxable room amount under Texas hotel occupancy tax rules.'
 };
 
