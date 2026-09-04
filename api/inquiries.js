@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const { db, ensureSchema, expireHolds } = require('../lib/db');
 const { getOtaBlockedDates, eachDate } = require('../lib/availability');
+const { calculateQuote } = require('../lib/pricing');
 
 function clean(v,max=500){return String(v||'').trim().slice(0,max);}
 function validDate(v){return /^\d{4}-\d{2}-\d{2}$/.test(String(v||''));}
@@ -14,7 +15,7 @@ module.exports=async function(req,res){
     const body=typeof req.body==='string'?JSON.parse(req.body||'{}'):(req.body||{});
     const guest_name=clean(body.name,120),guest_email=clean(body.email,180),guest_phone=clean(body.phone,60),notes=clean(body.message,2000);
     const checkin=clean(body.checkin,10),checkout=clean(body.checkout,10),guests=Number(body.guests);
-    if(!guest_name||!guest_email.includes('@')||!validDate(checkin)||!validDate(checkout)||!Number.isInteger(guests)||guests<1||guests>14){
+    if(!guest_name||!guest_email.includes('@')||!validDate(checkin)||!validDate(checkout)||!Number.isInteger(guests)||guests<1||guests>12){
       return res.status(400).json({error:'invalid_request',message:'Please complete all required booking fields.'});
     }
     if(checkout<=checkin) return res.status(400).json({error:'invalid_dates',message:'Check-out must be after check-in.'});
@@ -36,6 +37,12 @@ module.exports=async function(req,res){
     `;
     if(overlap.length) return res.status(409).json({error:'dates_unavailable',message:'Those dates are currently being held or are booked.'});
 
+    let quote;
+    try{quote=await calculateQuote(checkin,checkout);}catch(e){
+      if(e.code==='minimum_nights')return res.status(400).json({error:e.code,message:e.message,minNights:e.minNights});
+      throw e;
+    }
+
     const id=makeId(checkin);
     let rows;
     try{
@@ -50,9 +57,9 @@ module.exports=async function(req,res){
       }
       throw e;
     }
-    await sql`INSERT INTO booking_events (reservation_id,event_type,actor,metadata) VALUES (${id},'inquiry_created','guest',${JSON.stringify({guests})}::jsonb)`;
+    await sql`INSERT INTO booking_events (reservation_id,event_type,actor,metadata) VALUES (${id},'inquiry_created','guest',${JSON.stringify({guests,quote})}::jsonb)`;
     res.setHeader('Cache-Control','no-store');
-    return res.status(201).json({reservation:rows[0],message:'Your dates are temporarily held for 24 hours while CJT reviews your request.'});
+    return res.status(201).json({reservation:rows[0],quote,message:'Your dates are temporarily held for 24 hours while CJT reviews your request.'});
   }catch(e){
     console.error('inquiry error',e);
     return res.status(500).json({error:'booking_unavailable',message:'We could not place the hold. Please contact CJT directly.'});
