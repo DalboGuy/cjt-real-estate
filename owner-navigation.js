@@ -92,4 +92,10 @@
   bindPhaseTwo();
   const observer=new MutationObserver(bindPhaseTwo);
   observer.observe(document.body,{childList:true,subtree:true});
+
+  if(!document.querySelector('script[src*="owner-phase5-ux-fixes.js"]')){
+    const script=document.createElement('script');
+    script.src='/owner-phase5-ux-fixes.js?v=20260904-2';
+    document.body.appendChild(script);
+  }
 })();
