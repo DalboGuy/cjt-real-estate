@@ -16,7 +16,8 @@ const OWNER_MODULES=[
   '/owner-phase4-drilldowns.js?v=20260904-3',
   '/owner-phase5-ux-fixes.js?v=20260904-1',
   '/owner-market-events.js?v=20260904-1',
-  '/owner-nav-lifecycle.js?v=20260904-1'
+  '/owner-nav-lifecycle.js?v=20260904-1',
+  '/owner-mobile-ui.js?v=20260904-1'
 ];
 
 module.exports=async function(req,res){
