@@ -2,6 +2,7 @@ const crypto = require('crypto');
 const { db, ensureSchema, expireHolds } = require('../lib/db');
 const { getOtaBlockedDates, eachDate } = require('../lib/availability');
 const { calculateQuote } = require('../lib/pricing');
+const { createGuestAccessToken } = require('../lib/guest-access');
 
 const MAX_GUESTS=14;
 function clean(v,max=500){return String(v||'').trim().slice(0,max);}
@@ -16,8 +17,9 @@ module.exports=async function(req,res){
     const body=typeof req.body==='string'?JSON.parse(req.body||'{}'):(req.body||{});
     const guest_name=clean(body.name,120),guest_email=clean(body.email,180),guest_phone=clean(body.phone,60),notes=clean(body.message,2000);
     const checkin=clean(body.checkin,10),checkout=clean(body.checkout,10),guests=Number(body.guests);
-    if(!guest_name||!guest_email.includes('@')||!validDate(checkin)||!validDate(checkout)||!Number.isInteger(guests)||guests<1||guests>MAX_GUESTS){
-      return res.status(400).json({error:'invalid_request',message:'Please complete all required booking fields.'});
+    const hasTripType=/^Trip type:\s*.+/m.test(notes);
+    if(!guest_name||!guest_email.includes('@')||!guest_phone||!hasTripType||!validDate(checkin)||!validDate(checkout)||!Number.isInteger(guests)||guests<1||guests>MAX_GUESTS){
+      return res.status(400).json({error:'invalid_request',message:'Please complete all required booking fields, including phone and trip type.'});
     }
     if(checkout<=checkin) return res.status(400).json({error:'invalid_dates',message:'Check-out must be after check-in.'});
     const today=new Date().toISOString().slice(0,10);
@@ -49,7 +51,7 @@ module.exports=async function(req,res){
     try{
       rows=await sql`
         INSERT INTO reservations (id,guest_name,guest_email,guest_phone,guests,notes,checkin,checkout,status,hold_expires_at)
-        VALUES (${id},${guest_name},${guest_email},${guest_phone||null},${guests},${notes||null},${checkin}::date,${checkout}::date,'inquiry_hold',now()+interval '24 hours')
+        VALUES (${id},${guest_name},${guest_email},${guest_phone},${guests},${notes||null},${checkin}::date,${checkout}::date,'inquiry_hold',now()+interval '24 hours')
         RETURNING id,checkin::text,checkout::text,status,hold_expires_at
       `;
     }catch(e){
@@ -59,8 +61,17 @@ module.exports=async function(req,res){
       throw e;
     }
     await sql`INSERT INTO booking_events (reservation_id,event_type,actor,metadata) VALUES (${id},'inquiry_created','guest',${JSON.stringify({guests,quote})}::jsonb)`;
+
+    let statusUrl=null;
+    try{
+      const token=await createGuestAccessToken(id);
+      statusUrl=`/reservation.html?token=${encodeURIComponent(token)}`;
+    }catch(tokenError){
+      console.error('guest status token error',tokenError);
+    }
+
     res.setHeader('Cache-Control','no-store');
-    return res.status(201).json({reservation:rows[0],quote,message:'Your dates are temporarily held for 24 hours while CJT reviews your request.'});
+    return res.status(201).json({reservation:rows[0],quote,statusUrl,message:'Your dates are temporarily held for 24 hours while CJT reviews your request.'});
   }catch(e){
     console.error('inquiry error',e);
     return res.status(500).json({error:'booking_unavailable',message:'We could not place the hold. Please contact CJT directly.'});
