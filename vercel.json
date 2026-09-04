@@ -3,6 +3,7 @@
   "trailingSlash": false,
   "rewrites": [
     { "source": "/", "destination": "/v3.html" },
+    { "source": "/owner", "destination": "/api/owner-page" },
     { "source": "/direct-bookings.ics", "destination": "/api/direct-bookings" },
     { "source": "/bookingcom.ics", "destination": "/api/direct-bookings?bookingcom=1" }
   ],
@@ -10,7 +11,10 @@
     "api/calendar.js": { "maxDuration": 10 },
     "api/direct-bookings.js": { "maxDuration": 10 },
     "api/inquiries.js": { "maxDuration": 10 },
+    "api/integration-status.js": { "maxDuration": 10 },
     "api/owner.js": { "maxDuration": 10 },
+    "api/owner-calendar.js": { "maxDuration": 10 },
+    "api/owner-page.js": { "maxDuration": 10 },
     "api/site-config.js": { "maxDuration": 10 }
   }
 }
