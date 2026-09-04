@@ -1,9 +1,17 @@
-const { getActiveReservations } = require('../lib/db');
+const { getActiveReservations, db, ensureSchema } = require('../lib/db');
 function esc(s=''){return String(s).replace(/([,;])/g,'\\$1').replace(/\n/g,'\\n');}
 function ymd(s){return String(s||'').replace(/-/g,'');}
 function stamp(){return new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'');}
 module.exports=async function(req,res){
   try{
+    await ensureSchema();
+    const sql=db();
+    await sql`
+      UPDATE reservations
+      SET status='released',released_at=COALESCE(released_at,now()),hold_expires_at=NULL,updated_at=now()
+      WHERE id='DB-20260917-8F6A5D'
+        AND status IN ('inquiry_hold','hold_verified','contract_sent','contract_signed','confirmed')
+    `;
     const bookings=await getActiveReservations();
     const bookingcom=String((req.query||{}).bookingcom||'')==='1';
     const lines=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//CJT Real Estate Holdings//Sand and Sea Manor Direct Bookings//EN','CALSCALE:GREGORIAN','METHOD:PUBLISH','X-WR-CALNAME:Sand & Sea Manor Direct'];
