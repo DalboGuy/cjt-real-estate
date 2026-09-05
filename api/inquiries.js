@@ -32,7 +32,15 @@ module.exports=async function(req,res){
     const today=new Date().toISOString().slice(0,10);
     if(checkin<today) return res.status(400).json({error:'past_date',message:'Check-in must be a future date.'});
 
-    const {dates:otaBlocked}=await getOtaBlockedDates();
+    const ota=await getOtaBlockedDates();
+    const requiredSources=['airbnb','vrbo'];
+    const bookingSource=ota.sources.find(source=>source.name==='booking.com');
+    if(bookingSource&&bookingSource.error!=='not_configured')requiredSources.push('booking.com');
+    const failedSources=requiredSources.filter(name=>!ota.sources.some(source=>source.name===name&&source.ok));
+    if(failedSources.length){
+      return res.status(503).json({error:'availability_unavailable',message:'Live availability cannot be verified right now. Please contact CJT directly.'});
+    }
+    const otaBlocked=ota.dates;
     const requested=eachDate(checkin,checkout);
     if(requested.some(d=>otaBlocked.has(d))){
       return res.status(409).json({error:'dates_unavailable',message:'One or more requested dates are no longer available.'});
