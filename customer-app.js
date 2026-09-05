@@ -1,6 +1,17 @@
 (()=>{
-  const token=new URLSearchParams(location.search).get('token');
-  const state={status:null,quote:null,guest:null,unread:0,messagesLoaded:false};
+  const params=new URLSearchParams(location.search);
+  const token=params.get('token');
+  const demo=params.get('demo')==='1';
+  const state={status:null,quote:null,guest:null,unread:0,messagesLoaded:false,demoMessages:[]};
+  const DEMO={
+    status:{id:'DEMO-RESERVATION',property:'1720-avenue-m',checkin:'2026-10-16',checkout:'2026-10-19',guests:8,status:'confirmed',statusLabel:'Reservation confirmed',holdExpiresAt:null,contractSentAt:'2026-09-02T16:00:00Z',contractSignedAt:'2026-09-02T18:30:00Z',depositReceivedAt:'2026-09-03T14:00:00Z',createdAt:'2026-09-01T15:00:00Z'},
+    quote:{nightlySubtotal:1800,discountAmount:150,discountName:'Direct booking offer',cleaningFee:275,taxes:288.75,total:2213.75,depositDue:553.44,pricingReady:true},
+    guest:{guest_name:'Demo Guest',guest_email:'demo@example.com',guest_phone:'555-0100'},
+    messages:[
+      {id:'d1',sender_type:'owner',sender_name:'CJT',body:'Your reservation is confirmed. We are looking forward to hosting your group at Sand & Sea Manor.',created_at:'2026-09-03T15:15:00Z'},
+      {id:'d2',sender_type:'guest',sender_name:'Demo Guest',body:'Thanks. We are excited for the trip.',created_at:'2026-09-03T15:22:00Z'}
+    ]
+  };
   const $=id=>document.getElementById(id);
   const money=v=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(Number(v||0));
   const date=s=>s?new Date(String(s).includes('T')?s:s+'T00:00:00').toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'}):'—';
@@ -102,6 +113,7 @@
     list.scrollTop=list.scrollHeight;
   }
   async function loadMessages(silent=true){
+    if(demo){state.messagesLoaded=true;renderMessages(state.demoMessages);updateUnread(0);$('chatState').textContent='Demo chat';return}
     if(!token)return;
     if(!silent)$('chatState').textContent='Connecting…';
     try{
@@ -111,6 +123,13 @@
     }catch(e){$('chatState').textContent='Unavailable';if(!silent)$('chatList').innerHTML=`<div class="chat-empty">${esc(e.message)}</div>`}
   }
   async function loadApp(){
+    if(demo){
+      state.status=DEMO.status;state.quote=DEMO.quote;state.guest=DEMO.guest;state.unread=1;state.demoMessages=DEMO.messages.slice();
+      const demoBanner=$('demoBanner');if(demoBanner)demoBanner.hidden=false;
+      renderHome();renderStay();$('loadingScreen').classList.remove('active');
+      const initial=(location.hash||'').replace('#','');switchTab(['stay','messages','house','help'].includes(initial)?initial:'home');
+      return;
+    }
     if(!token){showFatal('This reservation link is incomplete. Use the private link sent by CJT.');return}
     try{
       const [statusRes,summaryRes]=await Promise.all([
@@ -131,6 +150,7 @@
     e.preventDefault();const body=$('chatBody'),send=$('chatSend'),text=body.value.trim();if(!text)return;
     send.disabled=true;send.textContent='Sending…';
     try{
+      if(demo){state.demoMessages.push({id:'demo-'+Date.now(),sender_type:'guest',sender_name:'Demo Guest',body:text,created_at:new Date().toISOString()});body.value='';renderMessages(state.demoMessages);return}
       const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'guest_send',token,body:text})}),d=await r.json();
       if(!r.ok)throw new Error(d.message||'Could not send message.');body.value='';await loadMessages(true);
     }catch(e){alert(e.message)}finally{send.disabled=false;send.textContent='Send';body.focus()}
