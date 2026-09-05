@@ -44,7 +44,7 @@ module.exports=async function(req,res){
       const password=String(body.password||'');
       if(name.length<2)return res.status(400).json({error:'name_required'});
       if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return res.status(400).json({error:'valid_email_required'});
-      if(password.length<12)return res.status(400).json({error:'password_too_short'});
+      if(password.length<5)return res.status(400).json({error:'password_too_short'});
 
       const creds=createPassword(password);
       const rows=await sql`
@@ -82,7 +82,7 @@ module.exports=async function(req,res){
       if(!session)return;
       const currentPassword=String(body.currentPassword||'');
       const newPassword=String(body.newPassword||'');
-      if(newPassword.length<12)return res.status(400).json({error:'password_too_short'});
+      if(newPassword.length<5)return res.status(400).json({error:'password_too_short'});
       const rows=await sql`SELECT password_salt,password_hash FROM owner_users WHERE id=${session.user.id} LIMIT 1`;
       if(!rows.length||!verifyPassword(currentPassword,rows[0].password_salt,rows[0].password_hash))return res.status(401).json({error:'current_password_invalid'});
       const creds=createPassword(newPassword);
