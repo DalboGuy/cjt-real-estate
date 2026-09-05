@@ -33,6 +33,8 @@
         <button data-coming-soon="Integrations"><span>Integrations</span></button>
         <a href="/owner-v1/documents"><span>Documents & Cloud</span><span class="count">Plan</span></a>
         <button data-coming-soon="Notifications"><span>Notifications</span></button>
+        <div class="nav-section">Architecture</div>
+        <a href="/admin-v1/maps"><span>Platform Maps</span><span class="count">Live</span></a>
         <div class="nav-section">Security</div>
         <button data-coming-soon="Audit Log"><span>Audit Log</span></button>
         <button data-coming-soon="Sessions"><span>Sessions</span></button>
@@ -104,17 +106,27 @@
           </article>
 
           <article class="card span-6">
+            <div class="card-head"><div><h3>Platform Maps</h3><p>Living visual documentation of the system and development roadmap.</p></div><a class="card-link" href="/admin-v1/maps">Open maps ↗</a></div>
+            <div class="split-metrics" style="grid-template-columns:repeat(3,1fr)">
+              <div class="mini"><b>7</b><span>Current map views</span></div>
+              <div class="mini"><b>Every build</b><span>Update rule</span></div>
+              <div class="mini"><b>0.1</b><span>Initial map version</span></div>
+            </div>
+            <div class="empty" style="margin-top:14px">Platform overview, Owner Portal, Admin Portal, integrations, cloud documents, data relationships and build state are now maintained as living architecture. A meaningful development is not fully documented until its map is updated.</div>
+            <div class="widget-footer"><a class="btn btn-primary" href="/admin-v1/maps">View Platform Maps</a></div>
+          </article>
+
+          <article class="card span-6">
             <div class="card-head"><div><h3>Audit & Activity</h3><p>Accountability once multiple users exist.</p></div></div>
             <div class="empty">Planned activity records include login/logout, user invitations, role changes, reservation lifecycle actions, pricing changes, document access/file events, integration changes and administrative configuration changes.</div>
           </article>
 
-          <article class="card span-6">
+          <article class="card span-12">
             <div class="card-head"><div><h3>System & Data</h3><p>Administrative health and recovery controls.</p></div></div>
-            <div class="list">
-              <div class="list-row"><div><strong>Database health</strong><span>Environment, migration and backup status.</span></div></div>
-              <div class="list-row"><div><strong>Automation health</strong><span>Last successful email/cloud sync and exceptions needing attention.</span></div></div>
-              <div class="list-row"><div><strong>Import / export</strong><span>Controlled data movement and reconciliation tools.</span></div></div>
-              <div class="list-row"><div><strong>Recovery</strong><span>Keep documented deployment and database rollback points.</span></div></div>
+            <div class="split-metrics">
+              <div class="mini"><b>Database</b><span>Environment, migration and backup status</span></div>
+              <div class="mini"><b>Automation</b><span>Last successful email/cloud sync and exceptions</span></div>
+              <div class="mini"><b>Recovery</b><span>Documented deployment and database rollback points</span></div>
             </div>
           </article>
         </section>
