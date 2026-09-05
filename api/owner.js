@@ -1,4 +1,5 @@
 const crypto=require('crypto');
+const {updateReservation}=require('../lib/reservation-workflow');
 const { db, ensureSchema, expireHolds }=require('../lib/db');
 
 function parseCookies(header=''){return Object.fromEntries(header.split(';').map(v=>v.trim()).filter(Boolean).map(v=>{const i=v.indexOf('=');return [decodeURIComponent(v.slice(0,i)),decodeURIComponent(v.slice(i+1))];}));}
@@ -99,8 +100,8 @@ module.exports=async function(req,res){
     if(req.method==='GET'){
       await expireHolds();
       const reservations=await sql`
-        SELECT id,guest_name,guest_email,guest_phone,guests,notes,checkin::text,checkout::text,status,
-               hold_expires_at,contract_sent_at,contract_signed_at,deposit_received_at,released_at,created_at,updated_at
+        SELECT id,guest_name,guest_email,guest_phone,guests,notes,checkin::text,checkout::text,status,review_stage,
+               hold_expires_at,contract_sent_at,contract_signed_at,deposit_received_at,released_at,created_at,updated_at::text
         FROM reservations
         ORDER BY CASE WHEN status IN ('released','expired','cancelled') THEN 1 ELSE 0 END, checkin ASC, created_at DESC
         LIMIT 250
@@ -125,27 +126,9 @@ module.exports=async function(req,res){
     }
 
     if(req.method==='POST'&&body.action==='reservation_update'){
-      const id=clean(body.id,80),next=clean(body.status,40);
-      if(!id)return res.status(400).json({error:'missing_id'});
-      let eventType;
-      if(next==='maintain_hold'){
-        await sql`UPDATE reservations SET status='hold_verified',hold_expires_at=GREATEST(COALESCE(hold_expires_at,now()),now())+interval '24 hours',updated_at=now() WHERE id=${id} AND status IN ('inquiry_hold','hold_verified')`;
-        eventType='hold_maintained';
-      }else if(next==='contract_sent'){
-        await sql`UPDATE reservations SET status='contract_sent',contract_sent_at=COALESCE(contract_sent_at,now()),hold_expires_at=NULL,updated_at=now() WHERE id=${id} AND status NOT IN ('released','cancelled','expired')`;
-        eventType='contract_sent';
-      }else if(next==='contract_signed'){
-        await sql`UPDATE reservations SET status='contract_signed',contract_signed_at=COALESCE(contract_signed_at,now()),hold_expires_at=NULL,updated_at=now() WHERE id=${id} AND status NOT IN ('released','cancelled','expired')`;
-        eventType='contract_signed';
-      }else if(next==='deposit_received'){
-        await sql`UPDATE reservations SET status='confirmed',deposit_received_at=COALESCE(deposit_received_at,now()),hold_expires_at=NULL,updated_at=now() WHERE id=${id} AND status NOT IN ('released','cancelled','expired')`;
-        eventType='deposit_received';
-      }else if(next==='release_dates'){
-        await sql`UPDATE reservations SET status='released',released_at=now(),hold_expires_at=NULL,updated_at=now() WHERE id=${id} AND status<>'cancelled'`;
-        eventType='dates_released';
-      }else return res.status(400).json({error:'invalid_status'});
-      await sql`INSERT INTO booking_events(reservation_id,event_type,actor,metadata) VALUES (${id},${eventType},${user.name},${JSON.stringify({user_id:user.id,email:user.email})}::jsonb)`;
-      return res.status(200).json({ok:true});
+      await expireHolds();
+      const result=await updateReservation(sql,body,user);
+      return res.status(result.code).json(result.error?{error:result.error}:{ok:true,reservation:result.reservation});
     }
 
     if(req.method==='POST'&&body.action==='task_create'){

@@ -19,6 +19,8 @@
   const activeFinancial=f=>f&&f.status!=='cancelled';
   let calendarCache=null,calendarCacheAt=0,calendarPromise=null;
 
+  window.addEventListener('cjt:reservation-updated',()=>{calendarCache=null;calendarCacheAt=0;loadCalendar(true).catch(()=>{})});
+
   function bind(el,handler,label){
     if(!el||el.dataset.phase4Bound==='1')return;
     el.dataset.phase4Bound='1';
@@ -146,7 +148,7 @@
     host.addEventListener('click',e=>{
       if(e.target.closest('.market-event-chip,.market-month-chip'))return;
       const cell=e.target.closest('.booking-day');
-      if(!cell||!cell.classList.contains('has-money')||!calendarCache)return;
+      if(!cell||cell.classList.contains('has-block')||!cell.classList.contains('has-money')||!calendarCache)return;
       const date=dateFromCalendarCell(cell,'bkTitle','.booking-day-number');if(!date)return;
       const fin=(calendarCache.financials||[]).find(f=>activeFinancial(f)&&f.checkin<=date&&f.checkout>date);
       if(!fin)return;

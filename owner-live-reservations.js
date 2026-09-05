@@ -1,132 +1,71 @@
 (()=>{
-  const root=document.documentElement;
-  if(root.dataset.liveReservationsLoaded)return;
-  root.dataset.liveReservationsLoaded='1';
-
-  const LIVE_PORTAL='https://cjtbookingpage.vercel.app/owner';
-  const style=document.createElement('style');
-  style.textContent=`
-    .live-res-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-    .live-res-notice{background:#eef6f4;border:1px solid #bfd7d2;border-radius:14px;padding:13px 15px;margin:12px 0;color:#24494f}
-    .live-res-notice strong{display:block;margin-bottom:3px}
-    .live-res-list{display:grid;gap:12px;margin-top:14px}
-    .live-res-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 8px 24px rgba(13,43,49,.045)}
-    .live-res-card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
-    .live-res-id{font-size:.78rem;font-weight:900;letter-spacing:.025em;color:var(--muted)}
-    .live-res-dates{font-size:1.18rem;font-weight:900;margin:5px 0}
-    .live-res-empty{background:#f5fbf7;border:1px solid #b9d8c5;border-radius:16px;padding:18px;color:#225b38;font-weight:800}
-    .live-res-error{background:#fff7f7;border:1px solid #e3bcbc;border-radius:16px;padding:16px;color:#7a2929}
-    .live-res-status{min-height:20px;margin-top:10px}
-  `;
-  document.head.appendChild(style);
-
-  let section,list,refreshButton,statusHost,loading=false;
-  const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-  const nights=(start,end)=>Math.max(0,Math.round((new Date(`${end}T00:00:00Z`)-new Date(`${start}T00:00:00Z`))/86400000));
-  const pretty=v=>new Date(`${v}T12:00:00`).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
-
-  async function liveApi(options={}){
-    const response=await fetch('/api/live-direct-bookings',{
-      headers:{'Content-Type':'application/json'},
-      ...options
-    });
-    const data=await response.json().catch(()=>({}));
-    if(!response.ok){const error=new Error(data.error||'live_direct_request_failed');error.status=response.status;throw error;}
-    return data;
+  if(window.CJTInquiryWorkflow)return;
+  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const closed=r=>['released','expired','cancelled'].includes(r.status);
+  const stage=r=>closed(r)?(r.review_stage==='rejected'?'rejected':r.status):(['contract_sent','contract_signed','confirmed'].includes(r.status)?r.status:r.review_stage==='pending'?'new':r.review_stage||'new');
+  let filter='active',search='',focusId='',busy=false,list,message;
+  const records=()=>typeof state!=='undefined'?state.reservations||[]:[];
+  const style=document.createElement('style');style.textContent='.inquiry-toolbar,.inquiry-actions{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}.inquiry-card{border:1px solid var(--line);background:white;border-radius:14px;padding:16px;margin:12px 0;overflow-wrap:anywhere}.inquiry-card button{min-height:44px}.inquiry-card:focus{outline:3px solid #2b8074}.inquiry-card textarea{width:100%;box-sizing:border-box}.block-review{max-width:560px;width:calc(100% - 48px);border:1px solid #aaa;border-radius:16px;padding:20px}.block-review::backdrop{background:#0008}';document.head.append(style);
+  function buttons(r){
+    if(closed(r))return [];
+    const out=[];
+    if(['inquiry_hold','hold_verified'].includes(r.status)){
+      if(stage(r)!=='accepted')out.push(['processing','Processing'],['accept','Accept & hold 24h']);
+      out.push(['maintain_hold','Keep hold 24h'],['reject','Reject inquiry'],['contract_sent','Mark contract sent']);
+    }
+    if(r.status==='contract_sent')out.push(['contract_signed','Mark contract signed']);
+    if(r.status==='contract_signed')out.push(['deposit_received','Mark deposit received']);
+    out.push(['release_dates','Release dates']);return out;
   }
-
-  function updateTopCount(count){
-    const el=document.getElementById('kpiReservations');
-    if(el)el.textContent=String(count);
-  }
-
-  async function releaseBlock(block,button){
-    if(!confirm(`Release ${block.checkin} through ${block.checkout} from the live direct-booking calendar?`))return;
-    const passcode=prompt('Enter the production owner passcode to release these dates.');
-    if(passcode===null)return;
-    button.disabled=true;
-    statusHost.className='live-res-status meta';
-    statusHost.textContent='Releasing live calendar block…';
-    try{
-      await liveApi({method:'POST',body:JSON.stringify({action:'release_live_direct',id:block.id,passcode})});
-      statusHost.className='live-res-status success';
-      statusHost.textContent='Dates released from the live direct-booking source. Connected calendars will clear after their next sync.';
-      await new Promise(resolve=>setTimeout(resolve,900));
-      await renderLiveReservations();
-    }catch(error){
-      statusHost.className='live-res-status error';
-      statusHost.textContent=error.message==='invalid_live_owner_passcode'?'The production owner passcode was not accepted.':`Could not release the live block: ${error.message}`;
-    }finally{
-      button.disabled=false;
+  function render(){
+    if(!list)return;
+    const all=records(),shown=all.filter(r=>(!focusId||r.id===focusId)&&(filter==='all'||filter==='active'&&!closed(r)||filter==='closed'&&closed(r)||stage(r)===filter)&&[r.id,r.guest_name,r.guest_email,r.checkin,r.checkout].join(' ').toLowerCase().includes(search.toLowerCase()));
+    list.innerHTML=shown.length?'':'<p>No inquiries match this view.</p>';
+    for(const r of shown){
+      const history=(typeof state!=='undefined'?state.events||[]:[]).filter(e=>e.reservation_id===r.id);
+      const card=document.createElement('article');card.className='inquiry-card';card.dataset.inquiryId=r.id;card.tabIndex=-1;
+      card.innerHTML=`<h3>${esc(r.guest_name||'Direct inquiry')} · ${esc(stage(r).replaceAll('_',' '))}</h3><p><strong>${esc(r.checkin)} → ${esc(r.checkout)}</strong> · ${esc(r.guests)} guests</p><p>${esc(r.id)}<br>${esc(r.guest_email)}<br>${esc(r.guest_phone||'')}</p><p>${esc(r.notes||'')}</p>${r.hold_expires_at&&!closed(r)?`<p>Hold expires ${esc(new Date(r.hold_expires_at).toLocaleString())}</p>`:''}${closed(r)?'<p>Direct dates are released. Other calendar sources may still block these dates.</p>':'<label>Internal decision note (optional)<textarea maxlength="2000" rows="2"></textarea></label>'}<div class="inquiry-actions">${buttons(r).map(([action,label])=>`<button type="button" class="btn ghost small" data-action="${action}" ${busy?'disabled':''}>${label}</button>`).join('')}</div>`;
+      if(history.length){const details=document.createElement('details');details.innerHTML='<summary>Recent activity</summary>'+history.map(e=>`<p>${esc(e.event_type.replaceAll('_',' '))} · ${esc(e.actor)} · ${esc(new Date(e.created_at).toLocaleString())}${e.metadata?.note?`<br>${esc(e.metadata.note)}`:''}</p>`).join('');card.append(details);}
+      card.querySelectorAll('[data-action]').forEach(b=>b.onclick=()=>update(r,b.dataset.action,card.querySelector('textarea')?.value||''));list.append(card);
     }
   }
-
-  async function renderLiveReservations(){
-    if(!list||loading)return;
-    loading=true;
-    if(refreshButton){refreshButton.disabled=true;refreshButton.textContent='Refreshing…';}
-    list.innerHTML='<div class="card">Loading live direct-booking blocks…</div>';
+  async function update(r,action,note){
+    if(busy)return;
+    const labels=Object.fromEntries(buttons(r));
+    if(!confirm(`${labels[action]} for ${r.guest_name}, ${r.checkin} → ${r.checkout}? ${['reject','release_dates'].includes(action)?'This releases the direct hold only. Other platforms must be managed separately.':'This records your decision; it does not send a contract, collect payment, or message the guest.'}`))return;
+    busy=true;list.querySelectorAll('button').forEach(b=>b.disabled=true);message.textContent='Saving decision…';
     try{
-      const data=await liveApi();
-      const blocks=Array.isArray(data.blocks)?data.blocks:[];
-      window.CJTLiveReservations=blocks;
-      window.dispatchEvent(new CustomEvent('cjt:live-reservations-updated',{detail:{blocks}}));
-      updateTopCount(blocks.length);
-      if(!blocks.length){
-        list.innerHTML='<div class="live-res-empty">No live direct-booking blocks are currently being published.</div>';
-        return;
-      }
-      const host=document.createElement('div');host.className='live-res-list';
-      for(const block of blocks){
-        const card=document.createElement('div');card.className='live-res-card';
-        const count=nights(block.checkin,block.checkout);
-        card.innerHTML=`<div class="live-res-card-head"><div><div class="live-res-id">${esc(block.id)}</div><div class="live-res-dates">${esc(pretty(block.checkin))} → ${esc(pretty(block.checkout))}</div><div class="meta">${count} occupied night${count===1?'':'s'} · Live production direct-booking feed</div></div><button class="btn danger small" type="button">Release dates</button></div>`;
-        card.querySelector('button').addEventListener('click',event=>releaseBlock(block,event.currentTarget));
-        host.appendChild(card);
-      }
-      list.innerHTML='';list.appendChild(host);
-    }catch(error){
-      window.CJTLiveReservations=[];
-      window.dispatchEvent(new CustomEvent('cjt:live-reservations-updated',{detail:{blocks:[]}}));
-      updateTopCount(0);
-      list.innerHTML=`<div class="live-res-error"><strong>Live reservation controls could not load.</strong><div class="meta" style="margin-top:5px">${esc(error.message)}</div></div>`;
-    }finally{
-      loading=false;
-      if(refreshButton){refreshButton.disabled=false;refreshButton.textContent='Refresh live blocks';}
-    }
+      const response=await fetch('/api/owner',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'reservation_update',id:r.id,status:action,note,expected_updated_at:r.updated_at})});
+      const data=await response.json();
+      if(!response.ok){if(response.status===409){await load();throw new Error('This inquiry changed or its hold expired. Review the refreshed record before trying again.');}throw new Error(data.error||'Unable to save');}
+      await load();window.dispatchEvent(new CustomEvent('cjt:reservation-updated'));
+      message.textContent='Decision saved. Direct availability updated; imported calendars clear on their next source sync. No guest message was sent.';
+    }catch(e){message.textContent=e.message;}finally{busy=false;render();}
   }
-
+  function open(id){
+    filter='all';focusId=id||'';search='';document.getElementById('inquiryFilter').value=filter;document.getElementById('inquirySearch').value=search;
+    if(window.CJTOwnerNav)window.CJTOwnerNav.openTab('reservations');else document.querySelector('[data-tab="reservations"]')?.click();
+    render();const card=[...list.children].find(c=>c.dataset.inquiryId===id);card?.focus();card?.scrollIntoView({block:'center'});
+  }
+  function reviewBlock(events){
+    document.getElementById('inquiryBlockReview')?.remove();
+    const dialog=document.createElement('dialog');dialog.id='inquiryBlockReview';dialog.className='block-review';
+    const links={airbnb:'https://www.airbnb.com/hosting/calendar',vrbo:'https://www.vrbo.com/', 'booking.com':'https://admin.booking.com/',houfy:'https://www.houfy.com/'};
+    dialog.innerHTML='<h2>Manage blocked dates</h2><p>Each listed source can block these nights. Revenue entries do not change availability.</p>';
+    for(const e of events){const item=document.createElement('div');item.innerHTML=`<h3>${esc(e.source)} · ${esc(e.start)} → ${esc(e.end)}</h3><p>${esc(e.summary||'Calendar block')}</p>`;
+      if(e.source==='direct'&&e.reservationId){const b=document.createElement('button');b.className='btn';b.textContent='Review inquiry / release dates';b.onclick=()=>{dialog.close();open(e.reservationId)};item.append(b);}
+      else{const p=document.createElement('p');p.textContent='Open the original booking or manual block on this platform. If it was imported there, remove it at its original source, then refresh after calendars synchronize.';item.append(p);if(links[e.source]){const a=document.createElement('a');a.href=links[e.source];a.target='_blank';a.rel='noopener';a.textContent=`Open ${e.source}`;item.append(a);}}
+      dialog.append(item);
+    }
+    const close=document.createElement('button');close.textContent='Close';close.className='btn ghost';close.onclick=()=>dialog.close();dialog.append(close);dialog.addEventListener('close',()=>dialog.remove());document.body.append(dialog);dialog.showModal();
+  }
   function install(){
-    section=document.getElementById('reservations');
-    list=document.getElementById('reservationList');
-    if(!section||!list){setTimeout(install,120);return;}
-
-    const heading=section.querySelector('h2');
-    if(heading)heading.textContent='Live Direct Bookings & Holds';
-    const description=section.querySelector('.sectionhead .meta');
-    if(description)description.textContent='Production direct-booking blocks with owner release controls.';
-
-    const actions=section.querySelector('.sectionhead > :last-child');
-    const toolbar=document.createElement('div');toolbar.className='live-res-toolbar';
-    refreshButton=document.createElement('button');refreshButton.className='btn ghost small';refreshButton.type='button';refreshButton.textContent='Refresh live blocks';
-    refreshButton.addEventListener('click',renderLiveReservations);
-    const liveLink=document.createElement('a');liveLink.className='btn ghost small';liveLink.href=LIVE_PORTAL;liveLink.target='_blank';liveLink.rel='noopener';liveLink.textContent='Open production controls';
-    toolbar.append(refreshButton,liveLink);
-    if(actions&&actions.tagName==='A')toolbar.appendChild(actions);
-    section.querySelector('.sectionhead')?.appendChild(toolbar);
-
-    const notice=document.createElement('div');notice.className='live-res-notice';notice.innerHTML='<strong>Live production source</strong>This tab reads the calendar feed that is connected to Airbnb, Vrbo and Booking.com. It does not use the separate preview database.';
-    section.querySelector('.sectionhead')?.insertAdjacentElement('afterend',notice);
-    statusHost=document.createElement('div');statusHost.className='live-res-status meta';
-    list.insertAdjacentElement('beforebegin',statusHost);
-
-    window.renderReservations=renderLiveReservations;
-    document.querySelector('.tab[data-tab="reservations"]')?.addEventListener('click',renderLiveReservations);
-    const portal=document.getElementById('portal');
-    const activate=()=>{if(portal&&!portal.classList.contains('hidden'))renderLiveReservations();};
-    activate();
-    if(portal)new MutationObserver(activate).observe(portal,{attributes:true,attributeFilter:['class']});
+    const section=document.getElementById('reservations');list=document.getElementById('reservationList');if(!section||!list)return;
+    section.querySelector('h2').textContent='Booking inquiries & reservations';
+    const description=section.querySelector('.sectionhead .meta');if(description)description.textContent='Review direct inquiries, record contract and payment milestones, and release direct holds.';
+    const toolbar=document.createElement('div');toolbar.className='inquiry-toolbar';toolbar.innerHTML='<label>View <select id="inquiryFilter"><option value="active">Active</option><option value="new">New</option><option value="processing">Processing</option><option value="accepted">Accepted</option><option value="confirmed">Confirmed</option><option value="closed">Closed / rejected</option><option value="all">All</option></select></label><label>Find inquiry <input id="inquirySearch" type="search" placeholder="Guest, dates, or booking ID"></label><button type="button" class="btn ghost">Refresh inquiries</button>';
+    list.before(toolbar);message=document.createElement('p');message.setAttribute('role','status');list.before(message);
+    toolbar.querySelector('select').onchange=e=>{focusId='';filter=e.target.value;render()};toolbar.querySelector('input').oninput=e=>{focusId='';search=e.target.value;render()};toolbar.querySelector('button').onclick=()=>load();window.renderReservations=render;render();
   }
-
-  install();
+  window.CJTInquiryWorkflow={open,reviewBlock};install();
 })();
