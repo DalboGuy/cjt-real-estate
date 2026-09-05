@@ -5,7 +5,8 @@
 
   const style=document.createElement('style');
   style.textContent=`
-    .phase5-backbar{display:none!important}
+    /* Override the older .phase5-backbar:not(.hidden) floating control. */
+    html[data-owner-interaction-rescue-loaded="1"] .phase5-backbar{display:none!important}
     #ownerRescueBack{position:fixed;right:18px;bottom:18px;z-index:10000;display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line,#dfe6e4);border-radius:999px;background:#fff;box-shadow:0 16px 42px rgba(13,43,49,.22);font-family:Inter,system-ui,sans-serif;transition:transform .15s ease,opacity .15s ease;max-width:min(360px,calc(100vw - 28px))}
     #ownerRescueBack.rescue-hidden{display:none!important}
     #ownerRescueBack button{border:0;border-radius:999px;padding:9px 13px;font:inherit;font-weight:850;background:var(--deep,#0d2b31);color:#fff;cursor:pointer;white-space:nowrap}
