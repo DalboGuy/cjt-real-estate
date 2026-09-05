@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>CJT Owner Portal · Documents</title>
+  <link rel="stylesheet" href="/assets/css/tokens.css">
+  <link rel="stylesheet" href="/assets/css/owner-shell.css">
+  <link rel="stylesheet" href="/assets/css/modules.css">
+</head>
+<body>
+  <section id="loginShell" class="login-shell hidden">
+    <div class="login-card">
+      <div class="brand" style="color:var(--cjt-ink)">CJT REALTY<small style="color:var(--cjt-muted)">Owner Operations</small></div>
+      <h1>Documents</h1>
+      <p>Use the existing Owner Portal passcode for this preview.</p>
+      <form id="loginForm"><input id="passcode" type="password" placeholder="Owner passcode" autocomplete="current-password" required><button class="btn btn-primary" type="submit">Sign in</button></form>
+      <div id="loginMsg" class="login-msg"></div>
+    </div>
+  </section>
+
+  <div id="ownerBackdrop" class="backdrop hidden"></div>
+  <div id="ownerApp" class="owner-app hidden">
+    <aside id="ownerSidebar" class="sidebar">
+      <div class="brand">CJT REALTY<small>Owner Operations</small></div>
+      <div class="property-chip"><strong>Sand & Sea Manor</strong><span>1720 Avenue M · Galveston, TX</span></div>
+      <nav class="nav" aria-label="Owner Portal">
+        <a href="/owner-v1"><span>Dashboard</span></a>
+        <a href="/owner-v1/communications"><span>Communications</span></a>
+        <a href="/owner-v1/reservations"><span>Reservations</span></a>
+        <button data-coming-soon="Calendar"><span>Calendar</span><span class="count">Soon</span></button>
+        <button data-coming-soon="Pricing"><span>Pricing</span><span class="count">Soon</span></button>
+        <button data-coming-soon="Financials"><span>Financials</span><span class="count">Soon</span></button>
+        <div class="nav-section">Property</div>
+        <button data-coming-soon="Property"><span>Property</span></button>
+        <button data-coming-soon="Maintenance"><span>Maintenance</span></button>
+        <a class="active" href="/owner-v1/documents"><span>Documents</span><span class="count">Plan</span></a>
+        <div class="nav-section">Reporting</div>
+        <button data-coming-soon="Analytics"><span>Analytics</span></button>
+        <div class="nav-section">System</div>
+        <a href="/account-v1"><span>My Account</span></a>
+        <a href="/admin-v1"><span>Admin</span><span class="count">Preview</span></a>
+        <button data-coming-soon="Settings"><span>Settings</span></button>
+      </nav>
+      <div class="sidebar-footer"><a href="/" target="_blank" rel="noopener">Guest site ↗</a><button id="logout" type="button">Sign out</button></div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div style="display:flex;align-items:center;gap:10px"><button id="mobileMenu" class="icon-btn mobile-menu" type="button" aria-label="Open menu">☰</button><div><h1>Documents</h1><div class="meta">Cloud-first document center · planning view</div></div></div>
+        <div class="top-actions"><a class="btn btn-secondary" href="/admin-v1">Admin Preview</a></div>
+      </header>
+
+      <div class="content">
+        <div class="section-title"><div><h2>Cloud Document Center</h2><p>The portal will organize and surface documents while the authoritative files stay in cloud storage.</p></div><span class="status-pill">Plan recorded</span></div>
+        <div id="moduleNotice" class="notice hidden"></div>
+
+        <section class="grid">
+          <article class="card span-8">
+            <div class="card-head"><div><h3>Design principle</h3><p>Keep large files out of the application database whenever practical.</p></div><span class="badge good">Cloud first</span></div>
+            <div class="empty">The Owner Portal should act as a searchable index and operating layer. Documents remain in the selected cloud provider, and the portal stores the document name, category, cloud link/ID, source, property/reservation/vendor relationships, dates, tags and access metadata.</div>
+            <div class="split-metrics" style="margin-top:14px">
+              <div class="mini"><b>1</b><span>Authoritative cloud copy</span></div>
+              <div class="mini"><b>0</b><span>Duplicate filing systems</span></div>
+              <div class="mini"><b>Hands-off</b><span>Preferred intake</span></div>
+            </div>
+          </article>
+
+          <article class="card span-4">
+            <div class="card-head"><div><h3>Cloud targets</h3><p>Provider can be selected or mixed later.</p></div></div>
+            <div class="list">
+              <div class="list-row"><div><strong>Google Drive</strong><span>Candidate for shared folders and automated filing.</span></div><span class="badge">Option</span></div>
+              <div class="list-row"><div><strong>Dropbox</strong><span>Candidate for document storage and linked access.</span></div><span class="badge">Option</span></div>
+              <div class="list-row"><div><strong>OneDrive / SharePoint</strong><span>Possible future Microsoft-centered storage.</span></div><span class="badge">Option</span></div>
+            </div>
+          </article>
+
+          <article class="card span-6">
+            <div class="card-head"><div><h3>Automatic document intake</h3><p>Preferred path: documents arrive without someone manually uploading them.</p></div><span class="badge warn">Planned</span></div>
+            <div class="list">
+              <div class="list-row"><div><strong>Email attachments</strong><span>Gmail rules identify invoices, statements, contracts, receipts and vendor documents, save them to cloud storage, then index them here.</span></div></div>
+              <div class="list-row"><div><strong>Generated reports</strong><span>Owner statements, financial reports and exports can automatically save a cloud copy when generated.</span></div></div>
+              <div class="list-row"><div><strong>Reservation documents</strong><span>Signed rental agreements and booking-related documents should attach to the matching reservation automatically when possible.</span></div></div>
+              <div class="list-row"><div><strong>Vendor / maintenance records</strong><span>Invoices, warranties and service records should route to the property, vendor and maintenance item based on email/source metadata.</span></div></div>
+              <div class="list-row"><div><strong>Manual upload</strong><span>Available as a fallback, not the normal operating method.</span></div></div>
+            </div>
+          </article>
+
+          <article class="card span-6">
+            <div class="card-head"><div><h3>Document organization</h3><p>Browse by business context instead of only by folders.</p></div></div>
+            <div class="split-metrics" style="grid-template-columns:1fr 1fr">
+              <div class="mini"><b>Reservations</b><span>Agreements, cancellations, guest acknowledgments</span></div>
+              <div class="mini"><b>Financial</b><span>Statements, payouts, invoices, receipts</span></div>
+              <div class="mini"><b>Property</b><span>Insurance, permits, plans, licenses</span></div>
+              <div class="mini"><b>Maintenance</b><span>Warranties, manuals, service records</span></div>
+              <div class="mini"><b>Vendors</b><span>Contracts, W-9s, proposals, COIs</span></div>
+              <div class="mini"><b>Operations</b><span>SOPs, checklists, house rules, inspections</span></div>
+            </div>
+          </article>
+
+          <article class="card span-8">
+            <div class="card-head"><div><h3>Planned automation flow</h3><p>How a document should get from an outside source into the portal.</p></div></div>
+            <div class="list">
+              <div class="list-row"><div><strong>1 · Detect</strong><span>Email, generated report, signed contract, connected cloud folder or manual fallback.</span></div></div>
+              <div class="list-row"><div><strong>2 · Classify</strong><span>Determine document type, property, reservation, vendor, statement period and useful tags.</span></div></div>
+              <div class="list-row"><div><strong>3 · File</strong><span>Save or confirm the authoritative copy in the configured cloud location.</span></div></div>
+              <div class="list-row"><div><strong>4 · Index</strong><span>Write a lightweight portal record with cloud pointer, metadata and relationships.</span></div></div>
+              <div class="list-row"><div><strong>5 · Surface</strong><span>Show the same document from Reservations, Financials, Maintenance, Vendors or Documents without duplicating the file.</span></div></div>
+            </div>
+          </article>
+
+          <article class="card span-4">
+            <div class="card-head"><div><h3>Guardrails</h3><p>Rules to preserve as we build.</p></div></div>
+            <div class="list">
+              <div class="list-row"><div><strong>No large-file database</strong><span>Neon stores metadata and relationships, not the normal file payload.</span></div><span class="badge good">Keep</span></div>
+              <div class="list-row"><div><strong>No manual-first workflow</strong><span>Email/cloud automation is the preferred intake mechanism.</span></div><span class="badge good">Keep</span></div>
+              <div class="list-row"><div><strong>One source of truth</strong><span>A document can appear in many modules while pointing to one cloud object.</span></div><span class="badge good">Keep</span></div>
+              <div class="list-row"><div><strong>Access control</strong><span>Document visibility will follow user roles and property access.</span></div><span class="badge warn">Build</span></div>
+            </div>
+          </article>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script src="/assets/js/owner-shell.js"></script>
+  <script src="/assets/js/static-auth.js"></script>
+</body>
+</html>
