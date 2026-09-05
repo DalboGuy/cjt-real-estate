@@ -29,5 +29,18 @@
     async function refreshCalendar(){try{const r=await fetch('/api/calendar',{cache:'no-store'});if(!r.ok)throw new Error();const d=await r.json();blocked=new Set(d.blockedDates||[]);statusEl.textContent=`Availability synced · last checked ${new Date(d.checkedAt).toLocaleString()}`;render()}catch{statusEl.textContent='Live availability is temporarily unavailable. Please email us to confirm dates.';render()}}refreshCalendar();
     document.getElementById('bookingForm').addEventListener('submit',async e=>{e.preventDefault();const form=e.currentTarget,btn=document.getElementById('submitBtn'),msg=document.getElementById('formMessage'),f=new FormData(form);msg.className='form-message';msg.textContent='';btn.disabled=true;btn.textContent='Placing hold…';try{const r=await fetch('/api/inquiries',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.fromEntries(f.entries()))});const d=await r.json();if(!r.ok)throw new Error(d.message||'We could not place the hold.');msg.className='form-message show';msg.innerHTML=`<strong>Your dates are on temporary hold.</strong><br>Reference: ${d.reservation.id}<br>Hold expires: ${new Date(d.reservation.hold_expires_at).toLocaleString()}<br>CJT will review your request and follow up with the direct-booking details.`;form.reset();await refreshCalendar()}catch(err){msg.className='form-message error show';msg.textContent=err.message}finally{btn.disabled=false;btn.textContent='Hold Dates & Request Direct Rate'}});
   </script>
+  <!--Start of Tawk.to Script-->
+  <script type="text/javascript">
+  var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+  (function(){
+  var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+  s1.async=true;
+  s1.src='https://embed.tawk.to/6a9c721ed0128c3449822367/1k1phrige';
+  s1.charset='UTF-8';
+  s1.setAttribute('crossorigin','*');
+  s0.parentNode.insertBefore(s1,s0);
+  })();
+  </script>
+  <!--End of Tawk.to Script-->
 </body>
 </html>
