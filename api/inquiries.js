@@ -10,17 +10,23 @@ function clean(v,max=500){return String(v||'').trim().slice(0,max);}
 function validDate(v){return /^\d{4}-\d{2}-\d{2}$/.test(String(v||''));}
 function makeId(checkin){return `DB-${String(checkin).replace(/-/g,'')}-${crypto.randomBytes(3).toString('hex').toUpperCase()}`;}
 function tripTypeFromNotes(notes){const m=String(notes||'').match(/^Trip type:\s*(.+)$/m);return m?clean(m[1],120):'';}
+function bookingTestMode(req){
+  return process.env.VERCEL_ENV==='preview' &&
+    process.env.VERCEL_GIT_COMMIT_REF==='customer-v3-ops' &&
+    String(req.query&&req.query.booking_test||'')==='1';
+}
 
 module.exports=async function(req,res){
   if(req.method!=='POST') return res.status(405).json({error:'method_not_allowed'});
   try{
+    const testMode=bookingTestMode(req);
     await ensureSchema();
     await expireHolds();
     const body=typeof req.body==='string'?JSON.parse(req.body||'{}'):(req.body||{});
     const guest_name=clean(body.name,120),guest_email=clean(body.email,180),guest_phone=clean(body.phone,60),notes=clean(body.message,2000);
-    const checkin=clean(body.checkin,10),checkout=clean(body.checkout,10),guests=Number(body.guests),tripType=tripTypeFromNotes(notes);
-    if(!guest_name||!guest_email.includes('@')||!guest_phone||!tripType||!validDate(checkin)||!validDate(checkout)||!Number.isInteger(guests)||guests<1||guests>MAX_GUESTS){
-      return res.status(400).json({error:'invalid_request',message:'Please complete all required booking fields, including phone and trip type.'});
+    const checkin=clean(body.checkin,10),checkout=clean(body.checkout,10),guests=Number(body.guests),tripType=clean(body.trip_type,120)||tripTypeFromNotes(notes)||(testMode?'Customer booking test':'');
+    if(!guest_name||!guest_email.includes('@')||(!testMode&&!guest_phone)||!tripType||!validDate(checkin)||!validDate(checkout)||!Number.isInteger(guests)||guests<1||guests>MAX_GUESTS){
+      return res.status(400).json({error:'invalid_request',message:testMode?'Complete the required test booking fields.':'Please complete all required booking fields, including phone and trip type.'});
     }
     if(checkout<=checkin) return res.status(400).json({error:'invalid_dates',message:'Check-out must be after check-in.'});
     const today=new Date().toISOString().slice(0,10);
@@ -33,18 +39,43 @@ module.exports=async function(req,res){
     }
 
     const sql=db();
-    const overlap=await sql`
-      SELECT id FROM reservations
-      WHERE status IN ('inquiry_hold','hold_verified','contract_sent','contract_signed','confirmed')
-        AND daterange(checkin,checkout,'[)') && daterange(${checkin}::date,${checkout}::date,'[)')
-      LIMIT 1
-    `;
-    if(overlap.length) return res.status(409).json({error:'dates_unavailable',message:'Those dates are currently being held or are booked.'});
+    const overlap=testMode
+      ? await sql`
+          SELECT id FROM reservations
+          WHERE status IN ('contract_sent','contract_signed','confirmed')
+            AND daterange(checkin,checkout,'[)') && daterange(${checkin}::date,${checkout}::date,'[)')
+          LIMIT 1
+        `
+      : await sql`
+          SELECT id FROM reservations
+          WHERE status IN ('inquiry_hold','hold_verified','contract_sent','contract_signed','confirmed')
+            AND daterange(checkin,checkout,'[)') && daterange(${checkin}::date,${checkout}::date,'[)')
+          LIMIT 1
+        `;
+    if(overlap.length) return res.status(409).json({error:'dates_unavailable',message:testMode?'Those dates are booked.':'Those dates are currently being held or are booked.'});
 
     let quote;
     try{quote=await calculateQuote(checkin,checkout);}catch(e){
       if(e.code==='minimum_nights')return res.status(400).json({error:e.code,message:e.message,minNights:e.minNights});
       throw e;
+    }
+
+    if(testMode){
+      res.setHeader('Cache-Control','no-store');
+      return res.status(200).json({
+        testMode:true,
+        reservation:{
+          id:`TEST-${String(checkin).replace(/-/g,'')}-${crypto.randomBytes(2).toString('hex').toUpperCase()}`,
+          guest_id:null,
+          checkin,
+          checkout,
+          status:'test_only',
+          hold_expires_at:null
+        },
+        quote,
+        statusUrl:null,
+        message:'Test complete. No dates were held and no reservation or guest record was created.'
+      });
     }
 
     const guest=await upsertGuest({name:guest_name,email:guest_email,phone:guest_phone});
