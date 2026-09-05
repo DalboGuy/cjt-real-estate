@@ -20,6 +20,7 @@ module.exports=async function(req,res){
   if(req.method!=='POST') return res.status(405).json({error:'method_not_allowed'});
   try{
     const testMode=bookingTestMode(req);
+    if(String(req.query&&req.query.booking_test||'')==='1'&&!testMode)return res.status(400).json({error:'test_unavailable',message:'Booking test is unavailable on this deployment.'});
     await ensureSchema();
     await expireHolds();
     const body=typeof req.body==='string'?JSON.parse(req.body||'{}'):(req.body||{});
@@ -58,6 +59,12 @@ module.exports=async function(req,res){
     try{quote=await calculateQuote(checkin,checkout);}catch(e){
       if(e.code==='minimum_nights')return res.status(400).json({error:e.code,message:e.message,minNights:e.minNights});
       throw e;
+    }
+
+    if(body.expected_quote){
+      if(!quote.pricingReady||JSON.stringify(body.expected_quote)!==JSON.stringify(quote)){
+        return res.status(409).json({error:'quote_changed',message:'Pricing has changed. Check availability and price again before placing your hold.'});
+      }
     }
 
     if(testMode){

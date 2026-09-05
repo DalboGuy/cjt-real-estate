@@ -97,6 +97,12 @@ module.exports=async function(req,res){
       return res.status(428).json({error:'password_change_required',user:{id:user.id,name:user.name,email:user.email,role:user.role}});
     }
 
+    if(req.method==='POST'&&['pricing_preview','pricing_publish','pricing_history'].includes(body.action)){
+      res.setHeader('Cache-Control','no-store');
+      try{return res.status(200).json(await require('../lib/pricing-adjustments').handle(sql,body,user));}
+      catch(e){if(e.status)return res.status(e.status).json({error:e.message});throw e;}
+    }
+
     if(req.method==='GET'){
       await expireHolds();
       const reservations=await sql`

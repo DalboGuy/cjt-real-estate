@@ -12,6 +12,7 @@ const OWNER_MODULES=[
   '/owner-finance-import.js?v=20260904-2',
   '/owner-live-reservations.js?v=20260905-inquiries',
   '/owner-booking-settings.js?v=20260904-2',
+  '/owner-pricing-adjustments.js?v=20260905-1',
   '/owner-detail-drawer.js?v=20260904-1',
   '/owner-phase4-drilldowns.js?v=inquiries-20260904-3',
   '/owner-phase5-state.js?v=20260904-1',
