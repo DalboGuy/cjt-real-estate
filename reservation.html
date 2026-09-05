@@ -2,44 +2,95 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Reservation Status | Sand & Sea Manor</title>
-  <style>
-    :root{--deep:#0d2b31;--ink:#14343a;--muted:#6b7d80;--paper:#fffdf9;--cream:#f7f1e7;--line:#dfe6e4;--good:#edf7f1;--warn:#fff8df}
-    *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif}.wrap{width:min(760px,calc(100% - 28px));margin:auto}.top{background:var(--deep);color:#fff;padding:28px 0}.top a{color:#fff;text-decoration:none;font-weight:800}.hero{padding:58px 0 22px}.eyebrow{text-transform:uppercase;letter-spacing:.14em;font-size:.72rem;font-weight:800;color:var(--muted)}h1{font-family:Georgia,serif;font-size:clamp(2.4rem,7vw,4.4rem);font-weight:500;line-height:1;margin:.45rem 0}.lead{color:var(--muted);font-size:1.05rem}.card{border:1px solid var(--line);border-radius:22px;background:#fff;padding:24px;margin:20px 0;box-shadow:0 16px 40px rgba(13,43,49,.07)}.status-pill{display:inline-block;padding:8px 12px;border-radius:999px;background:var(--good);font-weight:800}.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px}.item{border-top:1px solid var(--line);padding-top:13px}.item span{display:block;color:var(--muted);font-size:.8rem}.item strong{display:block;margin-top:3px}.steps{display:grid;gap:10px;margin-top:18px}.step{display:flex;gap:12px;align-items:flex-start;padding:12px;border-radius:14px;background:#fafcfb}.step .dot{width:13px;height:13px;border-radius:50%;background:#cfd8d6;margin-top:5px;flex:0 0 auto}.step.done .dot{background:var(--deep)}.step.active{background:var(--warn)}.quote{display:grid;gap:7px;margin-top:12px}.row{display:flex;justify-content:space-between;gap:14px}.row.total{border-top:1px solid var(--line);padding-top:10px;margin-top:5px;font-weight:900}.message{padding:16px;border-radius:14px;background:var(--cream);color:var(--muted)}footer{padding:34px 0 60px;color:var(--muted);font-size:.86rem}@media(max-width:600px){.grid{grid-template-columns:1fr}.card{padding:19px}}
-  </style>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#0d2b31" />
+  <title>Guest App | Sand & Sea Manor</title>
+  <link rel="stylesheet" href="/customer-app.css?v=20260904-1" />
 </head>
 <body>
-  <div class="top"><div class="wrap"><a href="/">SAND & SEA MANOR</a></div></div>
-  <main class="wrap">
-    <section class="hero"><div class="eyebrow">Direct booking</div><h1>Your reservation status</h1><p class="lead">Use this private link to see where your Sand & Sea Manor booking stands.</p></section>
-    <div id="content" class="card"><p>Loading reservation…</p></div>
+<div class="app-shell">
+  <header class="app-top">
+    <div class="top-inner">
+      <div class="brand">SAND & SEA MANOR<small>Guest App · Galveston, Texas</small></div>
+      <div class="privacy">Private reservation access</div>
+    </div>
+  </header>
+
+  <main class="app-main">
+    <section id="loadingScreen" class="screen active" data-screen="loading"><div id="appLoading" class="loading">Loading your stay…</div></section>
+
+    <section class="screen" data-screen="home">
+      <div class="screen-heading"><div class="eyebrow">Sand & Sea Manor</div><h1 id="homeGreeting">Your Galveston stay</h1><p class="lead">Everything for your direct booking in one place.</p></div>
+      <article class="hero-card">
+        <div class="eyebrow">Upcoming stay</div>
+        <div id="homeDates" class="stay-dates">Loading…</div>
+        <div class="countdown"><strong id="countdownValue">—</strong><span id="countdownLabel">until check-in</span></div>
+        <div id="homeTotalWrap" hidden><span style="color:rgba(255,255,255,.68);font-size:.8rem">Reservation total</span><strong id="homeTotal" style="display:block;font-size:1.2rem"></strong></div>
+        <div class="hero-actions"><button class="btn btn-light" data-go="stay">View My Stay</button><button class="btn btn-outline" style="border-color:rgba(255,255,255,.35);color:#fff" data-go="messages">Messages</button></div>
+      </article>
+      <article class="card">
+        <div class="card-head"><div><h2>Booking progress</h2><p>Your current direct-booking status.</p></div></div>
+        <div class="status-grid">
+          <div id="reservationBox" class="status-box"><span>Reservation</span><strong id="reservationState">Loading</strong></div>
+          <div id="agreementBox" class="status-box"><span>Agreement</span><strong id="agreementState">Loading</strong></div>
+          <div id="depositBox" class="status-box"><span>Deposit</span><strong id="depositState">Loading</strong></div>
+        </div>
+      </article>
+      <article class="card"><div class="card-head"><div><h2>Next step</h2></div></div><div class="next-step"><strong id="nextTitle">Loading…</strong><span id="nextBody"></span></div></article>
+      <div class="quick-grid">
+        <button class="quick" data-go="messages"><strong>Messages</strong><span id="homeMessageMeta">Private conversation with CJT</span></button>
+        <button class="quick" data-go="house"><strong>House</strong><span>Property guide and stay information</span></button>
+        <button class="quick" data-go="stay"><strong>My Stay</strong><span>Dates, guests, quote and booking timeline</span></button>
+        <button class="quick" data-go="help"><strong>Help</strong><span>Contact CJT and find support</span></button>
+      </div>
+    </section>
+
+    <section class="screen" data-screen="stay">
+      <div class="section-title"><div class="eyebrow">My Stay</div><h1>Reservation</h1><p>Your dates, booking progress and direct-booking quote.</p></div>
+      <article id="stayContent" class="card"><div class="loading">Loading reservation…</div></article>
+      <article class="card"><div class="card-head"><div><h2>Stay pricing</h2><p>Pricing attached to this reservation.</p></div></div><div id="quoteContent"></div></article>
+    </section>
+
+    <section class="screen" data-screen="messages">
+      <div class="section-title"><div class="eyebrow">Messages</div><h1>Talk with CJT</h1><p>Your private conversation stays attached to this reservation.</p></div>
+      <article class="card chat-card">
+        <div class="chat-head"><div><h2>Guest messages</h2><p style="margin:3px 0 0;color:var(--muted);font-size:.86rem">Sand & Sea Manor</p></div><span id="chatState" class="chat-state">Open chat</span></div>
+        <div id="chatList" class="chat-list"><div class="chat-empty">Open this tab to load your messages.</div></div>
+        <form id="chatForm" class="chat-form"><textarea id="chatBody" maxlength="4000" placeholder="Ask CJT a question or send an update…" required></textarea><button id="chatSend" class="btn btn-primary" type="submit">Send</button><div class="chat-note">Private reservation conversation. Do not send payment card information here.</div></form>
+      </article>
+    </section>
+
+    <section class="screen" data-screen="house">
+      <div class="section-title"><div class="eyebrow">House</div><h1>Your house guide</h1><p>The guest manual will live here so stay information is easy to find on a phone.</p></div>
+      <div class="guide-grid">
+        <article class="guide-card"><h3>Property</h3><div class="fact-list"><div class="fact"><span>Bedrooms</span><strong>5</strong></div><div class="fact"><span>Bathrooms</span><strong>3</strong></div><div class="fact"><span>Maximum guests</span><strong>14</strong></div></div></article>
+        <article class="guide-card"><h3>Outdoor spaces</h3><p>Private hot tub and a separate fire-pit area. The property does not have a pool.</p></article>
+        <article class="guide-card"><h3>Arrival & parking</h3><p>Detailed arrival, parking and access instructions will be published here from the CJT guest manual.</p></article>
+        <article class="guide-card"><h3>During your stay</h3><p>Wi-Fi, HVAC, appliance, hot-tub, fire-pit and house guidance will be searchable here.</p></article>
+        <article class="guide-card"><h3>Checkout</h3><p>Checkout instructions and departure reminders will appear here before the end of the stay.</p></article>
+        <article class="guide-card"><h3>Guest manual</h3><p>This section is the app shell. The existing Digital Guest Manual is the source we will migrate into it next.</p></article>
+      </div>
+    </section>
+
+    <section class="screen" data-screen="help">
+      <div class="section-title"><div class="eyebrow">Help</div><h1>Need something?</h1><p>Keep guest support connected to the reservation instead of scattered across different channels.</p></div>
+      <article class="card">
+        <h2>Contact CJT</h2><p class="lead" style="font-size:.92rem">For property or reservation questions, Messages is the preferred channel because it stays with your booking.</p>
+        <div class="help-actions"><button class="help-action" data-go="messages"><div>Message CJT<br><span>Open your reservation conversation</span></div><strong>Open</strong></button><a class="help-action" href="mailto:cjtrealestateholdings@gmail.com?subject=Sand%20%26%20Sea%20Manor%20Guest%20Help"><div>Email CJT<br><span>cjtrealestateholdings@gmail.com</span></div><strong>Email</strong></a></div>
+      </article>
+      <article class="card"><h2>Property issue</h2><div class="notice">The next support build will add issue categories, photo upload and automatic creation of a CJT Owner Portal task. For now, send the issue through Messages.</div></article>
+      <article class="card"><h2>Emergency</h2><p class="lead" style="font-size:.9rem">For an immediate life-safety emergency, contact local emergency services first. Then notify CJT through Messages when safe to do so.</p></article>
+    </section>
   </main>
-  <footer><div class="wrap">CJT Real Estate Holdings LLC · 1720 Avenue M, Galveston, TX · cjtrealestateholdings@gmail.com</div></footer>
-  <script>
-    const el=document.getElementById('content');
-    const token=new URLSearchParams(location.search).get('token');
-    const money=v=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(Number(v||0));
-    const date=s=>s?new Date(String(s).includes('T')?s:s+'T00:00:00').toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'}):'—';
-    const time=s=>s?new Date(s).toLocaleString():'—';
-    const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-    function stepHtml(r){
-      const order=['inquiry_hold','hold_verified','contract_sent','contract_signed','confirmed'];
-      const labels=['Dates held','CJT review','Agreement sent','Agreement signed','Reservation confirmed'];
-      const current=order.indexOf(r.status);
-      if(['expired','released','cancelled'].includes(r.status))return `<div class="message">This reservation is currently marked <strong>${esc(r.statusLabel)}</strong>. Contact CJT if you need help.</div>`;
-      return `<div class="steps">${labels.map((label,i)=>`<div class="step ${i<current?'done':''} ${i===current?'active':''}"><span class="dot"></span><div><strong>${label}</strong>${i===current?'<br><small>Current step</small>':''}</div></div>`).join('')}</div>`;
-    }
-    function quoteHtml(q){if(!q)return '';let rows=`<div class="quote"><div class="row"><span>Nightly stay</span><strong>${money(q.nightlySubtotal)}</strong></div>`;if(Number(q.discountAmount)>0)rows+=`<div class="row"><span>${esc(q.discountName||'Discount')}</span><strong>−${money(q.discountAmount)}</strong></div>`;if(q.pricingReady){rows+=`<div class="row"><span>Cleaning</span><strong>${money(q.cleaningFee)}</strong></div><div class="row"><span>Taxes</span><strong>${money(q.taxes)}</strong></div><div class="row total"><span>Total stay</span><strong>${money(q.total)}</strong></div>`;if(q.depositDue!=null)rows+=`<div class="row"><span>Deposit due</span><strong>${money(q.depositDue)}</strong></div>`}return rows+'</div>'}
-    async function load(){
-      if(!token){el.innerHTML='<div class="message">This reservation link is incomplete.</div>';return}
-      try{
-        const r=await fetch('/api/reservation-status?token='+encodeURIComponent(token),{cache:'no-store'});const d=await r.json();if(!r.ok)throw new Error(d.message||'Unable to load reservation.');const x=d.reservation;
-        el.innerHTML=`<span class="status-pill">${esc(x.statusLabel)}</span><div class="grid"><div class="item"><span>Reservation</span><strong>${esc(x.id)}</strong></div><div class="item"><span>Guests</span><strong>${esc(x.guests)}</strong></div><div class="item"><span>Check-in</span><strong>${date(x.checkin)}</strong></div><div class="item"><span>Check-out</span><strong>${date(x.checkout)}</strong></div>${x.holdExpiresAt?`<div class="item"><span>Temporary hold expires</span><strong>${time(x.holdExpiresAt)}</strong></div>`:''}</div>${stepHtml(x)}${quoteHtml(d.quote)}`;
-      }catch(e){el.innerHTML=`<div class="message">${esc(e.message)}</div>`}
-    }
-    load();
-  </script>
-  <script src="/customer-reservation-chat.js?v=20260904-1"></script>
+
+  <nav class="bottom-nav" aria-label="Guest app navigation"><div class="bottom-inner">
+    <button class="nav-btn active" data-tab="home">Home</button>
+    <button class="nav-btn" data-tab="stay">My Stay</button>
+    <button class="nav-btn" data-tab="messages">Messages<span id="messageBadge" class="nav-badge"></span></button>
+    <button class="nav-btn" data-tab="house">House</button>
+    <button class="nav-btn" data-tab="help">Help</button>
+  </div></nav>
+</div>
+<script src="/customer-app.js?v=20260904-1"></script>
 </body>
 </html>
