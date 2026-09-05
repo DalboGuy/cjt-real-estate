@@ -5,10 +5,16 @@ const { calculateQuote } = require('../lib/pricing');
 const MAX_GUESTS=14;
 function clean(v,max=100){return String(v||'').trim().slice(0,max);}
 function validDate(v){return /^\d{4}-\d{2}-\d{2}$/.test(String(v||''));}
+function bookingTestMode(req){
+  return process.env.VERCEL_ENV==='preview' &&
+    process.env.VERCEL_GIT_COMMIT_REF==='customer-v3-ops' &&
+    String(req.query&&req.query.booking_test||'')==='1';
+}
 
 module.exports=async function(req,res){
   if(req.method!=='POST')return res.status(405).json({error:'method_not_allowed'});
   try{
+    const testMode=bookingTestMode(req);
     await ensureSchema();
     await expireHolds();
     const body=typeof req.body==='string'?JSON.parse(req.body||'{}'):(req.body||{});
@@ -24,13 +30,20 @@ module.exports=async function(req,res){
     if(requested.some(d=>otaBlocked.has(d)))return res.status(409).json({error:'dates_unavailable',message:'One or more requested nights are unavailable.'});
 
     const sql=db();
-    const overlap=await sql`
-      SELECT id FROM reservations
-      WHERE status IN ('inquiry_hold','hold_verified','contract_sent','contract_signed','confirmed')
-        AND daterange(checkin,checkout,'[)') && daterange(${checkin}::date,${checkout}::date,'[)')
-      LIMIT 1
-    `;
-    if(overlap.length)return res.status(409).json({error:'dates_unavailable',message:'Those dates are currently being held or are booked.'});
+    const overlap=testMode
+      ? await sql`
+          SELECT id FROM reservations
+          WHERE status IN ('contract_sent','contract_signed','confirmed')
+            AND daterange(checkin,checkout,'[)') && daterange(${checkin}::date,${checkout}::date,'[)')
+          LIMIT 1
+        `
+      : await sql`
+          SELECT id FROM reservations
+          WHERE status IN ('inquiry_hold','hold_verified','contract_sent','contract_signed','confirmed')
+            AND daterange(checkin,checkout,'[)') && daterange(${checkin}::date,${checkout}::date,'[)')
+          LIMIT 1
+        `;
+    if(overlap.length)return res.status(409).json({error:'dates_unavailable',message:testMode?'Those dates are booked.':'Those dates are currently being held or are booked.'});
 
     let quote;
     try{quote=await calculateQuote(checkin,checkout);}catch(e){
@@ -38,7 +51,7 @@ module.exports=async function(req,res){
       throw e;
     }
     res.setHeader('Cache-Control','no-store');
-    return res.status(200).json({available:true,quote,checkedAt:new Date().toISOString()});
+    return res.status(200).json({available:true,quote,testMode,checkedAt:new Date().toISOString()});
   }catch(e){
     console.error('quote error',e);
     return res.status(500).json({error:'quote_unavailable',message:'We could not calculate this stay right now. You can still contact CJT directly.'});
