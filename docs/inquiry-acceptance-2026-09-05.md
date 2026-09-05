@@ -2,6 +2,20 @@
 
 Status: Built; full booking-cycle acceptance pending. One availability defect reproduced and corrected in this branch; not yet deployed.
 
+## Follow-up verification
+
+Preview deployment `dpl_D4kmaGsVHi4QKdscY8sivgmj4cYs` is READY at commit `91cb752194b98fb93ed4fd9a27864f6ab8d6725c`.
+
+The direct local database connection still could not be used. A test-only SQL transport relayed the application's SQL to the Neon connector, pinned to isolated branch `br-restless-lake-ave8snh6`. Queries and route logic were real; HTTP/Neon-driver transport and live OTA responses were not tested by this method. No production records were changed.
+
+- Main schema initialization: PASS against the isolated database.
+- Workflow assertions through Processing, Accept, contract sent, contract signed, deposit recorded, Release Dates, prohibited transitions, and stale-version rejection: PASS. Connector execution serialized the competing updates, so this demonstrates stale-write protection, not simultaneous request timing.
+- Original workflow suite stopped at the expired-hold fixture: a previous test already occupied its fixed 2090 dates. This was a fixture collision, not a failed workflow assertion. The suite as a whole must not be reported as passing.
+- `tests/inquiry-cycle-isolated.cjs`: PASS on unused 2097 dates. Real inquiry handler created guest schema, guest record, reservation hold, audit event, and status URL. Guest status returned the hold and then released status. Active reservations included the hold before rejection and excluded it afterward. An expired hold rejected acceptance and became expired through expiration processing.
+- Browser check: the preview opens the Vercel login page. Signed-in browser acceptance remains pending; preview database isolation must be confirmed before any browser submission.
+
+Next gate: authenticated preview inspection and environment isolation, followed by owner-button/browser refresh checks. Keep PR #10 in draft until those checks are complete.
+
 Production inspected: `3bdeb187463b0e9b97f41fcfe39227484ccb7fe6`, deployment `dpl_3xxKv9JpM7SpKsKuDVG8aJUDLU7r`.
 
 ## Confirmed defect and correction
