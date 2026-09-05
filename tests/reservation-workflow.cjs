@@ -28,6 +28,7 @@ const {updateReservation}=require('../lib/reservation-workflow');
   const expired=await fixture(3,"now()-interval '1 second'");assert.equal((await act(expired,'accept')).code,409);
   const rejected=await fixture(4);assert.equal((await act(rejected,'reject',{note:'Cannot accommodate'})).reservation.review_stage,'rejected');
   const [event]=await sql`SELECT metadata FROM booking_events WHERE reservation_id=${rejected}`;assert.equal(event.metadata.note,'Cannot accommodate');
+  const legacy=await fixture(5,'NULL');assert.equal((await act(legacy,'release_dates')).code,200);
   const [count]=await sql`SELECT count(*)::int AS n FROM booking_events WHERE reservation_id=${id}`;assert.equal(count.n,6);
   assert.equal((await act('missing','release_dates')).code,404);
   console.log('PASS: migration, decisions, milestones, rejection, expiration, concurrency, and atomic audit history');
