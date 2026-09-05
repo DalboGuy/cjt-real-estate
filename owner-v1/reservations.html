@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>CJT Owner Portal · Reservations</title>
+  <link rel="stylesheet" href="/assets/css/tokens.css">
+  <link rel="stylesheet" href="/assets/css/owner-shell.css">
+  <link rel="stylesheet" href="/assets/css/modules.css">
+</head>
+<body>
+  <section id="loginShell" class="login-shell hidden">
+    <div class="login-card">
+      <div class="brand" style="color:var(--cjt-ink)">CJT REALTY<small style="color:var(--cjt-muted)">Owner Operations</small></div>
+      <h1>Reservations</h1>
+      <p>Use the existing Owner Portal passcode.</p>
+      <form id="loginForm"><input id="passcode" type="password" placeholder="Owner passcode" autocomplete="current-password" required><button class="btn btn-primary" type="submit">Sign in</button></form>
+      <div id="loginMsg" class="login-msg"></div>
+    </div>
+  </section>
+
+  <div id="ownerBackdrop" class="backdrop hidden"></div>
+  <div id="ownerApp" class="owner-app hidden">
+    <aside id="ownerSidebar" class="sidebar">
+      <div class="brand">CJT REALTY<small>Owner Operations</small></div>
+      <div class="property-chip"><strong>Sand & Sea Manor</strong><span>1720 Avenue M · Galveston, TX</span></div>
+      <nav class="nav" aria-label="Owner Portal">
+        <a href="/owner-v1"><span>Dashboard</span></a>
+        <a href="/owner-v1/communications"><span>Communications</span><span id="communicationsNavCount" class="count">0</span></a>
+        <a class="active" href="/owner-v1/reservations"><span>Reservations</span></a>
+        <button data-coming-soon="Calendar"><span>Calendar</span><span class="count">Soon</span></button>
+        <button data-coming-soon="Pricing"><span>Pricing</span><span class="count">Soon</span></button>
+        <button data-coming-soon="Financials"><span>Financials</span><span class="count">Soon</span></button>
+        <div class="nav-section">Property</div>
+        <button data-coming-soon="Property"><span>Property</span></button>
+        <button data-coming-soon="Maintenance"><span>Maintenance</span></button>
+        <button data-coming-soon="Documents"><span>Documents</span></button>
+        <div class="nav-section">Reporting</div>
+        <button data-coming-soon="Analytics"><span>Analytics</span></button>
+        <div class="nav-section">System</div>
+        <button data-coming-soon="Settings"><span>Settings</span></button>
+      </nav>
+      <div class="sidebar-footer"><a href="/" target="_blank" rel="noopener">Guest site ↗</a><button id="logout" type="button">Sign out</button></div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div style="display:flex;align-items:center;gap:10px"><button id="mobileMenu" class="icon-btn mobile-menu" type="button" aria-label="Open menu">☰</button><div><h1>Reservations</h1><div class="meta">Direct booking operations and lifecycle</div></div></div>
+        <div class="top-actions"><span id="lastChecked" class="meta">Loading…</span><a class="btn btn-secondary" href="/owner">Legacy workflow ↗</a></div>
+      </header>
+
+      <div class="content">
+        <div class="section-title"><div><h2>Booking Operations</h2><p>Manage holds, contracts, deposits and release dates without leaving the Owner Portal shell.</p></div><span class="status-pill">Platform v1 preview</span></div>
+        <div id="moduleNotice" class="notice hidden"></div>
+        <div id="reservationSummary" class="summary-grid"></div>
+
+        <div class="module-grid">
+          <section class="module-main">
+            <div class="toolbar-row"><div id="reservationFilters" class="filter-row"></div><input id="reservationSearch" class="search-box" placeholder="Search guest, reservation ID, email, dates or notes…"></div>
+            <div id="reservationList" class="reservation-list"></div>
+          </section>
+
+          <aside class="module-side">
+            <div class="card quick-card">
+              <div class="card-head"><div><h3>Communications</h3><p>Quick guest-message context</p></div></div>
+              <div class="split-metrics" style="grid-template-columns:repeat(3,1fr)"><div class="mini"><b id="quickUnread">0</b><span>Unread</span></div><div class="mini"><b id="quickAirbnb">0</b><span>Airbnb</span></div><div class="mini"><b id="quickVrbo">0</b><span>Vrbo</span></div></div>
+              <div id="quickCommunications" class="list compact-list" style="margin-top:14px"></div>
+              <div class="widget-footer"><a class="btn btn-primary" href="/owner-v1/communications">Open Communications</a></div>
+            </div>
+            <div class="card" style="margin-top:16px"><div class="card-head"><div><h3>Closed Records</h3><p>Released, expired or cancelled</p></div></div><div class="metric" id="closedCount">0</div><div class="metric-label">Retained for history and audit.</div></div>
+          </aside>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/assets/js/owner-shell.js"></script>
+  <script src="/assets/js/reservations-v1.js"></script>
+</body>
+</html>
