@@ -97,7 +97,15 @@ module.exports=async function(req,res){
       return res.status(428).json({error:'password_change_required',user:{id:user.id,name:user.name,email:user.email,role:user.role}});
     }
 
+    if(req.method==='POST'&&body.action==='pricing_import'){
+      if(user.role!=='admin')return res.status(403).json({error:'admin_required'});
+      const importer=require('../lib/pricing-import');
+      try{importer.validateRows(body.rows);}catch(e){return res.status(400).json({error:e.message});}
+      return res.status(200).json(await importer.saveRows(sql,body.rows,user.id));
+    }
+
     if(req.method==='GET'){
+      res.setHeader('Cache-Control','no-store');
       await expireHolds();
       const reservations=await sql`
         SELECT id,guest_name,guest_email,guest_phone,guests,notes,checkin::text,checkout::text,status,review_stage,
@@ -195,7 +203,12 @@ module.exports=async function(req,res){
       if(user.role!=='admin')return res.status(403).json({error:'admin_required'});
       const key=clean(body.key,60);
       if(!['midweek_offer','long_stay_offer'].includes(key))return res.status(400).json({error:'invalid_config'});
-      const value=body.value&&typeof body.value==='object'?body.value:{};
+      const input=body.value||{};
+      const keys=key==='midweek_offer'?['discount_pct']:['seven_night_pct','fourteen_night_pct','twentyeight_night_pct'];
+      if(typeof input.enabled!=='boolean'||keys.some(k=>input[k]==null||input[k]===''||!Number.isFinite(Number(input[k]))||Number(input[k])<0||Number(input[k])>50))return res.status(400).json({error:'Discount percentages must be between 0 and 50.'});
+      if(key==='midweek_offer'&&(!Number.isInteger(Number(input.min_nights))||Number(input.min_nights)<1||Number(input.min_nights)>14))return res.status(400).json({error:'Minimum nights must be 1–14.'});
+      const value={enabled:input.enabled,...Object.fromEntries(keys.map(k=>[k,Number(input[k])]))};
+      if(key==='midweek_offer')value.min_nights=Number(input.min_nights);
       await sql`
         INSERT INTO site_config(key,value,updated_by_user_id,updated_at) VALUES (${key},${JSON.stringify(value)}::jsonb,${user.id},now())
         ON CONFLICT (key) DO UPDATE SET value=EXCLUDED.value,updated_by_user_id=EXCLUDED.updated_by_user_id,updated_at=now()
@@ -220,13 +233,13 @@ module.exports=async function(req,res){
       const dates=datesInclusive(String(body.start_date||''),String(body.end_date||body.start_date||''));
       const rate=Number(body.nightly_rate),minNights=body.min_nights===''||body.min_nights==null?null:Number(body.min_nights),label=clean(body.label,100)||null;
       if(!dates||!dates.length||!Number.isFinite(rate)||rate<0||rate>5000||(minNights!==null&&(!Number.isInteger(minNights)||minNights<1||minNights>30)))return res.status(400).json({error:'invalid_pricing_override'});
-      for(const stayDate of dates){
-        await sql`
-          INSERT INTO pricing_overrides(stay_date,nightly_rate,min_nights,label,updated_by_user_id,updated_at)
-          VALUES (${stayDate},${rate},${minNights},${label},${user.id},now())
-          ON CONFLICT (stay_date) DO UPDATE SET nightly_rate=EXCLUDED.nightly_rate,min_nights=EXCLUDED.min_nights,label=EXCLUDED.label,updated_by_user_id=EXCLUDED.updated_by_user_id,updated_at=now()
-        `;
-      }
+      await sql`
+        INSERT INTO pricing_overrides(stay_date,nightly_rate,min_nights,label,updated_by_user_id,updated_at)
+        SELECT value::date,${rate},${minNights},${label},${user.id},now()
+        FROM jsonb_array_elements_text(${JSON.stringify(dates)}::jsonb)
+        ON CONFLICT (stay_date) DO UPDATE SET nightly_rate=EXCLUDED.nightly_rate,min_nights=EXCLUDED.min_nights,
+          label=EXCLUDED.label,updated_by_user_id=EXCLUDED.updated_by_user_id,updated_at=now()
+      `;
       return res.status(200).json({ok:true,count:dates.length});
     }
 
@@ -234,9 +247,10 @@ module.exports=async function(req,res){
       if(user.role!=='admin')return res.status(403).json({error:'admin_required'});
       const dates=datesInclusive(String(body.start_date||''),String(body.end_date||body.start_date||''));
       if(!dates||!dates.length)return res.status(400).json({error:'invalid_pricing_override'});
-      let count=0;
-      for(const stayDate of dates){const gone=await sql`DELETE FROM pricing_overrides WHERE stay_date=${stayDate} RETURNING stay_date`;count+=gone.length;}
-      return res.status(200).json({ok:true,count});
+      const gone=await sql`DELETE FROM pricing_overrides
+        WHERE stay_date IN (SELECT value::date FROM jsonb_array_elements_text(${JSON.stringify(dates)}::jsonb))
+        RETURNING stay_date`;
+      return res.status(200).json({ok:true,count:gone.length});
     }
 
     return res.status(405).json({error:'method_not_allowed'});

@@ -13,7 +13,7 @@ const VERIFIED_TAX_DEFAULTS={
 function parseCookies(header=''){return Object.fromEntries(header.split(';').map(v=>v.trim()).filter(Boolean).map(v=>{const i=v.indexOf('=');return [decodeURIComponent(v.slice(0,i)),decodeURIComponent(v.slice(i+1))];}));}
 function tokenHash(v){return crypto.createHash('sha256').update(String(v||'')).digest('hex');}
 function number(v){const n=Number(v);return Number.isFinite(n)?n:null;}
-function isLegacyPlaceholder(v={}){return v.configured!==true&&Number(v.cleaning_fee||0)===0&&Number(v.deposit_pct||0)===0;}
+function isLegacyPlaceholder(v={}){return v.saved_by_owner!==true&&v.configured!==true&&Number(v.cleaning_fee||0)===0&&Number(v.deposit_pct||0)===0;}
 
 async function authUser(req){
   const token=parseCookies(req.headers.cookie||'').cjt_owner_session;
@@ -36,6 +36,7 @@ module.exports=async function(req,res){
     if(user.must_change_password)return res.status(428).json({error:'password_change_required'});
     const sql=db();
     if(req.method==='GET'){
+      res.setHeader('Cache-Control','no-store');
       const rows=await sql`SELECT value,updated_at FROM site_config WHERE key='booking_fees' LIMIT 1`;
       const stored=rows[0]&&rows[0].value||{};
       const shouldMigrate=!rows.length||isLegacyPlaceholder(stored);
@@ -58,6 +59,7 @@ module.exports=async function(req,res){
       }
       const value={
         configured:body.configured===true,
+        saved_by_owner:true,
         cleaning_fee:Math.round(cleaning*100)/100,
         tax_pct:Math.round(tax*10000)/10000,
         taxable_cleaning:body.taxable_cleaning===true,

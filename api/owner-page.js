@@ -11,13 +11,14 @@ const OWNER_MODULES=[
   '/owner-finance-ui.js?v=20260904-4',
   '/owner-finance-import.js?v=20260904-2',
   '/owner-live-reservations.js?v=20260905-inquiries',
-  '/owner-booking-settings.js?v=20260904-2',
+  '/owner-booking-settings.js?v=20260905-verified',
   '/owner-detail-drawer.js?v=20260904-1',
   '/owner-phase4-drilldowns.js?v=inquiries-20260904-3',
   '/owner-phase5-state.js?v=20260904-1',
   '/owner-phase5-ux-fixes.js?v=20260904-1',
   '/owner-market-events.js?v=20260904-1',
-  '/owner-interaction-rescue.js?v=20260905-single-back'
+  '/owner-interaction-rescue.js?v=20260905-single-back',
+  '/owner-pricing-controls.js?v=20260905-verified'
 ];
 
 module.exports=async function(req,res){
