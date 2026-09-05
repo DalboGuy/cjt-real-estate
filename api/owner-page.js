@@ -17,7 +17,7 @@ const OWNER_MODULES=[
   '/owner-phase5-state.js?v=20260904-1',
   '/owner-phase5-ux-fixes.js?v=20260904-1',
   '/owner-market-events.js?v=20260904-1',
-  '/owner-interaction-rescue.js?v=20260904-1'
+  '/owner-interaction-rescue.js?v=20260905-single-back'
 ];
 
 module.exports=async function(req,res){
