@@ -11,15 +11,8 @@
 </head>
 <body>
   <section id="loginShell" class="login-shell hidden">
-    <div class="login-card">
-      <div class="brand" style="color:var(--cjt-ink)">CJT REALTY<small style="color:var(--cjt-muted)">Administration</small></div>
-      <h1>Platform Maps</h1>
-      <p>This planning preview temporarily uses the existing Owner Portal passcode.</p>
-      <form id="loginForm"><input id="passcode" type="password" placeholder="Owner passcode" autocomplete="current-password" required><button class="btn btn-primary" type="submit">Sign in</button></form>
-      <div id="loginMsg" class="login-msg"></div>
-    </div>
+    <div class="login-card"><div class="brand" style="color:var(--cjt-ink)">CJT REALTY<small style="color:var(--cjt-muted)">Administration</small></div><h1>Platform Maps</h1><p>Use the current Owner passcode as a temporary bridge, or sign in with a named account.</p><form id="loginForm"><input id="passcode" type="password" placeholder="Owner passcode" required><button class="btn btn-primary" type="submit">Sign in</button></form><div id="loginMsg" class="login-msg"></div><div class="widget-footer"><a class="btn btn-secondary" href="/login-v1?return=/admin-v1/maps">Named login</a></div></div>
   </section>
-
   <div id="ownerBackdrop" class="backdrop hidden"></div>
   <div id="adminApp" class="owner-app hidden">
     <aside id="ownerSidebar" class="sidebar">
@@ -27,193 +20,90 @@
       <div class="property-chip"><strong>Platform Administration</strong><span>Living architecture & development map</span></div>
       <nav class="nav" aria-label="Admin Portal">
         <a href="/admin-v1"><span>Admin Dashboard</span></a>
-        <button data-coming-soon="Users & Access"><span>Users & Access</span><span class="count">Plan</span></button>
+        <a href="/admin-v1/users"><span>Users & Access</span><span class="count">Live</span></a>
         <button data-coming-soon="Properties"><span>Properties</span></button>
         <button data-coming-soon="Roles & Permissions"><span>Roles & Permissions</span></button>
         <div class="nav-section">Automation</div>
         <button data-coming-soon="Integrations"><span>Integrations</span></button>
-        <a href="/owner-v1/documents"><span>Documents & Cloud</span><span class="count">Plan</span></a>
-        <button data-coming-soon="Notifications"><span>Notifications</span></button>
+        <a href="/owner-v1/documents"><span>Documents & Cloud</span></a>
         <div class="nav-section">Architecture</div>
         <a class="active" href="/admin-v1/maps"><span>Platform Maps</span><span class="count">Live</span></a>
         <div class="nav-section">Security</div>
         <button data-coming-soon="Audit Log"><span>Audit Log</span></button>
         <button data-coming-soon="Sessions"><span>Sessions</span></button>
-        <div class="nav-section">System</div>
-        <button data-coming-soon="System & Data"><span>System & Data</span></button>
       </nav>
       <div class="sidebar-footer"><a href="/owner-v1">Owner Portal</a><a href="/account-v1">My Account</a><button id="logout" type="button">Sign out</button></div>
     </aside>
-
     <main class="main">
-      <header class="topbar">
-        <div style="display:flex;align-items:center;gap:10px"><button id="mobileMenu" class="icon-btn mobile-menu" type="button" aria-label="Open menu">☰</button><div><h1>Platform Maps</h1><div class="meta">Living visual architecture · update with every meaningful development</div></div></div>
-        <div class="top-actions"><a class="btn btn-secondary" href="/admin-v1">Admin Dashboard</a></div>
-      </header>
-
+      <header class="topbar"><div style="display:flex;align-items:center;gap:10px"><button id="mobileMenu" class="icon-btn mobile-menu" type="button">☰</button><div><h1>Platform Maps</h1><div class="meta">Living architecture · updated with every meaningful development</div></div></div><div class="top-actions"><a class="btn btn-secondary" href="/admin-v1">Admin Dashboard</a></div></header>
       <div class="content">
-        <div class="section-title"><div><h2>CJT Platform Visual Map</h2><p>One place to see how portals, data, integrations, documents and development status fit together.</p><div class="map-meta"><span class="status-pill">Version 0.1</span><span class="status-pill">Updated Sep 5, 2026</span><span class="status-pill">Branch: reorg/platform-v1</span></div></div><span class="status-pill">Living documentation</span></div>
+        <div class="section-title"><div><h2>CJT Platform Visual Map</h2><p>Current system structure, flows and build state.</p><div class="map-meta"><span class="status-pill">Version 0.2</span><span class="status-pill">Updated Sep 5, 2026</span><span class="status-pill">Branch: reorg/platform-v1</span></div></div><span class="status-pill">Living documentation</span></div>
         <div id="moduleNotice" class="notice hidden"></div>
-
-        <div class="map-rule"><strong>Development rule</strong><span>A feature is not considered fully documented until the relevant visual map, roadmap status and architecture notes are updated. New modules, integrations, routes, automations and data relationships must be reflected here.</span></div>
-
-        <nav class="map-toolbar" aria-label="Map sections" style="margin-top:18px">
-          <a href="#overview">Platform Overview</a>
-          <a href="#owner-map">Owner Portal</a>
-          <a href="#admin-map">Admin Portal</a>
-          <a href="#integrations">Integrations</a>
-          <a href="#documents">Document Flow</a>
-          <a href="#data">Data Relationships</a>
-          <a href="#roadmap">Build State</a>
-        </nav>
+        <div class="map-rule"><strong>Development rule</strong><span>A meaningful feature is not considered fully documented until its visual map, roadmap status and architecture notes are updated.</span></div>
+        <nav class="map-toolbar" style="margin-top:18px"><a href="#overview">Platform</a><a href="#owner">Owner</a><a href="#admin">Admin</a><a href="#identity">Identity</a><a href="#integrations">Integrations</a><a href="#documents">Documents</a><a href="#data">Data</a><a href="#roadmap">Build State</a></nav>
 
         <section id="overview" class="card map-card" style="margin-bottom:16px">
-          <div class="card-head"><div><h3>1 · Platform Overview</h3><p>Top-level view of the four user surfaces and the shared application foundation.</p></div><span class="badge good">Current baseline</span></div>
-          <div class="map-board">
-            <div class="map-root">
-              <div class="map-node core"><strong>CJT REALTY PLATFORM</strong><span>One platform · multiple controlled experiences</span></div>
-              <div class="map-arrow">↓</div>
-              <div class="map-row">
-                <div class="map-node public built"><strong>Public / Guest</strong><span>Website · booking · availability · contact · direct chat</span></div>
-                <div class="map-node owner progress"><strong>Owner Portal</strong><span>Dashboard · communications · reservations · operations</span></div>
-                <div class="map-node admin progress"><strong>Admin Portal</strong><span>Users · roles · properties · integrations · system</span></div>
-                <div class="map-node account progress"><strong>Account Center</strong><span>Login · profile · security · sessions · notifications</span></div>
-              </div>
-              <div class="map-arrow">↓</div>
-              <div class="map-row">
-                <div class="map-node data built"><strong>Application APIs</strong><span>Vercel server functions and shared business logic</span></div>
-                <div class="map-node data built"><strong>Neon</strong><span>Operational data, metadata, relationships and sessions</span></div>
-                <div class="map-node cloud progress"><strong>Cloud Storage</strong><span>Authoritative document files live outside the app database</span></div>
-              </div>
-            </div>
-          </div>
-          <div class="map-legend"><span><i class="legend-dot legend-built"></i>Built / working foundation</span><span><i class="legend-dot legend-progress"></i>In progress / shell exists</span><span><i class="legend-dot legend-planned"></i>Planned</span></div>
+          <div class="card-head"><div><h3>1 · Platform Overview</h3><p>Four user surfaces share one application/data foundation.</p></div><span class="badge good">Current</span></div>
+          <div class="map-board"><div class="map-root">
+            <div class="map-node core"><strong>CJT REALTY PLATFORM</strong><span>One platform · controlled experiences</span></div><div class="map-arrow">↓</div>
+            <div class="map-row"><div class="map-node public built"><strong>Public / Guest</strong><span>Website · booking · availability · chat</span></div><div class="map-node owner progress"><strong>Owner Portal</strong><span>Operations and property management</span></div><div class="map-node admin progress"><strong>Admin Portal</strong><span>Users · configuration · governance</span></div><div class="map-node account built"><strong>Account Center</strong><span>Named login · profile · password · session</span></div></div>
+            <div class="map-arrow">↓</div><div class="map-row"><div class="map-node data built"><strong>Vercel APIs</strong><span>Auth + business APIs</span></div><div class="map-node data built"><strong>Neon</strong><span>Operational data + sessions + users</span></div><div class="map-node cloud progress"><strong>Cloud Storage</strong><span>Future authoritative document store</span></div></div>
+          </div></div>
         </section>
 
-        <section id="owner-map" class="card map-card" style="margin-bottom:16px">
-          <div class="card-head"><div><h3>2 · Owner Portal Map</h3><p>Daily property operating system. Widgets summarize; modules manage.</p></div><a class="card-link" href="/owner-v1">Open Owner Portal ↗</a></div>
-          <div class="map-board">
-            <div class="map-root">
-              <div class="map-node owner progress"><strong>Owner Dashboard</strong><span>Daily control center</span></div>
-              <div class="map-arrow">↓</div>
-              <div class="map-columns">
-                <div class="map-column"><h4>Guest & Booking</h4><div class="map-node built"><strong>Communications</strong><span>Unified message workspace</span></div><div class="map-node built"><strong>Reservations</strong><span>Holds · contracts · deposits · release dates</span></div><div class="map-node planned"><strong>Calendar</strong><span>Unified availability and stay calendar</span></div></div>
-                <div class="map-column"><h4>Revenue</h4><div class="map-node planned"><strong>Pricing</strong><span>Rates · seasons · events · discounts</span></div><div class="map-node planned"><strong>Financials</strong><span>Revenue · fees · payouts · reconciliation</span></div><div class="map-node planned"><strong>Analytics</strong><span>ADR · occupancy · RevPAR · channels</span></div></div>
-                <div class="map-column"><h4>Property Operations</h4><div class="map-node planned"><strong>Property</strong><span>Amenities · configuration · operating data</span></div><div class="map-node planned"><strong>Maintenance</strong><span>Tasks · equipment · vendors · service history</span></div><div class="map-node progress"><strong>Documents</strong><span>Cloud index · search · contextual access</span></div></div>
-                <div class="map-column"><h4>User / System</h4><div class="map-node progress"><strong>My Account</strong><span>Profile · security · preferences</span></div><div class="map-node planned"><strong>Settings</strong><span>Owner-level configuration</span></div><div class="map-node admin progress"><strong>Admin Portal</strong><span>Platform-level controls for authorized users</span></div></div>
-              </div>
-            </div>
-          </div>
+        <section id="owner" class="card map-card" style="margin-bottom:16px">
+          <div class="card-head"><div><h3>2 · Owner Portal</h3><p>Widgets summarize; modules manage.</p></div><a class="card-link" href="/owner-v1">Open ↗</a></div>
+          <div class="map-board"><div class="map-root"><div class="map-node owner progress"><strong>Owner Dashboard</strong><span>Daily operating control center</span></div><div class="map-arrow">↓</div><div class="map-columns">
+            <div class="map-column"><h4>Guest & Booking</h4><div class="map-node built"><strong>Communications</strong><span>Unified workspace</span></div><div class="map-node built"><strong>Reservations</strong><span>Booking lifecycle</span></div><div class="map-node planned"><strong>Calendar</strong><span>Consolidated availability</span></div></div>
+            <div class="map-column"><h4>Revenue</h4><div class="map-node planned"><strong>Pricing</strong><span>Rates · seasons · events</span></div><div class="map-node planned"><strong>Financials</strong><span>Revenue · fees · payouts</span></div><div class="map-node planned"><strong>Analytics</strong><span>ADR · occupancy · RevPAR</span></div></div>
+            <div class="map-column"><h4>Operations</h4><div class="map-node planned"><strong>Property</strong><span>Configuration</span></div><div class="map-node planned"><strong>Maintenance</strong><span>Tasks · vendors · history</span></div><div class="map-node progress"><strong>Documents</strong><span>Cloud index and context</span></div></div>
+            <div class="map-column"><h4>User</h4><div class="map-node built"><strong>My Account</strong><span>Named identity + password</span></div><div class="map-node admin progress"><strong>Admin</strong><span>Authorized platform controls</span></div></div>
+          </div></div></div>
         </section>
 
-        <section id="admin-map" class="card map-card" style="margin-bottom:16px">
-          <div class="card-head"><div><h3>3 · Admin Portal Map</h3><p>Administration of the platform rather than daily property operations.</p></div><a class="card-link" href="/admin-v1">Open Admin ↗</a></div>
-          <div class="map-board">
-            <div class="map-root">
-              <div class="map-node admin progress"><strong>Admin Dashboard</strong><span>Platform configuration, health and access control</span></div>
-              <div class="map-arrow">↓</div>
-              <div class="map-columns">
-                <div class="map-column"><h4>Identity</h4><div class="map-node planned"><strong>Users & Access</strong><span>Invite · disable · assignments</span></div><div class="map-node planned"><strong>Roles & Permissions</strong><span>Role + property scope</span></div><div class="map-node planned"><strong>Sessions</strong><span>View and revoke access</span></div></div>
-                <div class="map-column"><h4>Configuration</h4><div class="map-node planned"><strong>Properties</strong><span>Property records and assignments</span></div><div class="map-node planned"><strong>Integrations</strong><span>Gmail · OTA · cloud · signing · payments</span></div><div class="map-node planned"><strong>Notifications</strong><span>System notification policies</span></div></div>
-                <div class="map-column"><h4>Governance</h4><div class="map-node progress"><strong>Platform Maps</strong><span>Living architecture and build state</span></div><div class="map-node planned"><strong>Audit Log</strong><span>Who changed what and when</span></div><div class="map-node planned"><strong>System & Data</strong><span>Health · imports · exports · recovery</span></div></div>
-                <div class="map-column"><h4>Automation</h4><div class="map-node progress"><strong>Documents & Cloud</strong><span>Filing rules and cloud index</span></div><div class="map-node planned"><strong>Email Intake</strong><span>Attachments and communication parsing</span></div><div class="map-node planned"><strong>Automation Health</strong><span>Last run · failures · exceptions</span></div></div>
-              </div>
-            </div>
-          </div>
+        <section id="admin" class="card map-card" style="margin-bottom:16px">
+          <div class="card-head"><div><h3>3 · Admin Portal</h3><p>Platform administration separated from daily property operations.</p></div><a class="card-link" href="/admin-v1">Open ↗</a></div>
+          <div class="map-board"><div class="map-root"><div class="map-node admin progress"><strong>Admin Dashboard</strong><span>Configuration · security · governance</span></div><div class="map-arrow">↓</div><div class="map-columns">
+            <div class="map-column"><h4>Identity</h4><div class="map-node built"><strong>Users & Access</strong><span>Named user directory</span></div><div class="map-node progress"><strong>Roles & Permissions</strong><span>Admin / Owner / Manager now; expanded profiles next</span></div><div class="map-node planned"><strong>Invitations</strong><span>Email invite + secure setup</span></div></div>
+            <div class="map-column"><h4>Configuration</h4><div class="map-node planned"><strong>Properties</strong><span>Property records + assignments</span></div><div class="map-node planned"><strong>Integrations</strong><span>Gmail · channels · cloud</span></div><div class="map-node planned"><strong>Notifications</strong><span>System policies</span></div></div>
+            <div class="map-column"><h4>Governance</h4><div class="map-node built"><strong>Platform Maps</strong><span>Living architecture</span></div><div class="map-node planned"><strong>Audit Log</strong><span>User-attributed activity</span></div><div class="map-node planned"><strong>System & Data</strong><span>Health · import/export · recovery</span></div></div>
+            <div class="map-column"><h4>Documents</h4><div class="map-node progress"><strong>Cloud Automation</strong><span>Email → cloud → index</span></div><div class="map-node planned"><strong>Automation Health</strong><span>Runs · failures · exceptions</span></div></div>
+          </div></div></div>
+        </section>
+
+        <section id="identity" class="card map-card" style="margin-bottom:16px">
+          <div class="card-head"><div><h3>4 · Identity & Session Flow</h3><p>Named accounts now sit on top of the existing secure owner-session cookie.</p></div><span class="badge good">Foundation built</span></div>
+          <div class="map-board"><div class="map-root">
+            <div class="map-row"><div class="map-node external"><strong>First Administrator</strong><span>Existing Owner passcode used once for bootstrap</span></div><div class="map-node external"><strong>Returning User</strong><span>Email + individual password</span></div></div><div class="map-arrow">↓</div>
+            <div class="map-node core"><strong>/api/auth</strong><span>Bootstrap · login · logout · change password · session status</span></div><div class="map-arrow">↓</div>
+            <div class="map-row"><div class="map-node data built"><strong>owner_users</strong><span>Name · email · salted password hash · role · status</span></div><div class="map-node data built"><strong>owner_sessions</strong><span>Hashed token · user_id · expiry</span></div></div><div class="map-arrow">↓</div>
+            <div class="map-row"><div class="map-node owner built"><strong>Owner Portal</strong><span>Same session cookie</span></div><div class="map-node account built"><strong>Account Center</strong><span>Profile + password</span></div><div class="map-node admin progress"><strong>Admin</strong><span>Admin-only user directory</span></div></div>
+          </div></div>
         </section>
 
         <section id="integrations" class="card map-card" style="margin-bottom:16px">
-          <div class="card-head"><div><h3>4 · Integration Map</h3><p>External systems feed CJT; the portal remains the operating view rather than pretending to replace every provider.</p></div><span class="badge warn">Evolving</span></div>
-          <div class="map-board">
-            <div class="map-root">
-              <div class="map-row">
-                <div class="map-node external"><strong>Airbnb</strong><span>Guest messages · reservations · calendar</span></div>
-                <div class="map-node external"><strong>Vrbo</strong><span>Guest messages · reservations · calendar</span></div>
-                <div class="map-node external"><strong>Booking.com</strong><span>Reservations / messages when source rules confirmed</span></div>
-                <div class="map-node external"><strong>Houfy</strong><span>Direct booking ecosystem and channel data</span></div>
-                <div class="map-node external built"><strong>CJT Website</strong><span>Direct inquiries and booking flow</span></div>
-              </div>
-              <div class="map-arrow">↓</div>
-              <div class="map-row">
-                <div class="map-node progress"><strong>Gmail Intake</strong><span>Message + attachment detection and parsing</span></div>
-                <div class="map-node built"><strong>tawk.to</strong><span>Direct website chat only</span></div>
-                <div class="map-node progress"><strong>Calendar Feeds</strong><span>External blocks and availability inputs</span></div>
-              </div>
-              <div class="map-arrow">↓</div>
-              <div class="map-node core"><strong>CJT Application Layer</strong><span>Normalize · link · secure · surface</span></div>
-              <div class="map-arrow">↓</div>
-              <div class="map-row">
-                <div class="map-node data built"><strong>Neon</strong><span>Business data and metadata</span></div>
-                <div class="map-node cloud progress"><strong>Cloud Files</strong><span>Drive / Dropbox / OneDrive or configured provider</span></div>
-                <div class="map-node external built"><strong>Official OTA Threads</strong><span>Reply through official thread until safe reply transport is verified</span></div>
-              </div>
-              <div class="map-arrow">↓</div>
-              <div class="map-row"><div class="map-node owner progress"><strong>Owner Portal</strong><span>Operations</span></div><div class="map-node admin progress"><strong>Admin Portal</strong><span>Configuration & oversight</span></div></div>
-            </div>
-          </div>
+          <div class="card-head"><div><h3>5 · Integration Map</h3><p>External providers feed CJT; official systems remain authoritative where required.</p></div></div>
+          <div class="map-board"><div class="map-root"><div class="map-row"><div class="map-node external"><strong>Airbnb</strong></div><div class="map-node external"><strong>Vrbo</strong></div><div class="map-node external"><strong>Booking.com</strong></div><div class="map-node external"><strong>Houfy</strong></div><div class="map-node external built"><strong>CJT Website</strong></div></div><div class="map-arrow">↓</div><div class="map-row"><div class="map-node progress"><strong>Gmail Intake</strong><span>Messages + future documents</span></div><div class="map-node built"><strong>tawk.to</strong><span>Direct website chat</span></div><div class="map-node progress"><strong>Calendar Feeds</strong></div></div><div class="map-arrow">↓</div><div class="map-node core"><strong>CJT Application Layer</strong><span>Normalize · link · secure · surface</span></div><div class="map-arrow">↓</div><div class="map-row"><div class="map-node data built"><strong>Neon</strong></div><div class="map-node cloud progress"><strong>Cloud Files</strong></div><div class="map-node external built"><strong>Official OTA Threads</strong><span>Reply surface until safe transport verified</span></div></div></div></div>
         </section>
 
         <section id="documents" class="card map-card" style="margin-bottom:16px">
-          <div class="card-head"><div><h3>5 · Cloud Document Flow</h3><p>Hands-off intake is the default; one authoritative cloud copy can appear in many business contexts.</p></div><a class="card-link" href="/owner-v1/documents">Open Documents plan ↗</a></div>
-          <div class="map-board">
-            <div class="map-root">
-              <div class="map-row">
-                <div class="map-node external"><strong>Email Attachments</strong><span>Invoices · receipts · statements · contracts</span></div>
-                <div class="map-node external"><strong>Generated Reports</strong><span>Owner statements · exports · financial reports</span></div>
-                <div class="map-node external"><strong>Signed Agreements</strong><span>Reservation / rental documents</span></div>
-                <div class="map-node external"><strong>Watched Cloud Folders</strong><span>Documents added outside CJT</span></div>
-                <div class="map-node external"><strong>Manual Fallback</strong><span>Exception path only</span></div>
-              </div>
-              <div class="map-arrow">↓</div>
-              <div class="map-row"><div class="map-node progress"><strong>Detect</strong><span>Identify candidate file</span></div><div class="map-arrow">→</div><div class="map-node progress"><strong>Classify</strong><span>Type · property · reservation · vendor · period</span></div><div class="map-arrow">→</div><div class="map-node progress"><strong>File</strong><span>Save / confirm authoritative cloud copy</span></div><div class="map-arrow">→</div><div class="map-node progress"><strong>Index</strong><span>Metadata + cloud pointer in CJT</span></div></div>
-              <div class="map-arrow">↓</div>
-              <div class="map-node cloud progress"><strong>Cloud Storage · Source of Truth</strong><span>Large document payload remains in selected cloud provider</span></div>
-              <div class="map-arrow">↓</div>
-              <div class="map-node data progress"><strong>CJT Document Index</strong><span>Title · category · provider ID · links · tags · permissions · relationships</span></div>
-              <div class="map-arrow">↓</div>
-              <div class="map-row"><div class="map-node planned"><strong>Reservations</strong></div><div class="map-node planned"><strong>Financials</strong></div><div class="map-node planned"><strong>Maintenance</strong></div><div class="map-node planned"><strong>Vendors</strong></div><div class="map-node progress"><strong>Documents</strong></div></div>
-            </div>
-          </div>
+          <div class="card-head"><div><h3>6 · Cloud Document Flow</h3><p>Hands-off intake is preferred; one cloud copy can appear in many portal contexts.</p></div><a class="card-link" href="/owner-v1/documents">Open Documents ↗</a></div>
+          <div class="map-board"><div class="map-root"><div class="map-row"><div class="map-node external"><strong>Email Attachments</strong></div><div class="map-node external"><strong>Generated Reports</strong></div><div class="map-node external"><strong>Signed Agreements</strong></div><div class="map-node external"><strong>Watched Folders</strong></div></div><div class="map-arrow">↓</div><div class="map-row"><div class="map-node progress"><strong>Detect</strong></div><div class="map-arrow">→</div><div class="map-node progress"><strong>Classify</strong></div><div class="map-arrow">→</div><div class="map-node progress"><strong>Cloud File</strong></div><div class="map-arrow">→</div><div class="map-node progress"><strong>CJT Index</strong></div></div><div class="map-arrow">↓</div><div class="map-row"><div class="map-node owner planned"><strong>Reservations</strong></div><div class="map-node owner planned"><strong>Financials</strong></div><div class="map-node owner planned"><strong>Maintenance</strong></div><div class="map-node owner progress"><strong>Documents</strong></div></div></div></div>
         </section>
 
         <section id="data" class="card map-card" style="margin-bottom:16px">
-          <div class="card-head"><div><h3>6 · Data Relationship Map</h3><p>Target relationships for one canonical source per business concept.</p></div><span class="badge warn">Additive migration planned</span></div>
-          <div class="map-board">
-            <div class="map-root">
-              <div class="map-node data progress"><strong>PROPERTY</strong><span>Sand & Sea Manor now · multi-property ready</span></div>
-              <div class="map-arrow">↓</div>
-              <div class="map-row">
-                <div class="map-group"><div class="map-node data built"><strong>RESERVATION</strong><span>Dates · status · lifecycle</span></div><div class="map-arrow">↓</div><div class="map-row"><div class="map-node planned"><strong>GUEST</strong><span>Identity/contact</span></div><div class="map-node planned"><strong>CHANNEL</strong><span>Direct · Airbnb · Vrbo · Booking.com · Houfy</span></div><div class="map-node built"><strong>FINANCIALS</strong><span>Booking economics + payouts</span></div></div><div class="map-arrow">↓</div><div class="map-node progress"><strong>CONVERSATION</strong><span>Guest/reservation/channel thread</span></div><div class="map-arrow">↓</div><div class="map-node progress"><strong>MESSAGES</strong><span>Inbound/outbound events</span></div></div>
-                <div class="map-group"><div class="map-node progress"><strong>DOCUMENTS</strong><span>Cloud metadata index</span></div><div class="map-arrow">↓</div><div class="map-node planned"><strong>RELATIONSHIPS</strong><span>Reservation · vendor · task · financial period</span></div></div>
-                <div class="map-group"><div class="map-node built"><strong>TASKS</strong><span>Shared operations engine</span></div><div class="map-arrow">↓</div><div class="map-node planned"><strong>MAINTENANCE</strong><span>Equipment · recurring service · vendors</span></div></div>
-                <div class="map-group"><div class="map-node built"><strong>PRICING OVERRIDES</strong><span>Current date-level data</span></div><div class="map-arrow">↓</div><div class="map-node planned"><strong>PRICING RULES</strong><span>Seasons · discounts · events · minimum stays</span></div></div>
-              </div>
-            </div>
-          </div>
+          <div class="card-head"><div><h3>7 · Core Data Relationships</h3><p>Identity is now explicitly part of the platform data model.</p></div></div>
+          <div class="map-board"><div class="map-root"><div class="map-row"><div class="map-node data built"><strong>owner_users</strong><span>Named identity + coarse role</span></div><div class="map-arrow">→</div><div class="map-node data built"><strong>owner_sessions</strong><span>User-aware sessions</span></div></div><div class="map-arrow">↓</div><div class="map-node data progress"><strong>Property Access Layer</strong><span>Next: user ↔ property ↔ permissions</span></div><div class="map-arrow">↓</div><div class="map-row"><div class="map-node data built"><strong>Reservations</strong></div><div class="map-node data built"><strong>Communications</strong></div><div class="map-node data built"><strong>Financials</strong></div><div class="map-node data built"><strong>Tasks</strong></div><div class="map-node data progress"><strong>Documents</strong></div></div></div></div>
         </section>
 
         <section id="roadmap" class="card map-card">
-          <div class="card-head"><div><h3>7 · Build State / Roadmap</h3><p>This table and the diagrams above should move together as development progresses.</p></div><span class="badge good">Tracked here</span></div>
-          <div style="overflow:auto">
-            <table class="roadmap-table">
-              <tr><th>Area</th><th>Status</th><th>Current state</th><th>Next development</th></tr>
-              <tr><td>Production backup / rollback</td><td><span class="badge good">Built</span></td><td>Git checkpoint, Neon production snapshot and deployment reference recorded.</td><td>Retain through cutover.</td></tr>
-              <tr><td>Owner Dashboard</td><td><span class="badge good">Built</span></td><td>Platform v1 preview with real summary data.</td><td>Shared shell extraction and module expansion.</td></tr>
-              <tr><td>Communications</td><td><span class="badge good">Built shell</span></td><td>Integrated module, filters, message detail and OTA/Gmail links.</td><td>Automatic Gmail ingestion and channel parsers.</td></tr>
-              <tr><td>Reservations</td><td><span class="badge good">Built shell</span></td><td>Integrated booking lifecycle controls.</td><td>Normalize reservation/guest/channel relationships.</td></tr>
-              <tr><td>Documents</td><td><span class="badge warn">Planning shell</span></td><td>Cloud-first design and hands-off filing requirements captured.</td><td>Choose cloud provider strategy and build document index/intake.</td></tr>
-              <tr><td>Admin Portal</td><td><span class="badge warn">Planning shell</span></td><td>Admin dashboard and Platform Maps exist.</td><td>Named users, roles, properties and integration management.</td></tr>
-              <tr><td>Account Center</td><td><span class="badge warn">Planning shell</span></td><td>Profile/security/session/notification structure captured.</td><td>Real account authentication and invite/recovery flows.</td></tr>
-              <tr><td>Calendar / Pricing / Financials / Maintenance / Analytics</td><td><span class="badge">Planned</span></td><td>Routes and responsibilities defined.</td><td>Build after identity/admin foundation and shared code cleanup.</td></tr>
-            </table>
-          </div>
-          <div class="map-rule" style="margin-top:16px"><strong>Definition of done</strong><span>For future meaningful changes, update the affected map(s), this build-state table, and the corresponding architecture note in the same development cycle.</span></div>
+          <div class="card-head"><div><h3>8 · Build State</h3><p>Current development status after named-account foundation work.</p></div></div>
+          <div class="summary-grid"><div class="summary-card"><span>Named account API</span><b>Built</b></div><div class="summary-card"><span>Login / bootstrap</span><b>Built</b></div><div class="summary-card"><span>Account Center</span><b>Built</b></div><div class="summary-card"><span>User directory</span><b>Built</b></div><div class="summary-card"><span>Property-scoped permissions</span><b>Next</b></div></div>
+          <div class="list" style="margin-top:16px"><div class="list-row"><div><strong>Next 1 · Role/property authorization</strong><span>Move beyond coarse admin/owner/manager into property-scoped permissions.</span></div><span class="badge warn">Next</span></div><div class="list-row"><div><strong>Next 2 · Invitations + password recovery</strong><span>Email-driven account setup and reset links.</span></div><span class="badge warn">Next</span></div><div class="list-row"><div><strong>Next 3 · Audit + session management</strong><span>Named attribution and per-session revocation.</span></div><span class="badge">Planned</span></div><div class="list-row"><div><strong>Then · Cloud document index / Gmail automation</strong><span>Use the new identity/permission foundation to control document access.</span></div><span class="badge">Planned</span></div></div>
         </section>
       </div>
     </main>
   </div>
-
-  <script src="/assets/js/owner-shell.js"></script>
-  <script src="/assets/js/static-auth.js"></script>
+  <script src="/assets/js/owner-shell.js"></script><script src="/assets/js/static-auth.js"></script>
 </body>
 </html>
