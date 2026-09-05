@@ -32,7 +32,7 @@
         <label class="metric-label" for="bootstrapEmail">Email</label>
         <input id="bootstrapEmail" type="email" autocomplete="email" required placeholder="you@example.com">
         <label class="metric-label" for="bootstrapPassword">New account password</label>
-        <input id="bootstrapPassword" type="password" autocomplete="new-password" minlength="12" required placeholder="At least 12 characters">
+        <input id="bootstrapPassword" type="password" autocomplete="new-password" minlength="5" required placeholder="At least 5 characters">
         <label class="metric-label" for="bootstrapPasscode">Existing Owner Portal passcode</label>
         <input id="bootstrapPasscode" type="password" autocomplete="off" required placeholder="Current shared passcode">
         <button class="btn btn-primary" style="width:100%;margin-top:12px" type="submit">Create first Administrator</button>
@@ -72,7 +72,7 @@ function errorText(code){
   return ({
     invalid_credentials:'Email or password is incorrect.',
     invalid_passcode:'The existing Owner Portal passcode is incorrect.',
-    password_too_short:'Use a password with at least 12 characters.',
+    password_too_short:'Use a password with at least 5 characters.',
     valid_email_required:'Enter a valid email address.',
     name_required:'Enter your name.',
     bootstrap_already_completed:'The first Administrator account has already been created.',
