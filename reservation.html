@@ -22,7 +22,7 @@
     const money=v=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(Number(v||0));
     const date=s=>s?new Date(String(s).includes('T')?s:s+'T00:00:00').toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'}):'—';
     const time=s=>s?new Date(s).toLocaleString():'—';
-    const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]));
     function stepHtml(r){
       const order=['inquiry_hold','hold_verified','contract_sent','contract_signed','confirmed'];
       const labels=['Dates held','CJT review','Agreement sent','Agreement signed','Reservation confirmed'];
@@ -40,5 +40,6 @@
     }
     load();
   </script>
+  <script src="/customer-reservation-chat.js?v=20260904-1"></script>
 </body>
 </html>
