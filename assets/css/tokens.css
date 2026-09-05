@@ -1,0 +1,15 @@
+:root{
+  --cjt-ink:#14343a;
+  --cjt-deep:#0d2b31;
+  --cjt-cream:#f7f1e7;
+  --cjt-paper:#fffdf9;
+  --cjt-muted:#6b7d80;
+  --cjt-line:#dfe6e4;
+  --cjt-soft:#eef3f1;
+  --cjt-good:#dff3e7;
+  --cjt-warn:#fff1cc;
+  --cjt-danger:#f8e5e2;
+  --cjt-shadow:0 16px 42px rgba(13,43,49,.08);
+  --cjt-radius:18px;
+  --cjt-sidebar:250px;
+}
