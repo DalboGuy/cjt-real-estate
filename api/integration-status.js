@@ -8,7 +8,7 @@ module.exports = async function(req,res){
   let guestBackfillComplete=false;
   let guestLinkIntegrity=false;
 
-  if(process.env.DATABASE_URL){
+  if((process.env.CJT_DATABASE_URL || process.env.DATABASE_URL)){
     try{
       await ensureGuestSchema();
       const sql=db();
@@ -41,7 +41,7 @@ module.exports = async function(req,res){
     houfyIcalConfigured:Boolean(process.env.HOUFY_ICAL_URL),
     houfyApiConfigured:Boolean(process.env.HOUFY_API_TOKEN),
     bookingComIcalConfigured:Boolean(process.env.BOOKING_COM_ICAL_URL),
-    databaseConfigured:Boolean(process.env.DATABASE_URL),
+    databaseConfigured:Boolean((process.env.CJT_DATABASE_URL || process.env.DATABASE_URL)),
     guestIdentityMode:'email_only',
     guestDatabaseReady,
     guestBackfillComplete,
