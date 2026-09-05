@@ -3,7 +3,7 @@ const { db, ensureSchema, expireHolds } = require('../lib/db');
 const { getOtaBlockedDates, eachDate } = require('../lib/availability');
 const { calculateQuote } = require('../lib/pricing');
 const { createGuestAccessToken } = require('../lib/guest-access');
-const { syncDirectReservation } = require('../lib/airtable');
+const { upsertGuest } = require('../lib/guests');
 
 const MAX_GUESTS=14;
 function clean(v,max=500){return String(v||'').trim().slice(0,max);}
@@ -47,13 +47,14 @@ module.exports=async function(req,res){
       throw e;
     }
 
+    const guest=await upsertGuest({name:guest_name,email:guest_email,phone:guest_phone});
     const id=makeId(checkin);
     let rows;
     try{
       rows=await sql`
-        INSERT INTO reservations (id,guest_name,guest_email,guest_phone,guests,notes,checkin,checkout,status,hold_expires_at)
-        VALUES (${id},${guest_name},${guest_email},${guest_phone},${guests},${notes||null},${checkin}::date,${checkout}::date,'inquiry_hold',now()+interval '24 hours')
-        RETURNING id,checkin::text,checkout::text,status,hold_expires_at
+        INSERT INTO reservations (id,guest_id,guest_name,guest_email,guest_phone,guests,notes,checkin,checkout,status,hold_expires_at)
+        VALUES (${id},${guest.id},${guest_name},${guest_email},${guest_phone},${guests},${notes||null},${checkin}::date,${checkout}::date,'inquiry_hold',now()+interval '24 hours')
+        RETURNING id,guest_id,checkin::text,checkout::text,status,hold_expires_at
       `;
     }catch(e){
       if(String(e.message||'').toLowerCase().includes('reservations_no_overlap')){
@@ -61,7 +62,7 @@ module.exports=async function(req,res){
       }
       throw e;
     }
-    await sql`INSERT INTO booking_events (reservation_id,event_type,actor,metadata) VALUES (${id},'inquiry_created','guest',${JSON.stringify({guests,tripType,quote})}::jsonb)`;
+    await sql`INSERT INTO booking_events (reservation_id,event_type,actor,metadata) VALUES (${id},'inquiry_created','guest',${JSON.stringify({guests,tripType,quote,guestId:guest.id})}::jsonb)`;
 
     let statusUrl=null;
     try{
@@ -69,17 +70,6 @@ module.exports=async function(req,res){
       statusUrl=`/reservation.html?token=${encodeURIComponent(token)}`;
     }catch(tokenError){
       console.error('guest status token error',tokenError);
-    }
-
-    try{
-      const sync=await syncDirectReservation({
-        name:guest_name,email:guest_email,phone:guest_phone,tripType,notes,
-        reservation:{...rows[0],guest_name,guest_email,guest_phone,guests},quote,statusUrl
-      });
-      await sql`INSERT INTO booking_events (reservation_id,event_type,actor,metadata) VALUES (${id},${sync.skipped?'airtable_sync_skipped':'airtable_synced'},'system',${JSON.stringify(sync)}::jsonb)`;
-    }catch(syncError){
-      console.error('airtable sync error',syncError);
-      await sql`INSERT INTO booking_events (reservation_id,event_type,actor,metadata) VALUES (${id},'airtable_sync_failed','system',${JSON.stringify({message:String(syncError.message||syncError).slice(0,500)})}::jsonb)`;
     }
 
     res.setHeader('Cache-Control','no-store');
