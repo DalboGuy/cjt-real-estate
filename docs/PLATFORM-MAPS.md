@@ -15,10 +15,11 @@ The Platform Maps portal currently maintains these views:
 1. Platform Overview
 2. Owner Portal Map
 3. Admin Portal Map
-4. Integration Map
-5. Cloud Document Flow
-6. Data Relationship Map
-7. Build State / Roadmap
+4. Identity & Session Flow
+5. Integration Map
+6. Cloud Document Flow
+7. Data Relationship Map
+8. Build State / Roadmap
 
 ## Development rule
 
@@ -45,8 +46,6 @@ A meaningful development cycle should include:
 4. relevant architecture-note update;
 5. preview deployment and validation.
 
-The goal is that the map a user sees in Admin represents the system we are actually building, not an old plan.
-
 ## Status vocabulary
 
 - **Built** — working foundation or accepted working implementation exists.
@@ -54,7 +53,7 @@ The goal is that the map a user sees in Admin represents the system we are actua
 - **In progress / Planning shell** — route/UI exists primarily to preserve the design and development direction.
 - **Planned** — defined but not yet implemented.
 
-## Current map baseline — 2026-09-05
+## Current map baseline — 2026-09-05, version 0.2
 
 ### Built / working foundations
 
@@ -67,35 +66,61 @@ The goal is that the map a user sees in Admin represents the system we are actua
 - integrated Reservations shell
 - existing booking financial dataset
 - existing reservation lifecycle controls
+- named-account authentication API
+- one-time first-Administrator bootstrap using the existing Owner passcode
+- individual email/password sign-in
+- salted password hashing
+- user-aware owner sessions
+- functional Account Center profile/session view
+- self-service password change
+- Administrator-only Users & Access directory
+- Platform Maps living documentation
 
 ### In progress / planning shells
 
 - Documents cloud-first planning module
 - Admin Portal
-- Account Center
-- Platform Maps
+- role/property authorization model
 - Gmail communications/document intake architecture
 - normalized multi-property-ready data model
 
 ### Planned deeper modules
 
+- user invitations
+- password recovery
+- expanded roles: Co-host, Accounting and Read Only
+- property-scoped permissions
+- per-session management/revocation
+- Audit Log
 - Calendar
 - Pricing
 - Financials
 - Property
 - Maintenance
 - Analytics
-- Users & Access
-- Roles & Permissions
 - Integration management
-- Audit Log
-- Session management
 - System & Data administration
+
+## Identity foundation reflected in maps
+
+The current named-account foundation deliberately reuses the existing `owner_users` and `owner_sessions` model instead of creating a second authentication store.
+
+Current flow:
+
+1. If no named users exist, the existing Owner Portal passcode may be used once to bootstrap the first Administrator account.
+2. The first Administrator chooses their own name, email and password.
+3. Returning named users authenticate with email and password.
+4. Passwords are stored only as salted derived hashes.
+5. Named sessions use the same HttpOnly `cjt_owner_session` cookie consumed by current Owner APIs, so existing Owner modules continue working during the migration.
+6. The Account Center can show the signed-in user's identity, role and session expiration and supports password changes.
+7. The Users & Access page requires a named Administrator session.
+
+The shared passcode remains a temporary compatibility bridge and has not yet been removed from the legacy Owner routes.
 
 ## Cloud document principle reflected in maps
 
 Documents should normally remain in a connected cloud provider. CJT stores/indexes metadata, relationships, tags, permissions and the cloud object pointer. Email attachments, generated reports, signed agreements and watched cloud folders should become preferred hands-off intake paths. Manual upload remains the exception path.
 
-## Security note
+## Next identity milestone
 
-The preview maps currently use the existing Owner Portal passcode only as a temporary development bridge. Future production Admin access must require named accounts with administrator authorization. Owner-visible map access can be added separately if desired, but the Admin map remains the authoritative development view.
+The next authentication/authorization development should add property-scoped permission records and an invitation/recovery workflow. Expanded roles should be introduced through an additive migration and tested on the reorganization Neon branch before production cutover.
