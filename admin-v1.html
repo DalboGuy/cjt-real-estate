@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>CJT Admin Portal · Platform v1 Preview</title>
+  <link rel="stylesheet" href="/assets/css/tokens.css">
+  <link rel="stylesheet" href="/assets/css/owner-shell.css">
+  <link rel="stylesheet" href="/assets/css/modules.css">
+</head>
+<body>
+  <section id="loginShell" class="login-shell hidden">
+    <div class="login-card">
+      <div class="brand" style="color:var(--cjt-ink)">CJT REALTY<small style="color:var(--cjt-muted)">Administration</small></div>
+      <h1>Admin Portal Preview</h1>
+      <p>This preview temporarily uses the existing Owner Portal passcode. Named admin accounts and role checks are planned before production use.</p>
+      <form id="loginForm"><input id="passcode" type="password" placeholder="Owner passcode" autocomplete="current-password" required><button class="btn btn-primary" type="submit">Sign in</button></form>
+      <div id="loginMsg" class="login-msg"></div>
+    </div>
+  </section>
+
+  <div id="ownerBackdrop" class="backdrop hidden"></div>
+  <div id="adminApp" class="owner-app hidden">
+    <aside id="ownerSidebar" class="sidebar">
+      <div class="brand">CJT REALTY<small>Administration</small></div>
+      <div class="property-chip"><strong>Platform Administration</strong><span>Users · Properties · Integrations · Security</span></div>
+      <nav class="nav" aria-label="Admin Portal">
+        <a class="active" href="/admin-v1"><span>Admin Dashboard</span></a>
+        <button data-coming-soon="Users & Access"><span>Users & Access</span><span class="count">Plan</span></button>
+        <button data-coming-soon="Properties"><span>Properties</span></button>
+        <button data-coming-soon="Roles & Permissions"><span>Roles & Permissions</span></button>
+        <div class="nav-section">Automation</div>
+        <button data-coming-soon="Integrations"><span>Integrations</span></button>
+        <a href="/owner-v1/documents"><span>Documents & Cloud</span><span class="count">Plan</span></a>
+        <button data-coming-soon="Notifications"><span>Notifications</span></button>
+        <div class="nav-section">Security</div>
+        <button data-coming-soon="Audit Log"><span>Audit Log</span></button>
+        <button data-coming-soon="Sessions"><span>Sessions</span></button>
+        <div class="nav-section">System</div>
+        <button data-coming-soon="System & Data"><span>System & Data</span></button>
+      </nav>
+      <div class="sidebar-footer"><a href="/owner-v1">Owner Portal</a><a href="/account-v1">My Account</a><button id="logout" type="button">Sign out</button></div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div style="display:flex;align-items:center;gap:10px"><button id="mobileMenu" class="icon-btn mobile-menu" type="button" aria-label="Open menu">☰</button><div><h1>Admin Dashboard</h1><div class="meta">Platform configuration and access control · planning preview</div></div></div>
+        <div class="top-actions"><a class="btn btn-secondary" href="/owner-v1">Owner Portal</a></div>
+      </header>
+
+      <div class="content">
+        <div class="section-title"><div><h2>CJT Administration</h2><p>This portal will manage the platform itself; the Owner Portal remains focused on operating properties.</p></div><span class="status-pill">Architecture placeholder</span></div>
+        <div id="moduleNotice" class="notice hidden"></div>
+
+        <section class="grid">
+          <article class="card span-4">
+            <div class="card-head"><div><h3>Users & Accounts</h3><p>Named users instead of one shared passcode.</p></div><span class="badge warn">Next foundation</span></div>
+            <div class="list">
+              <div class="list-row"><div><strong>Invite users</strong><span>Email invitation → user creates own password.</span></div></div>
+              <div class="list-row"><div><strong>Roles</strong><span>Administrator, Owner, Property Manager, Co-host, Accounting and Read Only.</span></div></div>
+              <div class="list-row"><div><strong>Property access</strong><span>Assign users only to properties they should see.</span></div></div>
+              <div class="list-row"><div><strong>Disable / revoke</strong><span>End access without deleting business history.</span></div></div>
+            </div>
+          </article>
+
+          <article class="card span-4">
+            <div class="card-head"><div><h3>Authentication & Security</h3><p>Replace temporary shared-passcode behavior.</p></div><span class="badge warn">Planned</span></div>
+            <div class="list">
+              <div class="list-row"><div><strong>Login</strong><span>Individual email + password or trusted OAuth.</span></div></div>
+              <div class="list-row"><div><strong>Password recovery</strong><span>Forgot/reset-password flow without admin knowing passwords.</span></div></div>
+              <div class="list-row"><div><strong>Sessions</strong><span>View and revoke active sessions.</span></div></div>
+              <div class="list-row"><div><strong>Audit</strong><span>Record important admin and owner actions.</span></div></div>
+            </div>
+          </article>
+
+          <article class="card span-4">
+            <div class="card-head"><div><h3>Properties</h3><p>Designed for Sand & Sea Manor now and more properties later.</p></div></div>
+            <div class="metric">1</div><div class="metric-label">Current property architecture</div>
+            <div class="empty" style="margin-top:14px">Admin will control property records, ownership/access assignments, channel connections and property-level configuration. Normal operational work stays in the Owner Portal.</div>
+          </article>
+
+          <article class="card span-8">
+            <div class="card-head"><div><h3>Documents & Cloud Automation</h3><p>Cloud storage should hold the files; CJT indexes and surfaces them.</p></div><a class="card-link" href="/owner-v1/documents">Open Documents plan ↗</a></div>
+            <div class="split-metrics">
+              <div class="mini"><b>Email</b><span>Automatic attachment intake</span></div>
+              <div class="mini"><b>Cloud</b><span>Authoritative file location</span></div>
+              <div class="mini"><b>Portal</b><span>Metadata, search and relationships</span></div>
+            </div>
+            <div class="list" style="margin-top:14px">
+              <div class="list-row"><div><strong>Hands-off filing</strong><span>Invoices, statements, contracts, receipts and service records should be detected from Gmail or connected sources, stored to the selected cloud location and indexed automatically.</span></div><span class="badge good">Principle</span></div>
+              <div class="list-row"><div><strong>One cloud object, many views</strong><span>The same document can appear under a reservation, property, vendor, financial record or maintenance item without copying the file.</span></div><span class="badge good">Principle</span></div>
+              <div class="list-row"><div><strong>Manual upload</strong><span>Keep it available for exceptions, but do not make manual filing the normal workflow.</span></div><span class="badge">Fallback</span></div>
+            </div>
+          </article>
+
+          <article class="card span-4">
+            <div class="card-head"><div><h3>Integrations</h3><p>Central place to manage system connections.</p></div></div>
+            <div class="list">
+              <div class="list-row"><div><strong>Gmail</strong><span>Guest communication and document intake.</span></div><span class="badge">Plan</span></div>
+              <div class="list-row"><div><strong>Cloud storage</strong><span>Drive, Dropbox and/or OneDrive.</span></div><span class="badge">Plan</span></div>
+              <div class="list-row"><div><strong>Booking channels</strong><span>Airbnb, Vrbo, Booking.com, Houfy and Direct.</span></div><span class="badge">Plan</span></div>
+              <div class="list-row"><div><strong>Signing / payments</strong><span>OpenSign and future payment/accounting links.</span></div><span class="badge">Plan</span></div>
+            </div>
+          </article>
+
+          <article class="card span-6">
+            <div class="card-head"><div><h3>Audit & Activity</h3><p>Accountability once multiple users exist.</p></div></div>
+            <div class="empty">Planned activity records include login/logout, user invitations, role changes, reservation lifecycle actions, pricing changes, document access/file events, integration changes and administrative configuration changes.</div>
+          </article>
+
+          <article class="card span-6">
+            <div class="card-head"><div><h3>System & Data</h3><p>Administrative health and recovery controls.</p></div></div>
+            <div class="list">
+              <div class="list-row"><div><strong>Database health</strong><span>Environment, migration and backup status.</span></div></div>
+              <div class="list-row"><div><strong>Automation health</strong><span>Last successful email/cloud sync and exceptions needing attention.</span></div></div>
+              <div class="list-row"><div><strong>Import / export</strong><span>Controlled data movement and reconciliation tools.</span></div></div>
+              <div class="list-row"><div><strong>Recovery</strong><span>Keep documented deployment and database rollback points.</span></div></div>
+            </div>
+          </article>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script src="/assets/js/owner-shell.js"></script>
+  <script src="/assets/js/static-auth.js"></script>
+</body>
+</html>
