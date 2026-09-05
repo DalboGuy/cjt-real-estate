@@ -17,7 +17,7 @@
   const section=document.createElement('section');
   section.id='bookingCalendar';section.className='panel';
   section.innerHTML=`
-    <div class="booking-section-title"><div><h2 style="margin-bottom:4px">Bookings & Revenue Calendar</h2><p class="meta" style="margin-top:0">Calendar blocks from Airbnb, Vrbo, Booking.com, Houfy and direct bookings, with a separate owner revenue ledger.</p></div><button id="bookingRefresh" class="btn ghost small" type="button">Refresh</button></div>
+    <div class="booking-section-title"><div><h2 style="margin-bottom:4px">Bookings & Revenue Calendar</h2><p class="meta" style="margin-top:0">Calendar blocks from Airbnb, Vrbo, Booking.com, Houfy and direct bookings, with a separate owner revenue ledger.</p></div><button type="button" class="btn" onclick="window.CJTInquiryWorkflow.open()">Manage inquiries</button><button id="bookingRefresh" class="btn ghost small" type="button">Refresh</button></div>
     <div class="sync-warning"><strong>Source-label caution:</strong> because the four booking sites are cross-synced, the same stay can appear in more than one iCal feed. A source chip means that feed contains the block; it does not by itself prove which site owns the reservation. Revenue records below are the authoritative channel assignment.</div>
     <div id="bookingHealth" class="calendar-source-health"></div>
     <div class="booking-kpis">
@@ -109,7 +109,9 @@
       const payout=financial.reduce((a,f)=>a+Number(f.expected_payout||0),0);
       el.innerHTML=`<div class="booking-day-number">${d}</div><div>${sources.slice(0,3).map(s=>`<span class="source-chip ${chipClass(s)}">${esc(channelLabel(s))}</span>`).join('')}${sources.length>3?`<span class="source-chip">+${sources.length-3}</span>`:''}</div>${financial.length?`<div class="day-money">${esc(financial.map(f=>channelLabel(f.channel)).join(' / '))}${payout?` · ${dollars(payout)}`:''}</div>`:''}`;
       el.title=events.length?events.map(e=>`${channelLabel(e.source)}: ${e.summary} (${e.start}–${e.end})`).join('\n'):'Available';
-      el.addEventListener('click',()=>prefillFromDay(date,events,financial));host.appendChild(el);
+      el.setAttribute('role','button');el.tabIndex=0;
+      const openDay=()=>events.length&&window.CJTInquiryWorkflow?window.CJTInquiryWorkflow.reviewBlock(events):prefillFromDay(date,events,financial);
+      el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openDay()}});el.addEventListener('click',openDay);host.appendChild(el);
     }
   }
 
@@ -133,6 +135,7 @@
     for(const g of groups.slice(0,60)){
       const row=document.createElement('div');row.className='booking-row';
       row.innerHTML=`<h4>${esc(g.start)} → ${esc(g.end)}</h4><div>${g.sources.map(s=>`<span class="source-chip ${chipClass(s)}">${esc(channelLabel(s))}</span>`).join('')}</div><div class="booking-muted">${g.reservationLike?'Reservation-like calendar event':'Calendar block'} · ${esc(g.summaries.slice(0,2).join(' / '))}</div><div class="actions"><button class="btn ghost small" type="button">Add revenue details</button></div>`;
+      const review=document.createElement('button');review.type='button';review.className='btn ghost small';review.textContent='Manage blocked dates';review.onclick=()=>window.CJTInquiryWorkflow?.reviewBlock([...(calendarState.data.otaEvents||[]),...(calendarState.data.directReservations||[])].filter(e=>e.start<g.end&&e.end>g.start));row.querySelector('.actions').append(review);
       row.querySelector('button').addEventListener('click',()=>prefillFromDay(g.start,(calendarState.data.otaEvents||[]).filter(e=>e.start===g.start&&e.end===g.end),[]));$('bkUnmatched').appendChild(row);
     }
   }
@@ -146,6 +149,7 @@
   async function deleteFinancial(f){if(!confirm(`Delete the revenue record for ${channelLabel(f.channel)} ${f.checkin} → ${f.checkout}?`))return;await ownerCalendarApi({method:'POST',body:JSON.stringify({action:'financial_delete',booking_key:f.booking_key})});await refresh();clearForm();}
 
   $('bkForm').addEventListener('submit',async e=>{e.preventDefault();const msg=$('bkMsg');msg.className='meta';msg.textContent='Saving…';const payload={action:'financial_upsert',booking_key:$('bkKey').value,channel:$('bkChannel').value,status:$('bkStatus').value,checkin:$('bkCheckin').value,checkout:$('bkCheckout').value,gross_revenue:$('bkGrossInput').value,expected_payout:$('bkPayoutInput').value,taxes:$('bkTaxes').value,cleaning_fee:$('bkCleaning').value,collected_amount:$('bkCollectedInput').value,external_reference:$('bkReference').value,notes:$('bkNotes').value,source:'owner_entry'};try{await ownerCalendarApi({method:'POST',body:JSON.stringify(payload)});msg.className='meta success';msg.textContent='Booking financials saved.';await refresh();}catch(err){msg.className='meta error';msg.textContent=`Could not save: ${err.message}`;}});
+  window.addEventListener('cjt:reservation-updated',refresh);
   $('bkClear').addEventListener('click',clearForm);$('bookingRefresh').addEventListener('click',refresh);$('bkPrev').addEventListener('click',()=>{calendarState.month.setMonth(calendarState.month.getMonth()-1);renderCalendar()});$('bkNext').addEventListener('click',()=>{calendarState.month.setMonth(calendarState.month.getMonth()+1);renderCalendar()});
 
   function maybeLoad(){if(!document.getElementById('portal')?.classList.contains('hidden')&&!calendarState.loaded)refresh();}
