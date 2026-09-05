@@ -34,10 +34,14 @@
   function portalVisible(){const p=document.getElementById('portal');return !!p&&!p.classList.contains('hidden')}
 
   function syncBack(){
-    back.classList.toggle('rescue-hidden',!portalVisible());
+    const hidden=!portalVisible();
+    if(back.classList.contains('rescue-hidden')!==hidden)back.classList.toggle('rescue-hidden',hidden);
     const item=history[history.length-1];
-    backButton.disabled=!item;
-    backLabel.textContent=item?`Return to ${tabLabel(item.tab)}`:'Previous view';
+    if(backButton.disabled!==!item)backButton.disabled=!item;
+    const label=item?`Return to ${tabLabel(item.tab)}`:'Previous view';
+    // This runs inside a subtree observer. Replacing unchanged text creates
+    // another childList mutation and otherwise keeps the browser in a loop.
+    if(backLabel.textContent!==label)backLabel.textContent=label;
   }
 
   function pulseBack(){
