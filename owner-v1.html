@@ -36,10 +36,12 @@
         <div class="nav-section">Property</div>
         <button data-coming-soon="Property"><span>Property</span></button>
         <button data-coming-soon="Maintenance"><span>Maintenance</span></button>
-        <button data-coming-soon="Documents"><span>Documents</span></button>
+        <a href="/owner-v1/documents"><span>Documents</span><span class="count">Plan</span></a>
         <div class="nav-section">Reporting</div>
         <button data-coming-soon="Analytics"><span>Analytics</span></button>
         <div class="nav-section">System</div>
+        <a href="/account-v1"><span>My Account</span></a>
+        <a href="/admin-v1"><span>Admin</span><span class="count">Preview</span></a>
         <button data-coming-soon="Settings"><span>Settings</span></button>
       </nav>
       <div class="sidebar-footer">
@@ -119,12 +121,19 @@
           </article>
 
           <article class="card span-4">
-            <div class="card-head"><div><h3>Platform Status</h3><p>Reorganization guardrails</p></div></div>
+            <div class="card-head"><div><h3>Documents</h3><p>Cloud-first document index and automation</p></div><a class="card-link" href="/owner-v1/documents">Open plan ↗</a></div>
+            <div class="metric">Cloud</div><div class="metric-label">Files stay in connected cloud storage; CJT organizes and links them.</div>
+            <div class="widget-footer"><a class="btn btn-secondary" href="/owner-v1/documents">View Documents Plan</a></div>
+          </article>
+
+          <article class="card span-8">
+            <div class="card-head"><div><h3>Platform Status</h3><p>Reorganization guardrails and architecture checkpoints</p></div><a class="card-link" href="/admin-v1">Admin preview ↗</a></div>
             <div class="list">
               <div class="list-row"><div><strong>Production</strong><span>Current owner workflows remain untouched.</span></div><span class="badge good">Safe</span></div>
               <div class="list-row"><div><strong>Database</strong><span>Production snapshot + reorg branch created.</span></div><span class="badge good">Backed up</span></div>
               <div class="list-row"><div><strong>Modules</strong><span>Communications and Reservations are integrated into the new shell.</span></div><span class="badge good">Phase 2</span></div>
-              <div class="list-row"><div><strong>Next</strong><span>Extract shared module code and begin Calendar / Pricing organization.</span></div><span class="badge warn">Phase 3</span></div>
+              <div class="list-row"><div><strong>Documents</strong><span>Cloud-first, email-driven document intake plan is now recorded in the portal.</span></div><span class="badge good">Recorded</span></div>
+              <div class="list-row"><div><strong>Admin & Accounts</strong><span>Admin Portal and Account Center planning shells are now available.</span></div><span class="badge warn">Foundation next</span></div>
             </div>
           </article>
         </section>
