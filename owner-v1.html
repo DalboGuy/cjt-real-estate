@@ -28,8 +28,8 @@
       <div class="property-chip"><strong>Sand & Sea Manor</strong><span>1720 Avenue M · Galveston, TX</span></div>
       <nav class="nav" aria-label="Owner Portal">
         <a class="active" href="/owner-v1"><span>Dashboard</span></a>
-        <a href="/communications"><span>Communications</span><span id="communicationsNavCount" class="count">0</span></a>
-        <a href="/owner"><span>Reservations</span><span class="count">↗</span></a>
+        <a href="/owner-v1/communications"><span>Communications</span><span id="communicationsNavCount" class="count">0</span></a>
+        <a href="/owner-v1/reservations"><span>Reservations</span></a>
         <button data-coming-soon="Calendar"><span>Calendar</span><span class="count">Soon</span></button>
         <button data-coming-soon="Pricing"><span>Pricing</span><span class="count">Soon</span></button>
         <button data-coming-soon="Financials"><span>Financials</span><span class="count">Soon</span></button>
@@ -67,22 +67,22 @@
 
         <section class="grid" aria-label="Owner dashboard widgets">
           <article class="card span-6">
-            <div class="card-head"><div><h3>Communications</h3><p>Guest messages across connected channels</p></div><a class="card-link" href="/communications">Open current hub ↗</a></div>
+            <div class="card-head"><div><h3>Communications</h3><p>Guest messages across connected channels</p></div><a class="card-link" href="/owner-v1/communications">Open module ↗</a></div>
             <div style="display:flex;align-items:end;gap:10px;margin-bottom:14px"><div><div id="commUnread" class="metric">0</div><div class="metric-label">Unread messages</div></div></div>
             <div id="commBreakdown" class="split-metrics"><div class="mini"><b>0</b><span>Airbnb unread</span></div><div class="mini"><b>0</b><span>Vrbo unread</span></div><div class="mini"><b>0</b><span>Other unread</span></div></div>
             <div id="commRecent" class="list" style="margin-top:16px"><div class="skeleton big"></div><div class="skeleton"></div></div>
-            <div class="widget-footer"><a class="btn btn-primary" href="/communications">Open Communications</a></div>
+            <div class="widget-footer"><a class="btn btn-primary" href="/owner-v1/communications">Open Communications</a></div>
           </article>
 
           <article class="card span-6">
-            <div class="card-head"><div><h3>Reservations</h3><p>Direct-booking lifecycle and upcoming stays</p></div><a class="card-link" href="/owner">Open current workflow ↗</a></div>
+            <div class="card-head"><div><h3>Reservations</h3><p>Direct-booking lifecycle and upcoming stays</p></div><a class="card-link" href="/owner-v1/reservations">Open module ↗</a></div>
             <div class="split-metrics">
               <div class="mini"><b id="resUpcoming">0</b><span>Upcoming / active</span></div>
               <div class="mini"><b id="resAction">0</b><span>Need action</span></div>
               <div class="mini"><b id="nextArrival" style="font-size:.9rem">—</b><span>Next direct arrival</span></div>
             </div>
             <div id="resRecent" class="list" style="margin-top:16px"><div class="skeleton big"></div><div class="skeleton"></div></div>
-            <div class="widget-footer"><a class="btn btn-primary" href="/owner">Manage Reservations</a></div>
+            <div class="widget-footer"><a class="btn btn-primary" href="/owner-v1/reservations">Manage Reservations</a></div>
           </article>
 
           <article class="card span-4">
@@ -123,7 +123,8 @@
             <div class="list">
               <div class="list-row"><div><strong>Production</strong><span>Current owner workflows remain untouched.</span></div><span class="badge good">Safe</span></div>
               <div class="list-row"><div><strong>Database</strong><span>Production snapshot + reorg branch created.</span></div><span class="badge good">Backed up</span></div>
-              <div class="list-row"><div><strong>Next</strong><span>Migrate Communications and Reservations into this shell.</span></div><span class="badge warn">Phase 2</span></div>
+              <div class="list-row"><div><strong>Modules</strong><span>Communications and Reservations are integrated into the new shell.</span></div><span class="badge good">Phase 2</span></div>
+              <div class="list-row"><div><strong>Next</strong><span>Extract shared module code and begin Calendar / Pricing organization.</span></div><span class="badge warn">Phase 3</span></div>
             </div>
           </article>
         </section>
