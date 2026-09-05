@@ -40,7 +40,9 @@ module.exports=async function(req,res){
     sources.push({name:'direct',ok:false,error:e.message});
   }
   res.setHeader('Cache-Control',testMode?'no-store':'s-maxage=60, stale-while-revalidate=180');
-  const requiredSources=['airbnb','vrbo','booking.com','direct'];
+  const requiredSources=['airbnb','vrbo','direct'];
+  const bookingSource=sources.find(source=>source.name==='booking.com');
+  if(bookingSource&&bookingSource.error!=='not_configured')requiredSources.push('booking.com');
   const failedSources=requiredSources.filter(name=>!sources.some(source=>source.name===name&&source.ok));
   res.status(200).json({blockedDates:[...all].sort(),blockedBySource,sources,events,healthy:failedSources.length===0,failedSources,testMode,checkedAt:new Date().toISOString()});
 };
