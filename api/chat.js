@@ -26,6 +26,15 @@ async function reservationSummary(id){
   `;
   return rows[0]||null;
 }
+async function guestUnreadCount(reservationId){
+  const sql=db();
+  const rows=await sql`
+    SELECT count(*)::int AS unread_count
+    FROM chat_messages
+    WHERE reservation_id=${reservationId} AND sender_type='owner' AND read_by_guest_at IS NULL
+  `;
+  return Number(rows[0]&&rows[0].unread_count||0);
+}
 
 module.exports=async function(req,res){
   try{
@@ -50,6 +59,14 @@ module.exports=async function(req,res){
       if(!reservation)return res.status(404).json({error:'reservation_not_found'});
       await markReadByOwner(reservationId);
       return res.status(200).json({owner:{id:owner.id,name:owner.name,role:owner.role},reservation,messages:await getMessages(reservationId)});
+    }
+
+    if(req.method==='GET'&&String(req.query&&req.query.mode||'')==='guest_summary'){
+      const token=String((req.query&&req.query.token)||'');
+      const reservation=await getReservationByGuestToken(token);
+      if(!reservation)return res.status(404).json({error:'not_found',message:'This private conversation link is invalid or expired.'});
+      const detail=await reservationSummary(reservation.id);
+      return res.status(200).json({reservation:detail,unread_count:await guestUnreadCount(reservation.id)});
     }
 
     if(req.method==='GET'){
