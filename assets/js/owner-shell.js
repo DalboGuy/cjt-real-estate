@@ -2,14 +2,65 @@
   const sidebar=document.getElementById('ownerSidebar');
   const backdrop=document.getElementById('ownerBackdrop');
   const menu=document.getElementById('mobileMenu');
+  const app=sidebar?.closest('.owner-app');
   const nav=sidebar?.querySelector('.nav');
-  function close(){sidebar?.classList.remove('open');backdrop?.classList.add('hidden')}
+  const isMobile=()=>window.matchMedia('(max-width:780px)').matches;
+
   function revealActive(){
     const active=nav?.querySelector('.active');
     if(active&&typeof active.scrollIntoView==='function')active.scrollIntoView({block:'nearest'});
   }
-  menu?.addEventListener('click',()=>{sidebar?.classList.add('open');backdrop?.classList.remove('hidden');requestAnimationFrame(revealActive)});
-  backdrop?.addEventListener('click',close);
+  function setCollapsed(collapsed){
+    if(!sidebar||!app)return;
+    app.classList.toggle('sidebar-collapsed',collapsed);
+    if(isMobile()){
+      sidebar.classList.toggle('open',!collapsed);
+      backdrop?.classList.toggle('hidden',collapsed);
+    }else{
+      sidebar.classList.remove('open');
+      backdrop?.classList.add('hidden');
+    }
+    if(!collapsed)requestAnimationFrame(revealActive);
+  }
+  function openNav(){setCollapsed(false)}
+  function closeNav(){setCollapsed(true)}
+
+  if(sidebar&&app){
+    const closeButton=document.createElement('button');
+    closeButton.type='button';
+    closeButton.className='sidebar-close';
+    closeButton.setAttribute('aria-label','Hide navigation');
+    closeButton.title='Hide navigation';
+    closeButton.textContent='‹';
+    closeButton.addEventListener('click',closeNav);
+    sidebar.prepend(closeButton);
+
+    const flyout=document.createElement('button');
+    flyout.type='button';
+    flyout.className='sidebar-flyout-toggle';
+    flyout.setAttribute('aria-label','Open navigation');
+    flyout.title='Open navigation';
+    const label=document.createElement('span');label.textContent='Menu';
+    const arrow=document.createElement('b');arrow.textContent='›';
+    flyout.append(label,arrow);
+    flyout.addEventListener('click',openNav);
+    app.appendChild(flyout);
+
+    if(isMobile())setCollapsed(true);
+  }
+
+  menu?.addEventListener('click',openNav);
+  backdrop?.addEventListener('click',closeNav);
+  window.addEventListener('resize',()=>{
+    if(!sidebar||!app)return;
+    if(isMobile()){
+      if(!sidebar.classList.contains('open'))app.classList.add('sidebar-collapsed');
+    }else if(sidebar.classList.contains('open')){
+      sidebar.classList.remove('open');
+      backdrop?.classList.add('hidden');
+      app.classList.remove('sidebar-collapsed');
+    }
+  });
 
   const ownerRoutes={
     'Calendar':'/owner-v1/calendar','Pricing':'/owner-v1/pricing','Financials':'/owner-v1/financials','Property':'/owner-v1/property','Maintenance':'/owner-v1/maintenance','Analytics':'/owner-v1/analytics','Settings':'/owner-v1/settings'
@@ -36,7 +87,7 @@
     if(route){location.href=route;return;}
     const target=document.getElementById('moduleNotice');
     if(target){target.textContent=`${name} is under construction.`;target.classList.remove('hidden');setTimeout(()=>target.classList.add('hidden'),3500)}
-    close();
+    closeNav();
   }));
   document.getElementById('logout')?.addEventListener('click',async()=>{
     await fetch('/api/owner',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'logout'})}).catch(()=>{});
