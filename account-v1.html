@@ -16,6 +16,7 @@
       <div class="property-chip"><strong id="accountName">Personal Account</strong><span id="accountAccess">Identity · Security · Access</span></div>
       <nav class="nav" aria-label="Account Center">
         <a class="active" href="/account-v1"><span>Account Overview</span></a>
+        <a href="/account-v1/sessions"><span>Sessions</span><span class="count">Live</span></a>
         <button data-coming-soon="Notification Preferences"><span>Notifications</span></button>
         <div class="nav-section">Access</div>
         <button data-coming-soon="Property Access"><span>Property Access</span></button>
@@ -61,20 +62,21 @@
             <div class="list">
               <div class="list-row"><div><strong>Individual credentials</strong><span>Each named user has their own password hash and session.</span></div><span class="badge good">Built</span></div>
               <div class="list-row"><div><strong>Password policy</strong><span>Minimum 5 characters; no required character mix.</span></div><span class="badge good">Set</span></div>
-              <div class="list-row"><div><strong>12-hour sessions</strong><span>Owner/Admin APIs use the same secure HttpOnly session cookie.</span></div><span class="badge good">Built</span></div>
-              <div class="list-row"><div><strong>Password recovery</strong><span>Email-based recovery comes with the invitation/email phase.</span></div><span class="badge warn">Next</span></div>
+              <div class="list-row"><div><strong>Password recovery</strong><span>Reset-token workflow is built. Automated email delivery activates when the runtime delivery connection is configured.</span></div><a class="card-link" href="/forgot-password-v1">Open ↗</a></div>
+              <div class="list-row"><div><strong>Session management</strong><span>View active sessions and sign out individual or all other sessions.</span></div><a class="card-link" href="/account-v1/sessions">Open ↗</a></div>
               <div class="list-row"><div><strong>MFA</strong><span>Reserved for later security hardening.</span></div><span class="badge">Planned</span></div>
             </div>
           </article>
 
           <article class="card span-4">
-            <div class="card-head"><div><h3>Role & Access</h3><p>Admin-controlled authorization</p></div></div>
-            <div class="empty">The current foundation supports Administrator, Owner and Manager. Property-scoped permissions plus Co-host, Accounting and Read Only are the next authorization migration.</div>
+            <div class="card-head"><div><h3>Role & Access</h3><p>Logged for later; not in the current build scope.</p></div></div>
+            <div class="empty">Property-scoped users, permission enforcement and invitations are recorded in Platform Maps but intentionally deferred.</div>
           </article>
 
           <article class="card span-4">
-            <div class="card-head"><div><h3>Sessions</h3><p>Current session visibility</p></div></div>
-            <div class="empty">This page now identifies the active session. A dedicated device/session manager with individual revocation is planned in Admin and Account Center.</div>
+            <div class="card-head"><div><h3>Sessions</h3><p>Named-account session controls</p></div><span class="badge good">Built</span></div>
+            <div class="empty">Open Sessions to see active sign-ins, the current session and revoke sessions you no longer want active.</div>
+            <div class="widget-footer"><a class="btn btn-primary" href="/account-v1/sessions">Manage Sessions</a></div>
           </article>
         </section>
 
