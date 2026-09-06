@@ -4,7 +4,7 @@ Status: **Living architecture documentation**
 
 Authoritative preview route: `/admin-v1/maps`
 
-Current version: **0.6 — 2026-09-05**
+Current version: **0.7 — 2026-09-05**
 
 ## Purpose
 
@@ -42,7 +42,8 @@ The portal maintains these views:
 4. Cloud Document Intake
 5. Source of Truth
 6. Identity & Access Flow
-7. Build State
+7. Portal Navigation Flow
+8. Build State
 
 The common CJT flow is:
 
@@ -59,6 +60,18 @@ Every visible navigation item must open a real route. A module that is not yet r
 The shared left navigation must also remain usable at every viewport height. The brand/property context and footer remain visible while the module list scrolls independently. Desktop, touch and mobile users must be able to reach every navigation item, and the active module should be kept in view automatically.
 
 The left navigation is also collapsible. A chevron control inside the pane hides it, and a persistent **Menu ›** flyout control remains on the left edge so the user can reopen the portal navigation from any module without using the browser Back button. On mobile the same control opens the sliding navigation drawer.
+
+## Mobile layout rule
+
+Portal pages must fit the device viewport without forcing the entire page to scroll sideways. On narrow screens:
+
+- the application shell, top bar, content area and cards are clamped to the viewport width;
+- card headers and action areas wrap instead of forcing fixed horizontal space;
+- dashboard metric grids collapse to single-column layouts when needed;
+- communications and reservation modules stack vertically;
+- long message content, labels and URLs wrap inside their containers;
+- visual maps stack vertically instead of extending the page width;
+- genuinely wide tables may scroll horizontally **inside their own card**, not by widening the portal page.
 
 Reserved Under construction routes currently cover:
 
