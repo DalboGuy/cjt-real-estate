@@ -50,7 +50,7 @@
               <label class="metric-label" for="currentPassword">Current password</label>
               <input id="currentPassword" type="password" autocomplete="current-password" required>
               <label class="metric-label" for="newPassword">New password</label>
-              <input id="newPassword" type="password" autocomplete="new-password" minlength="12" required placeholder="At least 12 characters">
+              <input id="newPassword" type="password" autocomplete="new-password" minlength="5" required placeholder="At least 5 characters">
               <button class="btn btn-primary" style="margin-top:12px" type="submit">Change password</button>
             </form>
             <div id="passwordMessage" class="login-msg"></div>
@@ -60,6 +60,7 @@
             <div class="card-head"><div><h3>Security</h3><p>Current foundation</p></div></div>
             <div class="list">
               <div class="list-row"><div><strong>Individual credentials</strong><span>Each named user has their own password hash and session.</span></div><span class="badge good">Built</span></div>
+              <div class="list-row"><div><strong>Password policy</strong><span>Minimum 5 characters; no required character mix.</span></div><span class="badge good">Set</span></div>
               <div class="list-row"><div><strong>12-hour sessions</strong><span>Owner/Admin APIs use the same secure HttpOnly session cookie.</span></div><span class="badge good">Built</span></div>
               <div class="list-row"><div><strong>Password recovery</strong><span>Email-based recovery comes with the invitation/email phase.</span></div><span class="badge warn">Next</span></div>
               <div class="list-row"><div><strong>MFA</strong><span>Reserved for later security hardening.</span></div><span class="badge">Planned</span></div>
@@ -116,7 +117,7 @@ document.getElementById('passwordForm').addEventListener('submit',async e=>{
   try{
     await auth({method:'POST',body:JSON.stringify({action:'change_password',currentPassword:document.getElementById('currentPassword').value,newPassword:document.getElementById('newPassword').value})});
     document.getElementById('currentPassword').value='';document.getElementById('newPassword').value='';msg.textContent='Password updated.';
-  }catch(err){msg.textContent=err.message==='current_password_invalid'?'Current password is incorrect.':err.message==='password_too_short'?'Use at least 12 characters.':'Password could not be updated.';}
+  }catch(err){msg.textContent=err.message==='current_password_invalid'?'Current password is incorrect.':err.message==='password_too_short'?'Use at least 5 characters.':'Password could not be updated.';}
 });
 load();
 </script>
