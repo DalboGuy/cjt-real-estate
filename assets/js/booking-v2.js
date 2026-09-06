@@ -205,6 +205,4 @@
   }
   function stopReviewScroll(){if(reviewTimer){clearInterval(reviewTimer);reviewTimer=null}}
   reviewRail?.addEventListener('mouseenter',stopReviewScroll);reviewRail?.addEventListener('mouseleave',startReviewScroll);reviewRail?.addEventListener('focusin',stopReviewScroll);reviewRail?.addEventListener('focusout',startReviewScroll);reviewRail?.addEventListener('pointerdown',stopReviewScroll);startReviewScroll();
-
-  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&roomModal?.classList.contains('show'))$('roomGalleryClose')?.click()});
 })();
