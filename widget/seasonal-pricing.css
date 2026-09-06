@@ -31,6 +31,8 @@
 .cjt-seasonal-pricing__detail dt { margin: 0; }
 .cjt-seasonal-pricing__detail dd { margin: 0; color: var(--cjt-seasonal-ink); font-weight: 600; text-align: right; }
 .cjt-seasonal-pricing__note { grid-column: 1 / -1; margin: 1px 0 0; padding-top: 10px; border-top: 1px solid #ececea; color: var(--cjt-seasonal-muted); }
+.cjt-seasonal-pricing__note dd { margin: 0; font-weight: 400; text-align: left; color: var(--cjt-seasonal-muted); }
+.cjt-seasonal-pricing__sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 .cjt-seasonal-pricing__item.is-open .cjt-seasonal-pricing__panel { grid-template-rows: 1fr; opacity: 1; }
 .cjt-seasonal-pricing__empty { margin: 0; padding: 22px 24px; color: var(--cjt-seasonal-muted); background: var(--cjt-seasonal-soft); font-size: .9rem; }
 .cjt-seasonal-pricing__error { margin: 0; padding: 14px 24px; color: #5a2525; background: #fbf3f3; font-size: .84rem; }

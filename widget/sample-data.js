@@ -2,6 +2,7 @@
 (function (root) {
   'use strict';
   root.CJTSeasonalPricingSample = {
+    /* badge is read by seasonal-pricing.js when sampleData is true */
     badge: 'Sample data — not live pricing', baseRate: 249,
     seasons: [
       { id: 'sample-november-value', name: 'November Value', nights: 2, start: '2025-11-01', end: '2025-11-30', price: 199, note: 'Illustrative screenshot period' },

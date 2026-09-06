@@ -21,7 +21,7 @@
     var opts = Object.assign({}, DEFAULTS, options || {});
     node.classList.add('cjt-seasonal-pricing', 'is-loading'); node.setAttribute('data-cjt-seasonal-pricing-mounted', 'true'); node.innerHTML = '';
     var header = el('div', 'cjt-seasonal-pricing__header'); header.appendChild(el('h2', 'cjt-seasonal-pricing__title', 'Seasonal Pricing')); header.appendChild(el('p', 'cjt-seasonal-pricing__intro', 'Nightly rates by season and stay requirements.'));
-    if (opts.sampleData) header.appendChild(el('span', 'cjt-seasonal-pricing__sample-badge', 'Sample data — not live pricing'));
+    if (opts.sampleData) header.appendChild(el('span', 'cjt-seasonal-pricing__sample-badge', opts.badge || 'Sample data — not live pricing'));
     node.appendChild(header);
     var base = el('div', 'cjt-seasonal-pricing__base'); base.appendChild(el('span', 'cjt-seasonal-pricing__base-label', 'Base Rate')); var baseValue = el('strong', 'cjt-seasonal-pricing__base-value', money(opts.baseRate)); base.appendChild(baseValue); node.appendChild(base);
     var list = el('ul', 'cjt-seasonal-pricing__list'); node.appendChild(list); var status = null;
@@ -41,7 +41,7 @@
         var inner = el('div', 'cjt-seasonal-pricing__panel-inner'), details = el('dl', 'cjt-seasonal-pricing__details');
         function detail(label, value) { var wrap = el('div', 'cjt-seasonal-pricing__detail'); wrap.appendChild(el('dt', '', label)); wrap.appendChild(el('dd', '', value)); details.appendChild(wrap); }
         detail('Date range', date(season.start) + ' – ' + date(season.end)); detail('Minimum stay', season.nights ? season.nights + ' nights' : 'Varies');
-        if (season.note) details.appendChild(el('p', 'cjt-seasonal-pricing__note', season.note));
+        if (season.note) { var note = el('div', 'cjt-seasonal-pricing__note cjt-seasonal-pricing__detail'); note.appendChild(el('dt', 'cjt-seasonal-pricing__sr-only', 'Note')); note.appendChild(el('dd', '', season.note)); details.appendChild(note); }
         inner.appendChild(details); panel.appendChild(inner); item.appendChild(button); item.appendChild(panel); list.appendChild(item);
         var titleId = panelId + '-title'; name.id = titleId; panel.setAttribute('aria-labelledby', titleId);
         var closeTimer;
@@ -58,10 +58,13 @@
         button.addEventListener('keydown', function (event) { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); button.click(); } });
       });
     }
-    load(opts.dataSource).then(function (raw) {
-      node.classList.remove('is-loading'); var source = payload(raw || {}); render(Object.assign({}, opts, source, { seasons: source.seasons || opts.seasons }));
-    }).catch(function () { node.classList.remove('is-loading'); list.innerHTML = ''; statusMessage('Seasonal rates could not be loaded. Check the quote for a live stay-specific price.', true); });
-    if (!opts.dataSource) { node.classList.remove('is-loading'); render(opts); }
+    if (opts.dataSource) {
+      load(opts.dataSource).then(function (raw) {
+        node.classList.remove('is-loading'); var source = payload(raw || {}); render(Object.assign({}, opts, source, { seasons: source.seasons || opts.seasons }));
+      }).catch(function () { node.classList.remove('is-loading'); list.innerHTML = ''; statusMessage('Seasonal rates could not be loaded. Check the quote for a live stay-specific price.', true); });
+    } else {
+      node.classList.remove('is-loading'); render(opts);
+    }
     return { container: node, refresh: function (next) { return mount(node, Object.assign({}, opts, next || {})); } };
   }
   function autoMount() { var n = document.querySelector('#cjt-seasonal-pricing, [data-cjt-seasonal-pricing]'); if (!n || n.getAttribute('data-cjt-seasonal-pricing-mounted')) return; var opts = n.cjtSeasonalPricingOptions || {}; if (n.getAttribute('data-sample-data') === '1' && root.CJTSeasonalPricingSample) opts = Object.assign({}, root.CJTSeasonalPricingSample, opts, { sampleData: true }); mount(n, opts); }
