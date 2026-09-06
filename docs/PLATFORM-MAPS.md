@@ -4,7 +4,7 @@ Status: **Living architecture documentation**
 
 Authoritative preview route: `/admin-v1/maps`
 
-Current version: **1.1 — 2026-09-05**
+Current version: **1.2 — 2026-09-05**
 
 ## Purpose
 
@@ -16,9 +16,24 @@ The primary function of this project is the **working direct-booking system** fo
 
 Current core loop:
 
-`Guest chooses dates → live availability check → seasonal price quote → booking request / 24-hour hold → Direct Booking Dashboard → owner accepts / adjusts / releases → contract / deposit milestones → confirmed reservation`
+`Guest explores listing → chooses dates/guests → live availability check → seasonal all-in quote → Book Now / 24-hour hold → Direct Booking Dashboard → owner accepts / adjusts / releases → agreement / payment milestones → confirmed reservation`
 
-Online payment/checkout is the next missing step in that loop.
+Online Stripe collection and final automated confirmation remain the next transactional step.
+
+## Canonical guest-facing property facts
+
+Owner-approved facts for the booking experience:
+
+- Sand & Sea Manor — 1720 Avenue M, Galveston, TX 77550.
+- 5 bedrooms.
+- 3 full bathrooms.
+- Maximum 14 overnight guests.
+- Hosted by CJT Realty.
+- Standard check-in 4:00 PM; checkout 10:00 AM.
+- No smoking.
+- Pets are considered case by case; guests are encouraged to ask before booking.
+- Events/gatherings are considered case by case; guests are encouraged to ask before booking.
+- Guest-facing cancellation summary: full refund more than 14 days before arrival, 50% refund 7–14 days before arrival, and non-refundable less than 7 days before arrival; the signed agreement controls final terms.
 
 ## Visual language
 
@@ -56,7 +71,8 @@ The portal maintains these views:
 8. Security Scope Decision
 9. Temporary Preview Access
 10. Direct Booking Engine
-11. Build State
+11. Guest Listing Experience
+12. Build State
 
 The common CJT flow is:
 
@@ -64,19 +80,42 @@ The common CJT flow is:
 
 ## Direct Booking Engine — current build
 
-The guest and owner sides now share one booking lifecycle:
+The guest and owner sides share one booking lifecycle:
 
-- `/` — guest booking page with clickable synced calendar.
+- `/` — listing-first guest booking page with a five-photo mosaic, full photo gallery, property details, sleeping arrangements, amenities, reviews, map, host profile, booking policies, sticky booking card and mobile Book Now bar.
 - `/api/calendar` — consolidated availability from OTA calendars and active CJT holds/reservations.
-- `/api/quote` — read-only quote service using the current seasonal schedule, Friday/Saturday weekend pricing, minimum-stay rules, $240 cleaning fee, and 15% tax.
-- `/api/inquiries` — rechecks availability and pricing, creates the 24-hour inquiry hold, and stores the exact quote with the booking event.
+- `/api/quote` — read-only quote service using the current seasonal schedule, Friday/Saturday weekend pricing, minimum-stay rules, $240 cleaning fee and 15% tax.
+- Quote payment schedule — stays more than 30 days away default to 50% due when the booking is accepted and 50% due 30 days before arrival; stays within 30 days default to the full balance due when accepted.
+- `/api/inquiries` — rechecks availability and pricing, creates the 24-hour inquiry hold, and stores the exact quote/payment schedule with the booking event.
 - `/owner-v1/reservations` — Direct Booking Dashboard showing requests, stored quotes, status, hold expiry, contract/deposit milestones, and owner actions.
-- `/api/owner` — owner actions can accept a new request, adjust the lodging subtotal while recalculating tax/total, extend a hold, track contract/signature/deposit, or reject/release the dates.
-- `reservations` remains the canonical booking record; `booking_events` stores quote snapshots and lifecycle events without requiring a new production schema migration.
+- `/api/owner` — owner actions can accept a new request, adjust the lodging subtotal while recalculating tax/total/payment schedule, extend a hold, track contract/signature/deposit, or reject/release the dates.
+- `reservations` remains the canonical booking record; `booking_events` stores quote snapshots and lifecycle events without requiring a new quote table.
 
-The published online pricing horizon in booking-engine v1 runs through **2027-08-15**. Dates beyond that require a future pricing extension rather than silently inventing rates.
+The published online pricing horizon runs through **2027-08-15**. Dates beyond that require a future pricing extension rather than silently inventing rates.
 
-Next booking-engine step: connect payment/checkout and produce the final guest confirmation flow after successful payment.
+### Occupancy schema note
+
+The guest UI, quote engine and inquiry validation now recognize the owner-approved capacity of 14. The existing production `reservations` table was originally created with a 12-guest check constraint. Until an additive production migration is explicitly approved, requests for 13–14 guests return a clear migration-pending message rather than silently changing the production schema. This is a known release item, not a change in the approved property capacity.
+
+## Guest Listing Experience — v1.2
+
+The guest UI follows the familiar interaction pattern of a modern vacation-rental listing while keeping CJT branding and content:
+
+`Listing header → photo mosaic → property summary → highlights → description → sleeping arrangements → amenities → reviews → exact map → Hosted by CJT Realty → rules/cancellation`
+
+Desktop keeps a sticky booking card beside the listing content. Mobile collapses to one content column with a persistent Book Now bar. Dates open in a dedicated calendar modal; guest count is adjusted in a compact picker; live quote details remain beside the Book Now action. The full photo collection opens in a categorized gallery and fullscreen viewer.
+
+Guest trust/decision features now include:
+
+- Share and local Save actions.
+- Full existing property photo collection.
+- Connected guest-review surface.
+- Exact map for 1720 Avenue M.
+- Clear host identity: Hosted by CJT Realty.
+- Case-by-case pet and event prompts inside the booking form.
+- Plain-language cancellation terms.
+- Payment-timing explanation before checkout is connected.
+- tawk.to remains the direct website chat channel.
 
 ## Source-of-truth principle
 
@@ -102,7 +141,7 @@ Portal pages must fit the device viewport without forcing the entire page to scr
 - visual maps stack vertically instead of extending the page width;
 - genuinely wide tables may scroll horizontally **inside their own card**, not by widening the portal page.
 
-The public booking page follows the same rule and includes a mobile sticky booking action.
+The public booking page follows the same rule, uses a one-column listing layout on phones and includes a persistent mobile Book Now action.
 
 ## Security scope decision — 2026-09-05
 
