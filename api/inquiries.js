@@ -5,6 +5,7 @@ const { quoteStay, eachDate, MAX_GUESTS } = require('../lib/pricing');
 
 function clean(v,max=500){return String(v||'').trim().slice(0,max);}
 function validDate(v){return /^\d{4}-\d{2}-\d{2}$/.test(String(v||''));}
+function isOccupancyConstraintViolation(error){return error?.constraint==="reservation_guest_count_valid"||String(error?.message||"").toLowerCase().includes("reservation_guest_count_valid");}
 function makeId(checkin){return `DB-${String(checkin).replace(/-/g,'')}-${crypto.randomBytes(3).toString('hex').toUpperCase()}`;}
 
 module.exports=async function(req,res){
@@ -55,7 +56,7 @@ module.exports=async function(req,res){
       if(detail.includes('reservations_no_overlap')){
         return res.status(409).json({error:'dates_unavailable',message:'Those dates were just placed on hold by another guest.'});
       }
-      if(detail.includes('reservation_guest_count_valid')&&guests>12){
+      if(isOccupancyConstraintViolation(e)&&guests>12){
         return res.status(503).json({error:'occupancy_migration_pending',message:'The home accommodates up to 14 guests, but online submission for groups of 13–14 is being updated. Please contact CJT Realty and we will place the request directly.'});
       }
       throw e;
