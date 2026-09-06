@@ -4,8 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Sand & Sea Manor | Historic Galveston Direct Booking</title>
-  <meta name="description" content="Book Sand & Sea Manor in Galveston direct with CJT Realty. Historic 5-bedroom, 3-bath home for up to 14 guests with a private hot tub, fire-pit area and live availability.">
+  <meta name="description" content="Book Sand & Sea Manor in Galveston direct with CJT Realty. Historic 5-bedroom, 3-bath home for up to 14 guests with private hot tub, fire-pit area and live availability.">
   <link rel="stylesheet" href="/assets/css/booking-listing.css">
+  <link rel="stylesheet" href="/assets/css/booking-v2.css">
 </head>
 <body>
   <div class="top-strip">Book direct with CJT Realty · live availability · clear trip pricing · personal booking support</div>
@@ -14,6 +15,7 @@
     <div class="wrap header-row">
       <a class="wordmark" href="/">SAND &amp; SEA MANOR<small>Historic Galveston · CJT Realty</small></a>
       <nav class="header-nav" aria-label="Guest navigation">
+        <a href="#sleep">Bedrooms</a>
         <a href="#amenities">Amenities</a>
         <a href="#reviews">Reviews</a>
         <a href="#location">Location</a>
@@ -43,15 +45,14 @@
     </section>
 
     <section class="wrap" aria-label="Property photos">
-      <div class="gallery-mosaic">
-        <button class="gallery-item main" type="button" data-photo-index="1"><img src="https://drive.google.com/thumbnail?id=1dBhTIh3KdqXDupNq8nhlCt4bWMVfV931&sz=w1800" alt="Sand and Sea Manor historic front porches"></button>
-        <button class="gallery-item" type="button" data-photo-index="8"><img src="https://drive.google.com/thumbnail?id=17_5GAmY3meVDnIq-bf8DGs4P7slYksx2&sz=w1200" alt="Fire-pit seating beneath string lights"></button>
-        <button class="gallery-item" type="button" data-photo-index="7"><img src="https://drive.google.com/thumbnail?id=1fFDMoALScgeTlx_PQIg9-2OXHSCXUbcn&sz=w1200" alt="Private hot tub"></button>
-        <button class="gallery-item" type="button" data-photo-index="25"><img src="https://drive.google.com/thumbnail?id=1sTSDC_fRrg76lo8IwenUkoeqplduW3SN&sz=w1200" alt="Breakfast table and kitchen island"></button>
-        <button class="gallery-item" type="button" data-photo-index="30"><img src="https://drive.google.com/thumbnail?id=1FketXkBAJjRF2LO0i5l-eYmL4tDiGaSB&sz=w1200" alt="Bedroom at Sand and Sea Manor"></button>
+            <!-- The public image manifest is the sole source for opening-gallery cards. -->
+      <div class="gallery-mosaic v2-mosaic" aria-label="Opening property photos">
         <button class="show-photos" type="button" data-open-gallery="all">▦ &nbsp;Show all photos</button>
       </div>
     </section>
+
+    <!-- Filled from the desktop source-summary markup on narrow screens. -->
+    <section class="wrap mobile-source-summaries" aria-label="Guest rating summaries"></section>
 
     <div class="wrap content-layout">
       <div class="main-column">
@@ -67,18 +68,9 @@
 
         <section class="section-block">
           <div class="highlight-list">
-            <div class="highlight">
-              <svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V9l7-6 7 6v12M9 21v-6h6v6"/></svg>
-              <div><strong>A Galveston home with history</strong><span>Built in 1886, restored with care, and designed to keep a group together under one roof.</span></div>
-            </div>
-            <div class="highlight">
-              <svg viewBox="0 0 24 24"><path d="M4 18c3-3 5-3 8 0s5 3 8 0M5 14c2-2 4-2 7 0s5 2 7 0M8 10c0-2 1-4 4-5 3 1 4 3 4 5"/></svg>
-              <div><strong>Private hot tub and separate fire-pit area</strong><span>Outdoor spaces built for relaxing after the beach, dinner, or a day exploring the island.</span></div>
-            </div>
-            <div class="highlight">
-              <svg viewBox="0 0 24 24"><path d="M5 12h14M7 12V8a2 2 0 0 1 2-2h2v6M13 12V7h2a2 2 0 0 1 2 2v3M5 12v6M19 12v6"/></svg>
-              <div><strong>Made for families and groups</strong><span>Five bedrooms, two living rooms, a full kitchen, porches, yard space, and room for up to 14 overnight guests.</span></div>
-            </div>
+            <div class="highlight"><svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V9l7-6 7 6v12M9 21v-6h6v6"/></svg><div><strong>A Galveston home with history</strong><span>Built in 1886, restored with care, and designed to keep a group together under one roof.</span></div></div>
+            <div class="highlight"><svg viewBox="0 0 24 24"><path d="M4 18c3-3 5-3 8 0s5 3 8 0M5 14c2-2 4-2 7 0s5 2 7 0M8 10c0-2 1-4 4-5 3 1 4 3 4 5"/></svg><div><strong>Private hot tub + separate fire-pit area</strong><span>Outdoor spaces made for winding down after the beach, dinner, or a day exploring the island.</span></div></div>
+            <div class="highlight"><svg viewBox="0 0 24 24"><path d="M5 12h14M7 12V8a2 2 0 0 1 2-2h2v6M13 12V7h2a2 2 0 0 1 2 2v3M5 12v6M19 12v6"/></svg><div><strong>Comfortable for families and groups</strong><span>Five bedrooms, two living rooms, a full kitchen, porches, yard space, and room for up to 14 overnight guests.</span></div></div>
           </div>
         </section>
 
@@ -91,53 +83,88 @@
           </div>
         </section>
 
-        <section class="section-block">
-          <h2>Where you'll sleep</h2>
-          <div class="sleeping-scroll">
-            <div class="sleep-card"><div class="sleep-icon">▤</div><strong>Primary bedroom</strong><span>Main level · King bed</span></div>
-            <div class="sleep-card"><div class="sleep-icon">▤</div><strong>Flex bedroom</strong><span>Main level · Twin daybed + trundle</span></div>
-            <div class="sleep-card"><div class="sleep-icon">▤</div><strong>Bedroom 2</strong><span>Upstairs · King + daybed + trundle</span></div>
-            <div class="sleep-card"><div class="sleep-icon">▤</div><strong>Bedroom 3</strong><span>Upstairs · King bed</span></div>
-            <div class="sleep-card"><div class="sleep-icon">▤</div><strong>Bedroom 4</strong><span>Upstairs · Queen + twin bunk beds</span></div>
+        <section class="section-block sleep-section" id="sleep">
+          <div class="section-heading-row">
+            <div><h2>Where you'll sleep</h2><p class="section-kicker">Five distinct sleeping spaces. Choose a room to view its photo collection.</p></div>
+            <div class="room-scroll-controls"><button id="roomPrev" class="btn btn-round btn-outline" type="button" aria-label="Previous bedroom">‹</button><button id="roomNext" class="btn btn-round btn-outline" type="button" aria-label="Next bedroom">›</button></div>
           </div>
-          <div class="section-action"><button class="btn btn-outline" type="button" data-open-gallery="bedrooms">See bedroom photos</button></div>
+          <!-- Room cards are filled from roomGroups in the public image manifest. -->
+          <div id="sleepingScroll" class="sleeping-scroll sleeping-scroll-v3" aria-label="Bedrooms"></div>
         </section>
 
-        <section class="section-block" id="amenities">
-          <h2>What this place offers</h2>
-          <div class="amenities-grid">
-            <div class="amenity-item"><svg viewBox="0 0 24 24"><path d="M4 18c3-3 5-3 8 0s5 3 8 0M5 14c2-2 4-2 7 0s5 2 7 0"/></svg><span>Private hot tub</span></div>
-            <div class="amenity-item"><svg viewBox="0 0 24 24"><path d="M12 3c3 4 5 6 5 10a5 5 0 0 1-10 0c0-3 2-5 5-10Z"/></svg><span>Separate fire-pit area</span></div>
-            <div class="amenity-item"><svg viewBox="0 0 24 24"><path d="M4 7h16v10H4zM8 21h8M12 17v4"/></svg><span>Two living rooms with Roku Smart TVs</span></div>
-            <div class="amenity-item"><svg viewBox="0 0 24 24"><path d="M4 20V8h16v12M2 20h20M7 8V4h10v4"/></svg><span>Two front porches</span></div>
-            <div class="amenity-item"><svg viewBox="0 0 24 24"><path d="M4 19h16M6 19V8h12v11M9 8V5h6v3"/></svg><span>Full kitchen</span></div>
-            <div class="amenity-item"><svg viewBox="0 0 24 24"><path d="M7 3h10v18H7zM9 7h6M9 15h6"/></svg><span>Full-size refrigerator with ice maker</span></div>
-            <div class="amenity-item"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4zM8 9h8M8 13h8"/></svg><span>Dishwasher</span></div>
-            <div class="amenity-item"><svg viewBox="0 0 24 24"><path d="M5 19V8m14 11V8M3 8h18M7 5h10"/></svg><span>Charcoal grill</span></div>
-            <div class="amenity-item"><svg viewBox="0 0 24 24"><path d="M4 18V9m16 9V9M4 14h16M7 9V5h10v4"/></svg><span>Back porch and fenced grassy yard</span></div>
-            <div class="amenity-item"><svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6 5.6 18.4"/></svg><span>Ceiling fans</span></div>
+        <section class="section-block amenities-v3" id="amenities">
+          <div class="section-heading-row"><div><h2>Amenities at Sand &amp; Sea Manor</h2><p class="section-kicker">A complete, organized view of what is available for your stay.</p></div></div>
+          <div class="popular-amenities" aria-label="Most popular amenities">
+            <strong>Most popular amenities</strong>
+            <div class="popular-amenity-row">
+              <span><b>⌁</b>Non-smoking rooms</span><span><b>⌁</b>Free WiFi</span><span><b>Ⓟ</b>Free parking</span><span><b>♧</b>Family rooms</span>
+            </div>
           </div>
-          <div class="section-action"><button id="amenitiesBtn" class="btn btn-outline" type="button">Show all amenities</button></div>
+          <div class="amenity-directory">
+            <div class="amenity-column">
+              <article class="amenity-category"><h3><span class="category-icon">Ⓟ</span>Parking</h3><p>Free public parking is available at a location nearby (reservation is not needed).</p></article>
+              <article class="amenity-category"><h3><span class="category-icon">⌁</span>Internet</h3><p>WiFi is available in all areas and is free of charge.</p></article>
+              <article class="amenity-category"><h3><span class="category-icon">▤</span>Kitchen</h3><ul><li>Children's high chair</li><li>Dining table</li><li>Coffee machine</li><li>Cleaning products</li><li>Toaster</li><li>Stovetop</li><li>Oven</li><li>Dryer</li><li>Kitchenware</li><li>Electric kettle</li><li>Kitchen</li><li>Washing machine</li><li>Dishwasher</li><li>Microwave</li><li>Refrigerator</li><li>Kitchenette</li></ul></article>
+              <article class="amenity-category"><h3><span class="category-icon">▱</span>Bedroom</h3><ul><li>Linens</li><li>Wardrobe or closet</li></ul></article>
+            </div>
+            <div class="amenity-column">
+              <article class="amenity-category"><h3><span class="category-icon">♨</span>Bathroom</h3><ul><li>Toilet paper</li><li>Towels</li><li>Towels/sheets (extra fee)</li><li>Additional toilet</li><li>Bath or shower</li><li>Shared toilet</li><li>Private bathroom</li><li>Toilet</li><li>Free toiletries</li><li>Shared bathroom</li><li>Hairdryer</li><li>Bath</li><li>Shower</li></ul></article>
+              <article class="amenity-category"><h3><span class="category-icon">▰</span>Living Area</h3><ul><li>Dining area</li><li>Sofa</li><li>Seating area</li><li>Desk</li></ul></article>
+              <article class="amenity-category"><h3><span class="category-icon">▣</span>Media &amp; Technology</h3><ul><li>Streaming service (like Netflix)</li><li>Flat-screen TV</li><li>Cable channels</li><li>TV</li></ul></article>
+              <article class="amenity-category"><h3><span class="category-icon">⌘</span>Room amenities</h3><ul><li>Socket near the bed</li><li>Clothes rack</li><li>Hardwood or parquet floors</li><li>Private entrance</li><li>Interconnected room(s) available</li><li>Heating</li><li>Fan</li><li>Ironing facilities</li><li>Iron</li><li>Hot tub</li></ul></article>
+            </div>
+            <div class="amenity-column">
+              <article class="amenity-category"><h3><span class="category-icon">♧</span>Pets</h3><p>Pets are allowed on request. Charges may apply.</p></article>
+              <article class="amenity-category"><h3><span class="category-icon">↟</span>Accessibility</h3><ul><li>Upper floors accessible by stairs only</li></ul></article>
+              <article class="amenity-category"><h3><span class="category-icon">♨</span>Outdoors</h3><ul><li>Outdoor fireplace</li><li>Outdoor dining area</li><li>Outdoor furniture</li><li>Barbecue</li><li>Patio</li><li>Balcony</li><li>Terrace</li><li>Garden</li></ul></article>
+              <article class="amenity-category"><h3><span class="category-icon">≈</span>Spa</h3><ul><li>Hot tub/Jacuzzi</li></ul></article>
+              <article class="amenity-category"><h3><span class="category-icon">♨</span>Food &amp; Drink</h3><ul><li>Tea/Coffee maker</li></ul></article>
+              <article class="amenity-category"><h3><span class="category-icon">✧</span>Entertainment &amp; Family Services</h3><ul><li>Board games/Puzzles</li><li>Board games/puzzles</li></ul></article>
+              <article class="amenity-category"><h3><span class="category-icon">•••</span>Miscellaneous</h3><ul><li>Air conditioning</li><li>Smoke-free property</li><li>Family rooms</li><li>Non-smoking rooms</li></ul></article>
+              <article class="amenity-category"><h3><span class="category-icon">▢</span>Safety &amp; security</h3><ul><li>Carbon monoxide detector</li></ul></article>
+              <article class="amenity-category"><h3><span class="category-icon">◎</span>Languages Spoken</h3><ul><li>English</li></ul></article>
+            </div>
+          </div>
+          <div class="section-action"><button id="amenitiesBtn" class="btn btn-outline" type="button">Open amenity list in a focused view</button></div>
         </section>
 
-        <section class="section-block" id="reviews">
-          <h2>Guest reviews</h2>
-          <p class="about-copy">Reviews available through our connected listing profile are shown here so you can see what prior guests have said about the home.</p>
-          <div class="reviews-shell"><iframe id="houfyReviews" src="/houfy-reviews.html" title="Guest reviews for Sand and Sea Manor" loading="lazy"></iframe></div>
+        <section class="section-block reviews-v3" id="reviews">
+          <div class="reviews-header-v3">
+            <div><h2>See what guests loved the most</h2><p class="section-kicker">Selected guest comments in a clean, scrollable view. Source and source rating stay visible on every card.</p></div>
+            <div class="review-scroll-controls"><button id="reviewPrev" class="btn btn-round btn-outline" type="button" aria-label="Previous guest review">‹</button><button id="reviewNext" class="btn btn-round btn-outline" type="button" aria-label="Next guest review">›</button></div>
+          </div>
+          <div class="review-topic-row" aria-label="Review topics"><span>Review topics</span><button class="review-topic" type="button" data-review-topic="room" aria-pressed="false">＋ Room</button><button class="review-topic" type="button" data-review-topic="family" aria-pressed="false">＋ Family</button></div>
+          <div id="guestLoveRail" class="guest-love-rail">
+            <article class="guest-love-card" data-review-tags="room"><div class="guest-card-head"><span class="guest-initial">M</span><div><strong>Mariana</strong><span>United States</span></div><span class="review-card-source">Booking.com · 9.4/10</span></div><blockquote>“We had a wonderful stay! The house is amazingly spacious and filled with gorgeous decor that makes it feel both stylish and cozy. I may have to steal a couple of the room themes for my house.”</blockquote></article>
+            <article class="guest-love-card" data-review-tags=""><div class="guest-card-head"><span class="guest-initial">J</span><div><strong>Jakayla</strong><span>United States</span></div><span class="review-card-source">Booking.com · 9.4/10</span></div><blockquote>“This house was amazing, the host Chris was even better and responded quick when we needed him! 10 out of 10 recommend this home.”</blockquote></article>
+            <article class="guest-love-card" data-review-tags="family"><div class="guest-card-head"><span class="guest-initial">B</span><div><strong>Brionne</strong><span>United States</span></div><span class="review-card-source">Booking.com · 9.4/10</span></div><blockquote>“The house is absolutely gorgeous inside and out. There was ample space for our family to stay comfortably and we were pleased with the overall layout of the home. It was literal perfection.”</blockquote></article>
+          </div>
+          <div class="reviews-feed-card" id="reviewFeed">
+            <div class="reviews-feed-head"><div><strong>Browse the connected review feed</strong><span>Scroll inside this window for additional guest reviews without stretching the booking page.</span></div><span class="source-badge">Connected reviews</span></div>
+            <div class="reviews-window"><iframe id="houfyReviews" src="/houfy-reviews.html" title="Guest reviews for Sand and Sea Manor" loading="lazy"></iframe></div>
+          </div>
         </section>
 
-        <section class="section-block" id="location">
-          <h2>Where you'll be</h2>
-          <iframe class="map-frame" title="Map showing Sand and Sea Manor at 1720 Avenue M in Galveston" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=1720%20Avenue%20M%2C%20Galveston%2C%20TX%2077550&output=embed"></iframe>
-          <div class="map-copy"><strong>1720 Avenue M · Galveston, Texas 77550</strong><p class="about-copy">Sand &amp; Sea Manor sits in historic Galveston with convenient access to the island's beaches, restaurants, attractions and downtown destinations.</p></div>
+        <section class="section-block location-v3" id="location">
+          <div class="section-heading-row"><div><h2>Where you'll be</h2><p class="section-kicker">The aerial photos are physically tied back to the property marker so the relationship is clear at a glance.</p></div></div>
+          <div class="location-stage" id="locationStage">
+            <div class="map-ground" id="mapGround">
+              <iframe class="map-frame map-frame-v2" title="Map showing Sand and Sea Manor at 1720 Avenue M in Galveston" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=1720%20Avenue%20M%2C%20Galveston%2C%20TX%2077550&output=embed"></iframe>
+              <div id="mapAnchor" class="map-anchor" aria-label="Sand and Sea Manor property location"><span></span></div>
+              <div class="map-address-chip"><strong>Sand &amp; Sea Manor</strong><span>1720 Avenue M · Galveston, TX 77550</span><a href="https://www.google.com/maps/search/?api=1&query=1720+Avenue+M+Galveston+TX+77550" target="_blank" rel="noopener">Open interactive map ↗</a></div>
+            </div>
+            <svg id="locationLines" class="location-lines" aria-hidden="true"><path id="lineA"/><path id="lineB"/></svg>
+            <div class="aerial-rail" aria-label="Aerial views connected to the property marker">
+              <button class="aerial-card" type="button" aria-pressed="false" data-map-line="lineA"><img src="/assets/images/public/gallery/1s78bXdJorG0Ob9gjmDFT1FXnFcA2vi-l.jpg" alt="Aerial neighborhood view of Sand and Sea Manor"><div><strong>Neighborhood aerial</strong><span>Hover or click to trace this view back to the property marker.</span></div></button>
+              <button class="aerial-card" type="button" aria-pressed="false" data-map-line="lineB"><img src="/assets/images/public/gallery/1BPh-xpmSKQIsLzd4xRdxF3byK6Xs4CQj.jpg" alt="Top-down aerial view of Sand and Sea Manor"><div><strong>Property aerial</strong><span>Hover or click to trace this view back to the property marker.</span></div></button>
+            </div>
+          </div>
+          <div class="map-copy"><strong>Historic Galveston · close to the island's beaches, downtown, restaurants, and attractions.</strong><p class="about-copy">The map remains centered on the property so the leader lines stay physically grounded to the correct location.</p></div>
         </section>
 
         <section class="section-block">
           <h2>Meet your host</h2>
-          <div class="host-card">
-            <div class="host-badge">CJT</div>
-            <div><h3>Hosted by CJT Realty</h3><p>Family-run ownership with a direct, professional approach to hosting. Questions about your group, a pet, an event, or special plans are welcome before you book.</p></div>
-          </div>
+          <div class="host-card"><div class="host-badge">CJT</div><div><h3>Hosted by CJT Realty</h3><p>Family-run ownership with a direct, professional approach to hosting. Questions about your group, a pet, an event, or special plans are welcome before you book.</p></div></div>
         </section>
 
         <section class="section-block">
@@ -151,28 +178,44 @@
       </div>
 
       <aside class="side-column" aria-label="Booking controls">
-        <div class="booking-card">
-          <div id="bookPrice" class="booking-price"><span class="price-main">Add dates for prices</span></div>
-          <div class="booking-selectors">
-            <div class="date-selector-row">
-              <button class="selector" type="button" data-open-calendar><span class="selector-label">Check-in</span><span class="selector-value" data-checkin-value>Add date</span></button>
-              <button class="selector" type="button" data-open-calendar><span class="selector-label">Checkout</span><span class="selector-value" data-checkout-value>Add date</span></button>
+        <div class="booking-sidebar-stack">
+          <div class="booking-card">
+            <div id="bookPrice" class="booking-price"><span class="price-main">Add dates for prices</span></div>
+            <div class="booking-selectors">
+              <div class="date-selector-row">
+                <button class="selector" type="button" data-open-calendar><span class="selector-label">Check-in</span><span class="selector-value" data-checkin-value>Add date</span></button>
+                <button class="selector" type="button" data-open-calendar><span class="selector-label">Checkout</span><span class="selector-value" data-checkout-value>Add date</span></button>
+              </div>
+              <div class="guest-wrap">
+                <button class="selector guest-selector" type="button" data-open-guests><span><span class="selector-label">Guests</span><span class="selector-value" data-guests-value>1 guest</span></span><span>⌄</span></button>
+                <div id="guestPopover" class="guest-popover"><div class="guest-row"><div><strong>Guests</strong><div class="selector-value">Maximum 14</div></div><div class="stepper"><button id="guestMinus" type="button" aria-label="Remove guest">−</button><b id="guestCount">1</b><button id="guestPlus" type="button" aria-label="Add guest">+</button></div></div></div>
+              </div>
             </div>
-            <div class="guest-wrap">
-              <button class="selector guest-selector" type="button" data-open-guests><span><span class="selector-label">Guests</span><span class="selector-value" data-guests-value>1 guest</span></span><span>⌄</span></button>
-              <div id="guestPopover" class="guest-popover"><div class="guest-row"><div><strong>Guests</strong><div class="selector-value">Maximum 14</div></div><div class="stepper"><button id="guestMinus" type="button" aria-label="Remove guest">−</button><b id="guestCount">1</b><button id="guestPlus" type="button" aria-label="Add guest">+</button></div></div></div>
+            <button id="bookNowBtn" class="btn btn-primary" type="button">Book Now</button>
+            <div class="charge-note">You won't be charged yet. Book Now places a 24-hour hold for CJT review.</div>
+            <div id="quoteError" class="quote-error" hidden></div>
+            <div id="quoteBreakdown" class="quote-breakdown">
+              <div class="quote-row"><span>Lodging</span><strong id="quoteLodging">—</strong></div>
+              <div class="quote-row"><span>Cleaning</span><strong id="quoteCleaning">—</strong></div>
+              <div class="quote-row"><span>Taxes</span><strong id="quoteTax">—</strong></div>
+              <div class="quote-row total"><span>Total</span><strong id="quoteTotal">—</strong></div>
+              <div id="paymentCopy" class="payment-box"></div>
+              <div style="margin-top:10px"><button id="refreshQuote" class="micro-link" type="button">Refresh price</button></div>
             </div>
           </div>
-          <button id="bookNowBtn" class="btn btn-primary" type="button">Book Now</button>
-          <div class="charge-note">You won't be charged yet. Book Now places a 24-hour hold for CJT review.</div>
-          <div id="quoteError" class="quote-error" hidden></div>
-          <div id="quoteBreakdown" class="quote-breakdown">
-            <div class="quote-row"><span>Lodging</span><strong id="quoteLodging">—</strong></div>
-            <div class="quote-row"><span>Cleaning</span><strong id="quoteCleaning">—</strong></div>
-            <div class="quote-row"><span>Taxes</span><strong id="quoteTax">—</strong></div>
-            <div class="quote-row total"><span>Total</span><strong id="quoteTotal">—</strong></div>
-            <div id="paymentCopy" class="payment-box"></div>
-            <div style="margin-top:10px"><button id="refreshQuote" class="micro-link" type="button">Refresh price</button></div>
+          <div class="desktop-source-summaries" aria-label="Guest rating summaries">
+            <div class="source-summary-card airbnb-summary">
+              <div class="source-summary-brand">Airbnb</div>
+              <div class="airbnb-favorite"><span class="laurel">❧</span><strong>Guest favorite</strong><span class="laurel flip">❧</span></div>
+              <p>One of the most loved homes on Airbnb, according to guests</p>
+              <div class="source-summary-score"><strong>4.86</strong><span>★★★★★</span><b>22 reviews</b></div>
+            </div>
+            <div class="source-summary-card booking-summary-card">
+              <div class="source-summary-brand">Booking.com</div>
+              <div class="booking-score-line"><strong>9.4</strong><span>/10</span><b>Exceptional</b></div>
+              <p>9 verified reviews</p>
+              <div class="booking-metrics"><span><b>9.6</b>Cleanliness</span><span><b>9.8</b>Location</span><span><b>9.4</b>Check-in</span></div>
+            </div>
           </div>
         </div>
       </aside>
@@ -190,10 +233,13 @@
 
   <div id="bookingModal" class="modal" role="dialog" aria-modal="true" aria-label="Book Sand and Sea Manor"><div class="modal-panel"><div class="modal-header"><h2>Book Sand &amp; Sea Manor</h2><button id="bookingClose" class="modal-close" type="button" aria-label="Close booking form">×</button></div><div class="modal-body"><div id="bookingSummary" class="booking-summary"></div><form id="bookingForm"><div class="booking-modal-grid"><div class="field"><label for="guestName">Name</label><input id="guestName" name="name" autocomplete="name" required></div><div class="field"><label for="guestEmail">Email</label><input id="guestEmail" name="email" type="email" autocomplete="email" required></div><div class="field"><label for="guestPhone">Phone</label><input id="guestPhone" name="phone" type="tel" autocomplete="tel" required></div><div class="field"><label for="tripType">Trip type</label><select id="tripType" name="trip_type" required><option value="">Select</option><option>Family trip</option><option>Friends / group getaway</option><option>Celebration</option><option>Work / retreat</option><option>Galveston event</option><option>Other</option></select></div><div class="field"><label for="pets">Bringing a pet?</label><select id="pets" name="pets" required><option value="no">No</option><option value="yes">Yes — please review with us</option></select></div><div class="field"><label for="event">Planning an event or gathering?</label><select id="event" name="event" required><option value="no">No</option><option value="yes">Yes — please review with us</option></select></div><div class="field full"><label for="guestMessage">Anything CJT should know?</label><textarea id="guestMessage" name="message" placeholder="Tell us about your trip, special requests, pet, or event details."></textarea></div><div class="field full"><label style="display:flex;gap:9px;align-items:flex-start;font-weight:600"><input type="checkbox" required style="width:auto;margin-top:3px"> <span>I understand this request places a temporary hold and is subject to CJT approval, the booking agreement, and required payment.</span></label></div><div class="field full"><button id="bookingSubmit" class="btn btn-primary" type="submit">Book Now — Hold These Dates</button><div id="bookingMessage" class="form-message"></div></div></div></form></div></div></div>
 
-  <div id="amenitiesModal" class="modal" role="dialog" aria-modal="true" aria-label="All amenities"><div class="modal-panel"><div class="modal-header"><h2>What Sand &amp; Sea Manor offers</h2><button id="amenitiesClose" class="modal-close" type="button" aria-label="Close amenities">×</button></div><div class="modal-body"><div class="amenities-modal-grid"><div class="amenity-item">Private hot tub</div><div class="amenity-item">Separate fire-pit area</div><div class="amenity-item">Two living rooms</div><div class="amenity-item">Roku Smart TVs</div><div class="amenity-item">Two front porches</div><div class="amenity-item">Adirondack seating</div><div class="amenity-item">Back porch</div><div class="amenity-item">Fenced grassy yard</div><div class="amenity-item">Charcoal grill</div><div class="amenity-item">Full kitchen</div><div class="amenity-item">Dishwasher</div><div class="amenity-item">Air fryer / oven combination</div><div class="amenity-item">Full-size refrigerator</div><div class="amenity-item">Ice maker</div><div class="amenity-item">Board games</div><div class="amenity-item">Ceiling fans</div><div class="amenity-item">Primary suite Smart TV</div><div class="amenity-item">Primary soaking tub</div><div class="amenity-item">Open street parking</div><div class="amenity-item">Historic two-story layout</div></div></div></div></div>
+  <div id="amenitiesModal" class="modal" role="dialog" aria-modal="true" aria-label="All amenities"><div class="modal-panel wide"><div class="modal-header"><h2>Amenities at Sand &amp; Sea Manor</h2><button id="amenitiesClose" class="modal-close" type="button" aria-label="Close amenities">×</button></div><div class="modal-body"><p class="section-kicker">This focused view uses the organized amenity directory on the listing page.</p><div id="amenitiesModalGrid" class="amenity-directory amenities-modal-directory" aria-label="All amenities"></div></div></div></div>
 
+  <div id="roomGalleryModal" class="modal" role="dialog" aria-modal="true" aria-label="Bedroom photos"><div class="modal-panel room-modal-panel"><div class="modal-header"><div><h2 id="roomGalleryTitle">Bedroom</h2><div id="roomGallerySubtitle" class="selector-value"></div></div><button id="roomGalleryClose" class="modal-close" type="button" aria-label="Close room photos">×</button></div><div class="modal-body"><div id="roomGalleryGrid" class="room-gallery-grid"></div></div></div></div>
+
+  <!-- Public image pipeline: active scripts use /assets/data/public-image-manifest.json. Rollback: booking-listing.drive-legacy.js + booking-v2.drive-legacy.js -->
   <script src="/assets/js/booking-listing.js"></script>
-  <!-- Direct website chat: tawk.to -->
+  <script src="/assets/js/booking-v2.js"></script>
   <script>
     var Tawk_API=Tawk_API||{},Tawk_LoadStart=new Date();
     (function(){var s1=document.createElement('script'),s0=document.getElementsByTagName('script')[0];s1.async=true;s1.src='https://embed.tawk.to/6a9c721ed0128c3449822367/1k1phrige';s1.charset='UTF-8';s1.setAttribute('crossorigin','*');s0.parentNode.insertBefore(s1,s0)})();
