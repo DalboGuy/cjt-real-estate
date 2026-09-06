@@ -2,8 +2,13 @@
   const sidebar=document.getElementById('ownerSidebar');
   const backdrop=document.getElementById('ownerBackdrop');
   const menu=document.getElementById('mobileMenu');
+  const nav=sidebar?.querySelector('.nav');
   function close(){sidebar?.classList.remove('open');backdrop?.classList.add('hidden')}
-  menu?.addEventListener('click',()=>{sidebar?.classList.add('open');backdrop?.classList.remove('hidden')});
+  function revealActive(){
+    const active=nav?.querySelector('.active');
+    if(active&&typeof active.scrollIntoView==='function')active.scrollIntoView({block:'nearest'});
+  }
+  menu?.addEventListener('click',()=>{sidebar?.classList.add('open');backdrop?.classList.remove('hidden');requestAnimationFrame(revealActive)});
   backdrop?.addEventListener('click',close);
 
   const ownerRoutes={
@@ -37,4 +42,5 @@
     await fetch('/api/owner',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'logout'})}).catch(()=>{});
     location.reload();
   });
+  requestAnimationFrame(revealActive);
 })();
