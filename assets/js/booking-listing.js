@@ -7,31 +7,56 @@
   const eachDate=(start,end)=>{const out=[];if(!start||!end)return out;for(let d=toUtc(start),stop=toUtc(end);d<stop;d=new Date(d.getTime()+86400000))out.push(d.toISOString().slice(0,10));return out};
   const esc=v=>String(v||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 
-  /* Canonical public images: assets/data/public-image-manifest.json (static read-only).
-     Drive thumbnail delivery and fallback chains are retired from guest runtime.
-     Rollback: swap script src to booking-listing.drive-legacy.js */
-  let photos=[];
-  const assetUrl=p=>p&&p.publicPath?p.publicPath:'';
+  function hydrateMobileSourceSummaries(){
+    const source=document.querySelector('.desktop-source-summaries'),target=document.querySelector('.mobile-source-summaries');
+    if(!source||!target||target.children.length)return;
+    [...source.children].forEach(card=>target.appendChild(card.cloneNode(true)));
+  }
+  function hydrateAmenitiesModal(){
+    const source=document.querySelector('.amenity-directory'),target=$('amenitiesModalGrid');
+    if(!source||!target||target.children.length)return;
+    [...source.children].forEach(column=>target.appendChild(column.cloneNode(true)));
+  }
 
-const galleryModal=$('galleryModal'),galleryGrid=$('galleryGrid'),viewer=$('photoViewer'),viewerImage=$('viewerImage'),viewerMeta=$('viewerMeta');
-  let galleryFilter='all',galleryVisible=photos.map((_,i)=>i),viewerIndex=0;
+  let photos=[],assetManifest=null;
+  const assetManifestUrl='/assets/data/public-image-manifest.json';
+  const $gallery=$('galleryModal'),galleryGrid=$('galleryGrid'),viewer=$('photoViewer'),viewerImage=$('viewerImage'),viewerMeta=$('viewerMeta');
+  let galleryFilter='all',galleryVisible=[],viewerIndex=0;
+  const roomStyle=document.createElement('style');
+  roomStyle.textContent='.room-card .room-visual{padding:0;position:relative;overflow:hidden;background:#eef2f0}.room-card .room-visual img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .22s ease}.room-card:hover .room-visual img,.room-card:focus-visible .room-visual img{transform:scale(1.025)}.room-card .room-visual.photo-fallback{display:grid;place-items:center}.room-card .room-visual.photo-fallback:before{content:"Room photo";color:#6b7d80;font-weight:850}.room-gallery-grid button.photo-fallback{display:grid;place-items:center;color:#6b7d80;font-weight:850}.room-card .room-visual .room-photo-count{position:absolute;left:12px;bottom:12px;background:rgba(255,255,255,.94);border:1px solid rgba(221,228,226,.95);border-radius:999px;padding:6px 9px;font-size:.7rem;font-weight:850;color:#12383e;box-shadow:0 4px 14px rgba(13,43,49,.1)}.room-gallery-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.room-gallery-grid button{border:0;padding:0;background:#eef2f0;border-radius:14px;overflow:hidden;cursor:pointer;min-height:220px}.room-gallery-grid img{width:100%;height:360px;object-fit:cover;display:block}@media(max-width:780px){.room-gallery-grid{grid-template-columns:1fr}.room-gallery-grid img{height:auto;max-height:72vh}}';
+  document.head.appendChild(roomStyle);
   function renderGallery(){
     galleryVisible=[];galleryGrid.innerHTML='';
-    photos.forEach((p,i)=>{if(galleryFilter!=='all'&&p.category!==galleryFilter)return;galleryVisible.push(i);const b=document.createElement('button');b.type='button';b.innerHTML=`<img loading="lazy" decoding="async" src="${assetUrl(p)}" alt="Sand & Sea Manor — ${esc(p.label)}">`;b.onclick=()=>openViewer(i);galleryGrid.appendChild(b)});
+    photos.forEach((p,i)=>{if(galleryFilter!=='all'&&p.category!==galleryFilter)return;galleryVisible.push(i);const b=document.createElement('button');b.type='button';b.innerHTML=`<img loading="lazy" decoding="async" src="${p.publicPath}" alt="Sand & Sea Manor — ${esc(p.label)}">`;b.onclick=()=>openViewer(i);galleryGrid.appendChild(b)});
     $('galleryCount').textContent=`${galleryVisible.length} photo${galleryVisible.length===1?'':'s'}`;
   }
-  function openGallery(filter='all'){galleryFilter=filter;document.querySelectorAll('[data-gallery-filter]').forEach(b=>b.classList.toggle('active',b.dataset.galleryFilter===filter));renderGallery();galleryModal.classList.add('show');document.body.classList.add('modal-open')}
-  function closeGallery(){galleryModal.classList.remove('show');if(!viewer.classList.contains('show'))document.body.classList.remove('modal-open')}
-  function openViewer(i){viewerIndex=i;viewerImage.src=assetUrl(photos[i]);viewerImage.alt=`Sand & Sea Manor — ${photos[i].label}`;const pos=galleryVisible.indexOf(i);viewerMeta.textContent=`${photos[i].label} · ${pos>=0?pos+1:i+1} of ${galleryVisible.length||photos.length}`;viewer.classList.add('show');document.body.classList.add('modal-open')}
-  function closeViewer(){viewer.classList.remove('show');if(!galleryModal.classList.contains('show'))document.body.classList.remove('modal-open')}
+  function openGallery(filter='all'){galleryFilter=filter;document.querySelectorAll('[data-gallery-filter]').forEach(b=>b.classList.toggle('active',b.dataset.galleryFilter===filter));renderGallery();$gallery.classList.add('show');document.body.classList.add('modal-open')}
+  function closeGallery(){$gallery.classList.remove('show');if(!viewer.classList.contains('show'))document.body.classList.remove('modal-open')}
+  function openViewer(i){if(!photos[i])return;viewerIndex=i;viewerImage.src=photos[i].publicPath;viewerImage.alt=`Sand & Sea Manor — ${photos[i].label}`;const pos=galleryVisible.indexOf(i);viewerMeta.textContent=`${photos[i].label} · ${pos>=0?pos+1:i+1} of ${galleryVisible.length||photos.length}`;viewer.classList.add('show');document.body.classList.add('modal-open')}
+  function closeViewer(){viewer.classList.remove('show');if(!$gallery.classList.contains('show'))document.body.classList.remove('modal-open')}
   function moveViewer(step){let p=galleryVisible.indexOf(viewerIndex);if(p<0)p=0;p=(p+step+galleryVisible.length)%galleryVisible.length;openViewer(galleryVisible[p])}
   document.querySelectorAll('[data-open-gallery]').forEach(b=>b.onclick=()=>openGallery(b.dataset.openGallery||'all'));
-  document.querySelectorAll('[data-photo-index]').forEach(b=>b.onclick=()=>{galleryFilter='all';galleryVisible=photos.map((_,i)=>i);openViewer(Number(b.dataset.photoIndex)||0)});
   document.querySelectorAll('[data-gallery-filter]').forEach(b=>b.onclick=()=>{galleryFilter=b.dataset.galleryFilter;document.querySelectorAll('[data-gallery-filter]').forEach(x=>x.classList.toggle('active',x===b));renderGallery()});
   $('galleryClose').onclick=closeGallery;$('viewerClose').onclick=closeViewer;$('viewerPrev').onclick=()=>moveViewer(-1);$('viewerNext').onclick=()=>moveViewer(1);
-  galleryModal.addEventListener('click',e=>{if(e.target===galleryModal)closeGallery()});viewer.addEventListener('click',e=>{if(e.target===viewer)closeViewer()});
-  document.addEventListener('keydown',e=>{if(viewer.classList.contains('show')){if(e.key==='Escape')closeViewer();if(e.key==='ArrowLeft')moveViewer(-1);if(e.key==='ArrowRight')moveViewer(1)}else if(galleryModal.classList.contains('show')&&e.key==='Escape')closeGallery()});
-
+  $gallery.addEventListener('click',e=>{if(e.target===$gallery)closeGallery()});viewer.addEventListener('click',e=>{if(e.target===viewer)closeViewer()});
+  document.addEventListener('keydown',e=>{if(viewer.classList.contains('show')){if(e.key==='Escape')closeViewer();if(e.key==='ArrowLeft')moveViewer(-1);if(e.key==='ArrowRight')moveViewer(1)}else if($gallery.classList.contains('show')&&e.key==='Escape')closeGallery()});
+  function renderMosaic(){
+    const mosaic=document.querySelector('.v2-mosaic');if(!mosaic||!assetManifest)return;
+    // The mount is intentionally empty in HTML; never remove visible markup here.
+    if(mosaic.querySelector('.gallery-item'))return;
+    const show=mosaic.querySelector('.show-photos');
+    assetManifest.openingPhotos.forEach((photo,i)=>{const b=document.createElement('button');b.type='button';b.className=`gallery-item${i===0?' main':''}`;const galleryIndex=photos.findIndex(p=>p.id===photo.id);if(galleryIndex>=0)b.dataset.photoIndex=String(galleryIndex);b.innerHTML=`<img src="${photo.publicPath}" alt="${esc(photo.alt||photo.label||'Sand & Sea Manor')}">`;b.onclick=()=>openViewer(galleryIndex>=0?galleryIndex:i);mosaic.insertBefore(b,show)});
+  }
+  function renderRooms(){
+    const scroll=$('sleepingScroll'),modal=$('roomGalleryModal'),grid=$('roomGalleryGrid');if(!scroll||!modal||!grid||!assetManifest)return;
+    // Room cards have one source: manifest roomGroups, rendered into the empty mount.
+    if(scroll.children.length)return;
+    const title=$('roomGalleryTitle'),subtitle=$('roomGallerySubtitle');
+    const openRoom=room=>{title.textContent=room.name;subtitle.textContent=`${room.photos.length} photo${room.photos.length===1?'':'s'}`;grid.innerHTML='';room.photos.forEach((photo,i)=>{const b=document.createElement('button');b.type='button';b.innerHTML=`<img src="${photo.publicPath}" alt="${esc(room.name)} photo ${i+1}">`;const img=b.querySelector('img');if(img)img.onerror=()=>{img.remove();b.classList.add('photo-fallback')};grid.appendChild(b)});modal.classList.add('show');document.body.classList.add('modal-open')};
+    assetManifest.roomGroups.forEach((room,index)=>{const card=document.createElement('button');card.type='button';card.className='sleep-card room-card';card.dataset.roomIndex=String(index);const cover=room.photos[0];card.innerHTML=`<div class="room-visual"><img src="${cover.publicPath}" alt="${esc(room.name)}"><span class="room-photo-count">${room.photos.length} photo${room.photos.length===1?'':'s'}</span></div><div class="room-card-copy"><strong>${esc(room.name)}</strong><span>${room.photos.length} room photo${room.photos.length===1?'':'s'}</span><span class="room-link">View room →</span></div>`;const visual=card.querySelector('.room-visual'),img=card.querySelector('img');if(img&&visual)img.onerror=()=>{img.remove();visual.classList.add('photo-fallback');visual.setAttribute('aria-label',`${room.name} photo unavailable`)};card.onclick=()=>openRoom(room);scroll.appendChild(card)});
+    $('roomGalleryClose')?.addEventListener('click',()=>{modal.classList.remove('show');document.body.classList.remove('modal-open')});modal.addEventListener('click',e=>{if(e.target===modal)$('roomGalleryClose')?.click()});$('roomPrev')?.addEventListener('click',()=>scroll.scrollBy({left:-330,behavior:'smooth'}));$('roomNext')?.addEventListener('click',()=>scroll.scrollBy({left:330,behavior:'smooth'}));
+  }
+  async function loadAssetManifest(){try{const response=await fetch(assetManifestUrl,{cache:'no-store'});if(!response.ok)throw new Error('image_manifest_unavailable');assetManifest=await response.json();photos=assetManifest.galleryPhotos||[];renderMosaic();renderRooms();renderGallery()}catch(error){console.error('Public image manifest failed to load',error)}}
   $('shareBtn').onclick=async()=>{const data={title:'Sand & Sea Manor',text:'Sand & Sea Manor in Galveston — direct booking',url:location.href};try{if(navigator.share)await navigator.share(data);else{await navigator.clipboard.writeText(location.href);$('shareLabel').textContent='Copied';setTimeout(()=>$('shareLabel').textContent='Share',1600)}}catch{}};
   const saved=localStorage.getItem('cjt_sand_sea_saved')==='1';
   function paintSave(on){$('saveBtn').dataset.saved=on?'1':'0';$('saveLabel').textContent=on?'Saved':'Save';$('saveHeart').setAttribute('fill',on?'currentColor':'none')}
@@ -97,26 +122,5 @@ const galleryModal=$('galleryModal'),galleryGrid=$('galleryGrid'),viewer=$('phot
 
   window.addEventListener('message',e=>{if(e.origin!==location.origin||e.data?.type!=='cjt-reviews-height')return;const frame=$('houfyReviews');if(frame&&Number(e.data.height)>200)frame.style.height=`${Math.min(2200,Number(e.data.height)+12)}px`});
   document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(calendarModal.classList.contains('show'))closeCalendar();if(bookingModal.classList.contains('show'))closeBooking();if($('amenitiesModal').classList.contains('show'))$('amenitiesClose').click()});
-  updateSelectors();resetQuote();
-
-  async function bootPublicImages(){
-    try{
-      const res=await fetch('/assets/data/public-image-manifest.json',{credentials:'omit'});
-      if(!res.ok)throw new Error('manifest '+res.status);
-      const manifest=await res.json();
-      photos=(manifest.galleryPhotos||[]).map(p=>({
-        id:p.sourceDriveFileId||p.resolvedDriveFileId||p.id,
-        category:p.category,
-        label:p.label,
-        publicPath:p.publicPath
-      }));
-      window.__CJT_PUBLIC_IMAGE_MANIFEST__=manifest;
-      renderGallery();
-      document.dispatchEvent(new CustomEvent('cjt:public-images-ready',{detail:manifest}));
-    }catch(err){
-      console.error('Public image manifest failed to load',err);
-      $('galleryCount')&&($('galleryCount').textContent='Photos unavailable');
-    }
-  }
-  bootPublicImages();
+  hydrateMobileSourceSummaries();hydrateAmenitiesModal();updateSelectors();resetQuote();renderGallery();loadAssetManifest();
 })();

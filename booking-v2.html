@@ -45,31 +45,14 @@
     </section>
 
     <section class="wrap" aria-label="Property photos">
-            <div class="gallery-mosaic v2-mosaic">
-        <button class="gallery-item main" type="button"><img src="/assets/images/public/opening/19qVu5W92D3HZ98fmkJtYWkon10RoQb9A.jpg" alt="Private hot tub at Sand and Sea Manor" loading="eager" decoding="async"></button>
-        <button class="gallery-item" type="button"><img src="/assets/images/public/opening/1fQ5o4coCkKLHd-T7TVT7IVuJ6s3gWYCu.jpg" alt="Historic front exterior of Sand and Sea Manor at sunset" loading="lazy" decoding="async"></button>
-        <button class="gallery-item" type="button"><img src="/assets/images/public/opening/1S_cxUhVmopWmuDoEZViX4QDXg94JKb_f.jpg" alt="Oversized family room at Sand and Sea Manor" loading="lazy" decoding="async"></button>
-        <button class="gallery-item" type="button"><img src="/assets/images/public/opening/1YCvLJWjz6csiaFDEnlpoi7zGQdEOtuAq.jpg" alt="Fire-pit seating at Sand and Sea Manor" loading="lazy" decoding="async"></button>
-        <button class="gallery-item" type="button"><img src="/assets/images/public/opening/1mou-dVzjGrc41Ws9WnSB2k5dvriLoYhV.jpg" alt="Second living room at Sand and Sea Manor" loading="lazy" decoding="async"></button>
-        <button class="gallery-item" type="button"><img src="/assets/images/public/opening/1z3V_SUJMrVu_Ciw-m2HOUk4nTWkouVMO.jpg" alt="Breakfast table and kitchen island at Sand and Sea Manor" loading="lazy" decoding="async"></button>
+            <!-- The public image manifest is the sole source for opening-gallery cards. -->
+      <div class="gallery-mosaic v2-mosaic" aria-label="Opening property photos">
         <button class="show-photos" type="button" data-open-gallery="all">▦ &nbsp;Show all photos</button>
       </div>
     </section>
 
-    <section class="wrap mobile-source-summaries" aria-label="Guest rating summaries">
-      <div class="source-summary-card airbnb-summary">
-        <div class="source-summary-brand">Airbnb</div>
-        <div class="airbnb-favorite"><span class="laurel">❧</span><strong>Guest favorite</strong><span class="laurel flip">❧</span></div>
-        <p>One of the most loved homes on Airbnb, according to guests</p>
-        <div class="source-summary-score"><strong>4.86</strong><span>★★★★★</span><b>22 reviews</b></div>
-      </div>
-      <div class="source-summary-card booking-summary-card">
-        <div class="source-summary-brand">Booking.com</div>
-        <div class="booking-score-line"><strong>9.4</strong><span>/10</span><b>Exceptional</b></div>
-        <p>9 verified reviews</p>
-        <div class="booking-metrics"><span><b>9.6</b>Cleanliness</span><span><b>9.8</b>Location</span><span><b>9.4</b>Check-in</span></div>
-      </div>
-    </section>
+    <!-- Filled from the desktop source-summary markup on narrow screens. -->
+    <section class="wrap mobile-source-summaries" aria-label="Guest rating summaries"></section>
 
     <div class="wrap content-layout">
       <div class="main-column">
@@ -105,13 +88,8 @@
             <div><h2>Where you'll sleep</h2><p class="section-kicker">Five distinct sleeping spaces. Choose a room to view its photo collection.</p></div>
             <div class="room-scroll-controls"><button id="roomPrev" class="btn btn-round btn-outline" type="button" aria-label="Previous bedroom">‹</button><button id="roomNext" class="btn btn-round btn-outline" type="button" aria-label="Next bedroom">›</button></div>
           </div>
-          <div id="sleepingScroll" class="sleeping-scroll sleeping-scroll-v3">
-            <button class="sleep-card room-card room-card-pending" type="button" data-room-title="Primary bedroom" data-room-subtitle="Main level · King bed" data-room-folder-name="Primary bedroom"><div class="room-visual"><span class="bed-icon">▱</span><span>Main level</span></div><div class="room-card-copy"><strong>Primary bedroom</strong><span>King bed</span><span class="room-link">Open room photos →</span></div></button>
-            <button class="sleep-card room-card room-card-pending" type="button" data-room-title="Flex bedroom" data-room-subtitle="Main level · Twin daybed + trundle" data-room-folder-name="Flex bedroom"><div class="room-visual"><span class="bed-icon">▱</span><span>Main level</span></div><div class="room-card-copy"><strong>Flex bedroom</strong><span>Twin daybed + trundle</span><span class="room-link">Open room photos →</span></div></button>
-            <button class="sleep-card room-card room-card-pending" type="button" data-room-title="Bedroom 2" data-room-subtitle="Upstairs · King + daybed + trundle" data-room-folder-name="Bedroom 2"><div class="room-visual"><span class="bed-icon">▱</span><span>Upstairs</span></div><div class="room-card-copy"><strong>Bedroom 2</strong><span>King + daybed + trundle</span><span class="room-link">Open room photos →</span></div></button>
-            <button class="sleep-card room-card room-card-pending" type="button" data-room-title="Bedroom 3" data-room-subtitle="Upstairs · King bed" data-room-folder-name="Bedroom 3"><div class="room-visual"><span class="bed-icon">▱</span><span>Upstairs</span></div><div class="room-card-copy"><strong>Bedroom 3</strong><span>King bed</span><span class="room-link">Open room photos →</span></div></button>
-            <button class="sleep-card room-card room-card-pending" type="button" data-room-title="Bedroom 4" data-room-subtitle="Upstairs · Queen + twin bunk beds" data-room-folder-name="Bedroom 4"><div class="room-visual"><span class="bed-icon">▱</span><span>Upstairs</span></div><div class="room-card-copy"><strong>Bedroom 4</strong><span>Queen + twin bunk beds</span><span class="room-link">Open room photos →</span></div></button>
-          </div>
+          <!-- Room cards are filled from roomGroups in the public image manifest. -->
+          <div id="sleepingScroll" class="sleeping-scroll sleeping-scroll-v3" aria-label="Bedrooms"></div>
         </section>
 
         <section class="section-block amenities-v3" id="amenities">
@@ -255,7 +233,7 @@
 
   <div id="bookingModal" class="modal" role="dialog" aria-modal="true" aria-label="Book Sand and Sea Manor"><div class="modal-panel"><div class="modal-header"><h2>Book Sand &amp; Sea Manor</h2><button id="bookingClose" class="modal-close" type="button" aria-label="Close booking form">×</button></div><div class="modal-body"><div id="bookingSummary" class="booking-summary"></div><form id="bookingForm"><div class="booking-modal-grid"><div class="field"><label for="guestName">Name</label><input id="guestName" name="name" autocomplete="name" required></div><div class="field"><label for="guestEmail">Email</label><input id="guestEmail" name="email" type="email" autocomplete="email" required></div><div class="field"><label for="guestPhone">Phone</label><input id="guestPhone" name="phone" type="tel" autocomplete="tel" required></div><div class="field"><label for="tripType">Trip type</label><select id="tripType" name="trip_type" required><option value="">Select</option><option>Family trip</option><option>Friends / group getaway</option><option>Celebration</option><option>Work / retreat</option><option>Galveston event</option><option>Other</option></select></div><div class="field"><label for="pets">Bringing a pet?</label><select id="pets" name="pets" required><option value="no">No</option><option value="yes">Yes — please review with us</option></select></div><div class="field"><label for="event">Planning an event or gathering?</label><select id="event" name="event" required><option value="no">No</option><option value="yes">Yes — please review with us</option></select></div><div class="field full"><label for="guestMessage">Anything CJT should know?</label><textarea id="guestMessage" name="message" placeholder="Tell us about your trip, special requests, pet, or event details."></textarea></div><div class="field full"><label style="display:flex;gap:9px;align-items:flex-start;font-weight:600"><input type="checkbox" required style="width:auto;margin-top:3px"> <span>I understand this request places a temporary hold and is subject to CJT approval, the booking agreement, and required payment.</span></label></div><div class="field full"><button id="bookingSubmit" class="btn btn-primary" type="submit">Book Now — Hold These Dates</button><div id="bookingMessage" class="form-message"></div></div></div></form></div></div></div>
 
-  <div id="amenitiesModal" class="modal" role="dialog" aria-modal="true" aria-label="All amenities"><div class="modal-panel wide"><div class="modal-header"><h2>Amenities at Sand &amp; Sea Manor</h2><button id="amenitiesClose" class="modal-close" type="button" aria-label="Close amenities">×</button></div><div class="modal-body"><p class="section-kicker">This focused view mirrors the organized amenity directory on the listing page.</p><div class="amenities-modal-grid"><div class="amenity-item">Free WiFi</div><div class="amenity-item">Free public parking nearby</div><div class="amenity-item">Full kitchen</div><div class="amenity-item">Dishwasher</div><div class="amenity-item">Microwave</div><div class="amenity-item">Refrigerator</div><div class="amenity-item">Washing machine</div><div class="amenity-item">Dryer</div><div class="amenity-item">Coffee machine</div><div class="amenity-item">Linens</div><div class="amenity-item">Towels</div><div class="amenity-item">Private bathroom</div><div class="amenity-item">Hot tub/Jacuzzi</div><div class="amenity-item">Outdoor fireplace</div><div class="amenity-item">Outdoor dining area</div><div class="amenity-item">Patio</div><div class="amenity-item">Balcony</div><div class="amenity-item">Garden</div><div class="amenity-item">Streaming service</div><div class="amenity-item">Flat-screen TV</div><div class="amenity-item">Board games/puzzles</div><div class="amenity-item">Air conditioning</div><div class="amenity-item">Smoke-free property</div><div class="amenity-item">Carbon monoxide detector</div></div></div></div></div>
+  <div id="amenitiesModal" class="modal" role="dialog" aria-modal="true" aria-label="All amenities"><div class="modal-panel wide"><div class="modal-header"><h2>Amenities at Sand &amp; Sea Manor</h2><button id="amenitiesClose" class="modal-close" type="button" aria-label="Close amenities">×</button></div><div class="modal-body"><p class="section-kicker">This focused view uses the organized amenity directory on the listing page.</p><div id="amenitiesModalGrid" class="amenity-directory amenities-modal-directory" aria-label="All amenities"></div></div></div></div>
 
   <div id="roomGalleryModal" class="modal" role="dialog" aria-modal="true" aria-label="Bedroom photos"><div class="modal-panel room-modal-panel"><div class="modal-header"><div><h2 id="roomGalleryTitle">Bedroom</h2><div id="roomGallerySubtitle" class="selector-value"></div></div><button id="roomGalleryClose" class="modal-close" type="button" aria-label="Close room photos">×</button></div><div class="modal-body"><div id="roomGalleryGrid" class="room-gallery-grid"></div></div></div></div>
 
