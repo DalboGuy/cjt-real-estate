@@ -37,7 +37,7 @@
     <main class="main">
       <header class="topbar"><div style="display:flex;align-items:center;gap:10px"><button id="mobileMenu" class="icon-btn mobile-menu" type="button">☰</button><div><h1>Platform Maps</h1><div class="meta">Living architecture · updated with every meaningful development</div></div></div><div class="top-actions"><a class="btn btn-secondary" href="/admin-v1">Admin Dashboard</a></div></header>
       <div class="content">
-        <div class="section-title"><div><h2>CJT Platform Visual Map</h2><p>Current system structure, flows and build state.</p><div class="map-meta"><span class="status-pill">Version 0.2</span><span class="status-pill">Updated Sep 5, 2026</span><span class="status-pill">Branch: reorg/platform-v1</span></div></div><span class="status-pill">Living documentation</span></div>
+        <div class="section-title"><div><h2>CJT Platform Visual Map</h2><p>Current system structure, flows and build state.</p><div class="map-meta"><span class="status-pill">Version 0.3</span><span class="status-pill">Updated Sep 5, 2026</span><span class="status-pill">Branch: reorg/platform-v1</span></div></div><span class="status-pill">Living documentation</span></div>
         <div id="moduleNotice" class="notice hidden"></div>
         <div class="map-rule"><strong>Development rule</strong><span>A meaningful feature is not considered fully documented until its visual map, roadmap status and architecture notes are updated.</span></div>
         <nav class="map-toolbar" style="margin-top:18px"><a href="#overview">Platform</a><a href="#owner">Owner</a><a href="#admin">Admin</a><a href="#identity">Identity</a><a href="#integrations">Integrations</a><a href="#documents">Documents</a><a href="#data">Data</a><a href="#roadmap">Build State</a></nav>
@@ -72,11 +72,11 @@
         </section>
 
         <section id="identity" class="card map-card" style="margin-bottom:16px">
-          <div class="card-head"><div><h3>4 · Identity & Session Flow</h3><p>Named accounts now sit on top of the existing secure owner-session cookie.</p></div><span class="badge good">Foundation built</span></div>
+          <div class="card-head"><div><h3>4 · Identity & Session Flow</h3><p>Named accounts sit on top of the existing secure owner-session cookie.</p></div><span class="badge good">Foundation built</span></div>
           <div class="map-board"><div class="map-root">
             <div class="map-row"><div class="map-node external"><strong>First Administrator</strong><span>Existing Owner passcode used once for bootstrap</span></div><div class="map-node external"><strong>Returning User</strong><span>Email + individual password</span></div></div><div class="map-arrow">↓</div>
             <div class="map-node core"><strong>/api/auth</strong><span>Bootstrap · login · logout · change password · session status</span></div><div class="map-arrow">↓</div>
-            <div class="map-row"><div class="map-node data built"><strong>owner_users</strong><span>Name · email · salted password hash · role · status</span></div><div class="map-node data built"><strong>owner_sessions</strong><span>Hashed token · user_id · expiry</span></div></div><div class="map-arrow">↓</div>
+            <div class="map-row"><div class="map-node data built"><strong>owner_users</strong><span>Name · email · salted password hash · role · status</span></div><div class="map-node data built"><strong>owner_sessions</strong><span>Hashed token · user_id · expiry</span></div><div class="map-node built"><strong>Password Policy</strong><span>Minimum 5 characters · no required character mix</span></div></div><div class="map-arrow">↓</div>
             <div class="map-row"><div class="map-node owner built"><strong>Owner Portal</strong><span>Same session cookie</span></div><div class="map-node account built"><strong>Account Center</strong><span>Profile + password</span></div><div class="map-node admin progress"><strong>Admin</strong><span>Admin-only user directory</span></div></div>
           </div></div>
         </section>
@@ -92,13 +92,13 @@
         </section>
 
         <section id="data" class="card map-card" style="margin-bottom:16px">
-          <div class="card-head"><div><h3>7 · Core Data Relationships</h3><p>Identity is now explicitly part of the platform data model.</p></div></div>
+          <div class="card-head"><div><h3>7 · Core Data Relationships</h3><p>Identity is explicitly part of the platform data model.</p></div></div>
           <div class="map-board"><div class="map-root"><div class="map-row"><div class="map-node data built"><strong>owner_users</strong><span>Named identity + coarse role</span></div><div class="map-arrow">→</div><div class="map-node data built"><strong>owner_sessions</strong><span>User-aware sessions</span></div></div><div class="map-arrow">↓</div><div class="map-node data progress"><strong>Property Access Layer</strong><span>Next: user ↔ property ↔ permissions</span></div><div class="map-arrow">↓</div><div class="map-row"><div class="map-node data built"><strong>Reservations</strong></div><div class="map-node data built"><strong>Communications</strong></div><div class="map-node data built"><strong>Financials</strong></div><div class="map-node data built"><strong>Tasks</strong></div><div class="map-node data progress"><strong>Documents</strong></div></div></div></div>
         </section>
 
         <section id="roadmap" class="card map-card">
-          <div class="card-head"><div><h3>8 · Build State</h3><p>Current development status after named-account foundation work.</p></div></div>
-          <div class="summary-grid"><div class="summary-card"><span>Named account API</span><b>Built</b></div><div class="summary-card"><span>Login / bootstrap</span><b>Built</b></div><div class="summary-card"><span>Account Center</span><b>Built</b></div><div class="summary-card"><span>User directory</span><b>Built</b></div><div class="summary-card"><span>Property-scoped permissions</span><b>Next</b></div></div>
+          <div class="card-head"><div><h3>8 · Build State</h3><p>Current development status after account-policy refinement.</p></div></div>
+          <div class="summary-grid"><div class="summary-card"><span>Named account API</span><b>Built</b></div><div class="summary-card"><span>Login / bootstrap</span><b>Built</b></div><div class="summary-card"><span>Account Center</span><b>Built</b></div><div class="summary-card"><span>User directory</span><b>Built</b></div><div class="summary-card"><span>Password policy</span><b>5-char min</b></div><div class="summary-card"><span>Property-scoped permissions</span><b>Next</b></div></div>
           <div class="list" style="margin-top:16px"><div class="list-row"><div><strong>Next 1 · Role/property authorization</strong><span>Move beyond coarse admin/owner/manager into property-scoped permissions.</span></div><span class="badge warn">Next</span></div><div class="list-row"><div><strong>Next 2 · Invitations + password recovery</strong><span>Email-driven account setup and reset links.</span></div><span class="badge warn">Next</span></div><div class="list-row"><div><strong>Next 3 · Audit + session management</strong><span>Named attribution and per-session revocation.</span></div><span class="badge">Planned</span></div><div class="list-row"><div><strong>Then · Cloud document index / Gmail automation</strong><span>Use the new identity/permission foundation to control document access.</span></div><span class="badge">Planned</span></div></div>
         </section>
       </div>
