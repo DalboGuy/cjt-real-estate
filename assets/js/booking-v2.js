@@ -1,5 +1,6 @@
 (()=>{
   const $=id=>document.getElementById(id);
+  const thumb=(id,w=1400)=>`https://drive.google.com/thumbnail?id=${encodeURIComponent(id)}&sz=w${w}`;
 
   /* Map + aerial interaction: lines stay physically attached to the map marker and card edges. */
   const stage=$('locationStage'),lineSvg=$('locationLines'),mapAnchor=$('mapAnchor');
@@ -38,19 +39,79 @@
   });
   if(stage){new ResizeObserver(drawMapLines).observe(stage);window.addEventListener('resize',drawMapLines);window.addEventListener('load',()=>requestAnimationFrame(drawMapLines));requestAnimationFrame(drawMapLines)}
 
-  /* Bedroom group shell: no room-photo assignment is guessed. New Drive folders plug in here later. */
-  const roomModal=$('roomGalleryModal'),roomGrid=$('roomGalleryGrid'),roomTitle=$('roomGalleryTitle'),roomSubtitle=$('roomGallerySubtitle');
-  function openRoom(card){
-    roomTitle.textContent=card.dataset.roomTitle||'Bedroom';
-    roomSubtitle.textContent=card.dataset.roomSubtitle||'';
-    const folder=card.dataset.roomFolderName||card.dataset.roomTitle||'this bedroom';
-    roomGrid.innerHTML=`<div class="room-folder-pending"><strong>${folder} photo group</strong><span>The widget is ready. Connect the new Google Drive folder for ${folder} and this card will open only that room's photos.</span></div>`;
-    roomModal?.classList.add('show');document.body.classList.add('modal-open');
+  /* Bedroom collections come directly from the five owner-supplied Google Drive folders. Folder name is the guest-facing room name; no bed configuration is inferred here. */
+  const roomGroups=[
+    {
+      name:'Master Bedroom',folderId:'1IxJqk17K7skT9ss5LMXQ6_WrFuCbp5W_',
+      photos:[
+        {id:'17-FjbJy1wtgDtNdSJKvfYq4_Wtg4dJBk',name:'28.jpg'},
+        {id:'1RUE96rF2Y8dbK_-CS31VE5Vkba6KSOyR',name:'27.jpg'},
+        {id:'1KTV7nKFn4C9YC1dB_zKEu2QdqQMHKJLm',name:'9.jpg'},
+        {id:'1G-a091oYqM-KexAS8nRSC6KCM0eQtMY1',name:'12.jpg'},
+        {id:'1ixcf53Yo75CnfJgRZxdM4lTuaTV2BHNm',name:'52.jpg'}
+      ]
+    },
+    {
+      name:'Boho Room',folderId:'1PHttJna7uy8D_d47gs_9Qz19oIdW7kJh',
+      photos:[
+        {id:'1p_gSIPgB8li-ZHPcE5jF_mTJVf4DX9H1',name:'41.jpg'},
+        {id:'1ftx3EpDLreevw_jjMUH4Pa3hj0ZyNcdc',name:'42.jpg'}
+      ]
+    },
+    {
+      name:'Glam Room',folderId:'1kk2QcvsaZxM8NJqqr9agvAmNWLWmsRQY',
+      photos:[
+        {id:'1vpI2I7nBKRLcvcEzXS-ePn2-BxFleWoI',name:'43.jpg'},
+        {id:'1RkZ5GUgqVVLyLbz6pgVBiWYG1b1u5u3g',name:'44.jpg'}
+      ]
+    },
+    {
+      name:'Flex Room',folderId:'1o-nrG3bMMqgZ4-Egm2XzNmXZ00MD2YGd',
+      photos:[
+        {id:'1NXXKCKJmY-bZB3t36XKs7HfJwIn2Q25L',name:'39.jpg'},
+        {id:'1fNrIsAjT8OeoEKLh-ffSXTdvKHId561u',name:'40.jpg'}
+      ]
+    },
+    {
+      name:'Bunk Room',folderId:'1ui0dfMhlt5S4d2wLA34rtyteAHp9PQlk',
+      photos:[{id:'1Oosyi1X3GMY9eX0EJKCLYPEkFCQ6WdBQ',name:'37.jpg'}]
+    }
+  ];
+
+  const roomRuntimeStyle=document.createElement('style');
+  roomRuntimeStyle.textContent='.room-card .room-visual{padding:0;position:relative;overflow:hidden;background:#eef2f0}.room-card .room-visual img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .22s ease}.room-card:hover .room-visual img,.room-card:focus-visible .room-visual img{transform:scale(1.025)}.room-card .room-visual .room-photo-count{position:absolute;left:12px;bottom:12px;background:rgba(255,255,255,.94);border:1px solid rgba(221,228,226,.95);border-radius:999px;padding:6px 9px;font-size:.7rem;font-weight:850;color:#12383e;box-shadow:0 4px 14px rgba(13,43,49,.1)}.room-gallery-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.room-gallery-grid button{border:0;padding:0;background:#eee;border-radius:14px;overflow:hidden;cursor:pointer}.room-gallery-grid img{width:100%;height:360px;object-fit:cover;display:block;transition:transform .2s ease}.room-gallery-grid button:hover img{transform:scale(1.018)}@media(max-width:780px){.room-gallery-grid{grid-template-columns:1fr}.room-gallery-grid img{height:auto;max-height:72vh}}';
+  document.head.appendChild(roomRuntimeStyle);
+
+  const roomScroll=$('sleepingScroll');
+  if(roomScroll){
+    roomScroll.innerHTML='';
+    roomGroups.forEach((room,roomIndex)=>{
+      const card=document.createElement('button');
+      card.type='button';
+      card.className='sleep-card room-card';
+      card.dataset.roomIndex=String(roomIndex);
+      const cover=room.photos[0];
+      card.innerHTML=`<div class="room-visual"><img src="${thumb(cover.id,1000)}" alt="${room.name}"><span class="room-photo-count">${room.photos.length} photo${room.photos.length===1?'':'s'}</span></div><div class="room-card-copy"><strong>${room.name}</strong><span>Room photo collection</span><span class="room-link">View ${room.photos.length} photo${room.photos.length===1?'':'s'} →</span></div>`;
+      card.addEventListener('click',()=>openRoom(room));
+      roomScroll.appendChild(card);
+    });
   }
-  document.querySelectorAll('.room-card-pending').forEach(card=>card.addEventListener('click',()=>openRoom(card)));
+
+  const roomModal=$('roomGalleryModal'),roomGrid=$('roomGalleryGrid'),roomTitle=$('roomGalleryTitle'),roomSubtitle=$('roomGallerySubtitle');
+  function openRoom(room){
+    if(!roomModal||!roomGrid)return;
+    roomTitle.textContent=room.name;
+    roomSubtitle.textContent=`${room.photos.length} photo${room.photos.length===1?'':'s'} · Google Drive room collection`;
+    roomGrid.innerHTML='';
+    room.photos.forEach((photo,i)=>{
+      const b=document.createElement('button');b.type='button';
+      b.innerHTML=`<img src="${thumb(photo.id,1800)}" alt="${room.name} photo ${i+1}">`;
+      roomGrid.appendChild(b);
+    });
+    roomModal.classList.add('show');document.body.classList.add('modal-open');
+  }
   $('roomGalleryClose')?.addEventListener('click',()=>{roomModal?.classList.remove('show');document.body.classList.remove('modal-open')});
   roomModal?.addEventListener('click',e=>{if(e.target===roomModal)$('roomGalleryClose')?.click()});
-  const roomScroll=$('sleepingScroll');
   $('roomPrev')?.addEventListener('click',()=>roomScroll?.scrollBy({left:-330,behavior:'smooth'}));
   $('roomNext')?.addEventListener('click',()=>roomScroll?.scrollBy({left:330,behavior:'smooth'}));
 
