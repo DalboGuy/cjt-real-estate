@@ -4,7 +4,7 @@ Status: **Living architecture documentation**
 
 Authoritative preview route: `/admin-v1/maps`
 
-Current version: **0.9 — 2026-09-05**
+Current version: **1.0 — 2026-09-05**
 
 ## Purpose
 
@@ -44,7 +44,8 @@ The portal maintains these views:
 6. Identity & Access Flow
 7. Portal Navigation Flow
 8. Security Scope Decision
-9. Build State
+9. Temporary Preview Access
+10. Build State
 
 The common CJT flow is:
 
@@ -85,6 +86,12 @@ The owner explicitly narrowed the next identity/security build to items **4 and 
 5. **Sessions & audit — Built.** Named users can review/revoke their own active sessions; Administrators can review/revoke named-account sessions. Authentication and session actions write to the shared audit trail when `audit_log` is present.
 
 The `password_reset_tokens` and `audit_log` tables are present on the Neon reorganization branch. Preview code does **not** create these tables on the production database; if the current Vercel preview is still attached to production, Password Recovery and Audit report storage unavailable instead of mutating production schema.
+
+## Temporary preview access — 2026-09-05
+
+At the owner's request, application-password gates are temporarily bypassed for **preview GET/read access from 8:25 PM to 9:25 PM Central on Sep 5, 2026**. The bypass is coded with a fixed expiration timestamp and only activates when `VERCEL_ENV=preview`; production authentication is unchanged.
+
+Because the current Vercel preview may still be connected to the production database, data-changing POST/write actions remain session-protected during this temporary window. This keeps navigation, maps, dashboards, accounts, audit and other read surfaces easy to review without opening unauthenticated writes against potentially live data.
 
 Reserved Under construction routes currently cover:
 
