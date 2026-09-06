@@ -6,6 +6,12 @@
   const nav=sidebar?.querySelector('.nav');
   const isMobile=()=>window.matchMedia('(max-width:780px)').matches;
 
+  // Keep the mobile return-to-navigation handle compact and away from
+  // bottom filters/browser chrome. This overrides the older bottom placement.
+  const navPlacement=document.createElement('style');
+  navPlacement.textContent='@media(max-width:780px){.sidebar-flyout-toggle{top:42%;bottom:auto;transform:translateY(-50%);width:34px;height:58px;padding:0;justify-content:center;border-radius:0 12px 12px 0}.sidebar-flyout-toggle span{display:none}.sidebar-flyout-toggle b{font-size:1.45rem}}@media(max-width:420px){.sidebar-flyout-toggle{top:40%;bottom:auto;transform:translateY(-50%);width:32px;height:54px}}';
+  document.head.appendChild(navPlacement);
+
   function revealActive(){
     const active=nav?.querySelector('.active');
     if(active&&typeof active.scrollIntoView==='function')active.scrollIntoView({block:'nearest'});
@@ -93,5 +99,14 @@
     await fetch('/api/owner',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'logout'})}).catch(()=>{});
     location.reload();
   });
+
+  // Keep the living visual map current with the navigation behavior.
+  if(location.pathname.replace(/\/$/,'')==='/admin-v1/maps'){
+    const version=[...document.querySelectorAll('.status-pill')].find(el=>/^Version\s/i.test(el.textContent||''));
+    if(version)version.textContent='Version 0.8';
+    const note=document.querySelector('#navigation .flow-note');
+    if(note)note.textContent='Desktop: the pane can collapse and reopen. Mobile: a compact arrow-only handle stays around the middle of the left edge, clear of bottom filters and browser controls, and opens the slide-out drawer. The browser Back button is not required.';
+  }
+
   requestAnimationFrame(revealActive);
 })();
