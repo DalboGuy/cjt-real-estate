@@ -2,6 +2,7 @@ const crypto=require('crypto');
 const { db, ensureSchema, expireHolds }=require('../lib/db');
 const {previewPasswordFreeActive}=require('../lib/preview-access');
 const {ownerAdjustedQuote}=require('../lib/pricing');
+const {paymentSnapshot}=require('../lib/payments');
 
 function parseCookies(header=''){return Object.fromEntries(header.split(';').map(v=>v.trim()).filter(Boolean).map(v=>{const i=v.indexOf('=');return [decodeURIComponent(v.slice(0,i)),decodeURIComponent(v.slice(i+1))];}));}
 function hash(v){return crypto.createHash('sha256').update(v).digest('hex');}
@@ -53,7 +54,8 @@ module.exports=async function(req,res){
         ORDER BY CASE WHEN r.status IN ('released','expired','cancelled') THEN 1 ELSE 0 END, r.checkin ASC, r.created_at DESC
         LIMIT 250
       `;
-      return res.status(200).json({reservations,temporaryPasswordFree:previewPasswordFreeActive(req)});
+      const reservationsWithPayments=await Promise.all(reservations.map(async reservation=>({...reservation,payment:await paymentSnapshot(sql,reservation.id)})));
+      return res.status(200).json({reservations:reservationsWithPayments,temporaryPasswordFree:previewPasswordFreeActive(req)});
     }
 
     if(req.method==='POST'&&body.action==='logout'){
@@ -67,7 +69,7 @@ module.exports=async function(req,res){
       const id=String(body.id||'').trim();
       if(!id)return res.status(400).json({error:'missing_id'});
       const rows=await sql`
-        SELECT r.id,r.status,q.quote
+        SELECT r.id,r.status,q.quote,EXISTS (SELECT 1 FROM booking_events pe WHERE pe.reservation_id=r.id AND pe.event_type IN ('payment_checkout_created','payment_verified')) AS payment_started
         FROM reservations r
         LEFT JOIN LATERAL (
           SELECT e.metadata->'quote' AS quote
@@ -80,6 +82,7 @@ module.exports=async function(req,res){
       const row=rows[0];
       if(!row)return res.status(404).json({error:'reservation_not_found'});
       if(['released','expired','cancelled'].includes(row.status))return res.status(409).json({error:'reservation_closed'});
+      if(row.payment_started)return res.status(409).json({error:'payment_started',message:'The quote cannot change after a Stripe checkout has been created.'});
       let quote;
       try{quote=ownerAdjustedQuote(row.quote||{},body.lodgingSubtotal);}catch(e){return res.status(e.status||400).json({error:e.code||'invalid_quote',message:e.message});}
       await sql`INSERT INTO booking_events(reservation_id,event_type,actor,metadata) VALUES (${id},'quote_updated','owner',${JSON.stringify({quote})}::jsonb)`;
@@ -107,6 +110,8 @@ module.exports=async function(req,res){
         await sql`UPDATE reservations SET status='contract_signed',contract_signed_at=COALESCE(contract_signed_at,now()),hold_expires_at=NULL,updated_at=now() WHERE id=${id} AND status NOT IN ('released','cancelled','expired')`;
         eventType='contract_signed';
       }else if(next==='deposit_received'){
+        const payment=await paymentSnapshot(sql,id);
+        if(!payment.verified)return res.status(409).json({error:'payment_not_verified',message:'A verified Stripe payment is required before confirmation.'});
         await sql`UPDATE reservations SET status='confirmed',deposit_received_at=COALESCE(deposit_received_at,now()),hold_expires_at=NULL,updated_at=now() WHERE id=${id} AND status NOT IN ('released','cancelled','expired')`;
         eventType='deposit_received';
       }else if(next==='release_dates'){
