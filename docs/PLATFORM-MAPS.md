@@ -53,7 +53,7 @@ A meaningful development cycle should include:
 - **In progress / Planning shell** — route/UI exists primarily to preserve the design and development direction.
 - **Planned** — defined but not yet implemented.
 
-## Current map baseline — 2026-09-05, version 0.2
+## Current map baseline — 2026-09-05, version 0.3
 
 ### Built / working foundations
 
@@ -74,6 +74,7 @@ A meaningful development cycle should include:
 - functional Account Center profile/session view
 - self-service password change
 - Administrator-only Users & Access directory
+- simplified password policy: minimum 5 characters with no required character composition
 - Platform Maps living documentation
 
 ### In progress / planning shells
@@ -111,9 +112,10 @@ Current flow:
 2. The first Administrator chooses their own name, email and password.
 3. Returning named users authenticate with email and password.
 4. Passwords are stored only as salted derived hashes.
-5. Named sessions use the same HttpOnly `cjt_owner_session` cookie consumed by current Owner APIs, so existing Owner modules continue working during the migration.
-6. The Account Center can show the signed-in user's identity, role and session expiration and supports password changes.
-7. The Users & Access page requires a named Administrator session.
+5. The CJT password policy is intentionally simple: a password may be any 5 or more characters, with no uppercase, lowercase, number or symbol requirement.
+6. Named sessions use the same HttpOnly `cjt_owner_session` cookie consumed by current Owner APIs, so existing Owner modules continue working during the migration.
+7. The Account Center can show the signed-in user's identity, role and session expiration and supports password changes.
+8. The Users & Access page requires a named Administrator session.
 
 The shared passcode remains a temporary compatibility bridge and has not yet been removed from the legacy Owner routes.
 
