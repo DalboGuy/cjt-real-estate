@@ -1,0 +1,31 @@
+(()=>{
+ const host=document.getElementById('pricing');if(!host)return;
+ const el=document.createElement('div');el.className='card';el.id='pricingAdjustments';
+ el.innerHTML=`<h3>Adjust nightly pricing</h3><p class="meta">Publish rates to Direct Booking. Existing reservations keep their recorded quote. Discounts, minimum stays and fees still apply.</p>
+ <form id="paForm" class="formgrid"><div><label for="paStart">First night</label><input id="paStart" type="date" required></div><div><label for="paEnd">Last night (inclusive)</label><input id="paEnd" type="date" required></div>
+ <div><label for="paMode">Adjustment</label><select id="paMode"><option value="fixed">Set nightly price ($)</option><option value="delta">Add / subtract dollars</option><option value="percent">Increase / decrease percent</option></select></div><div><label for="paAmount">Amount (negative to decrease)</label><input id="paAmount" type="number" step="0.01" required></div>
+ <fieldset class="full"><legend>Days to change</legend>${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map((d,i)=>`<label style="display:inline-block;margin:6px"><input type="checkbox" name="weekday" value="${i}" checked style="width:auto"> ${d}</label>`).join('')}</fieldset>
+ <fieldset class="full"><legend>Publish to</legend><label><input id="paDirect" type="checkbox" checked style="width:auto"> Direct Booking</label>${['Airbnb','Vrbo','Booking.com','Houfy'].map(n=>`<label class="meta"><input type="checkbox" disabled style="width:auto"> ${n} — Not connected</label>`).join('')}</fieldset>
+ <div class="full"><label for="paNote">Reason / internal note</label><input id="paNote" maxlength="300" placeholder="Example: October weekend adjustment"></div><div class="full"><button class="btn primary">Preview changes</button></div></form>
+ <p id="paMessage" role="status" aria-live="polite"></p><div id="paPreview"></div><button id="paPublish" class="btn primary" hidden>Publish to Direct Booking</button>
+ <details style="margin-top:18px"><summary>Pricing change history</summary><button id="paHistoryRefresh" class="btn ghost small" type="button">Refresh history</button><p class="meta">Latest 30 publications from this control. Restoring removes new overrides or restores previous overrides; current base rates apply where an override is removed.</p><div id="paHistory"></div></details>`;
+ const anchor=host.querySelector('.pricingnote');if(anchor)anchor.after(el);else host.appendChild(el);
+ const $=id=>document.getElementById(id),money=n=>Number(n).toLocaleString('en-US',{style:'currency',currency:'USD'});
+ let pending=null,busy=false,revision=0;
+ async function api(b){const r=await fetch('/api/owner',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}),d=await r.json();if(!r.ok)throw Error(d.error||'Request failed');return d;}
+ function message(t){$('paMessage').textContent=t;}
+ function clear(){revision++;pending=null;$('paPreview').replaceChildren();$('paPublish').hidden=true;}
+ function input(){return {start_date:$('paStart').value,end_date:$('paEnd').value,mode:$('paMode').value,amount:Number($('paAmount').value),weekdays:[...el.querySelectorAll('[name=weekday]:checked')].map(x=>Number(x.value)),channels:$('paDirect').checked?['direct']:[],note:$('paNote').value};}
+ function show(b,p){
+  pending={...b,expected_snapshot:p.snapshot};const wrap=document.createElement('div');wrap.style.overflowX='auto';const table=document.createElement('table');table.style.cssText='width:100%;text-align:left;margin:12px 0';
+  const head=table.createTHead().insertRow();['Night','Current rate','New rate'].forEach(t=>{const th=document.createElement('th');th.textContent=t;head.appendChild(th)});
+  const rules=p.snapshot.rules.value||{};function rate(date,override){return override?override.nightly_rate:rules[(rules.weekend_days||[5,6]).map(Number).includes(new Date(date).getUTCDay())?'weekend_rate':'weekday_rate']||0}
+  for(const e of p.entries){const row=table.insertRow();[e.stay_date,money(rate(e.stay_date,e.old)),e.new?money(e.new.nightly_rate):`${money(rate(e.stay_date,null))} (base rate)`].forEach(t=>row.insertCell().textContent=t)}
+  wrap.appendChild(table);$('paPreview').replaceChildren(wrap);$('paPublish').hidden=false;message(`${p.entries.length} nights ready for review. Nightly rates exclude discounts, fees and tax.`);
+ }
+ $('paForm').addEventListener('input',clear);
+ $('paForm').onsubmit=async e=>{e.preventDefault();if(busy)return;clear();busy=true;message('Preparing preview…');try{const b=input(),v=revision,p=await api({...b,action:'pricing_preview'});if(v===revision)show(b,p)}catch(e){message(e.message)}finally{busy=false}};
+ $('paPublish').onclick=async()=>{if(!pending||busy)return;if(!confirm('Publish these nightly rates to Direct Booking?'))return;busy=true;$('paPublish').disabled=true;try{const d=await api({...pending,action:'pricing_publish'});clear();message(`Published ${d.count} nights to Direct Booking. Other sites were not changed.`);if(typeof load==='function'){try{await load()}catch{message(`Published ${d.count} nights. Reload the page to refresh the calendar.`)}}await history()}catch(e){clear();message(e.message+' Preview again before publishing.')}finally{busy=false;$('paPublish').disabled=false}};
+ async function history(){try{const d=await api({action:'pricing_history'});$('paHistory').replaceChildren();for(const h of d.history){const box=document.createElement('div');box.className='securitybox';const text=document.createElement('p');text.textContent=`${new Date(h.created_at).toLocaleString()} · ${h.actor} · ${h.mode} · ${h.start_date}–${h.end_date} · ${h.note}`;const button=document.createElement('button');button.className='btn ghost small';button.textContent='Preview restore';button.onclick=async()=>{if(busy)return;busy=true;clear();try{const b={mode:'restore',restore_id:h.id,start_date:h.start_date,end_date:h.end_date,weekdays:[0,1,2,3,4,5,6],channels:['direct'],note:`Restore ${h.id}`};show(b,await api({...b,action:'pricing_preview'}));$('paPreview').scrollIntoView({behavior:'smooth',block:'center'})}catch(e){message(e.message)}finally{busy=false}};box.append(text,button);$('paHistory').appendChild(box)}if(!d.history.length)$('paHistory').textContent='No pricing publications yet.'}catch(e){$('paHistory').textContent=e.message}}
+ $('paHistoryRefresh').onclick=history;
+})();

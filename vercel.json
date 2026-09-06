@@ -1,14 +1,66 @@
 {
-  "cleanUrls": true,
+  "cleanUrls": false,
   "trailingSlash": false,
   "rewrites": [
-    { "source": "/direct-bookings.ics", "destination": "/api/direct-bookings" },
-    { "source": "/bookingcom.ics", "destination": "/api/direct-bookings?bookingcom=1" }
+    {
+      "source": "/",
+      "destination": "/v3.html"
+    },
+    {
+      "source": "/booking-test",
+      "destination": "/api/customer-test-page"
+    },
+    {
+      "source": "/owner",
+      "destination": "/api/owner-page"
+    },
+    {
+      "source": "/messages",
+      "destination": "/messages.html"
+    },
+    {
+      "source": "/direct-bookings.ics",
+      "destination": "/api/direct-bookings"
+    },
+    {
+      "source": "/bookingcom.ics",
+      "destination": "/api/direct-bookings?bookingcom=1"
+    },
+    {
+      "source": "/communications",
+      "destination": "/communications.html"
+    }
   ],
   "functions": {
-    "api/calendar.js": { "maxDuration": 10 },
-    "api/direct-bookings.js": { "maxDuration": 10 },
-    "api/inquiries.js": { "maxDuration": 10 },
-    "api/owner.js": { "maxDuration": 10 }
+    "api/calendar.js": {
+      "maxDuration": 10
+    },
+    "api/chat.js": {
+      "maxDuration": 10
+    },
+    "api/customer-test-page.js": {
+      "maxDuration": 10
+    },
+    "api/direct-bookings.js": {
+      "maxDuration": 10
+    },
+    "api/inquiries.js": {
+      "maxDuration": 10
+    },
+    "api/integration-status.js": {
+      "maxDuration": 10
+    },
+    "api/owner.js": {
+      "maxDuration": 10
+    },
+    "api/owner-calendar.js": {
+      "maxDuration": 10
+    },
+    "api/owner-page.js": {
+      "maxDuration": 10
+    },
+    "api/site-config.js": {
+      "maxDuration": 10
+    }
   }
 }
