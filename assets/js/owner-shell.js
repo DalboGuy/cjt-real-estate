@@ -100,7 +100,7 @@
 
   if(location.pathname.replace(/\/$/,'')==='/admin-v1/maps'){
     const version=[...document.querySelectorAll('.status-pill')].find(el=>/^Version\s/i.test(el.textContent||''));
-    if(version)version.textContent='Version 0.9';
+    if(version)version.textContent='Version 1.0';
     const note=document.querySelector('#navigation .flow-note');
     if(note)note.textContent='Desktop: the pane can collapse and reopen. Mobile: a compact arrow-only handle stays around the middle of the left edge, clear of bottom filters and browser controls, and opens the slide-out drawer. The browser Back button is not required.';
 
@@ -117,6 +117,14 @@
       roadmap.parentNode.insertBefore(section,roadmap);
       const toolbar=document.querySelector('.map-toolbar');
       if(toolbar){const a=document.createElement('a');a.href='#security-scope';a.textContent='Security Scope';toolbar.appendChild(a)}
+    }
+    if(roadmap&&!document.getElementById('temporary-preview-access')){
+      const section=document.createElement('section');
+      section.id='temporary-preview-access';section.className='card map-card';section.style.marginBottom='16px';
+      section.innerHTML='<div class="card-head"><div><h3>Temporary Preview Access Window</h3><p>Password-free preview review requested for one hour on Sep 5, 2026.</p></div><span class="badge warn">Auto-expires</span></div><div class="list"><div class="list-row"><div><strong>Window</strong><span>8:25 PM–9:25 PM Central. Preview GET/read access does not require an application password during this window.</span></div><span class="badge good">Temporary</span></div><div class="list-row"><div><strong>Production</strong><span>Production authentication is unchanged.</span></div><span class="badge good">Protected</span></div><div class="list-row"><div><strong>Data-changing actions</strong><span>POST/write operations remain session-protected because the preview database connection may still point at production.</span></div><span class="badge">Guardrail</span></div></div>';
+      roadmap.parentNode.insertBefore(section,roadmap);
+      const toolbar=document.querySelector('.map-toolbar');
+      if(toolbar){const a=document.createElement('a');a.href='#temporary-preview-access';a.textContent='Temporary Access';toolbar.appendChild(a)}
     }
     const nextRow=[...roadmap?.querySelectorAll('.list-row')||[]].find(row=>row.querySelector('strong')?.textContent.trim()==='Next');
     if(nextRow){const span=nextRow.querySelector('div span');if(span)span.textContent='Items 1–3 remain logged as deferred. No additional identity/access work is in scope beyond password recovery, sessions and audit.';const badge=nextRow.querySelector('.badge');if(badge){badge.textContent='Deferred';badge.classList.remove('warn')}}
