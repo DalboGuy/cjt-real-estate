@@ -13,8 +13,6 @@
     { "source": "/admin-v1/roles", "destination": "/under-construction.html" },
     { "source": "/admin-v1/integrations", "destination": "/under-construction.html" },
     { "source": "/admin-v1/notifications", "destination": "/under-construction.html" },
-    { "source": "/admin-v1/audit", "destination": "/under-construction.html" },
-    { "source": "/admin-v1/sessions", "destination": "/under-construction.html" },
     { "source": "/admin-v1/system-data", "destination": "/under-construction.html" },
     { "source": "/account-v1/notifications", "destination": "/under-construction.html" },
     { "source": "/account-v1/property-access", "destination": "/under-construction.html" },
