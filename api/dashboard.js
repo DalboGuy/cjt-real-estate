@@ -1,5 +1,6 @@
 const crypto=require('crypto');
 const {db,ensureSchema,expireHolds}=require('../lib/db');
+const {previewPasswordFreeActive}=require('../lib/preview-access');
 
 function parseCookies(header=''){
   return Object.fromEntries(header.split(';').map(v=>v.trim()).filter(Boolean).map(v=>{
@@ -9,6 +10,7 @@ function parseCookies(header=''){
 }
 function hash(v){return crypto.createHash('sha256').update(v).digest('hex')}
 async function authenticated(req){
+  if(previewPasswordFreeActive(req))return true;
   await ensureSchema();
   const token=parseCookies(req.headers.cookie||'').cjt_owner_session;
   if(!token)return false;
@@ -86,6 +88,7 @@ module.exports=async function(req,res){
     res.setHeader('Cache-Control','no-store');
     return res.status(200).json({
       checkedAt:new Date().toISOString(),
+      temporaryPasswordFree:previewPasswordFreeActive(req),
       reservations:{summary:reservationSummary[0]||{},recent:recentReservations},
       communications:{summary:communicationSummary[0]||{},recent:recentMessages},
       financials:financialSummary[0]||{},
