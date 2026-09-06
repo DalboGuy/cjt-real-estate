@@ -4,7 +4,7 @@ Status: **Living architecture documentation**
 
 Authoritative preview route: `/admin-v1/maps`
 
-Current version: **0.5 — 2026-09-05**
+Current version: **0.6 — 2026-09-05**
 
 ## Purpose
 
@@ -57,6 +57,8 @@ CJT is the organizing and operating layer, but it does not pretend to own every 
 Every visible navigation item must open a real route. A module that is not yet ready must open an **Under construction** portal page instead of behaving like a dead or non-working button.
 
 The shared left navigation must also remain usable at every viewport height. The brand/property context and footer remain visible while the module list scrolls independently. Desktop, touch and mobile users must be able to reach every navigation item, and the active module should be kept in view automatically.
+
+The left navigation is also collapsible. A chevron control inside the pane hides it, and a persistent **Menu ›** flyout control remains on the left edge so the user can reopen the portal navigation from any module without using the browser Back button. On mobile the same control opens the sliding navigation drawer.
 
 Reserved Under construction routes currently cover:
 
