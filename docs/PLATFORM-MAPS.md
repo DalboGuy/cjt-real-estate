@@ -4,7 +4,7 @@ Status: **Living architecture documentation**
 
 Authoritative preview route: `/admin-v1/maps`
 
-Current version: **0.7 — 2026-09-05**
+Current version: **0.8 — 2026-09-05**
 
 ## Purpose
 
@@ -59,7 +59,7 @@ Every visible navigation item must open a real route. A module that is not yet r
 
 The shared left navigation must also remain usable at every viewport height. The brand/property context and footer remain visible while the module list scrolls independently. Desktop, touch and mobile users must be able to reach every navigation item, and the active module should be kept in view automatically.
 
-The left navigation is also collapsible. A chevron control inside the pane hides it, and a persistent **Menu ›** flyout control remains on the left edge so the user can reopen the portal navigation from any module without using the browser Back button. On mobile the same control opens the sliding navigation drawer.
+The left navigation is also collapsible. A chevron control inside the pane hides it, and a persistent flyout control remains on the left edge so the user can reopen portal navigation from any module without using the browser Back button. On mobile the return control is a compact **arrow-only edge handle** positioned around the middle of the screen rather than near the bottom, so it stays clear of filter buttons and mobile browser controls. Tapping it opens the sliding navigation drawer.
 
 ## Mobile layout rule
 
