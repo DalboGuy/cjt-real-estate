@@ -55,5 +55,6 @@ Every PR must state:
 6. Production impact.
 7. Known limitations.
 8. Vercel preview URL when available.
+9. Configuration handoff: exact environment-variable names only, required versus optional status, target Vercel environments, and whether Joel has set them; never include values.
 
 If any acceptance criterion is unverified, mark the feature `Partial` or `Needs review`, not `Built`.

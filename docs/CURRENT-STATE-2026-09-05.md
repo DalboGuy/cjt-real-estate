@@ -188,13 +188,15 @@ Known configuration names referenced by code include:
 
 - `DATABASE_URL`
 - `OWNER_PORTAL_PASSCODE`
-- `BOOKING_COM_ICAL_URL`
+- `AIRBNB_ICAL_URL`
+- `VRBO_ICAL_URL`
+- `BOOKING_COM_ICAL_URL` (optional)
 
 No secret values are stored in this document.
 
 ### Security/configuration note
 
-The Airbnb and Vrbo iCal feed URLs are currently hardcoded in `lib/availability.js`. Their embedded tokens are not reproduced here. During reorganization, move those URLs into environment variables or another protected configuration store.
+Airbnb and Vrbo iCal feed values are protected Vercel environment configuration, not repository source. `AIRBNB_ICAL_URL` and `VRBO_ICAL_URL` are required for availability; `BOOKING_COM_ICAL_URL` remains optional. See `docs/OTA-CALENDAR-CONFIGURATION.md` for the configuration handoff. If a required feed variable is missing, `/api/calendar` fails closed with a clear configuration error rather than inventing or using a fallback feed.
 
 ## Gmail / OTA organization
 
