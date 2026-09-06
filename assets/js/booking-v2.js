@@ -2,6 +2,34 @@
   const $=id=>document.getElementById(id);
   const thumb=(id,w=1400)=>`https://drive.google.com/thumbnail?id=${encodeURIComponent(id)}&sz=w${w}`;
 
+  /* Some images in the categorized gallery still point to later Drive copies that are private.
+     When one of those URLs fails, swap it to the exact matching public original from the
+     pre-redesign master photo set. Matching was verified by filename and file size. */
+  const publicImageFallbacks={
+    '1FketXkBAJjRF2LO0i5l-eYmL4tDiGaSB':'1X1qxr3kkttUlUGq7-pO7yDN00dOwmEob',
+    '17-FjbJy1wtgDtNdSJKvfYq4_Wtg4dJBk':'1PpvUxJlvb1JjWqg7EBZzkbGAtvOUGqTM',
+    '1Oosyi1X3GMY9eX0EJKCLYPEkFCQ6WdBQ':'1V_iLI4_uvax7dlTllW8N2sXBOl7tGZtW',
+    '1f0pliNlWzuuuhAsITTm-221J0MEWqvST':'1me2WcqWzZ6ZUb55A6-tiZOnm3r3igGel',
+    '1k3zT3TYsraQBiZVfiidhimcjqnxw0V_u':'1yzwWdsT001Ngn1kZMG27ztplFyvm5yFk',
+    '1kroJMzxDsXSxQ_vyDuKtQG3gvtH8n0LG':'1oHaZh2tPCh5J0bWbY6rnrJQxbqzbMmXu',
+    '1p_gSIPgB8li-ZHPcE5jF_mTJVf4DX9H1':'1JlfPna3S8STdFA7sjuA5uhMLDemk0NXe',
+    '1ftx3EpDLreevw_jjMUH4Pa3hj0ZyNcdc':'1Wul5n_SRp9LutOrS-Ptjfc7KKq6-S02r',
+    '1vpI2I7nBKRLcvcEzXS-ePn2-BxFleWoI':'1QAuZGsYQLHfmzX8gisj1C9rvS33TTg0I',
+    '1RkZ5GUgqVVLyLbz6pgVBiWYG1b1u5u3g':'1hT6T9fbkp-N5iHoiaj5OaH-bjYPOeJAS',
+    '1KTV7nKFn4C9YC1dB_zKEu2QdqQMHKJLm':'1dOEt1mcytUnoQR-JQ_PwS_wnt9cUv98f',
+    '1G-a091oYqM-KexAS8nRSC6KCM0eQtMY1':'1lf3xMpvuNuXFM8shiyVqz9a1alPF8SdJ',
+    '1ixcf53Yo75CnfJgRZxdM4lTuaTV2BHNm':'1P55Ba4LnbWVTowwiwCjkefB7ZCRxuC2F'
+  };
+  document.addEventListener('error',event=>{
+    const img=event.target;
+    if(!(img instanceof HTMLImageElement)||img.dataset.publicFallbackTried==='1')return;
+    const match=img.src.match(/[?&]id=([^&]+)/);if(!match)return;
+    const oldId=decodeURIComponent(match[1]),replacement=publicImageFallbacks[oldId];if(!replacement)return;
+    img.dataset.publicFallbackTried='1';
+    const sizeMatch=img.src.match(/[?&]sz=w(\d+)/),width=sizeMatch?Number(sizeMatch[1]):1400;
+    img.src=thumb(replacement,width);
+  },true);
+
   /* Restore the exact property-photo set used on the booking page before the listing redesign.
      These four source files are already publicly viewable. Do not invent a fifth image. */
   const originalMosaic=[
