@@ -4,7 +4,7 @@ Status: **Living architecture documentation**
 
 Authoritative preview route: `/admin-v1/maps`
 
-Current version: **1.2 — 2026-09-05**
+Current version: **1.3 — 2026-09-05**
 
 ## Purpose
 
@@ -82,7 +82,7 @@ The common CJT flow is:
 
 The guest and owner sides share one booking lifecycle:
 
-- `/` — listing-first guest booking page with a five-photo mosaic, full photo gallery, property details, sleeping arrangements, amenities, reviews, map, host profile, booking policies, sticky booking card and mobile Book Now bar.
+- `/` — listing-first guest booking page. On the reorganization preview, root now rewrites to `/booking-v2.html` while the previous page remains available in source as a rollback reference.
 - `/api/calendar` — consolidated availability from OTA calendars and active CJT holds/reservations.
 - `/api/quote` — read-only quote service using the current seasonal schedule, Friday/Saturday weekend pricing, minimum-stay rules, $240 cleaning fee and 15% tax.
 - Quote payment schedule — stays more than 30 days away default to 50% due when the booking is accepted and 50% due 30 days before arrival; stays within 30 days default to the full balance due when accepted.
@@ -97,20 +97,30 @@ The published online pricing horizon runs through **2027-08-15**. Dates beyond t
 
 The guest UI, quote engine and inquiry validation now recognize the owner-approved capacity of 14. The existing production `reservations` table was originally created with a 12-guest check constraint. Until an additive production migration is explicitly approved, requests for 13–14 guests return a clear migration-pending message rather than silently changing the production schema. This is a known release item, not a change in the approved property capacity.
 
-## Guest Listing Experience — v1.2
+## Guest Listing Experience — v1.3
 
 The guest UI follows the familiar interaction pattern of a modern vacation-rental listing while keeping CJT branding and content:
 
-`Listing header → photo mosaic → property summary → highlights → description → sleeping arrangements → amenities → reviews → exact map → Hosted by CJT Realty → rules/cancellation`
+`Listing header → photo mosaic → property summary → highlights → description → interactive bedroom cards → organized amenity groups → source-aware reviews → live map + aerial rail → Hosted by CJT Realty → rules/cancellation`
 
 Desktop keeps a sticky booking card beside the listing content. Mobile collapses to one content column with a persistent Book Now bar. Dates open in a dedicated calendar modal; guest count is adjusted in a compact picker; live quote details remain beside the Book Now action. The full photo collection opens in a categorized gallery and fullscreen viewer.
 
-Guest trust/decision features now include:
+### v1.3 interaction refinements
+
+- Refreshed five-photo opening mosaic with exterior, living, kitchen, bedroom and outdoor-experience photography.
+- `Where you'll sleep` is now a larger horizontal room-card rail. Each bedroom card opens a focused two-photo room view instead of behaving like a generic text widget.
+- Amenities are organized by purpose: Outdoor & relaxation, Kitchen & dining, Living & comfort, and Practical stay essentials.
+- Guest reviews now lead with a horizontally scrolling source-rating rail and keep the connected Houfy review feed inside a bounded scroll area so reviews do not stretch the entire listing page.
+- Current verified source summaries displayed in the preview are Airbnb **4.85/5 from 20 reviews** and Booking.com **10/10 from 2 reviews** as observed on Sep 5, 2026. These are presentation data and will naturally change as external listings receive new reviews.
+- Location now uses the actual existing Sand & Sea Manor aerial photographs in a floating rail to the right of the live map. Desktop leader lines visually anchor each aerial card to the property location marker; hover/focus activates the corresponding line and map pin. Mobile stacks the map and aerial cards without decorative leader lines.
+- Both map aerial cards open the original property photographs in the existing fullscreen viewer.
+
+Guest trust/decision features include:
 
 - Share and local Save actions.
 - Full existing property photo collection.
-- Connected guest-review surface.
-- Exact map for 1720 Avenue M.
+- Connected guest-review surface with source context.
+- Exact map for 1720 Avenue M plus aerial property context.
 - Clear host identity: Hosted by CJT Realty.
 - Case-by-case pet and event prompts inside the booking form.
 - Plain-language cancellation terms.
