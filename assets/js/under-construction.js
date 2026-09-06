@@ -11,8 +11,6 @@
     '/admin-v1/roles':{portal:'admin',module:'Roles & Permissions',description:'Role definitions and property-scoped access rules will be managed here.'},
     '/admin-v1/integrations':{portal:'admin',module:'Integrations',description:'Gmail, booking channels, cloud storage, signing and other external connections will be managed here.'},
     '/admin-v1/notifications':{portal:'admin',module:'Notifications',description:'Platform-level notification rules, routing and alert policies will be managed here.'},
-    '/admin-v1/audit':{portal:'admin',module:'Audit Log',description:'User-attributed platform and operating activity will be reviewed here.'},
-    '/admin-v1/sessions':{portal:'admin',module:'Sessions',description:'Active user sessions and administrative session revocation controls will live here.'},
     '/admin-v1/system-data':{portal:'admin',module:'System & Data',description:'System health, data tools, imports, exports, backups and recovery information will live here.'},
     '/account-v1/notifications':{portal:'account',module:'Notifications',description:'Personal alert and notification preferences will live here.'},
     '/account-v1/property-access':{portal:'account',module:'Property Access',description:'The properties and permissions assigned to the signed-in account will be shown here.'}
@@ -31,7 +29,7 @@
     ['#','Architecture'],['Platform Maps','/admin-v1/maps'],['#','Security'],['Audit Log','/admin-v1/audit'],['Sessions','/admin-v1/sessions'],
     ['#','System'],['System & Data','/admin-v1/system-data']
   ];
-  const accountItems=[['Account Overview','/account-v1'],['Notifications','/account-v1/notifications'],['#','Access'],['Property Access','/account-v1/property-access']];
+  const accountItems=[['Account Overview','/account-v1'],['Sessions','/account-v1/sessions'],['Notifications','/account-v1/notifications'],['#','Access'],['Property Access','/account-v1/property-access']];
 
   const configs={
     owner:{brand:'Owner Operations',chipTitle:'Sand & Sea Manor',chipText:'1720 Avenue M · Galveston, TX',items:ownerItems,back:'/owner-v1',backText:'Owner Dashboard'},
