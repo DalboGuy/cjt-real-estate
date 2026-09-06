@@ -6,8 +6,6 @@
   const nav=sidebar?.querySelector('.nav');
   const isMobile=()=>window.matchMedia('(max-width:780px)').matches;
 
-  // Keep the mobile return-to-navigation handle compact and away from
-  // bottom filters/browser chrome. This overrides the older bottom placement.
   const navPlacement=document.createElement('style');
   navPlacement.textContent='@media(max-width:780px){.sidebar-flyout-toggle{top:42%;bottom:auto;transform:translateY(-50%);width:34px;height:58px;padding:0;justify-content:center;border-radius:0 12px 12px 0}.sidebar-flyout-toggle span{display:none}.sidebar-flyout-toggle b{font-size:1.45rem}}@media(max-width:420px){.sidebar-flyout-toggle{top:40%;bottom:auto;transform:translateY(-50%);width:32px;height:54px}}';
   document.head.appendChild(navPlacement);
@@ -100,12 +98,19 @@
     location.reload();
   });
 
-  // Keep the living visual map current with the navigation behavior.
   if(location.pathname.replace(/\/$/,'')==='/admin-v1/maps'){
     const version=[...document.querySelectorAll('.status-pill')].find(el=>/^Version\s/i.test(el.textContent||''));
-    if(version)version.textContent='Version 0.8';
+    if(version)version.textContent='Version 0.9';
     const note=document.querySelector('#navigation .flow-note');
     if(note)note.textContent='Desktop: the pane can collapse and reopen. Mobile: a compact arrow-only handle stays around the middle of the left edge, clear of bottom filters and browser controls, and opens the slide-out drawer. The browser Back button is not required.';
+
+    const roadmap=document.getElementById('roadmap');
+    if(roadmap&&!document.getElementById('security-scope')){
+      const section=document.createElement('section');
+      section.id='security-scope';section.className='card map-card';section.style.marginBottom='16px';
+      section.innerHTML='<div class="card-head"><div><h3>Security Scope Decision</h3><p>Current owner-directed priority: build only items 4 and 5; keep items 1–3 visible for later.</p></div><span class="badge good">Recorded</span></div><div class="list"><div class="list-row"><div><strong>1 · Property-scoped users & permissions</strong><span>Assign users to properties and roles.</span></div><span class="badge">Deferred</span></div><div class="list-row"><div><strong>2 · Permission enforcement</strong><span>Role-aware navigation and API authorization.</span></div><span class="badge">Deferred</span></div><div class="list-row"><div><strong>3 · Invitations</strong><span>Email invite → user-created account → access activation.</span></div><span class="badge">Deferred</span></div><div class="list-row"><div><strong>4 · Password recovery</strong><span>30-minute one-time reset token, password replacement and session invalidation. Automated email uses a runtime delivery hook.</span></div><span class="badge good">Built foundation</span></div><div class="list-row"><div><strong>5 · Sessions & audit</strong><span>Named-account session review/revocation plus a shared audit event stream. Audit storage is present on the reorganization database branch.</span></div><span class="badge good">Built</span></div></div>';
+      roadmap.parentNode.insertBefore(section,roadmap);
+    }
   }
 
   requestAnimationFrame(revealActive);
