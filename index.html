@@ -20,7 +20,8 @@
 .calendar{grid-template-columns:repeat(7,minmax(0,1fr))}
 .calendar .day{aspect-ratio:auto;min-height:44px;height:clamp(44px,7vw,76px)}
 .calendar-shell .legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:16px}
-</style></head>
+</style><link rel="stylesheet" href="/widget/seasonal-pricing.css">
+</head>
 <body>
   <div class="top">Book direct with CJT · live availability · clear all-in pricing · 24-hour reservation holds</div>
   <nav><div class="wrap nav"><a class="brand" href="#top">SAND & SEA MANOR<small>1720 Avenue M · Galveston, Texas</small></a><div class="links"><a href="#home">The Home</a><a href="#amenities">Amenities</a><a href="#availability">Availability</a><a href="#faq">FAQ</a><a class="btn btn-primary" href="#book">Check Dates & Price</a></div></div></nav>
@@ -57,7 +58,14 @@
 
     <section class="section" id="availability"><div class="wrap"><div class="section-head"><div class="eyebrow" style="color:var(--muted)">Synced availability</div><h2>Choose your dates directly from the calendar.</h2><p>Select an available arrival date, then select your checkout date. The dates will be carried into the booking form automatically.</p></div><div class="calendar-shell"><div class="calendar-top"><button id="prev" type="button" aria-label="Previous month">←</button><div class="month-title" id="monthTitle">Loading…</div><button id="next" type="button" aria-label="Next month">→</button></div><div class="calendar" id="calendar"></div><div class="legend"><span><i class="dot a"></i>Available</span><span><i class="dot b"></i>Unavailable / on hold</span><span><i class="dot s"></i>Your dates</span></div><div class="selection-card"><div><strong id="selectionTitle">Select your arrival date</strong><span id="selectionText">Choose any available future date to begin.</span></div><a class="btn btn-outline" id="continueDates" href="#book" style="display:none">Continue to price</a></div><div class="status" id="calStatus">Connecting to synced availability…</div></div></div></section>
 
-    <section class="booking" id="book"><div class="wrap booking-grid"><div><div class="eyebrow">Direct booking</div><h2>Check the price, then hold your stay.</h2><p>The site rechecks availability before quoting and again before placing a 24-hour inquiry hold. Payment is not collected on this page.</p><div class="steps"><div class="step"><div class="step-num">1</div><div><strong>Select dates and guests.</strong><br>We verify the stay against synchronized calendars and active direct holds.</div></div><div class="step"><div class="step-num">2</div><div><strong>Review the all-in quote.</strong><br>Nightly rates, eligible discounts, $240 cleaning, 15% lodging tax and the 35% deposit are calculated server-side.</div></div><div class="step"><div class="step-num">3</div><div><strong>Place a 24-hour hold.</strong><br>CJT reviews the request and continues the agreement and deposit process before confirmation.</div></div></div><p><strong>cjtrealestateholdings@gmail.com</strong></p></div>
+    
+    <section class="section" id="seasonal-pricing" aria-label="Seasonal pricing">
+      <div class="wrap">
+        <div id="cjt-seasonal-pricing" data-sample-data="1"></div>
+      </div>
+    </section>
+
+<section class="booking" id="book"><div class="wrap booking-grid"><div><div class="eyebrow">Direct booking</div><h2>Check the price, then hold your stay.</h2><p>The site rechecks availability before quoting and again before placing a 24-hour inquiry hold. Payment is not collected on this page.</p><div class="steps"><div class="step"><div class="step-num">1</div><div><strong>Select dates and guests.</strong><br>We verify the stay against synchronized calendars and active direct holds.</div></div><div class="step"><div class="step-num">2</div><div><strong>Review the all-in quote.</strong><br>Nightly rates, eligible discounts, $240 cleaning, 15% lodging tax and the 35% deposit are calculated server-side.</div></div><div class="step"><div class="step-num">3</div><div><strong>Place a 24-hour hold.</strong><br>CJT reviews the request and continues the agreement and deposit process before confirmation.</div></div></div><p><strong>cjtrealestateholdings@gmail.com</strong></p></div>
       <form id="bookingForm"><div class="form-grid">
         <div class="field"><label>Check-in</label><input name="checkin" id="checkin" type="date" required></div>
         <div class="field"><label>Check-out</label><input name="checkout" id="checkout" type="date" required></div>
@@ -196,5 +204,8 @@
   })();
   </script>
   <!--End of Tawk.to Script-->
+
+<script src="/widget/sample-data.js"></script>
+<script src="/widget/seasonal-pricing.js"></script>
 </body>
 </html>
