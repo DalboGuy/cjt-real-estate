@@ -1,0 +1,49 @@
+/* Seasonal Pricing widget. All selectors are scoped to avoid site collisions. */
+.cjt-seasonal-pricing {
+  --cjt-seasonal-ink: #171717; --cjt-seasonal-muted: #6e6e6e; --cjt-seasonal-border: #dedede;
+  --cjt-seasonal-soft: #f6f6f4; --cjt-seasonal-panel: #fff; --cjt-seasonal-duration: 220ms; --cjt-seasonal-easing: cubic-bezier(.22, 1, .36, 1); --cjt-seasonal-stagger: 0ms;
+  color: var(--cjt-seasonal-ink); background: var(--cjt-seasonal-panel); border: 1px solid var(--cjt-seasonal-border);
+  border-radius: 12px; overflow: hidden; font-family: inherit; line-height: 1.4; max-width: 760px;
+}
+.cjt-seasonal-pricing *, .cjt-seasonal-pricing *::before, .cjt-seasonal-pricing *::after { box-sizing: border-box; }
+.cjt-seasonal-pricing__header { padding: 22px 24px 18px; border-bottom: 1px solid var(--cjt-seasonal-border); }
+.cjt-seasonal-pricing__title { margin: 0; font-size: clamp(1.2rem, 2.3vw, 1.55rem); font-weight: 700; letter-spacing: -.02em; }
+.cjt-seasonal-pricing__intro { margin: 5px 0 0; color: var(--cjt-seasonal-muted); font-size: .9rem; }
+.cjt-seasonal-pricing__sample-badge { display: inline-flex; margin-top: 13px; padding: 5px 9px; border-radius: 999px; background: #ededeb; color: #4c4c4c; font-size: .74rem; font-weight: 700; letter-spacing: .01em; }
+.cjt-seasonal-pricing__base { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding: 17px 24px; background: var(--cjt-seasonal-soft); border-bottom: 1px solid var(--cjt-seasonal-border); }
+.cjt-seasonal-pricing__base-label { color: var(--cjt-seasonal-muted); font-size: .86rem; }
+.cjt-seasonal-pricing__base-value { font-size: 1.05rem; font-weight: 700; white-space: nowrap; }
+.cjt-seasonal-pricing__list { margin: 0; padding: 0; list-style: none; max-height: 420px; overflow-y: auto; }
+.cjt-seasonal-pricing__item { border-bottom: 1px solid var(--cjt-seasonal-border); }
+.cjt-seasonal-pricing__item:last-child { border-bottom: 0; }
+.cjt-seasonal-pricing__trigger { width: 100%; display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(82px, .65fr) auto; align-items: center; gap: 16px; border: 0; padding: 18px 24px; text-align: left; color: inherit; background: transparent; font: inherit; cursor: pointer; transition: background-color var(--cjt-seasonal-duration) var(--cjt-seasonal-easing); }
+.cjt-seasonal-pricing__trigger:hover { background: #fafafa; }
+.cjt-seasonal-pricing__trigger:focus-visible { outline: 3px solid #222; outline-offset: -3px; position: relative; z-index: 1; }
+.cjt-seasonal-pricing__season-name { min-width: 0; font-weight: 700; }
+.cjt-seasonal-pricing__meta { color: var(--cjt-seasonal-muted); font-size: .84rem; }
+.cjt-seasonal-pricing__price { justify-self: end; font-size: .98rem; font-weight: 700; white-space: nowrap; }
+.cjt-seasonal-pricing__chevron { width: 10px; height: 10px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg) translateY(-2px); transition: transform var(--cjt-seasonal-duration) var(--cjt-seasonal-easing); }
+.cjt-seasonal-pricing__trigger[aria-expanded="true"] .cjt-seasonal-pricing__chevron { transform: rotate(225deg) translate(-2px, -2px); }
+.cjt-seasonal-pricing__panel { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows var(--cjt-seasonal-duration) var(--cjt-seasonal-easing), opacity var(--cjt-seasonal-duration) var(--cjt-seasonal-easing); transition-delay: var(--cjt-seasonal-stagger); }
+.cjt-seasonal-pricing__panel-inner { min-height: 0; overflow: hidden; }
+.cjt-seasonal-pricing__details { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 22px; margin: 0; padding: 0 24px 19px; color: var(--cjt-seasonal-muted); font-size: .84rem; }
+.cjt-seasonal-pricing__detail { display: flex; justify-content: space-between; gap: 12px; border-top: 1px solid #ececea; padding-top: 10px; }
+.cjt-seasonal-pricing__detail dt { margin: 0; }
+.cjt-seasonal-pricing__detail dd { margin: 0; color: var(--cjt-seasonal-ink); font-weight: 600; text-align: right; }
+.cjt-seasonal-pricing__note { grid-column: 1 / -1; margin: 1px 0 0; padding-top: 10px; border-top: 1px solid #ececea; color: var(--cjt-seasonal-muted); }
+.cjt-seasonal-pricing__note dd { margin: 0; font-weight: 400; text-align: left; color: var(--cjt-seasonal-muted); }
+.cjt-seasonal-pricing__sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+.cjt-seasonal-pricing__item.is-open .cjt-seasonal-pricing__panel { grid-template-rows: 1fr; opacity: 1; }
+.cjt-seasonal-pricing__empty { margin: 0; padding: 22px 24px; color: var(--cjt-seasonal-muted); background: var(--cjt-seasonal-soft); font-size: .9rem; }
+.cjt-seasonal-pricing__error { margin: 0; padding: 14px 24px; color: #5a2525; background: #fbf3f3; font-size: .84rem; }
+.cjt-seasonal-pricing.is-loading .cjt-seasonal-pricing__list { min-height: 58px; }
+@media (max-width: 560px) {
+  .cjt-seasonal-pricing__header, .cjt-seasonal-pricing__base, .cjt-seasonal-pricing__trigger { padding-left: 17px; padding-right: 17px; }
+  .cjt-seasonal-pricing__trigger { grid-template-columns: minmax(0, 1fr) auto auto; gap: 10px; }
+  .cjt-seasonal-pricing__meta { grid-column: 1 / 2; grid-row: 2; }
+  .cjt-seasonal-pricing__price { grid-column: 2; grid-row: 1 / 3; }
+  .cjt-seasonal-pricing__chevron { grid-column: 3; grid-row: 1 / 3; }
+  .cjt-seasonal-pricing__details { grid-template-columns: 1fr; padding-left: 17px; padding-right: 17px; }
+  .cjt-seasonal-pricing__note { grid-column: auto; }
+}
+@media (prefers-reduced-motion: reduce) { .cjt-seasonal-pricing *, .cjt-seasonal-pricing *::before, .cjt-seasonal-pricing *::after { transition-duration: 0ms !important; animation-duration: 0ms !important; } }
