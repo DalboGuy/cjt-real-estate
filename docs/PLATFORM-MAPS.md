@@ -4,7 +4,7 @@ Status: **Living architecture documentation**
 
 Authoritative preview route: `/admin-v1/maps`
 
-Current version: **0.8 — 2026-09-05**
+Current version: **0.9 — 2026-09-05**
 
 ## Purpose
 
@@ -23,7 +23,7 @@ Color identifies the type of system or surface, not build status:
 - Cloud — authoritative document files stored in the selected cloud provider.
 - Core application — Vercel APIs and shared business logic.
 
-Build status is shown separately with labels such as Built, Build / Under construction, and Planned.
+Build status is shown separately with labels such as Built, Build / Under construction, Deferred, and Planned.
 
 Arrow language:
 
@@ -43,7 +43,8 @@ The portal maintains these views:
 5. Source of Truth
 6. Identity & Access Flow
 7. Portal Navigation Flow
-8. Build State
+8. Security Scope Decision
+9. Build State
 
 The common CJT flow is:
 
@@ -57,9 +58,9 @@ CJT is the organizing and operating layer, but it does not pretend to own every 
 
 Every visible navigation item must open a real route. A module that is not yet ready must open an **Under construction** portal page instead of behaving like a dead or non-working button.
 
-The shared left navigation must also remain usable at every viewport height. The brand/property context and footer remain visible while the module list scrolls independently. Desktop, touch and mobile users must be able to reach every navigation item, and the active module should be kept in view automatically.
+The shared left navigation must remain usable at every viewport height. The brand/property context and footer remain visible while the module list scrolls independently. Desktop, touch and mobile users must be able to reach every navigation item, and the active module should be kept in view automatically.
 
-The left navigation is also collapsible. A chevron control inside the pane hides it, and a persistent flyout control remains on the left edge so the user can reopen portal navigation from any module without using the browser Back button. On mobile the return control is a compact **arrow-only edge handle** positioned around the middle of the screen rather than near the bottom, so it stays clear of filter buttons and mobile browser controls. Tapping it opens the sliding navigation drawer.
+The left navigation is collapsible. A chevron control inside the pane hides it, and a persistent flyout control remains on the left edge so the user can reopen portal navigation from any module without using the browser Back button. On mobile the return control is a compact arrow-only edge handle positioned around the middle of the screen so it stays clear of filter buttons and mobile browser controls.
 
 ## Mobile layout rule
 
@@ -73,13 +74,25 @@ Portal pages must fit the device viewport without forcing the entire page to scr
 - visual maps stack vertically instead of extending the page width;
 - genuinely wide tables may scroll horizontally **inside their own card**, not by widening the portal page.
 
+## Security scope decision — 2026-09-05
+
+The owner explicitly narrowed the next identity/security build to items **4 and 5 only**. Items **1–3 stay recorded in Platform Maps for later** and are not current build work.
+
+1. **Property-scoped users & permissions — Deferred.** Assign users to properties and roles.
+2. **Permission enforcement — Deferred.** Role-aware navigation and API authorization.
+3. **Invitations — Deferred.** Email invitation and account activation flow.
+4. **Password recovery — Built foundation.** One-time 30-minute reset tokens, password replacement, and invalidation of the user's existing sessions after a successful reset. Automated email delivery uses a protected runtime delivery hook and remains inactive until that connection is configured.
+5. **Sessions & audit — Built.** Named users can review/revoke their own active sessions; Administrators can review/revoke named-account sessions. Authentication and session actions write to the shared audit trail when `audit_log` is present.
+
+The `password_reset_tokens` and `audit_log` tables are present on the Neon reorganization branch. Preview code does **not** create these tables on the production database; if the current Vercel preview is still attached to production, Password Recovery and Audit report storage unavailable instead of mutating production schema.
+
 Reserved Under construction routes currently cover:
 
 - Owner: Calendar, Pricing, Financials, Property, Maintenance, Analytics, Settings
-- Admin: Properties, Roles & Permissions, Integrations, Notifications, Audit Log, Sessions, System & Data
+- Admin: Properties, Roles & Permissions, Integrations, Notifications, System & Data
 - Account: Notifications, Property Access
 
-These routes are stable placeholders; the working module will replace the placeholder without changing the navigation path.
+Audit and Sessions are no longer placeholder routes.
 
 ## Development rule
 
@@ -88,7 +101,7 @@ A meaningful development is not fully documented until the applicable maps are u
 1. structure — where the feature lives;
 2. flow — what comes in, what it touches and what goes out;
 3. authority — which system is the source of truth and where final actions occur;
-4. build state — Built, Under construction or Planned.
+4. build state — Built, Under construction, Deferred or Planned.
 
 ## Current identity baseline
 
@@ -97,7 +110,10 @@ A meaningful development is not fully documented until the applicable maps are u
 - Returning users can sign in with email and password.
 - Password policy: minimum 5 characters, no required character composition.
 - `owner_users` and `owner_sessions` provide named identity and user-aware sessions.
-- Property-scoped authorization tables exist on the reorganization database branch and are the next authorization layer.
+- Password recovery request/reset routes and token handling are built.
+- Account and Admin session-management pages are built.
+- Admin Audit Log page and shared event writer are built.
+- Property-scoped authorization remains documented but deferred.
 
 ## Current cloud-document principle
 
