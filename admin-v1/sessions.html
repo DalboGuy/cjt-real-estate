@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>CJT Admin · Sessions</title>
+  <link rel="stylesheet" href="/assets/css/tokens.css"><link rel="stylesheet" href="/assets/css/owner-shell.css"><link rel="stylesheet" href="/assets/css/modules.css">
+</head>
+<body>
+  <div id="ownerBackdrop" class="backdrop hidden"></div>
+  <div id="adminApp" class="owner-app hidden">
+    <aside id="ownerSidebar" class="sidebar">
+      <div class="brand">CJT REALTY<small>Administration</small></div>
+      <div class="property-chip"><strong>Platform Administration</strong><span>Security · Sessions</span></div>
+      <nav class="nav" aria-label="Admin Portal">
+        <a href="/admin-v1"><span>Admin Dashboard</span></a><a href="/admin-v1/users"><span>Users & Access</span></a>
+        <button data-coming-soon="Properties"><span>Properties</span></button><button data-coming-soon="Roles & Permissions"><span>Roles & Permissions</span></button>
+        <div class="nav-section">Automation</div><button data-coming-soon="Integrations"><span>Integrations</span></button><a href="/owner-v1/documents"><span>Documents & Cloud</span></a><button data-coming-soon="Notifications"><span>Notifications</span></button>
+        <div class="nav-section">Architecture</div><a href="/admin-v1/maps"><span>Platform Maps</span></a>
+        <div class="nav-section">Security</div><a href="/admin-v1/audit"><span>Audit Log</span><span class="count">Live</span></a><a class="active" href="/admin-v1/sessions"><span>Sessions</span><span class="count">Live</span></a>
+        <div class="nav-section">System</div><button data-coming-soon="System & Data"><span>System & Data</span></button>
+      </nav>
+      <div class="sidebar-footer"><a href="/owner-v1">Owner Portal</a><a href="/account-v1">My Account</a><button id="logout" type="button">Sign out</button></div>
+    </aside>
+    <main class="main">
+      <header class="topbar"><div style="display:flex;align-items:center;gap:10px"><button id="mobileMenu" class="icon-btn mobile-menu" type="button" aria-label="Open menu">☰</button><div><h1>Sessions</h1><div class="meta">Administrative view of active named-account sessions</div></div></div><div class="top-actions"><a class="btn btn-secondary" href="/admin-v1/audit">Audit Log</a></div></header>
+      <div class="content"><div class="section-title"><div><h2>Active User Sessions</h2><p>Administrators can revoke a single active session. Revocation is recorded in the audit log when audit storage is available.</p></div><span id="count" class="status-pill">Loading…</span></div><div id="notice" class="notice hidden"></div><section class="card"><div id="sessionList" class="list"><div class="empty">Loading sessions…</div></div></section></div>
+    </main>
+  </div>
+<script src="/assets/js/owner-shell.js"></script>
+<script>
+const app=document.getElementById('adminApp'),list=document.getElementById('sessionList'),notice=document.getElementById('notice'),count=document.getElementById('count');
+function fmt(v){return v?new Date(v).toLocaleString():'—'}function show(msg){notice.textContent=msg;notice.classList.remove('hidden')}
+async function api(opts={}){const r=await fetch('/api/sessions?scope=admin',{headers:{'Content-Type':'application/json'},...opts});const d=await r.json().catch(()=>({}));if(!r.ok){const e=new Error(d.error||'request_failed');e.status=r.status;throw e}return d}
+async function load(){try{const d=await api();app.classList.remove('hidden');render(d.sessions||[])}catch(e){location.href='/login-v1?return=/admin-v1/sessions'}}
+function render(rows){count.textContent=`${rows.length} active`;if(!rows.length){list.innerHTML='<div class="empty">No active named-account sessions.</div>';return}list.innerHTML='';rows.forEach(s=>{const row=document.createElement('div');row.className='list-row';const left=document.createElement('div');const strong=document.createElement('strong');strong.textContent=s.name||s.email||`User ${s.userId}`;const span=document.createElement('span');span.textContent=`${s.email||''}${s.role?' · '+s.role:''} · Started ${fmt(s.createdAt)} · Expires ${fmt(s.expiresAt)}`;left.append(strong,span);const right=document.createElement('div');right.className='actions';if(s.current){const b=document.createElement('span');b.className='badge good';b.textContent='Current';right.appendChild(b)}const btn=document.createElement('button');btn.className='btn btn-secondary';btn.type='button';btn.textContent='Revoke';btn.addEventListener('click',()=>revoke(s.id,s.current));right.appendChild(btn);row.append(left,right);list.appendChild(row)})}
+async function revoke(id,current){if(!confirm(current?'Revoke your current administrator session?':'Revoke this user session?'))return;try{const d=await api({method:'POST',body:JSON.stringify({action:'revoke',sessionId:id})});if(d.revokedCurrent){location.href='/login-v1?return=/admin-v1/sessions';return}show('Session revoked.');load()}catch(e){show('Session could not be revoked.')}}
+load();
+</script>
+</body></html>

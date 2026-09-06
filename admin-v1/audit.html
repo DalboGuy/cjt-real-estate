@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>CJT Admin · Audit Log</title>
+  <link rel="stylesheet" href="/assets/css/tokens.css"><link rel="stylesheet" href="/assets/css/owner-shell.css"><link rel="stylesheet" href="/assets/css/modules.css">
+</head>
+<body>
+  <div id="ownerBackdrop" class="backdrop hidden"></div>
+  <div id="adminApp" class="owner-app hidden">
+    <aside id="ownerSidebar" class="sidebar">
+      <div class="brand">CJT REALTY<small>Administration</small></div>
+      <div class="property-chip"><strong>Platform Administration</strong><span>Security · Audit</span></div>
+      <nav class="nav" aria-label="Admin Portal">
+        <a href="/admin-v1"><span>Admin Dashboard</span></a><a href="/admin-v1/users"><span>Users & Access</span></a>
+        <button data-coming-soon="Properties"><span>Properties</span></button><button data-coming-soon="Roles & Permissions"><span>Roles & Permissions</span></button>
+        <div class="nav-section">Automation</div><button data-coming-soon="Integrations"><span>Integrations</span></button><a href="/owner-v1/documents"><span>Documents & Cloud</span></a><button data-coming-soon="Notifications"><span>Notifications</span></button>
+        <div class="nav-section">Architecture</div><a href="/admin-v1/maps"><span>Platform Maps</span></a>
+        <div class="nav-section">Security</div><a class="active" href="/admin-v1/audit"><span>Audit Log</span><span class="count">Live</span></a><a href="/admin-v1/sessions"><span>Sessions</span><span class="count">Live</span></a>
+        <div class="nav-section">System</div><button data-coming-soon="System & Data"><span>System & Data</span></button>
+      </nav>
+      <div class="sidebar-footer"><a href="/owner-v1">Owner Portal</a><a href="/account-v1">My Account</a><button id="logout" type="button">Sign out</button></div>
+    </aside>
+    <main class="main">
+      <header class="topbar"><div style="display:flex;align-items:center;gap:10px"><button id="mobileMenu" class="icon-btn mobile-menu" type="button" aria-label="Open menu">☰</button><div><h1>Audit Log</h1><div class="meta">Who changed what and when</div></div></div><div class="top-actions"><a class="btn btn-secondary" href="/admin-v1/sessions">Sessions</a></div></header>
+      <div class="content">
+        <div class="section-title"><div><h2>Platform Activity</h2><p>Authentication and session activity is recorded now; other modules can write to the same audit trail as they are built.</p></div><span id="status" class="status-pill">Loading…</span></div>
+        <div id="notice" class="notice hidden"></div>
+        <section class="card"><div class="toolbar-row"><input id="search" class="search-box" placeholder="Filter by event, user or target"><button id="refresh" class="btn btn-secondary" type="button">Refresh</button></div><div id="auditList" class="list"><div class="empty">Loading activity…</div></div></section>
+      </div>
+    </main>
+  </div>
+<script src="/assets/js/owner-shell.js"></script>
+<script>
+const app=document.getElementById('adminApp'),list=document.getElementById('auditList'),notice=document.getElementById('notice'),status=document.getElementById('status'),search=document.getElementById('search');let events=[];
+function fmt(v){return v?new Date(v).toLocaleString():'—'}function show(msg){notice.textContent=msg;notice.classList.remove('hidden')}
+function label(v){return String(v||'').replaceAll('.',' › ').replaceAll('_',' ')}
+async function load(){try{const r=await fetch('/api/audit');const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'request_failed');app.classList.remove('hidden');if(!d.available){status.textContent='Storage pending';show('Audit UI and event writers are built. The current preview database does not expose the audit_log table, so no audit records are shown here yet.');events=[];render();return}events=d.events||[];status.textContent=`${events.length} recent`;notice.classList.add('hidden');render()}catch(e){location.href='/login-v1?return=/admin-v1/audit'}}
+function render(){const q=search.value.trim().toLowerCase();const rows=events.filter(e=>!q||[e.eventType,e.targetType,e.targetId,e.actor?.name,e.actor?.email,e.propertyId].some(v=>String(v||'').toLowerCase().includes(q)));if(!rows.length){list.innerHTML='<div class="empty">No matching audit activity.</div>';return}list.innerHTML='';rows.forEach(e=>{const row=document.createElement('div');row.className='list-row';const left=document.createElement('div');const strong=document.createElement('strong');strong.textContent=label(e.eventType);const actor=e.actor?`${e.actor.name} · ${e.actor.email}`:'System / unavailable actor';const target=[e.targetType,e.targetId].filter(Boolean).join(' ');const span=document.createElement('span');span.textContent=`${actor}${target?' · '+target:''} · ${fmt(e.createdAt)}`;left.append(strong,span);const badge=document.createElement('span');badge.className='badge';badge.textContent=e.actor?.role||'system';row.append(left,badge);list.appendChild(row)})}
+search.addEventListener('input',render);document.getElementById('refresh').addEventListener('click',load);load();
+</script>
+</body></html>

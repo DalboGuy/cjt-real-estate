@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>CJT Admin Portal · Users & Access</title>
+  <link rel="stylesheet" href="/assets/css/tokens.css">
+  <link rel="stylesheet" href="/assets/css/owner-shell.css">
+  <link rel="stylesheet" href="/assets/css/modules.css">
+</head>
+<body>
+  <div id="ownerBackdrop" class="backdrop hidden"></div>
+  <div id="adminApp" class="owner-app hidden">
+    <aside id="ownerSidebar" class="sidebar">
+      <div class="brand">CJT REALTY<small>Administration</small></div>
+      <div class="property-chip"><strong>Platform Administration</strong><span>Named users & access control</span></div>
+      <nav class="nav" aria-label="Admin Portal">
+        <a href="/admin-v1"><span>Admin Dashboard</span></a>
+        <a class="active" href="/admin-v1/users"><span>Users & Access</span><span class="count">Live</span></a>
+        <button data-coming-soon="Properties"><span>Properties</span></button>
+        <button data-coming-soon="Roles & Permissions"><span>Roles & Permissions</span></button>
+        <div class="nav-section">Automation</div>
+        <button data-coming-soon="Integrations"><span>Integrations</span></button>
+        <a href="/owner-v1/documents"><span>Documents & Cloud</span></a>
+        <div class="nav-section">Architecture</div>
+        <a href="/admin-v1/maps"><span>Platform Maps</span><span class="count">Live</span></a>
+        <div class="nav-section">Security</div>
+        <a href="/admin-v1/audit"><span>Audit Log</span><span class="count">Live</span></a>
+        <a href="/admin-v1/sessions"><span>Sessions</span><span class="count">Live</span></a>
+      </nav>
+      <div class="sidebar-footer"><a href="/owner-v1">Owner Portal</a><a href="/account-v1">My Account</a><button id="logout" type="button">Sign out</button></div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div style="display:flex;align-items:center;gap:10px"><button id="mobileMenu" class="icon-btn mobile-menu" type="button" aria-label="Open menu">☰</button><div><h1>Users & Access</h1><div class="meta">Named account foundation</div></div></div>
+        <div class="top-actions"><a class="btn btn-secondary" href="/account-v1">My Account</a></div>
+      </header>
+      <div class="content">
+        <div class="section-title"><div><h2>User Directory</h2><p>Named users have individual credentials and sessions. Property-scoped access, enforcement and invitations are logged for later rather than being built now.</p></div><span class="status-pill">Foundation live</span></div>
+        <div id="notice" class="notice hidden"></div>
+        <div id="summary" class="summary-grid"></div>
+        <section class="card">
+          <div class="card-head"><div><h3>Accounts</h3><p>Current platform users</p></div><a class="card-link" href="/login-v1">Account sign-in ↗</a></div>
+          <div id="users" class="list"><div class="skeleton big"></div><div class="skeleton"></div></div>
+        </section>
+        <section class="grid" style="margin-top:16px">
+          <article class="card span-6"><div class="card-head"><div><h3>Deferred: property-scoped access</h3><p>Recorded in Platform Maps for a later build.</p></div><span class="badge">Deferred</span></div><div class="empty">Assign users to specific properties and roles only when we return to access expansion.</div></article>
+          <article class="card span-6"><div class="card-head"><div><h3>Deferred: enforcement + invitations</h3><p>Also recorded in Platform Maps.</p></div><span class="badge">Deferred</span></div><div class="empty">Navigation/API permission enforcement and invitation emails are intentionally not part of the current scope. Current work is password recovery, sessions and audit.</div></article>
+        </section>
+      </div>
+    </main>
+  </div>
+<script src="/assets/js/owner-shell.js"></script>
+<script>
+function esc(v=''){return String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function fmt(v){return v?new Date(v).toLocaleString():'Never'}
+async function load(){
+  const r=await fetch('/api/admin-users',{cache:'no-store'});
+  if(r.status===401){location.href='/login-v1?return='+encodeURIComponent(location.pathname);return;}
+  const d=await r.json().catch(()=>({}));
+  if(r.status===403){document.getElementById('adminApp').classList.remove('hidden');document.getElementById('notice').textContent='Administrator access is required for this page.';document.getElementById('notice').classList.remove('hidden');return;}
+  if(!r.ok){document.getElementById('adminApp').classList.remove('hidden');document.getElementById('notice').textContent='Could not load user directory.';document.getElementById('notice').classList.remove('hidden');return;}
+  document.getElementById('adminApp').classList.remove('hidden');
+  const users=d.users||[];
+  const active=users.filter(u=>u.active).length,admins=users.filter(u=>u.role==='admin'&&u.active).length,sessions=users.reduce((n,u)=>n+(u.active_sessions||0),0);
+  document.getElementById('summary').innerHTML=`<div class="summary-card"><span>Users</span><b>${users.length}</b></div><div class="summary-card"><span>Active</span><b>${active}</b></div><div class="summary-card"><span>Administrators</span><b>${admins}</b></div><div class="summary-card"><span>Active sessions</span><b>${sessions}</b></div>`;
+  document.getElementById('users').innerHTML=users.length?users.map(u=>`<div class="list-row"><div><strong>${esc(u.name)}</strong><span>${esc(u.email)} · ${esc(u.role)} · Last session ${esc(fmt(u.last_session_at))}</span></div><div><span class="badge ${u.active?'good':'danger'}">${u.active?'active':'disabled'}</span> <span class="badge">${u.active_sessions||0} sessions</span></div></div>`).join(''):'<div class="empty">No named accounts yet. Open the account sign-in page to create the first Administrator.</div>';
+}
+load();
+</script>
+</body>
+</html>

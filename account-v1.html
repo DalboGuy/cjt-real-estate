@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>CJT Account Center</title>
+  <link rel="stylesheet" href="/assets/css/tokens.css">
+  <link rel="stylesheet" href="/assets/css/owner-shell.css">
+  <link rel="stylesheet" href="/assets/css/modules.css">
+</head>
+<body>
+  <div id="ownerBackdrop" class="backdrop hidden"></div>
+  <div id="accountApp" class="owner-app hidden">
+    <aside id="ownerSidebar" class="sidebar">
+      <div class="brand">CJT REALTY<small>Account Center</small></div>
+      <div class="property-chip"><strong id="accountName">Personal Account</strong><span id="accountAccess">Identity · Security · Access</span></div>
+      <nav class="nav" aria-label="Account Center">
+        <a class="active" href="/account-v1"><span>Account Overview</span></a>
+        <a href="/account-v1/sessions"><span>Sessions</span><span class="count">Live</span></a>
+        <button data-coming-soon="Notification Preferences"><span>Notifications</span></button>
+        <div class="nav-section">Access</div>
+        <button data-coming-soon="Property Access"><span>Property Access</span></button>
+      </nav>
+      <div class="sidebar-footer"><a href="/owner-v1">Owner Portal</a><a id="adminFooter" class="hidden" href="/admin-v1">Admin</a><button id="logout" type="button">Sign out</button></div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div style="display:flex;align-items:center;gap:10px"><button id="mobileMenu" class="icon-btn mobile-menu" type="button" aria-label="Open menu">☰</button><div><h1>My Account</h1><div class="meta">Identity, security and personal access</div></div></div>
+        <div class="top-actions"><a class="btn btn-secondary" href="/owner-v1">Owner Portal</a></div>
+      </header>
+
+      <div class="content">
+        <div class="section-title"><div><h2>Account Center</h2><p>Individual account information and security controls.</p></div><span id="accountStatus" class="status-pill">Loading…</span></div>
+        <div id="notice" class="notice hidden"></div>
+
+        <section id="namedContent" class="grid hidden">
+          <article class="card span-6">
+            <div class="card-head"><div><h3>Profile</h3><p>Your CJT platform identity.</p></div><span class="badge good">Named account</span></div>
+            <div class="list">
+              <div class="list-row"><div><strong>Name</strong><span id="profileName">—</span></div></div>
+              <div class="list-row"><div><strong>Email</strong><span id="profileEmail">—</span></div></div>
+              <div class="list-row"><div><strong>Role</strong><span id="profileRole">—</span></div></div>
+              <div class="list-row"><div><strong>Session expires</strong><span id="sessionExpiry">—</span></div></div>
+            </div>
+          </article>
+
+          <article class="card span-6">
+            <div class="card-head"><div><h3>Change Password</h3><p>Password changes are handled by the signed-in user.</p></div><span class="badge good">Live</span></div>
+            <form id="passwordForm">
+              <label class="metric-label" for="currentPassword">Current password</label>
+              <input id="currentPassword" type="password" autocomplete="current-password" required>
+              <label class="metric-label" for="newPassword">New password</label>
+              <input id="newPassword" type="password" autocomplete="new-password" minlength="5" required placeholder="At least 5 characters">
+              <button class="btn btn-primary" style="margin-top:12px" type="submit">Change password</button>
+            </form>
+            <div id="passwordMessage" class="login-msg"></div>
+          </article>
+
+          <article class="card span-4">
+            <div class="card-head"><div><h3>Security</h3><p>Current foundation</p></div></div>
+            <div class="list">
+              <div class="list-row"><div><strong>Individual credentials</strong><span>Each named user has their own password hash and session.</span></div><span class="badge good">Built</span></div>
+              <div class="list-row"><div><strong>Password policy</strong><span>Minimum 5 characters; no required character mix.</span></div><span class="badge good">Set</span></div>
+              <div class="list-row"><div><strong>Password recovery</strong><span>Reset-token workflow is built. Automated email delivery activates when the runtime delivery connection is configured.</span></div><a class="card-link" href="/forgot-password-v1">Open ↗</a></div>
+              <div class="list-row"><div><strong>Session management</strong><span>View active sessions and sign out individual or all other sessions.</span></div><a class="card-link" href="/account-v1/sessions">Open ↗</a></div>
+              <div class="list-row"><div><strong>MFA</strong><span>Reserved for later security hardening.</span></div><span class="badge">Planned</span></div>
+            </div>
+          </article>
+
+          <article class="card span-4">
+            <div class="card-head"><div><h3>Role & Access</h3><p>Logged for later; not in the current build scope.</p></div></div>
+            <div class="empty">Property-scoped users, permission enforcement and invitations are recorded in Platform Maps but intentionally deferred.</div>
+          </article>
+
+          <article class="card span-4">
+            <div class="card-head"><div><h3>Sessions</h3><p>Named-account session controls</p></div><span class="badge good">Built</span></div>
+            <div class="empty">Open Sessions to see active sign-ins, the current session and revoke sessions you no longer want active.</div>
+            <div class="widget-footer"><a class="btn btn-primary" href="/account-v1/sessions">Manage Sessions</a></div>
+          </article>
+        </section>
+
+        <section id="legacyContent" class="card hidden">
+          <div class="card-head"><div><h3>Legacy shared-passcode session</h3><p>This session is authenticated but is not tied to a named user.</p></div><span class="badge warn">Transition</span></div>
+          <div class="empty">Create the first Administrator account or sign in with a named account. Existing production Owner Portal behavior remains available during migration.</div>
+          <div class="widget-footer"><a class="btn btn-primary" href="/login-v1?return=/account-v1">Open named account sign-in</a></div>
+        </section>
+      </div>
+    </main>
+  </div>
+<script src="/assets/js/owner-shell.js"></script>
+<script>
+async function auth(opts={}){const r=await fetch('/api/auth',{headers:{'Content-Type':'application/json'},...opts});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'request_failed');return d}
+function fmt(v){return v?new Date(v).toLocaleString():'—'}
+async function load(){
+  try{
+    const d=await auth();
+    if(!d.authenticated){location.href='/login-v1?return=/account-v1';return;}
+    document.getElementById('accountApp').classList.remove('hidden');
+    if(d.user){
+      const u=d.user;
+      document.getElementById('namedContent').classList.remove('hidden');
+      document.getElementById('accountStatus').textContent='Named account active';
+      document.getElementById('accountName').textContent=u.name;
+      document.getElementById('accountAccess').textContent=`${u.role} · individual session`;
+      document.getElementById('profileName').textContent=u.name;
+      document.getElementById('profileEmail').textContent=u.email;
+      document.getElementById('profileRole').textContent=u.role.replaceAll('_',' ');
+      document.getElementById('sessionExpiry').textContent=fmt(d.session?.expiresAt);
+      document.getElementById('adminFooter').classList.toggle('hidden',u.role!=='admin');
+    }else{
+      document.getElementById('legacyContent').classList.remove('hidden');
+      document.getElementById('accountStatus').textContent='Legacy session';
+    }
+  }catch(e){location.href='/login-v1?return=/account-v1';}
+}
+document.getElementById('passwordForm').addEventListener('submit',async e=>{
+  e.preventDefault();const msg=document.getElementById('passwordMessage');msg.textContent='Updating password…';
+  try{
+    await auth({method:'POST',body:JSON.stringify({action:'change_password',currentPassword:document.getElementById('currentPassword').value,newPassword:document.getElementById('newPassword').value})});
+    document.getElementById('currentPassword').value='';document.getElementById('newPassword').value='';msg.textContent='Password updated.';
+  }catch(err){msg.textContent=err.message==='current_password_invalid'?'Current password is incorrect.':err.message==='password_too_short'?'Use at least 5 characters.':'Password could not be updated.';}
+});
+load();
+</script>
+</body>
+</html>

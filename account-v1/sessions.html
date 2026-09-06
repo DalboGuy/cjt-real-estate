@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>CJT Account Center · Sessions</title>
+  <link rel="stylesheet" href="/assets/css/tokens.css"><link rel="stylesheet" href="/assets/css/owner-shell.css"><link rel="stylesheet" href="/assets/css/modules.css">
+</head>
+<body>
+  <div id="ownerBackdrop" class="backdrop hidden"></div>
+  <div id="accountApp" class="owner-app hidden">
+    <aside id="ownerSidebar" class="sidebar">
+      <div class="brand">CJT REALTY<small>Account Center</small></div>
+      <div class="property-chip"><strong>Personal Account</strong><span>Identity · Security · Access</span></div>
+      <nav class="nav" aria-label="Account Center">
+        <a href="/account-v1"><span>Account Overview</span></a>
+        <a class="active" href="/account-v1/sessions"><span>Sessions</span><span class="count">Live</span></a>
+        <button data-coming-soon="Notification Preferences"><span>Notifications</span></button>
+        <div class="nav-section">Access</div>
+        <button data-coming-soon="Property Access"><span>Property Access</span></button>
+      </nav>
+      <div class="sidebar-footer"><a href="/owner-v1">Owner Portal</a><a href="/admin-v1">Admin</a><button id="logout" type="button">Sign out</button></div>
+    </aside>
+    <main class="main">
+      <header class="topbar"><div style="display:flex;align-items:center;gap:10px"><button id="mobileMenu" class="icon-btn mobile-menu" type="button" aria-label="Open menu">☰</button><div><h1>Sessions</h1><div class="meta">See and revoke your active CJT sign-ins</div></div></div><div class="top-actions"><a class="btn btn-secondary" href="/account-v1">My Account</a></div></header>
+      <div class="content">
+        <div class="section-title"><div><h2>Active Sessions</h2><p>Signing out a session immediately removes its access. Session records currently show timing; device labels can be added later.</p></div><button id="revokeOthers" class="btn btn-secondary" type="button">Sign out other sessions</button></div>
+        <div id="notice" class="notice hidden"></div>
+        <section class="card"><div class="card-head"><div><h3>Your sessions</h3><p>Current and other active sessions for this account.</p></div><span id="count" class="badge good">0 active</span></div><div id="sessionList" class="list"><div class="empty">Loading sessions…</div></div></section>
+      </div>
+    </main>
+  </div>
+<script src="/assets/js/owner-shell.js"></script>
+<script>
+const app=document.getElementById('accountApp'),list=document.getElementById('sessionList'),notice=document.getElementById('notice'),count=document.getElementById('count');
+function fmt(v){return v?new Date(v).toLocaleString():'—'}
+function show(msg){notice.textContent=msg;notice.classList.remove('hidden')}
+async function api(opts={}){const r=await fetch('/api/sessions',{headers:{'Content-Type':'application/json'},...opts});const d=await r.json().catch(()=>({}));if(!r.ok){const e=new Error(d.error||'request_failed');e.status=r.status;throw e}return d}
+async function load(){
+  try{const d=await api();app.classList.remove('hidden');render(d.sessions||[])}catch(e){location.href='/login-v1?return=/account-v1/sessions'}
+}
+function render(rows){
+  count.textContent=`${rows.length} active`;
+  if(!rows.length){list.innerHTML='<div class="empty">No active named-account sessions.</div>';return}
+  list.innerHTML='';
+  rows.forEach(s=>{const row=document.createElement('div');row.className='list-row';const left=document.createElement('div');const strong=document.createElement('strong');strong.textContent=s.current?'Current session':`Session ${s.id}`;const span=document.createElement('span');span.textContent=`Started ${fmt(s.createdAt)} · Expires ${fmt(s.expiresAt)}`;left.append(strong,span);const right=document.createElement('div');right.className='actions';if(s.current){const b=document.createElement('span');b.className='badge good';b.textContent='Current';right.appendChild(b)}const btn=document.createElement('button');btn.className='btn btn-secondary';btn.type='button';btn.textContent='Sign out';btn.addEventListener('click',()=>revoke(s.id,s.current));right.appendChild(btn);row.append(left,right);list.appendChild(row)})
+}
+async function revoke(id,current){if(!confirm(current?'Sign out this current session?':'Sign out this session?'))return;try{const d=await api({method:'POST',body:JSON.stringify({action:'revoke',sessionId:id})});if(d.revokedCurrent){location.href='/login-v1?return=/account-v1/sessions';return}show('Session signed out.');load()}catch(e){show('Session could not be revoked.')}}
+document.getElementById('revokeOthers').addEventListener('click',async()=>{if(!confirm('Sign out every other active session for this account?'))return;try{const d=await api({method:'POST',body:JSON.stringify({action:'revoke_others'})});show(`${d.revoked||0} other session(s) signed out.`);load()}catch(e){show('Other sessions could not be revoked.')}});
+load();
+</script>
+</body></html>

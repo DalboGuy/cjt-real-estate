@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>CJT Realty · Under Construction</title>
+  <link rel="stylesheet" href="/assets/css/tokens.css">
+  <link rel="stylesheet" href="/assets/css/owner-shell.css">
+  <link rel="stylesheet" href="/assets/css/modules.css">
+</head>
+<body>
+  <section id="loginShell" class="login-shell hidden">
+    <div class="login-card">
+      <div class="brand" style="color:var(--cjt-ink)">CJT REALTY<small style="color:var(--cjt-muted)">Platform v1</small></div>
+      <h1>Sign in</h1>
+      <p>This module is part of the protected CJT portal preview.</p>
+      <form id="loginForm"><input id="passcode" type="password" placeholder="Owner passcode" autocomplete="current-password" required><button class="btn btn-primary" type="submit">Sign in</button></form>
+      <div id="loginMsg" class="login-msg"></div>
+      <div class="widget-footer"><a id="namedLogin" class="btn btn-secondary" href="/login-v1">Named account login</a></div>
+    </div>
+  </section>
+
+  <div id="ownerBackdrop" class="backdrop hidden"></div>
+  <div id="ownerApp" class="owner-app hidden">
+    <aside id="ownerSidebar" class="sidebar"></aside>
+    <main class="main">
+      <header class="topbar">
+        <div style="display:flex;align-items:center;gap:10px"><button id="mobileMenu" class="icon-btn mobile-menu" type="button" aria-label="Open menu">☰</button><div><h1 id="moduleTitle">Module</h1><div id="portalMeta" class="meta">Platform v1</div></div></div>
+        <div class="top-actions"><a id="backLink" class="btn btn-secondary" href="/owner-v1">Back</a></div>
+      </header>
+      <div class="content">
+        <div class="hero-row"><div><h2 id="moduleHeading">Module</h2><p id="moduleIntro">This module has a reserved place in the platform and is being built.</p></div><div class="status-strip"><span class="status-pill">Under construction</span><span class="status-pill">Route active</span></div></div>
+        <section class="grid">
+          <article class="card span-8">
+            <div class="card-head"><div><h3>Under construction</h3><p>The navigation item works and this route is reserved.</p></div><span class="badge warn">Not ready yet</span></div>
+            <div class="empty" id="moduleDescription">The working module will be added here without changing the navigation path.</div>
+          </article>
+          <article class="card span-4">
+            <div class="card-head"><div><h3>What this means</h3><p>No dead buttons.</p></div></div>
+            <div class="list"><div class="list-row"><div><strong>Route</strong><span id="routeText">—</span></div><span class="badge good">Reserved</span></div><div class="list-row"><div><strong>Status</strong><span>UI / data workflow still being developed.</span></div><span class="badge warn">Build</span></div><div class="list-row"><div><strong>Navigation</strong><span>You can continue to every other portal area from the left menu.</span></div></div></div>
+          </article>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script src="/assets/js/under-construction.js"></script>
+  <script src="/assets/js/owner-shell.js"></script>
+  <script src="/assets/js/static-auth.js"></script>
+</body>
+</html>

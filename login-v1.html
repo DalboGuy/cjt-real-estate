@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>CJT Realty · Sign In</title>
+  <link rel="stylesheet" href="/assets/css/tokens.css">
+  <link rel="stylesheet" href="/assets/css/owner-shell.css">
+  <link rel="stylesheet" href="/assets/css/modules.css">
+</head>
+<body>
+  <section class="login-shell">
+    <div class="login-card" style="width:min(520px,100%)">
+      <div class="brand" style="color:var(--cjt-ink)">CJT REALTY<small style="color:var(--cjt-muted)">Platform Account</small></div>
+      <h1 id="title">Sign in</h1>
+      <p id="intro">Use your individual CJT account.</p>
+
+      <div id="status" class="notice hidden"></div>
+
+      <form id="loginForm" class="hidden">
+        <label class="metric-label" for="email">Email</label>
+        <input id="email" type="email" autocomplete="username" required placeholder="you@example.com">
+        <label class="metric-label" for="password">Password</label>
+        <input id="password" type="password" autocomplete="current-password" required placeholder="Password">
+        <button class="btn btn-primary" style="width:100%;margin-top:12px" type="submit">Sign in</button>
+        <div style="margin-top:10px;text-align:center"><a class="card-link" href="/forgot-password-v1">Forgot password?</a></div>
+      </form>
+
+      <form id="bootstrapForm" class="hidden">
+        <div class="notice" style="margin-bottom:12px">No named CJT account exists yet. Use the current Owner Portal passcode once to establish the first Administrator account.</div>
+        <label class="metric-label" for="bootstrapName">Name</label>
+        <input id="bootstrapName" autocomplete="name" required placeholder="Full name">
+        <label class="metric-label" for="bootstrapEmail">Email</label>
+        <input id="bootstrapEmail" type="email" autocomplete="email" required placeholder="you@example.com">
+        <label class="metric-label" for="bootstrapPassword">New account password</label>
+        <input id="bootstrapPassword" type="password" autocomplete="new-password" minlength="5" required placeholder="At least 5 characters">
+        <label class="metric-label" for="bootstrapPasscode">Existing Owner Portal passcode</label>
+        <input id="bootstrapPasscode" type="password" autocomplete="off" required placeholder="Current shared passcode">
+        <button class="btn btn-primary" style="width:100%;margin-top:12px" type="submit">Create first Administrator</button>
+      </form>
+
+      <div id="signedIn" class="hidden">
+        <div class="card" style="box-shadow:none;padding:16px;margin:14px 0">
+          <div class="metric-label">Signed in as</div>
+          <strong id="signedInName"></strong>
+          <div id="signedInEmail" class="metric-label"></div>
+          <div style="margin-top:8px"><span id="signedInRole" class="badge good"></span></div>
+        </div>
+        <div class="widget-footer">
+          <a class="btn btn-primary" href="/owner-v1">Owner Portal</a>
+          <a class="btn btn-secondary" href="/account-v1">My Account</a>
+          <a id="adminLink" class="btn btn-secondary hidden" href="/admin-v1">Admin</a>
+          <button id="logoutBtn" class="btn btn-secondary" type="button">Sign out</button>
+        </div>
+      </div>
+
+      <p id="message" class="login-msg"></p>
+      <div style="margin-top:18px" class="metric-label">Platform v1 preview · production public site and legacy Owner Portal remain unchanged.</div>
+    </div>
+  </section>
+
+<script>
+const loginForm=document.getElementById('loginForm');
+const bootstrapForm=document.getElementById('bootstrapForm');
+const signedIn=document.getElementById('signedIn');
+const message=document.getElementById('message');
+const statusBox=document.getElementById('status');
+const params=new URLSearchParams(location.search);
+const rawReturn=params.get('return')||'/owner-v1';
+const returnTo=rawReturn.startsWith('/')&&!rawReturn.startsWith('//')?rawReturn:'/owner-v1';
+
+function errorText(code){
+  return ({
+    invalid_credentials:'Email or password is incorrect.',
+    invalid_passcode:'The existing Owner Portal passcode is incorrect.',
+    password_too_short:'Use a password with at least 5 characters.',
+    valid_email_required:'Enter a valid email address.',
+    name_required:'Enter your name.',
+    bootstrap_already_completed:'The first Administrator account has already been created.',
+    owner_login_not_configured:'The existing Owner Portal passcode is not configured.'
+  })[code]||'The request could not be completed.';
+}
+async function auth(opts={}){
+  const r=await fetch('/api/auth',{headers:{'Content-Type':'application/json'},...opts});
+  const d=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error(d.error||'request_failed');
+  return d;
+}
+function showSignedIn(d){
+  loginForm.classList.add('hidden');bootstrapForm.classList.add('hidden');signedIn.classList.remove('hidden');
+  const u=d.user||{};
+  document.getElementById('title').textContent='Account active';
+  document.getElementById('intro').textContent='Your named CJT account session is active.';
+  document.getElementById('signedInName').textContent=u.name||'Named account';
+  document.getElementById('signedInEmail').textContent=u.email||'';
+  document.getElementById('signedInRole').textContent=(u.role||'user').replaceAll('_',' ');
+  document.getElementById('adminLink').classList.toggle('hidden',u.role!=='admin');
+}
+async function load(){
+  try{
+    const d=await auth();
+    if(d.authenticated&&d.user)return showSignedIn(d);
+    if(d.needsBootstrap){
+      document.getElementById('title').textContent='Create first Administrator';
+      document.getElementById('intro').textContent='Establish the first named CJT platform account.';
+      bootstrapForm.classList.remove('hidden');loginForm.classList.add('hidden');
+      if(d.authenticated&&d.legacy){statusBox.textContent='You are currently using a legacy shared-passcode session. Create the first named Administrator below.';statusBox.classList.remove('hidden');}
+    }else{
+      loginForm.classList.remove('hidden');bootstrapForm.classList.add('hidden');
+      if(d.authenticated&&d.legacy){statusBox.textContent='A legacy shared-passcode session is active. Sign in with a named account to move to user-based access.';statusBox.classList.remove('hidden');}
+    }
+  }catch(e){message.textContent='Could not load account status.';}
+}
+loginForm.addEventListener('submit',async e=>{
+  e.preventDefault();message.textContent='Signing in…';
+  try{
+    await auth({method:'POST',body:JSON.stringify({action:'login',email:document.getElementById('email').value,password:document.getElementById('password').value})});
+    location.href=returnTo;
+  }catch(err){message.textContent=errorText(err.message);}
+});
+bootstrapForm.addEventListener('submit',async e=>{
+  e.preventDefault();message.textContent='Creating Administrator account…';
+  try{
+    await auth({method:'POST',body:JSON.stringify({
+      action:'bootstrap',
+      name:document.getElementById('bootstrapName').value,
+      email:document.getElementById('bootstrapEmail').value,
+      password:document.getElementById('bootstrapPassword').value,
+      passcode:document.getElementById('bootstrapPasscode').value
+    })});
+    location.href=returnTo;
+  }catch(err){message.textContent=errorText(err.message);}
+});
+document.getElementById('logoutBtn').addEventListener('click',async()=>{await auth({method:'POST',body:JSON.stringify({action:'logout'})}).catch(()=>{});location.reload();});
+load();
+</script>
+</body>
+</html>

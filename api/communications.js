@@ -1,9 +1,11 @@
 const crypto=require('crypto');
 const { db, ensureSchema }=require('../lib/db');
+const {previewPasswordFreeActive}=require('../lib/preview-access');
 
 function parseCookies(header=''){return Object.fromEntries(header.split(';').map(v=>v.trim()).filter(Boolean).map(v=>{const i=v.indexOf('=');return [decodeURIComponent(v.slice(0,i)),decodeURIComponent(v.slice(i+1))];}));}
 function hash(v){return crypto.createHash('sha256').update(v).digest('hex');}
 async function authenticated(req){
+  if(previewPasswordFreeActive(req))return true;
   await ensureSchema();
   const token=parseCookies(req.headers.cookie||'').cjt_owner_session;
   if(!token)return false;
@@ -32,7 +34,7 @@ module.exports=async function(req,res){
         SELECT platform,count(*)::int total,count(*) FILTER (WHERE is_read=false)::int unread
         FROM communications_messages GROUP BY platform
       `;
-      return res.status(200).json({messages:rows,counts});
+      return res.status(200).json({messages:rows,counts,temporaryPasswordFree:previewPasswordFreeActive(req)});
     }
 
     if(req.method==='POST'){

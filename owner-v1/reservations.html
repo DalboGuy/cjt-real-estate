@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>CJT Owner Portal · Direct Booking Dashboard</title>
+  <link rel="stylesheet" href="/assets/css/tokens.css">
+  <link rel="stylesheet" href="/assets/css/owner-shell.css">
+  <link rel="stylesheet" href="/assets/css/modules.css">
+</head>
+<body>
+  <section id="loginShell" class="login-shell hidden">
+    <div class="login-card">
+      <div class="brand" style="color:var(--cjt-ink)">CJT REALTY<small style="color:var(--cjt-muted)">Owner Operations</small></div>
+      <h1>Direct Booking Dashboard</h1>
+      <p>Sign in to approve requests, adjust quotes, release dates, and advance bookings.</p>
+      <form id="loginForm"><input id="passcode" type="password" placeholder="Owner passcode" autocomplete="current-password" required><button class="btn btn-primary" type="submit">Sign in</button></form>
+      <div id="loginMsg" class="login-msg"></div>
+    </div>
+  </section>
+
+  <div id="ownerBackdrop" class="backdrop hidden"></div>
+  <div id="ownerApp" class="owner-app hidden">
+    <aside id="ownerSidebar" class="sidebar">
+      <div class="brand">CJT REALTY<small>Owner Operations</small></div>
+      <div class="property-chip"><strong>Sand & Sea Manor</strong><span>1720 Avenue M · Galveston, TX</span></div>
+      <nav class="nav" aria-label="Owner Portal">
+        <a href="/owner-v1"><span>Dashboard</span></a>
+        <a href="/owner-v1/communications"><span>Communications</span><span id="communicationsNavCount" class="count">0</span></a>
+        <a class="active" href="/owner-v1/reservations"><span>Direct Bookings</span><span class="count">Live</span></a>
+        <button data-coming-soon="Calendar"><span>Calendar</span><span class="count">Soon</span></button>
+        <button data-coming-soon="Pricing"><span>Pricing</span><span class="count">Soon</span></button>
+        <button data-coming-soon="Financials"><span>Financials</span><span class="count">Soon</span></button>
+        <div class="nav-section">Property</div>
+        <button data-coming-soon="Property"><span>Property</span></button>
+        <button data-coming-soon="Maintenance"><span>Maintenance</span></button>
+        <a href="/owner-v1/documents"><span>Documents</span><span class="count">Plan</span></a>
+        <div class="nav-section">Reporting</div>
+        <button data-coming-soon="Analytics"><span>Analytics</span></button>
+        <div class="nav-section">System</div>
+        <a href="/account-v1"><span>My Account</span></a>
+        <a href="/admin-v1"><span>Admin</span><span class="count">Preview</span></a>
+        <button data-coming-soon="Settings"><span>Settings</span></button>
+      </nav>
+      <div class="sidebar-footer"><a href="/" target="_blank" rel="noopener">Booking page ↗</a><button id="logout" type="button">Sign out</button></div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div style="display:flex;align-items:center;gap:10px"><button id="mobileMenu" class="icon-btn mobile-menu" type="button" aria-label="Open menu">☰</button><div><h1>Direct Booking Dashboard</h1><div class="meta">Requests, quotes, holds, contracts and confirmation</div></div></div>
+        <div class="top-actions"><span id="lastChecked" class="meta">Loading…</span><a class="btn btn-secondary" href="/" target="_blank" rel="noopener">Open Booking Page ↗</a></div>
+      </header>
+
+      <div class="content">
+        <div class="section-title"><div><h2>Booking Operations</h2><p>Every direct-booking request from the public page appears here with its stored quote. Accept the request, adjust the lodging subtotal, extend the hold, move through contract/deposit milestones, or release the dates.</p></div><span class="status-pill">Booking engine v1</span></div>
+        <div id="moduleNotice" class="notice hidden"></div>
+        <div id="reservationSummary" class="summary-grid"></div>
+
+        <div class="module-grid">
+          <section class="module-main">
+            <div class="toolbar-row"><div id="reservationFilters" class="filter-row"></div><input id="reservationSearch" class="search-box" placeholder="Search guest, booking ID, email, dates, status or quote…"></div>
+            <div id="reservationList" class="reservation-list"></div>
+          </section>
+
+          <aside class="module-side">
+            <div class="card quick-card">
+              <div class="card-head"><div><h3>Booking flow</h3><p>Current direct-booking lifecycle</p></div></div>
+              <div class="list compact-list">
+                <div class="list-row"><div><strong>1 · Guest quote</strong><span>Dates + seasonal price + cleaning + tax</span></div><span class="badge good">Live</span></div>
+                <div class="list-row"><div><strong>2 · Inquiry hold</strong><span>24-hour inventory protection</span></div><span class="badge good">Live</span></div>
+                <div class="list-row"><div><strong>3 · Owner review</strong><span>Accept, adjust quote, or release</span></div><span class="badge good">Live</span></div>
+                <div class="list-row"><div><strong>4 · Contract / deposit</strong><span>Track milestones to confirmation</span></div><span class="badge good">Live</span></div>
+                <div class="list-row"><div><strong>5 · Online payment</strong><span>Checkout connection is the next booking-engine step</span></div><span class="badge warn">Next</span></div>
+              </div>
+              <div class="widget-footer"><a class="btn btn-primary" href="/" target="_blank" rel="noopener">Test Guest Booking Page</a></div>
+            </div>
+            <div class="card" style="margin-top:16px"><div class="card-head"><div><h3>Closed Records</h3><p>Released, expired or cancelled</p></div></div><div class="metric" id="closedCount">0</div><div class="metric-label">Retained for history and booking-event audit.</div></div>
+            <div class="card" style="margin-top:16px">
+              <div class="card-head"><div><h3>Communications</h3><p>Deferred while the booking engine is completed</p></div></div>
+              <div class="split-metrics" style="grid-template-columns:repeat(3,1fr)"><div class="mini"><b id="quickUnread">0</b><span>Unread</span></div><div class="mini"><b id="quickAirbnb">0</b><span>Airbnb</span></div><div class="mini"><b id="quickVrbo">0</b><span>Vrbo</span></div></div>
+              <div id="quickCommunications" class="list compact-list" style="margin-top:14px"></div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/assets/js/owner-shell.js"></script>
+  <script src="/assets/js/reservations-v1.js"></script>
+</body>
+</html>

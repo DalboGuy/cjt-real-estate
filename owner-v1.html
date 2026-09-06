@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>CJT Owner Portal · Platform v1 Preview</title>
+  <link rel="stylesheet" href="/assets/css/tokens.css">
+  <link rel="stylesheet" href="/assets/css/owner-shell.css">
+</head>
+<body>
+  <section id="loginShell" class="login-shell hidden">
+    <div class="login-card">
+      <div class="brand" style="color:var(--cjt-ink)">CJT REALTY<small style="color:var(--cjt-muted)">Owner Operations</small></div>
+      <h1>Platform v1 Preview</h1>
+      <p>Use the existing Owner Portal passcode. This preview is isolated from the production route.</p>
+      <form id="loginForm">
+        <input id="passcode" type="password" placeholder="Owner passcode" autocomplete="current-password" required>
+        <button class="btn btn-primary" type="submit">Sign in</button>
+      </form>
+      <div id="loginMsg" class="login-msg"></div>
+    </div>
+  </section>
+
+  <div id="ownerBackdrop" class="backdrop hidden"></div>
+  <div id="ownerApp" class="owner-app hidden">
+    <aside id="ownerSidebar" class="sidebar">
+      <div class="brand">CJT REALTY<small>Owner Operations</small></div>
+      <div class="property-chip"><strong>Sand & Sea Manor</strong><span>1720 Avenue M · Galveston, TX</span></div>
+      <nav class="nav" aria-label="Owner Portal">
+        <a class="active" href="/owner-v1"><span>Dashboard</span></a>
+        <a href="/owner-v1/communications"><span>Communications</span><span id="communicationsNavCount" class="count">0</span></a>
+        <a href="/owner-v1/reservations"><span>Reservations</span></a>
+        <button data-coming-soon="Calendar"><span>Calendar</span><span class="count">Soon</span></button>
+        <button data-coming-soon="Pricing"><span>Pricing</span><span class="count">Soon</span></button>
+        <button data-coming-soon="Financials"><span>Financials</span><span class="count">Soon</span></button>
+        <div class="nav-section">Property</div>
+        <button data-coming-soon="Property"><span>Property</span></button>
+        <button data-coming-soon="Maintenance"><span>Maintenance</span></button>
+        <a href="/owner-v1/documents"><span>Documents</span><span class="count">Plan</span></a>
+        <div class="nav-section">Reporting</div>
+        <button data-coming-soon="Analytics"><span>Analytics</span></button>
+        <div class="nav-section">System</div>
+        <a href="/account-v1"><span>My Account</span></a>
+        <a href="/admin-v1"><span>Admin</span><span class="count">Preview</span></a>
+        <button data-coming-soon="Settings"><span>Settings</span></button>
+      </nav>
+      <div class="sidebar-footer">
+        <a href="/" target="_blank" rel="noopener">Guest site ↗</a>
+        <button id="logout" type="button">Sign out</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div style="display:flex;align-items:center;gap:10px">
+          <button id="mobileMenu" class="icon-btn mobile-menu" type="button" aria-label="Open menu">☰</button>
+          <div><h1>Owner Dashboard</h1><div class="meta">Platform v1 preview · production route unchanged</div></div>
+        </div>
+        <div class="top-actions"><span id="lastChecked" class="meta">Loading…</span><a class="btn btn-secondary" href="/owner">Current Portal ↗</a></div>
+      </header>
+
+      <div class="content">
+        <div class="hero-row">
+          <div><h2>Sand & Sea Manor</h2><p>One place to see what needs attention across guests, bookings, pricing, finances and property operations.</p></div>
+          <div class="status-strip"><span class="status-pill">Preview branch</span><span class="status-pill">Production unchanged</span></div>
+        </div>
+
+        <div id="moduleNotice" class="card hidden" style="margin-bottom:16px"></div>
+
+        <section class="grid" aria-label="Owner dashboard widgets">
+          <article class="card span-6">
+            <div class="card-head"><div><h3>Communications</h3><p>Guest messages across connected channels</p></div><a class="card-link" href="/owner-v1/communications">Open module ↗</a></div>
+            <div style="display:flex;align-items:end;gap:10px;margin-bottom:14px"><div><div id="commUnread" class="metric">0</div><div class="metric-label">Unread messages</div></div></div>
+            <div id="commBreakdown" class="split-metrics"><div class="mini"><b>0</b><span>Airbnb unread</span></div><div class="mini"><b>0</b><span>Vrbo unread</span></div><div class="mini"><b>0</b><span>Other unread</span></div></div>
+            <div id="commRecent" class="list" style="margin-top:16px"><div class="skeleton big"></div><div class="skeleton"></div></div>
+            <div class="widget-footer"><a class="btn btn-primary" href="/owner-v1/communications">Open Communications</a></div>
+          </article>
+
+          <article class="card span-6">
+            <div class="card-head"><div><h3>Reservations</h3><p>Direct-booking lifecycle and upcoming stays</p></div><a class="card-link" href="/owner-v1/reservations">Open module ↗</a></div>
+            <div class="split-metrics">
+              <div class="mini"><b id="resUpcoming">0</b><span>Upcoming / active</span></div>
+              <div class="mini"><b id="resAction">0</b><span>Need action</span></div>
+              <div class="mini"><b id="nextArrival" style="font-size:.9rem">—</b><span>Next direct arrival</span></div>
+            </div>
+            <div id="resRecent" class="list" style="margin-top:16px"><div class="skeleton big"></div><div class="skeleton"></div></div>
+            <div class="widget-footer"><a class="btn btn-primary" href="/owner-v1/reservations">Manage Reservations</a></div>
+          </article>
+
+          <article class="card span-4">
+            <div class="card-head"><div><h3>Calendar</h3><p>Consolidated availability</p></div><button class="card-link" style="border:0;background:none;cursor:pointer" data-coming-soon="Calendar">Module soon</button></div>
+            <div class="metric" id="calendarNext">Shared service</div><div class="metric-label">Public availability remains live during migration.</div>
+            <div class="widget-footer"><a class="btn btn-secondary" href="/#availability" target="_blank" rel="noopener">View Live Calendar ↗</a></div>
+          </article>
+
+          <article class="card span-4">
+            <div class="card-head"><div><h3>Pricing</h3><p>Rules and date-level overrides</p></div><button class="card-link" style="border:0;background:none;cursor:pointer" data-coming-soon="Pricing">Module soon</button></div>
+            <div class="split-metrics" style="grid-template-columns:1fr 1fr">
+              <div class="mini"><b id="pricingState">—</b><span>Pricing rules</span></div>
+              <div class="mini"><b id="pricingOverrides">0</b><span>Future overrides</span></div>
+            </div>
+          </article>
+
+          <article class="card span-4">
+            <div class="card-head"><div><h3>Property Operations</h3><p>Tasks and maintenance</p></div><button class="card-link" style="border:0;background:none;cursor:pointer" data-coming-soon="Maintenance">Module soon</button></div>
+            <div class="split-metrics" style="grid-template-columns:1fr 1fr">
+              <div class="mini"><b id="openTasks">0</b><span>Open tasks</span></div>
+              <div class="mini"><b id="highTasks">0</b><span>High priority</span></div>
+            </div>
+            <div class="empty" style="margin-top:14px">The existing task table will become the shared operations engine rather than creating a second maintenance task system.</div>
+          </article>
+
+          <article class="card span-8">
+            <div class="card-head"><div><h3>Financials</h3><p>Booking economics from the current owner financial dataset</p></div><button class="card-link" style="border:0;background:none;cursor:pointer" data-coming-soon="Financials">Module soon</button></div>
+            <div class="split-metrics">
+              <div class="mini"><b id="mtdGross">$0</b><span>MTD gross by check-in</span></div>
+              <div class="mini"><b id="mtdPayout">$0</b><span>MTD expected payout</span></div>
+              <div class="mini"><b id="financialRecords">0</b><span>Booking financial records</span></div>
+            </div>
+            <div class="empty" style="margin-top:14px">Platform v1 will build on the existing financial data rather than creating a new disconnected reporting store.</div>
+          </article>
+
+          <article class="card span-4">
+            <div class="card-head"><div><h3>Documents</h3><p>Cloud-first document index and automation</p></div><a class="card-link" href="/owner-v1/documents">Open plan ↗</a></div>
+            <div class="metric">Cloud</div><div class="metric-label">Files stay in connected cloud storage; CJT organizes and links them.</div>
+            <div class="widget-footer"><a class="btn btn-secondary" href="/owner-v1/documents">View Documents Plan</a></div>
+          </article>
+
+          <article class="card span-8">
+            <div class="card-head"><div><h3>Platform Status</h3><p>Reorganization guardrails and architecture checkpoints</p></div><a class="card-link" href="/admin-v1">Admin preview ↗</a></div>
+            <div class="list">
+              <div class="list-row"><div><strong>Production</strong><span>Current owner workflows remain untouched.</span></div><span class="badge good">Safe</span></div>
+              <div class="list-row"><div><strong>Database</strong><span>Production snapshot + reorg branch created.</span></div><span class="badge good">Backed up</span></div>
+              <div class="list-row"><div><strong>Modules</strong><span>Communications and Reservations are integrated into the new shell.</span></div><span class="badge good">Phase 2</span></div>
+              <div class="list-row"><div><strong>Documents</strong><span>Cloud-first, email-driven document intake plan is now recorded in the portal.</span></div><span class="badge good">Recorded</span></div>
+              <div class="list-row"><div><strong>Admin & Accounts</strong><span>Admin Portal and Account Center planning shells are now available.</span></div><span class="badge warn">Foundation next</span></div>
+            </div>
+          </article>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script src="/assets/js/owner-shell.js"></script>
+  <script src="/assets/js/dashboard.js"></script>
+</body>
+</html>
