@@ -4,7 +4,7 @@ Status: **Living architecture documentation**
 
 Authoritative preview route: `/admin-v1/maps`
 
-Current version: **1.3 — 2026-09-05**
+Current version: **1.4 — 2026-09-05**
 
 ## Purpose
 
@@ -82,7 +82,7 @@ The common CJT flow is:
 
 The guest and owner sides share one booking lifecycle:
 
-- `/` — listing-first guest booking page. On the reorganization preview, root now rewrites to `/booking-v2.html` while the previous page remains available in source as a rollback reference.
+- `/` — listing-first guest booking page. On the reorganization preview, root rewrites to `/booking-v2.html` while the previous page remains available in source as a rollback reference.
 - `/api/calendar` — consolidated availability from OTA calendars and active CJT holds/reservations.
 - `/api/quote` — read-only quote service using the current seasonal schedule, Friday/Saturday weekend pricing, minimum-stay rules, $240 cleaning fee and 15% tax.
 - Quote payment schedule — stays more than 30 days away default to 50% due when the booking is accepted and 50% due 30 days before arrival; stays within 30 days default to the full balance due when accepted.
@@ -95,31 +95,33 @@ The published online pricing horizon runs through **2027-08-15**. Dates beyond t
 
 ### Occupancy schema note
 
-The guest UI, quote engine and inquiry validation now recognize the owner-approved capacity of 14. The existing production `reservations` table was originally created with a 12-guest check constraint. Until an additive production migration is explicitly approved, requests for 13–14 guests return a clear migration-pending message rather than silently changing the production schema. This is a known release item, not a change in the approved property capacity.
+The guest UI, quote engine and inquiry validation recognize the owner-approved capacity of 14. The existing production `reservations` table was originally created with a 12-guest check constraint. Until an additive production migration is explicitly approved, requests for 13–14 guests return a clear migration-pending message rather than silently changing the production schema. This is a known release item, not a change in the approved property capacity.
 
-## Guest Listing Experience — v1.3
+## Guest Listing Experience — v1.4
 
 The guest UI follows the familiar interaction pattern of a modern vacation-rental listing while keeping CJT branding and content:
 
-`Listing header → photo mosaic → property summary → highlights → description → interactive bedroom cards → organized amenity groups → source-aware reviews → live map + aerial rail → Hosted by CJT Realty → rules/cancellation`
+`Listing header → original five-photo mosaic → property summary → highlights → description → bedroom widgets → Booking.com-style amenity directory → source-rating summaries + guest review rail → live map + grounded aerial rail → Hosted by CJT Realty → rules/cancellation`
 
-Desktop keeps a sticky booking card beside the listing content. Mobile collapses to one content column with a persistent Book Now bar. Dates open in a dedicated calendar modal; guest count is adjusted in a compact picker; live quote details remain beside the Book Now action. The full photo collection opens in a categorized gallery and fullscreen viewer.
+Desktop keeps a sticky booking card beside the listing content. Directly beneath it, source-summary cards show the current owner-provided review summaries. Mobile places the same summaries near the top of the listing. Dates open in a dedicated calendar modal; guest count is adjusted in a compact picker; live quote details remain beside the Book Now action. The full property photo collection remains available in the categorized gallery and fullscreen viewer.
 
-### v1.3 interaction refinements
+### v1.4 interaction refinements
 
-- Refreshed five-photo opening mosaic with exterior, living, kitchen, bedroom and outdoor-experience photography.
-- `Where you'll sleep` is now a larger horizontal room-card rail. Each bedroom card opens a focused two-photo room view instead of behaving like a generic text widget.
-- Amenities are organized by purpose: Outdoor & relaxation, Kitchen & dining, Living & comfort, and Practical stay essentials.
-- Guest reviews now lead with a horizontally scrolling source-rating rail and keep the connected Houfy review feed inside a bounded scroll area so reviews do not stretch the entire listing page.
-- Current verified source summaries displayed in the preview are Airbnb **4.85/5 from 20 reviews** and Booking.com **10/10 from 2 reviews** as observed on Sep 5, 2026. These are presentation data and will naturally change as external listings receive new reviews.
-- Location now uses the actual existing Sand & Sea Manor aerial photographs in a floating rail to the right of the live map. Desktop leader lines visually anchor each aerial card to the property location marker; hover/focus activates the corresponding line and map pin. Mobile stacks the map and aerial cards without decorative leader lines.
-- Both map aerial cards open the original property photographs in the existing fullscreen viewer.
+- Restored the top photo collage to the same property-image mix used before the redesign: historic exterior, fire-pit seating, private hot tub, breakfast table/kitchen island, and bedroom.
+- `Where you'll sleep` is now a larger, more polished horizontal card rail. Room cards no longer guess which photos belong to which bedroom. Each card opens a room-specific placeholder shell until the owner-created Google Drive bedroom folder for that room is connected.
+- Amenities now follow the owner-provided Booking.com amenity structure rather than generic marketing copy. The listing presents popular amenities first, then logical categories including Parking, Internet, Kitchen, Bedroom, Bathroom, Living Area, Media & Technology, Room amenities, Pets, Accessibility, Outdoors, Spa, Food & Drink, Entertainment & Family Services, Miscellaneous, Safety & security, and Languages Spoken.
+- Review summaries are displayed directly under the booking controls using the owner-provided source values: Airbnb **4.86/5 with 22 reviews and Guest favorite**, and Booking.com **9.4/10 Exceptional with 9 verified reviews**. Booking.com subratings shown are Cleanliness **9.6**, Location **9.8**, and Check-in **9.4**.
+- The main reviews section is now titled `See what guests loved the most` and uses horizontally scrolling review cards with the source and source rating visible on each card. Room and Family topic controls filter only reviews whose text clearly supports those themes.
+- The connected Houfy review feed remains available in a bounded scrolling window beneath the selected-review rail.
+- Location keeps the actual existing Sand & Sea Manor aerial photographs floating to the right of the map. A custom property marker stays fixed over the address while dynamically calculated SVG leader lines connect the marker to each aerial card. Hover/focus highlights the corresponding line and property marker; clicking an aerial card persists or clears the selected relationship.
+- The embedded map is kept centered on the address so the leader lines remain visually grounded. A separate `Open interactive map` control opens Google Maps for panning/navigation.
+- Mobile stacks the map and aerial cards and intentionally removes decorative leader lines where the desktop relationship would not remain visually clear.
 
 Guest trust/decision features include:
 
 - Share and local Save actions.
 - Full existing property photo collection.
-- Connected guest-review surface with source context.
+- Source-aware review summaries and selected guest comments.
 - Exact map for 1720 Avenue M plus aerial property context.
 - Clear host identity: Hosted by CJT Realty.
 - Case-by-case pet and event prompts inside the booking form.
@@ -167,9 +169,9 @@ The `password_reset_tokens` and `audit_log` tables are present on the Neon reorg
 
 ## Temporary preview access — 2026-09-05
 
-At the owner's request, application-password gates are temporarily bypassed for **preview GET/read access from 8:25 PM to 9:25 PM Central on Sep 5, 2026**. The bypass is coded with a fixed expiration timestamp and only activates when `VERCEL_ENV=preview`; production authentication is unchanged.
+At the owner's request, application-password gates were temporarily bypassed for **preview GET/read access from 8:25 PM to 9:25 PM Central on Sep 5, 2026**. The bypass is coded with a fixed expiration timestamp and only activates when `VERCEL_ENV=preview`; production authentication is unchanged.
 
-Data-changing POST/write actions remain session-protected during this temporary window because the current preview database connection may still point at production.
+Data-changing POST/write actions remain session-protected during temporary password-free preview windows because the preview database connection may still point at production.
 
 Reserved Under construction routes currently cover:
 
