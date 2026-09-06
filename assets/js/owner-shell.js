@@ -98,53 +98,5 @@
     location.reload();
   });
 
-  if(location.pathname.replace(/\/$/,'')==='/admin-v1/maps'){
-    const version=[...document.querySelectorAll('.status-pill')].find(el=>/^Version\s/i.test(el.textContent||''));
-    if(version)version.textContent='Version 1.5';
-    const note=document.querySelector('#navigation .flow-note');
-    if(note)note.textContent='Desktop: the pane can collapse and reopen. Mobile: a compact arrow-only handle stays around the middle of the left edge, clear of bottom filters and browser controls, and opens the slide-out drawer. The browser Back button is not required.';
-
-    document.querySelectorAll('[data-coming-soon="Audit Log"],[data-coming-soon="Sessions"]').forEach(el=>{
-      const count=el.querySelector('.count');
-      if(count)count.textContent='Live';
-    });
-
-    const roadmap=document.getElementById('roadmap');
-    if(roadmap&&!document.getElementById('security-scope')){
-      const section=document.createElement('section');
-      section.id='security-scope';section.className='card map-card';section.style.marginBottom='16px';
-      section.innerHTML='<div class="card-head"><div><h3>Security Scope Decision</h3><p>Current owner-directed priority: build only items 4 and 5; keep items 1–3 visible for later.</p></div><span class="badge good">Recorded</span></div><div class="list"><div class="list-row"><div><strong>1 · Property-scoped users & permissions</strong><span>Assign users to properties and roles.</span></div><span class="badge">Deferred</span></div><div class="list-row"><div><strong>2 · Permission enforcement</strong><span>Role-aware navigation and API authorization.</span></div><span class="badge">Deferred</span></div><div class="list-row"><div><strong>3 · Invitations</strong><span>Email invite → user-created account → access activation.</span></div><span class="badge">Deferred</span></div><div class="list-row"><div><strong>4 · Password recovery</strong><span>30-minute one-time reset token, password replacement and session invalidation. Automated email uses a runtime delivery hook.</span></div><span class="badge good">Built foundation</span></div><div class="list-row"><div><strong>5 · Sessions & audit</strong><span>Named-account session review/revocation plus a shared audit event stream.</span></div><span class="badge good">Built</span></div></div>';
-      roadmap.parentNode.insertBefore(section,roadmap);
-      const toolbar=document.querySelector('.map-toolbar');
-      if(toolbar){const a=document.createElement('a');a.href='#security-scope';a.textContent='Security Scope';toolbar.appendChild(a)}
-    }
-    if(roadmap&&!document.getElementById('temporary-preview-access')){
-      const section=document.createElement('section');
-      section.id='temporary-preview-access';section.className='card map-card';section.style.marginBottom='16px';
-      section.innerHTML='<div class="card-head"><div><h3>Temporary Preview Access Window</h3><p>Password-free preview review requested for one hour on Sep 5, 2026.</p></div><span class="badge warn">Auto-expires</span></div><div class="list"><div class="list-row"><div><strong>Window</strong><span>8:25 PM–9:25 PM Central. Preview GET/read access does not require an application password during this window.</span></div><span class="badge good">Temporary</span></div><div class="list-row"><div><strong>Production</strong><span>Production authentication is unchanged.</span></div><span class="badge good">Protected</span></div><div class="list-row"><div><strong>Data-changing actions</strong><span>POST/write operations remain session-protected because the preview database connection may still point at production.</span></div><span class="badge">Guardrail</span></div></div>';
-      roadmap.parentNode.insertBefore(section,roadmap);
-      const toolbar=document.querySelector('.map-toolbar');
-      if(toolbar){const a=document.createElement('a');a.href='#temporary-preview-access';a.textContent='Temporary Access';toolbar.appendChild(a)}
-    }
-    if(roadmap&&!document.getElementById('direct-booking-engine')){
-      const section=document.createElement('section');
-      section.id='direct-booking-engine';section.className='card map-card';section.style.marginBottom='16px';
-      section.innerHTML='<div class="card-head"><div><h3>Direct Booking Engine · Primary Product</h3><p>The working booking page and owner booking dashboard are the platform priority.</p></div><span class="badge good">Core build</span></div><div class="map-board"><div class="map-root"><div class="map-row"><div class="map-node public built"><strong>Guest Booking Page</strong><span>listing → dates → guests</span></div><div class="map-arrow">→</div><div class="map-node core built"><strong>/api/quote</strong><span>seasonal rates · minimum stay · cleaning · tax · payment timing</span></div><div class="map-arrow">→</div><div class="map-node core built"><strong>/api/inquiries</strong><span>recheck → 24-hour hold</span></div><div class="map-arrow">→</div><div class="map-node data built"><strong>reservations + booking_events</strong><span>booking record + quote snapshot</span></div><div class="map-arrow">→</div><div class="map-node owner built"><strong>Direct Booking Dashboard</strong><span>accept · adjust · extend · release</span></div></div><div class="map-arrow">↓</div><div class="map-row"><div class="map-node owner built"><strong>Agreement / Deposit Milestones</strong><span>existing lifecycle controls</span></div><div class="map-arrow planned">···→</div><div class="map-node external progress"><strong>Stripe Checkout</strong><span>next transactional connection</span></div><div class="map-arrow planned">···→</div><div class="map-node public progress"><strong>Guest Confirmation</strong></div></div><div class="flow-note">Payment timing is quoted: more than 30 days out defaults to 50% when accepted + 50% due 30 days before arrival; within 30 days defaults to full payment when accepted.</div></div></div>';
-      roadmap.parentNode.insertBefore(section,roadmap);
-      const toolbar=document.querySelector('.map-toolbar');
-      if(toolbar){const a=document.createElement('a');a.href='#direct-booking-engine';a.textContent='Direct Booking';toolbar.appendChild(a)}
-    }
-    if(roadmap&&!document.getElementById('guest-listing-experience')){
-      const section=document.createElement('section');
-      section.id='guest-listing-experience';section.className='card map-card';section.style.marginBottom='16px';
-      section.innerHTML='<div class="card-head"><div><h3>Guest Listing Experience</h3><p>Listing-first booking UI modeled on familiar vacation-rental interaction patterns while keeping CJT branding.</p></div><span class="badge good">v1.5</span></div><div class="map-board"><div class="map-root"><div class="map-row"><div class="map-node public built"><strong>Original Photo Set</strong><span>exact pre-redesign 4-photo collage restored</span></div><div class="map-arrow">→</div><div class="map-node public built"><strong>Bedroom Cards</strong><span>folder names + verified public image matches</span></div><div class="map-arrow">→</div><div class="map-node public built"><strong>Full Amenity Directory</strong><span>Booking.com structure + category icons</span></div><div class="map-arrow">→</div><div class="map-node external built"><strong>Source Review Summaries</strong><span>Airbnb 4.86/5 · Booking.com 9.4/10</span></div><div class="map-arrow">→</div><div class="map-node public built"><strong>Guest Love Rail</strong><span>scrolling comments + source score</span></div><div class="map-arrow">→</div><div class="map-node external built"><strong>Grounded Map + Aerials</strong><span>dynamic leader lines to actual aerial photos</span></div><div class="map-arrow">→</div><div class="map-node public built"><strong>Sticky Book Now</strong></div></div><div class="flow-note">Booking UI audit corrected the prior pass: bedroom cards now use the exact owner folder names and matching public master-photo files so private Drive copies do not render blank; categorized gallery failures are recovered to those public originals; the opening collage uses the exact four pre-redesign images; aerial click now only persists the line/pin highlight requested by the owner.</div></div></div>';
-      roadmap.parentNode.insertBefore(section,roadmap);
-      const toolbar=document.querySelector('.map-toolbar');
-      if(toolbar){const a=document.createElement('a');a.href='#guest-listing-experience';a.textContent='Guest Listing';toolbar.appendChild(a)}
-    }
-    const nextRow=[...roadmap?.querySelectorAll('.list-row')||[]].find(row=>row.querySelector('strong')?.textContent.trim()==='Next');
-    if(nextRow){const span=nextRow.querySelector('div span');if(span)span.textContent='Continue booking-page polish and complete Stripe payment/checkout, final guest confirmation, and the 14-guest production constraint migration. Communications, Documents and items 1–3 of access expansion remain deferred.';const badge=nextRow.querySelector('.badge');if(badge){badge.textContent='Booking engine';badge.classList.add('warn')}}
-  }
-
   requestAnimationFrame(revealActive);
 })();
