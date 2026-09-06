@@ -18,7 +18,8 @@
     '1RkZ5GUgqVVLyLbz6pgVBiWYG1b1u5u3g':'1hT6T9fbkp-N5iHoiaj5OaH-bjYPOeJAS',
     '1KTV7nKFn4C9YC1dB_zKEu2QdqQMHKJLm':'1dOEt1mcytUnoQR-JQ_PwS_wnt9cUv98f',
     '1G-a091oYqM-KexAS8nRSC6KCM0eQtMY1':'1lf3xMpvuNuXFM8shiyVqz9a1alPF8SdJ',
-    '1ixcf53Yo75CnfJgRZxdM4lTuaTV2BHNm':'1P55Ba4LnbWVTowwiwCjkefB7ZCRxuC2F'
+    '1ixcf53Yo75CnfJgRZxdM4lTuaTV2BHNm':'1P55Ba4LnbWVTowwiwCjkefB7ZCRxuC2F',
+    '1R1PEWlj45mU7lhPQPG5xIe5qkos723la':'1fQ5o4coCkKLHd-T7TVT7IVuJ6s3gWYCu'
   };
   document.addEventListener('error',event=>{
     const img=event.target;
@@ -34,10 +35,10 @@
      Use these six exact public Drive files in the supplied order. */
   const originalMosaic=[
     {id:'19qVu5W92D3HZ98fmkJtYWkon10RoQb9A',alt:'Private hot tub at Sand and Sea Manor'},
-    {id:'1R1PEWlj45mU7lhPQPG5xIe5qkos723la',alt:'Porch and outdoor amenities at Sand and Sea Manor'},
-    {id:'1S_cxUhVmopWmuDoEZViX4QDXg94JKb_f',alt:'Living room at Sand and Sea Manor'},
+    {id:'1fQ5o4coCkKLHd-T7TVT7IVuJ6s3gWYCu',alt:'Historic front exterior of Sand and Sea Manor at sunset'},
+    {id:'1S_cxUhVmopWmuDoEZViX4QDXg94JKb_f',alt:'Oversized family room at Sand and Sea Manor'},
     {id:'1YCvLJWjz6csiaFDEnlpoi7zGQdEOtuAq',alt:'Fire-pit seating at Sand and Sea Manor'},
-    {id:'1mou-dVzjGrc41Ws9WnSB2k5dvriLoYhV',alt:'Bedroom at Sand and Sea Manor'},
+    {id:'1mou-dVzjGrc41Ws9WnSB2k5dvriLoYhV',alt:'Second living room at Sand and Sea Manor'},
     {id:'1z3V_SUJMrVu_Ciw-m2HOUk4nTWkouVMO',alt:'Breakfast table and kitchen island at Sand and Sea Manor'}
   ];
   const mosaic=document.querySelector('.v2-mosaic');
