@@ -1,11 +1,13 @@
 const crypto=require('crypto');
 const { db, ensureSchema, expireHolds }=require('../lib/db');
+const {previewPasswordFreeActive}=require('../lib/preview-access');
 
 function parseCookies(header=''){return Object.fromEntries(header.split(';').map(v=>v.trim()).filter(Boolean).map(v=>{const i=v.indexOf('=');return [decodeURIComponent(v.slice(0,i)),decodeURIComponent(v.slice(i+1))];}));}
 function hash(v){return crypto.createHash('sha256').update(v).digest('hex');}
 function safeEqual(a,b){const A=Buffer.from(String(a||'')),B=Buffer.from(String(b||''));return A.length===B.length&&crypto.timingSafeEqual(A,B);}
 
 async function authenticated(req){
+  if(previewPasswordFreeActive(req))return true;
   await ensureSchema();
   const token=parseCookies(req.headers.cookie||'').cjt_owner_session;
   if(!token)return false;
@@ -42,7 +44,7 @@ module.exports=async function(req,res){
         ORDER BY CASE WHEN status IN ('released','expired','cancelled') THEN 1 ELSE 0 END, checkin ASC, created_at DESC
         LIMIT 250
       `;
-      return res.status(200).json({reservations});
+      return res.status(200).json({reservations,temporaryPasswordFree:previewPasswordFreeActive(req)});
     }
 
     if(req.method==='POST'&&body.action==='logout'){
