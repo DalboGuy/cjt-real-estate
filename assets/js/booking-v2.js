@@ -52,6 +52,8 @@
   }
   document.querySelectorAll('.aerial-card').forEach(card=>{
     const id=card.dataset.mapLine;
+    card.onclick=null;
+    card.removeAttribute('data-photo-index');
     card.addEventListener('mouseenter',()=>paintMapLink(id));
     card.addEventListener('mouseleave',()=>paintMapLink(selectedLine));
     card.addEventListener('focus',()=>paintMapLink(id));
@@ -113,6 +115,9 @@
   function setRoomImage(img,host,label){
     img.onerror=()=>{img.remove();host.classList.add('photo-fallback');host.setAttribute('aria-label',`${label} photo unavailable`)};
   }
+
+  const sleepKicker=document.querySelector('#sleep .section-kicker');
+  if(sleepKicker)sleepKicker.textContent='Choose a room to view its photo collection.';
 
   const roomScroll=$('sleepingScroll');
   if(roomScroll){
