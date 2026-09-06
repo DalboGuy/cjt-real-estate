@@ -7,22 +7,70 @@
   const eachDate=(start,end)=>{const out=[];if(!start||!end)return out;for(let d=toUtc(start),stop=toUtc(end);d<stop;d=new Date(d.getTime()+86400000))out.push(d.toISOString().slice(0,10));return out};
   const esc=v=>String(v||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 
-  /* Canonical public images: assets/data/public-image-manifest.json (static read-only).
-     Drive thumbnail delivery and fallback chains are retired from guest runtime.
-     Rollback: swap script src to booking-listing.drive-legacy.js */
-  let photos=[];
-  const assetUrl=p=>p&&p.publicPath?p.publicPath:'';
+  const photos=`
+1p8Z7flJ93NS9h1-PXA1tMBlmdFGREAZD|exterior|Historic exterior
+1dBhTIh3KdqXDupNq8nhlCt4bWMVfV931|exterior|Front porches
+1Ho_SCb2DvzT-ILkroyU0DnulqNdqpxzy|exterior|Historic exterior detail
+1fcbIXeRuvtAF53iMcUMgCZo6InRfsD0u|exterior|Front of Sand & Sea Manor
+1QH8SdE1f57HKdHWHyZSL3zirOdolyaL6|exterior|Porch and exterior
+1s78bXdJorG0Ob9gjmDFT1FXnFcA2vi-l|aerial|Aerial view and Galveston setting
+1BPh-xpmSKQIsLzd4xRdxF3byK6Xs4CQj|aerial|Aerial view
+1fFDMoALScgeTlx_PQIg9-2OXHSCXUbcn|amenities|Private hot tub
+17_5GAmY3meVDnIq-bf8DGs4P7slYksx2|amenities|Fire-pit seating
+1xTNCQsQ_5Dzl28arvo33IOHptaL2fqyu|amenities|Outdoor gathering space
+1R1PEWlj45mU7lhPQPG5xIe5qkos723la|amenities|Porch and outdoor amenities
+17IKRicvoTHOAlz4pwL9_gprfuyHCZX6n|kitchen|Kitchen
+1Uo1qEEvG3fGo44_mEylC1RHeILnJGWCm|kitchen|Kitchen detail
+1INdrIqGUIEbG34kC1yH9R8XrCYW6g4qh|kitchen|Kitchen and island
+1J38yTIhUdkUn_LLNINPz3Zk2KWrX0NmU|kitchen|Kitchen workspace
+1yiHhZvkt2Fnb9gFtoav3S_On9ZEzoP3z|kitchen|Dining and kitchen
+1xCRRO4TdN9t3pOTNdL0KADC7TRKdWjJU|interior|Living space
+1Gdj9OWALEV1A0n9nUEKGEwGbQZmAGonV|interior|Living room
+1r81GJrow1oZchenCk-r0iFFnEXTL8Oji|interior|Historic interior
+1b7FFHGl1zxKiKhZdfpvGwU0gQsL64mQ5|interior|Gathering space
+1QAH2igcmg2wcCdcMMJdDUaDo3RzDvWSy|interior|Interior detail
+1Y9-TrFB6dkRIJb-vEtKxEWwidT13tNQ1|interior|Living space
+1ui_lNQvozRmu9okHuwbY6UmyzxnkaUl8|interior|Dining area
+1ed1qkAf-DMMKcVgayLYvqquZKFf_1J3H|interior|Historic hallway
+1CF3Vh7UPdvKbomxz1gZ2PWe8GwiqBvDU|interior|Common area
+1sTSDC_fRrg76lo8IwenUkoeqplduW3SN|interior|Breakfast table and kitchen island
+11929mx1yVcV0R-uoeOm3TQLYl2iHsxwG|interior|Common area
+1MxqxfLFHcqhPJk48GZDUqQzzOyGcbsVG|interior|Interior room
+1TWCMCYCz9SxPV1cDaIyJgn4mtLogE48u|interior|Historic interior
+1fftBq9HG4mwktZSuz1EP0wsWaICPErSA|interior|Interior detail
+1FketXkBAJjRF2LO0i5l-eYmL4tDiGaSB|bedrooms|Bedroom
+17-FjbJy1wtgDtNdSJKvfYq4_Wtg4dJBk|bedrooms|Bedroom
+1Oosyi1X3GMY9eX0EJKCLYPEkFCQ6WdBQ|bedrooms|Bedroom
+1f0pliNlWzuuuhAsITTm-221J0MEWqvST|bedrooms|Bedroom
+1k3zT3TYsraQBiZVfiidhimcjqnxw0V_u|bedrooms|Bedroom
+1kroJMzxDsXSxQ_vyDuKtQG3gvtH8n0LG|bedrooms|Bedroom
+1p_gSIPgB8li-ZHPcE5jF_mTJVf4DX9H1|bedrooms|Bedroom
+1ftx3EpDLreevw_jjMUH4Pa3hj0ZyNcdc|bedrooms|Bedroom
+1vpI2I7nBKRLcvcEzXS-ePn2-BxFleWoI|bedrooms|Bedroom
+1RkZ5GUgqVVLyLbz6pgVBiWYG1b1u5u3g|bedrooms|Bedroom
+1L_4HDMlTssj_RLZZy7tz13gXXIaxuNn9|bath|Bathroom
+1AbDYapEfgS_sOG9HXO5KivZ4QxK_8xQU|bath|Bathroom
+1KTV7nKFn4C9YC1dB_zKEu2QdqQMHKJLm|bath|Bathroom
+1X3hp-PjGqeo8QYBluU4-FDOxXmfAw4k8|bath|Bathroom
+1G-a091oYqM-KexAS8nRSC6KCM0eQtMY1|bath|Bathroom
+1_TT-6FmEJtzUzme2nvSoj7vi8oTK822f|bath|Bathroom
+16J3GHLUdzWNEQYDbIVc88KUlvPyxOmZ8|bath|Bathroom
+1LYhrO-f2QGZcyxsXdgGhl922_kY06yWj|bath|Bathroom
+10e-3ry9wEVTqrLomPB0s70D0DD5Tvy07|bath|Bathroom
+1l-gDbm4blFAKAq6zwcVmXqD6RABJWD0K|bath|Bathroom
+1ixcf53Yo75CnfJgRZxdM4lTuaTV2BHNm|bath|Bathroom`.trim().split('\n').map(row=>{const [id,category,label]=row.split('|');return{id,category,label}});
+  const thumb=(id,w=1200)=>`https://drive.google.com/thumbnail?id=${encodeURIComponent(id)}&sz=w${w}`;
 
-const galleryModal=$('galleryModal'),galleryGrid=$('galleryGrid'),viewer=$('photoViewer'),viewerImage=$('viewerImage'),viewerMeta=$('viewerMeta');
+  const galleryModal=$('galleryModal'),galleryGrid=$('galleryGrid'),viewer=$('photoViewer'),viewerImage=$('viewerImage'),viewerMeta=$('viewerMeta');
   let galleryFilter='all',galleryVisible=photos.map((_,i)=>i),viewerIndex=0;
   function renderGallery(){
     galleryVisible=[];galleryGrid.innerHTML='';
-    photos.forEach((p,i)=>{if(galleryFilter!=='all'&&p.category!==galleryFilter)return;galleryVisible.push(i);const b=document.createElement('button');b.type='button';b.innerHTML=`<img loading="lazy" decoding="async" src="${assetUrl(p)}" alt="Sand & Sea Manor — ${esc(p.label)}">`;b.onclick=()=>openViewer(i);galleryGrid.appendChild(b)});
+    photos.forEach((p,i)=>{if(galleryFilter!=='all'&&p.category!==galleryFilter)return;galleryVisible.push(i);const b=document.createElement('button');b.type='button';b.innerHTML=`<img loading="lazy" decoding="async" src="${thumb(p.id,900)}" alt="Sand & Sea Manor — ${esc(p.label)}">`;b.onclick=()=>openViewer(i);galleryGrid.appendChild(b)});
     $('galleryCount').textContent=`${galleryVisible.length} photo${galleryVisible.length===1?'':'s'}`;
   }
   function openGallery(filter='all'){galleryFilter=filter;document.querySelectorAll('[data-gallery-filter]').forEach(b=>b.classList.toggle('active',b.dataset.galleryFilter===filter));renderGallery();galleryModal.classList.add('show');document.body.classList.add('modal-open')}
   function closeGallery(){galleryModal.classList.remove('show');if(!viewer.classList.contains('show'))document.body.classList.remove('modal-open')}
-  function openViewer(i){viewerIndex=i;viewerImage.src=assetUrl(photos[i]);viewerImage.alt=`Sand & Sea Manor — ${photos[i].label}`;const pos=galleryVisible.indexOf(i);viewerMeta.textContent=`${photos[i].label} · ${pos>=0?pos+1:i+1} of ${galleryVisible.length||photos.length}`;viewer.classList.add('show');document.body.classList.add('modal-open')}
+  function openViewer(i){viewerIndex=i;viewerImage.src=thumb(photos[i].id,2200);viewerImage.alt=`Sand & Sea Manor — ${photos[i].label}`;const pos=galleryVisible.indexOf(i);viewerMeta.textContent=`${photos[i].label} · ${pos>=0?pos+1:i+1} of ${galleryVisible.length||photos.length}`;viewer.classList.add('show');document.body.classList.add('modal-open')}
   function closeViewer(){viewer.classList.remove('show');if(!galleryModal.classList.contains('show'))document.body.classList.remove('modal-open')}
   function moveViewer(step){let p=galleryVisible.indexOf(viewerIndex);if(p<0)p=0;p=(p+step+galleryVisible.length)%galleryVisible.length;openViewer(galleryVisible[p])}
   document.querySelectorAll('[data-open-gallery]').forEach(b=>b.onclick=()=>openGallery(b.dataset.openGallery||'all'));
@@ -97,26 +145,5 @@ const galleryModal=$('galleryModal'),galleryGrid=$('galleryGrid'),viewer=$('phot
 
   window.addEventListener('message',e=>{if(e.origin!==location.origin||e.data?.type!=='cjt-reviews-height')return;const frame=$('houfyReviews');if(frame&&Number(e.data.height)>200)frame.style.height=`${Math.min(2200,Number(e.data.height)+12)}px`});
   document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(calendarModal.classList.contains('show'))closeCalendar();if(bookingModal.classList.contains('show'))closeBooking();if($('amenitiesModal').classList.contains('show'))$('amenitiesClose').click()});
-  updateSelectors();resetQuote();
-
-  async function bootPublicImages(){
-    try{
-      const res=await fetch('/assets/data/public-image-manifest.json',{credentials:'omit'});
-      if(!res.ok)throw new Error('manifest '+res.status);
-      const manifest=await res.json();
-      photos=(manifest.galleryPhotos||[]).map(p=>({
-        id:p.sourceDriveFileId||p.resolvedDriveFileId||p.id,
-        category:p.category,
-        label:p.label,
-        publicPath:p.publicPath
-      }));
-      window.__CJT_PUBLIC_IMAGE_MANIFEST__=manifest;
-      renderGallery();
-      document.dispatchEvent(new CustomEvent('cjt:public-images-ready',{detail:manifest}));
-    }catch(err){
-      console.error('Public image manifest failed to load',err);
-      $('galleryCount')&&($('galleryCount').textContent='Photos unavailable');
-    }
-  }
-  bootPublicImages();
+  updateSelectors();resetQuote();renderGallery();
 })();
