@@ -63,11 +63,17 @@ function filteredReservations(){
   });
 }
 
+function paymentMarkup(q){
+  const p=q?.paymentSchedule;if(!p)return '';
+  if(p.mode==='split')return `<div class="list-row"><div><strong>Payment schedule</strong><span>${esc(money(p.dueAtBooking))} when accepted · ${esc(money(p.remainingBalance))} due ${esc(p.balanceDueDateLabel||'30 days before arrival')}</span></div><span class="badge good">50 / 50</span></div>`;
+  return `<div class="list-row"><div><strong>Payment schedule</strong><span>${esc(money(p.dueAtBooking||q.total))} due when accepted</span></div><span class="badge">Full</span></div>`;
+}
+
 function quoteMarkup(r){
   const q=r.quote;
   if(!q)return '<div class="empty" style="margin-top:12px">No stored quote on this older reservation.</div>';
   const lines=(q.priceLines||[]).map(x=>`<div class="list-row"><div><strong>${esc(x.season)}</strong><span>${esc(x.nights)} night${Number(x.nights)===1?'':'s'} × ${esc(money(x.nightlyRate))}</span></div><b>${esc(money(x.subtotal))}</b></div>`).join('');
-  return `<div class="card" style="margin-top:14px;padding:14px;background:var(--cjt-soft)"><div class="card-head"><div><h3 style="font-size:1rem">Direct quote</h3><p>${esc(q.nights)} nights · average ${esc(money(q.averageNightly||Number(q.lodgingSubtotal||0)/Math.max(Number(q.nights||1),1)))}/night${q.ownerAdjusted?' · owner adjusted':''}</p></div><strong style="font-size:1.25rem">${esc(money(q.total))}</strong></div><div class="list compact-list">${lines}<div class="list-row"><div><strong>Lodging</strong></div><b>${esc(money(q.lodgingSubtotal))}</b></div><div class="list-row"><div><strong>Cleaning</strong></div><b>${esc(money(q.cleaningFee))}</b></div><div class="list-row"><div><strong>Tax</strong><span>${Math.round(Number(q.taxRate||0)*100)}%</span></div><b>${esc(money(q.taxes))}</b></div></div></div>`;
+  return `<div class="card" style="margin-top:14px;padding:14px;background:var(--cjt-soft)"><div class="card-head"><div><h3 style="font-size:1rem">Direct quote</h3><p>${esc(q.nights)} nights · average ${esc(money(q.averageNightly||Number(q.lodgingSubtotal||0)/Math.max(Number(q.nights||1),1)))}/night${q.ownerAdjusted?' · owner adjusted':''}</p></div><strong style="font-size:1.25rem">${esc(money(q.total))}</strong></div><div class="list compact-list">${lines}<div class="list-row"><div><strong>Lodging</strong></div><b>${esc(money(q.lodgingSubtotal))}</b></div><div class="list-row"><div><strong>Cleaning</strong></div><b>${esc(money(q.cleaningFee))}</b></div><div class="list-row"><div><strong>Tax</strong><span>${Math.round(Number(q.taxRate||0)*100)}%</span></div><b>${esc(money(q.taxes))}</b></div>${paymentMarkup(q)}</div></div>`;
 }
 
 function actionMarkup(r){
