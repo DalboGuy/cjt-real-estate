@@ -1,0 +1,609 @@
+{
+  "schema": "cjt.public-image-manifest.v1",
+  "property": "Sand & Sea Manor",
+  "status": "Needs review",
+  "delivery": "static-read-only",
+  "notes": "Canonical guest-facing image manifest. Runtime must use publicPath only; Drive IDs are editorial provenance, not delivery.",
+  "openingPhotos": [
+    {
+      "id": "19qVu5W92D3HZ98fmkJtYWkon10RoQb9A",
+      "alt": "Private hot tub at Sand and Sea Manor",
+      "publicPath": "/assets/images/public/opening/19qVu5W92D3HZ98fmkJtYWkon10RoQb9A.jpg",
+      "sourceDriveFileId": "19qVu5W92D3HZ98fmkJtYWkon10RoQb9A"
+    },
+    {
+      "id": "1fQ5o4coCkKLHd-T7TVT7IVuJ6s3gWYCu",
+      "alt": "Historic front exterior of Sand and Sea Manor at sunset",
+      "publicPath": "/assets/images/public/opening/1fQ5o4coCkKLHd-T7TVT7IVuJ6s3gWYCu.jpg",
+      "sourceDriveFileId": "1fQ5o4coCkKLHd-T7TVT7IVuJ6s3gWYCu"
+    },
+    {
+      "id": "1S_cxUhVmopWmuDoEZViX4QDXg94JKb_f",
+      "alt": "Oversized family room at Sand and Sea Manor",
+      "publicPath": "/assets/images/public/opening/1S_cxUhVmopWmuDoEZViX4QDXg94JKb_f.jpg",
+      "sourceDriveFileId": "1S_cxUhVmopWmuDoEZViX4QDXg94JKb_f"
+    },
+    {
+      "id": "1YCvLJWjz6csiaFDEnlpoi7zGQdEOtuAq",
+      "alt": "Fire-pit seating at Sand and Sea Manor",
+      "publicPath": "/assets/images/public/opening/1YCvLJWjz6csiaFDEnlpoi7zGQdEOtuAq.jpg",
+      "sourceDriveFileId": "1YCvLJWjz6csiaFDEnlpoi7zGQdEOtuAq"
+    },
+    {
+      "id": "1mou-dVzjGrc41Ws9WnSB2k5dvriLoYhV",
+      "alt": "Second living room at Sand and Sea Manor",
+      "publicPath": "/assets/images/public/opening/1mou-dVzjGrc41Ws9WnSB2k5dvriLoYhV.jpg",
+      "sourceDriveFileId": "1mou-dVzjGrc41Ws9WnSB2k5dvriLoYhV"
+    },
+    {
+      "id": "1z3V_SUJMrVu_Ciw-m2HOUk4nTWkouVMO",
+      "alt": "Breakfast table and kitchen island at Sand and Sea Manor",
+      "publicPath": "/assets/images/public/opening/1z3V_SUJMrVu_Ciw-m2HOUk4nTWkouVMO.jpg",
+      "sourceDriveFileId": "1z3V_SUJMrVu_Ciw-m2HOUk4nTWkouVMO"
+    }
+  ],
+  "galleryPhotos": [
+    {
+      "id": "1p8Z7flJ93NS9h1-PXA1tMBlmdFGREAZD",
+      "category": "exterior",
+      "label": "Historic exterior",
+      "index": 0,
+      "sourceDriveFileId": "1p8Z7flJ93NS9h1-PXA1tMBlmdFGREAZD",
+      "resolvedDriveFileId": "1p8Z7flJ93NS9h1-PXA1tMBlmdFGREAZD",
+      "publicPath": "/assets/images/public/gallery/1p8Z7flJ93NS9h1-PXA1tMBlmdFGREAZD.jpg"
+    },
+    {
+      "id": "1dBhTIh3KdqXDupNq8nhlCt4bWMVfV931",
+      "category": "exterior",
+      "label": "Front porches",
+      "index": 1,
+      "sourceDriveFileId": "1dBhTIh3KdqXDupNq8nhlCt4bWMVfV931",
+      "resolvedDriveFileId": "1dBhTIh3KdqXDupNq8nhlCt4bWMVfV931",
+      "publicPath": "/assets/images/public/gallery/1dBhTIh3KdqXDupNq8nhlCt4bWMVfV931.jpg"
+    },
+    {
+      "id": "1Ho_SCb2DvzT-ILkroyU0DnulqNdqpxzy",
+      "category": "exterior",
+      "label": "Historic exterior detail",
+      "index": 2,
+      "sourceDriveFileId": "1Ho_SCb2DvzT-ILkroyU0DnulqNdqpxzy",
+      "resolvedDriveFileId": "1Ho_SCb2DvzT-ILkroyU0DnulqNdqpxzy",
+      "publicPath": "/assets/images/public/gallery/1Ho_SCb2DvzT-ILkroyU0DnulqNdqpxzy.jpg"
+    },
+    {
+      "id": "1fcbIXeRuvtAF53iMcUMgCZo6InRfsD0u",
+      "category": "exterior",
+      "label": "Front of Sand & Sea Manor",
+      "index": 3,
+      "sourceDriveFileId": "1fcbIXeRuvtAF53iMcUMgCZo6InRfsD0u",
+      "resolvedDriveFileId": "1fcbIXeRuvtAF53iMcUMgCZo6InRfsD0u",
+      "publicPath": "/assets/images/public/gallery/1fcbIXeRuvtAF53iMcUMgCZo6InRfsD0u.jpg"
+    },
+    {
+      "id": "1QH8SdE1f57HKdHWHyZSL3zirOdolyaL6",
+      "category": "exterior",
+      "label": "Porch and exterior",
+      "index": 4,
+      "sourceDriveFileId": "1QH8SdE1f57HKdHWHyZSL3zirOdolyaL6",
+      "resolvedDriveFileId": "1QH8SdE1f57HKdHWHyZSL3zirOdolyaL6",
+      "publicPath": "/assets/images/public/gallery/1QH8SdE1f57HKdHWHyZSL3zirOdolyaL6.jpg"
+    },
+    {
+      "id": "1s78bXdJorG0Ob9gjmDFT1FXnFcA2vi-l",
+      "category": "aerial",
+      "label": "Aerial view and Galveston setting",
+      "index": 5,
+      "sourceDriveFileId": "1s78bXdJorG0Ob9gjmDFT1FXnFcA2vi-l",
+      "resolvedDriveFileId": "1s78bXdJorG0Ob9gjmDFT1FXnFcA2vi-l",
+      "publicPath": "/assets/images/public/gallery/1s78bXdJorG0Ob9gjmDFT1FXnFcA2vi-l.jpg"
+    },
+    {
+      "id": "1BPh-xpmSKQIsLzd4xRdxF3byK6Xs4CQj",
+      "category": "aerial",
+      "label": "Aerial view",
+      "index": 6,
+      "sourceDriveFileId": "1BPh-xpmSKQIsLzd4xRdxF3byK6Xs4CQj",
+      "resolvedDriveFileId": "1BPh-xpmSKQIsLzd4xRdxF3byK6Xs4CQj",
+      "publicPath": "/assets/images/public/gallery/1BPh-xpmSKQIsLzd4xRdxF3byK6Xs4CQj.jpg"
+    },
+    {
+      "id": "1fFDMoALScgeTlx_PQIg9-2OXHSCXUbcn",
+      "category": "amenities",
+      "label": "Private hot tub",
+      "index": 7,
+      "sourceDriveFileId": "1fFDMoALScgeTlx_PQIg9-2OXHSCXUbcn",
+      "resolvedDriveFileId": "1fFDMoALScgeTlx_PQIg9-2OXHSCXUbcn",
+      "publicPath": "/assets/images/public/gallery/1fFDMoALScgeTlx_PQIg9-2OXHSCXUbcn.jpg"
+    },
+    {
+      "id": "17_5GAmY3meVDnIq-bf8DGs4P7slYksx2",
+      "category": "amenities",
+      "label": "Fire-pit seating",
+      "index": 8,
+      "sourceDriveFileId": "17_5GAmY3meVDnIq-bf8DGs4P7slYksx2",
+      "resolvedDriveFileId": "17_5GAmY3meVDnIq-bf8DGs4P7slYksx2",
+      "publicPath": "/assets/images/public/gallery/17_5GAmY3meVDnIq-bf8DGs4P7slYksx2.jpg"
+    },
+    {
+      "id": "1xTNCQsQ_5Dzl28arvo33IOHptaL2fqyu",
+      "category": "amenities",
+      "label": "Outdoor gathering space",
+      "index": 9,
+      "sourceDriveFileId": "1xTNCQsQ_5Dzl28arvo33IOHptaL2fqyu",
+      "resolvedDriveFileId": "1xTNCQsQ_5Dzl28arvo33IOHptaL2fqyu",
+      "publicPath": "/assets/images/public/gallery/1xTNCQsQ_5Dzl28arvo33IOHptaL2fqyu.jpg"
+    },
+    {
+      "id": "1R1PEWlj45mU7lhPQPG5xIe5qkos723la",
+      "category": "amenities",
+      "label": "Porch and outdoor amenities",
+      "index": 10,
+      "sourceDriveFileId": "1R1PEWlj45mU7lhPQPG5xIe5qkos723la",
+      "resolvedDriveFileId": "1fQ5o4coCkKLHd-T7TVT7IVuJ6s3gWYCu",
+      "publicPath": "/assets/images/public/gallery/1fQ5o4coCkKLHd-T7TVT7IVuJ6s3gWYCu.jpg"
+    },
+    {
+      "id": "17IKRicvoTHOAlz4pwL9_gprfuyHCZX6n",
+      "category": "kitchen",
+      "label": "Kitchen",
+      "index": 11,
+      "sourceDriveFileId": "17IKRicvoTHOAlz4pwL9_gprfuyHCZX6n",
+      "resolvedDriveFileId": "17IKRicvoTHOAlz4pwL9_gprfuyHCZX6n",
+      "publicPath": "/assets/images/public/gallery/17IKRicvoTHOAlz4pwL9_gprfuyHCZX6n.jpg"
+    },
+    {
+      "id": "1Uo1qEEvG3fGo44_mEylC1RHeILnJGWCm",
+      "category": "kitchen",
+      "label": "Kitchen detail",
+      "index": 12,
+      "sourceDriveFileId": "1Uo1qEEvG3fGo44_mEylC1RHeILnJGWCm",
+      "resolvedDriveFileId": "1Uo1qEEvG3fGo44_mEylC1RHeILnJGWCm",
+      "publicPath": "/assets/images/public/gallery/1Uo1qEEvG3fGo44_mEylC1RHeILnJGWCm.jpg"
+    },
+    {
+      "id": "1INdrIqGUIEbG34kC1yH9R8XrCYW6g4qh",
+      "category": "kitchen",
+      "label": "Kitchen and island",
+      "index": 13,
+      "sourceDriveFileId": "1INdrIqGUIEbG34kC1yH9R8XrCYW6g4qh",
+      "resolvedDriveFileId": "1INdrIqGUIEbG34kC1yH9R8XrCYW6g4qh",
+      "publicPath": "/assets/images/public/gallery/1INdrIqGUIEbG34kC1yH9R8XrCYW6g4qh.jpg"
+    },
+    {
+      "id": "1J38yTIhUdkUn_LLNINPz3Zk2KWrX0NmU",
+      "category": "kitchen",
+      "label": "Kitchen workspace",
+      "index": 14,
+      "sourceDriveFileId": "1J38yTIhUdkUn_LLNINPz3Zk2KWrX0NmU",
+      "resolvedDriveFileId": "1J38yTIhUdkUn_LLNINPz3Zk2KWrX0NmU",
+      "publicPath": "/assets/images/public/gallery/1J38yTIhUdkUn_LLNINPz3Zk2KWrX0NmU.jpg"
+    },
+    {
+      "id": "1yiHhZvkt2Fnb9gFtoav3S_On9ZEzoP3z",
+      "category": "kitchen",
+      "label": "Dining and kitchen",
+      "index": 15,
+      "sourceDriveFileId": "1yiHhZvkt2Fnb9gFtoav3S_On9ZEzoP3z",
+      "resolvedDriveFileId": "1yiHhZvkt2Fnb9gFtoav3S_On9ZEzoP3z",
+      "publicPath": "/assets/images/public/gallery/1yiHhZvkt2Fnb9gFtoav3S_On9ZEzoP3z.jpg"
+    },
+    {
+      "id": "1xCRRO4TdN9t3pOTNdL0KADC7TRKdWjJU",
+      "category": "interior",
+      "label": "Living space",
+      "index": 16,
+      "sourceDriveFileId": "1xCRRO4TdN9t3pOTNdL0KADC7TRKdWjJU",
+      "resolvedDriveFileId": "1xCRRO4TdN9t3pOTNdL0KADC7TRKdWjJU",
+      "publicPath": "/assets/images/public/gallery/1xCRRO4TdN9t3pOTNdL0KADC7TRKdWjJU.jpg"
+    },
+    {
+      "id": "1Gdj9OWALEV1A0n9nUEKGEwGbQZmAGonV",
+      "category": "interior",
+      "label": "Living room",
+      "index": 17,
+      "sourceDriveFileId": "1Gdj9OWALEV1A0n9nUEKGEwGbQZmAGonV",
+      "resolvedDriveFileId": "1Gdj9OWALEV1A0n9nUEKGEwGbQZmAGonV",
+      "publicPath": "/assets/images/public/gallery/1Gdj9OWALEV1A0n9nUEKGEwGbQZmAGonV.jpg"
+    },
+    {
+      "id": "1r81GJrow1oZchenCk-r0iFFnEXTL8Oji",
+      "category": "interior",
+      "label": "Historic interior",
+      "index": 18,
+      "sourceDriveFileId": "1r81GJrow1oZchenCk-r0iFFnEXTL8Oji",
+      "resolvedDriveFileId": "1r81GJrow1oZchenCk-r0iFFnEXTL8Oji",
+      "publicPath": "/assets/images/public/gallery/1r81GJrow1oZchenCk-r0iFFnEXTL8Oji.jpg"
+    },
+    {
+      "id": "1b7FFHGl1zxKiKhZdfpvGwU0gQsL64mQ5",
+      "category": "interior",
+      "label": "Gathering space",
+      "index": 19,
+      "sourceDriveFileId": "1b7FFHGl1zxKiKhZdfpvGwU0gQsL64mQ5",
+      "resolvedDriveFileId": "1b7FFHGl1zxKiKhZdfpvGwU0gQsL64mQ5",
+      "publicPath": "/assets/images/public/gallery/1b7FFHGl1zxKiKhZdfpvGwU0gQsL64mQ5.jpg"
+    },
+    {
+      "id": "1QAH2igcmg2wcCdcMMJdDUaDo3RzDvWSy",
+      "category": "interior",
+      "label": "Interior detail",
+      "index": 20,
+      "sourceDriveFileId": "1QAH2igcmg2wcCdcMMJdDUaDo3RzDvWSy",
+      "resolvedDriveFileId": "1QAH2igcmg2wcCdcMMJdDUaDo3RzDvWSy",
+      "publicPath": "/assets/images/public/gallery/1QAH2igcmg2wcCdcMMJdDUaDo3RzDvWSy.jpg"
+    },
+    {
+      "id": "1Y9-TrFB6dkRIJb-vEtKxEWwidT13tNQ1",
+      "category": "interior",
+      "label": "Living space",
+      "index": 21,
+      "sourceDriveFileId": "1Y9-TrFB6dkRIJb-vEtKxEWwidT13tNQ1",
+      "resolvedDriveFileId": "1Y9-TrFB6dkRIJb-vEtKxEWwidT13tNQ1",
+      "publicPath": "/assets/images/public/gallery/1Y9-TrFB6dkRIJb-vEtKxEWwidT13tNQ1.jpg"
+    },
+    {
+      "id": "1ui_lNQvozRmu9okHuwbY6UmyzxnkaUl8",
+      "category": "interior",
+      "label": "Dining area",
+      "index": 22,
+      "sourceDriveFileId": "1ui_lNQvozRmu9okHuwbY6UmyzxnkaUl8",
+      "resolvedDriveFileId": "1ui_lNQvozRmu9okHuwbY6UmyzxnkaUl8",
+      "publicPath": "/assets/images/public/gallery/1ui_lNQvozRmu9okHuwbY6UmyzxnkaUl8.jpg"
+    },
+    {
+      "id": "1ed1qkAf-DMMKcVgayLYvqquZKFf_1J3H",
+      "category": "interior",
+      "label": "Historic hallway",
+      "index": 23,
+      "sourceDriveFileId": "1ed1qkAf-DMMKcVgayLYvqquZKFf_1J3H",
+      "resolvedDriveFileId": "1ed1qkAf-DMMKcVgayLYvqquZKFf_1J3H",
+      "publicPath": "/assets/images/public/gallery/1ed1qkAf-DMMKcVgayLYvqquZKFf_1J3H.jpg"
+    },
+    {
+      "id": "1CF3Vh7UPdvKbomxz1gZ2PWe8GwiqBvDU",
+      "category": "interior",
+      "label": "Common area",
+      "index": 24,
+      "sourceDriveFileId": "1CF3Vh7UPdvKbomxz1gZ2PWe8GwiqBvDU",
+      "resolvedDriveFileId": "1CF3Vh7UPdvKbomxz1gZ2PWe8GwiqBvDU",
+      "publicPath": "/assets/images/public/gallery/1CF3Vh7UPdvKbomxz1gZ2PWe8GwiqBvDU.jpg"
+    },
+    {
+      "id": "1sTSDC_fRrg76lo8IwenUkoeqplduW3SN",
+      "category": "interior",
+      "label": "Breakfast table and kitchen island",
+      "index": 25,
+      "sourceDriveFileId": "1sTSDC_fRrg76lo8IwenUkoeqplduW3SN",
+      "resolvedDriveFileId": "1sTSDC_fRrg76lo8IwenUkoeqplduW3SN",
+      "publicPath": "/assets/images/public/gallery/1sTSDC_fRrg76lo8IwenUkoeqplduW3SN.jpg"
+    },
+    {
+      "id": "11929mx1yVcV0R-uoeOm3TQLYl2iHsxwG",
+      "category": "interior",
+      "label": "Common area",
+      "index": 26,
+      "sourceDriveFileId": "11929mx1yVcV0R-uoeOm3TQLYl2iHsxwG",
+      "resolvedDriveFileId": "11929mx1yVcV0R-uoeOm3TQLYl2iHsxwG",
+      "publicPath": "/assets/images/public/gallery/11929mx1yVcV0R-uoeOm3TQLYl2iHsxwG.jpg"
+    },
+    {
+      "id": "1MxqxfLFHcqhPJk48GZDUqQzzOyGcbsVG",
+      "category": "interior",
+      "label": "Interior room",
+      "index": 27,
+      "sourceDriveFileId": "1MxqxfLFHcqhPJk48GZDUqQzzOyGcbsVG",
+      "resolvedDriveFileId": "1MxqxfLFHcqhPJk48GZDUqQzzOyGcbsVG",
+      "publicPath": "/assets/images/public/gallery/1MxqxfLFHcqhPJk48GZDUqQzzOyGcbsVG.jpg"
+    },
+    {
+      "id": "1TWCMCYCz9SxPV1cDaIyJgn4mtLogE48u",
+      "category": "interior",
+      "label": "Historic interior",
+      "index": 28,
+      "sourceDriveFileId": "1TWCMCYCz9SxPV1cDaIyJgn4mtLogE48u",
+      "resolvedDriveFileId": "1TWCMCYCz9SxPV1cDaIyJgn4mtLogE48u",
+      "publicPath": "/assets/images/public/gallery/1TWCMCYCz9SxPV1cDaIyJgn4mtLogE48u.jpg"
+    },
+    {
+      "id": "1fftBq9HG4mwktZSuz1EP0wsWaICPErSA",
+      "category": "interior",
+      "label": "Interior detail",
+      "index": 29,
+      "sourceDriveFileId": "1fftBq9HG4mwktZSuz1EP0wsWaICPErSA",
+      "resolvedDriveFileId": "1fftBq9HG4mwktZSuz1EP0wsWaICPErSA",
+      "publicPath": "/assets/images/public/gallery/1fftBq9HG4mwktZSuz1EP0wsWaICPErSA.jpg"
+    },
+    {
+      "id": "1FketXkBAJjRF2LO0i5l-eYmL4tDiGaSB",
+      "category": "bedrooms",
+      "label": "Bedroom",
+      "index": 30,
+      "sourceDriveFileId": "1FketXkBAJjRF2LO0i5l-eYmL4tDiGaSB",
+      "resolvedDriveFileId": "1X1qxr3kkttUlUGq7-pO7yDN00dOwmEob",
+      "publicPath": "/assets/images/public/gallery/1X1qxr3kkttUlUGq7-pO7yDN00dOwmEob.jpg"
+    },
+    {
+      "id": "17-FjbJy1wtgDtNdSJKvfYq4_Wtg4dJBk",
+      "category": "bedrooms",
+      "label": "Bedroom",
+      "index": 31,
+      "sourceDriveFileId": "17-FjbJy1wtgDtNdSJKvfYq4_Wtg4dJBk",
+      "resolvedDriveFileId": "1PpvUxJlvb1JjWqg7EBZzkbGAtvOUGqTM",
+      "publicPath": "/assets/images/public/gallery/1PpvUxJlvb1JjWqg7EBZzkbGAtvOUGqTM.jpg"
+    },
+    {
+      "id": "1Oosyi1X3GMY9eX0EJKCLYPEkFCQ6WdBQ",
+      "category": "bedrooms",
+      "label": "Bedroom",
+      "index": 32,
+      "sourceDriveFileId": "1Oosyi1X3GMY9eX0EJKCLYPEkFCQ6WdBQ",
+      "resolvedDriveFileId": "1V_iLI4_uvax7dlTllW8N2sXBOl7tGZtW",
+      "publicPath": "/assets/images/public/gallery/1V_iLI4_uvax7dlTllW8N2sXBOl7tGZtW.jpg"
+    },
+    {
+      "id": "1f0pliNlWzuuuhAsITTm-221J0MEWqvST",
+      "category": "bedrooms",
+      "label": "Bedroom",
+      "index": 33,
+      "sourceDriveFileId": "1f0pliNlWzuuuhAsITTm-221J0MEWqvST",
+      "resolvedDriveFileId": "1me2WcqWzZ6ZUb55A6-tiZOnm3r3igGel",
+      "publicPath": "/assets/images/public/gallery/1me2WcqWzZ6ZUb55A6-tiZOnm3r3igGel.jpg"
+    },
+    {
+      "id": "1k3zT3TYsraQBiZVfiidhimcjqnxw0V_u",
+      "category": "bedrooms",
+      "label": "Bedroom",
+      "index": 34,
+      "sourceDriveFileId": "1k3zT3TYsraQBiZVfiidhimcjqnxw0V_u",
+      "resolvedDriveFileId": "1yzwWdsT001Ngn1kZMG27ztplFyvm5yFk",
+      "publicPath": "/assets/images/public/gallery/1yzwWdsT001Ngn1kZMG27ztplFyvm5yFk.jpg"
+    },
+    {
+      "id": "1kroJMzxDsXSxQ_vyDuKtQG3gvtH8n0LG",
+      "category": "bedrooms",
+      "label": "Bedroom",
+      "index": 35,
+      "sourceDriveFileId": "1kroJMzxDsXSxQ_vyDuKtQG3gvtH8n0LG",
+      "resolvedDriveFileId": "1oHaZh2tPCh5J0bWbY6rnrJQxbqzbMmXu",
+      "publicPath": "/assets/images/public/gallery/1oHaZh2tPCh5J0bWbY6rnrJQxbqzbMmXu.jpg"
+    },
+    {
+      "id": "1p_gSIPgB8li-ZHPcE5jF_mTJVf4DX9H1",
+      "category": "bedrooms",
+      "label": "Bedroom",
+      "index": 36,
+      "sourceDriveFileId": "1p_gSIPgB8li-ZHPcE5jF_mTJVf4DX9H1",
+      "resolvedDriveFileId": "1JlfPna3S8STdFA7sjuA5uhMLDemk0NXe",
+      "publicPath": "/assets/images/public/gallery/1JlfPna3S8STdFA7sjuA5uhMLDemk0NXe.jpg"
+    },
+    {
+      "id": "1ftx3EpDLreevw_jjMUH4Pa3hj0ZyNcdc",
+      "category": "bedrooms",
+      "label": "Bedroom",
+      "index": 37,
+      "sourceDriveFileId": "1ftx3EpDLreevw_jjMUH4Pa3hj0ZyNcdc",
+      "resolvedDriveFileId": "1Wul5n_SRp9LutOrS-Ptjfc7KKq6-S02r",
+      "publicPath": "/assets/images/public/gallery/1Wul5n_SRp9LutOrS-Ptjfc7KKq6-S02r.jpg"
+    },
+    {
+      "id": "1vpI2I7nBKRLcvcEzXS-ePn2-BxFleWoI",
+      "category": "bedrooms",
+      "label": "Bedroom",
+      "index": 38,
+      "sourceDriveFileId": "1vpI2I7nBKRLcvcEzXS-ePn2-BxFleWoI",
+      "resolvedDriveFileId": "1QAuZGsYQLHfmzX8gisj1C9rvS33TTg0I",
+      "publicPath": "/assets/images/public/gallery/1QAuZGsYQLHfmzX8gisj1C9rvS33TTg0I.jpg"
+    },
+    {
+      "id": "1RkZ5GUgqVVLyLbz6pgVBiWYG1b1u5u3g",
+      "category": "bedrooms",
+      "label": "Bedroom",
+      "index": 39,
+      "sourceDriveFileId": "1RkZ5GUgqVVLyLbz6pgVBiWYG1b1u5u3g",
+      "resolvedDriveFileId": "1hT6T9fbkp-N5iHoiaj5OaH-bjYPOeJAS",
+      "publicPath": "/assets/images/public/gallery/1hT6T9fbkp-N5iHoiaj5OaH-bjYPOeJAS.jpg"
+    },
+    {
+      "id": "1L_4HDMlTssj_RLZZy7tz13gXXIaxuNn9",
+      "category": "bath",
+      "label": "Bathroom",
+      "index": 40,
+      "sourceDriveFileId": "1L_4HDMlTssj_RLZZy7tz13gXXIaxuNn9",
+      "resolvedDriveFileId": "1L_4HDMlTssj_RLZZy7tz13gXXIaxuNn9",
+      "publicPath": "/assets/images/public/gallery/1L_4HDMlTssj_RLZZy7tz13gXXIaxuNn9.jpg"
+    },
+    {
+      "id": "1AbDYapEfgS_sOG9HXO5KivZ4QxK_8xQU",
+      "category": "bath",
+      "label": "Bathroom",
+      "index": 41,
+      "sourceDriveFileId": "1AbDYapEfgS_sOG9HXO5KivZ4QxK_8xQU",
+      "resolvedDriveFileId": "1AbDYapEfgS_sOG9HXO5KivZ4QxK_8xQU",
+      "publicPath": "/assets/images/public/gallery/1AbDYapEfgS_sOG9HXO5KivZ4QxK_8xQU.jpg"
+    },
+    {
+      "id": "1KTV7nKFn4C9YC1dB_zKEu2QdqQMHKJLm",
+      "category": "bath",
+      "label": "Bathroom",
+      "index": 42,
+      "sourceDriveFileId": "1KTV7nKFn4C9YC1dB_zKEu2QdqQMHKJLm",
+      "resolvedDriveFileId": "1dOEt1mcytUnoQR-JQ_PwS_wnt9cUv98f",
+      "publicPath": "/assets/images/public/gallery/1dOEt1mcytUnoQR-JQ_PwS_wnt9cUv98f.jpg"
+    },
+    {
+      "id": "1G-a091oYqM-KexAS8nRSC6KCM0eQtMY1",
+      "category": "bath",
+      "label": "Bathroom",
+      "index": 43,
+      "sourceDriveFileId": "1G-a091oYqM-KexAS8nRSC6KCM0eQtMY1",
+      "resolvedDriveFileId": "1lf3xMpvuNuXFM8shiyVqz9a1alPF8SdJ",
+      "publicPath": "/assets/images/public/gallery/1lf3xMpvuNuXFM8shiyVqz9a1alPF8SdJ.jpg"
+    },
+    {
+      "id": "1_TT-6FmEJtzUzme2nvSoj7vi8oTK822f",
+      "category": "bath",
+      "label": "Bathroom",
+      "index": 44,
+      "sourceDriveFileId": "1_TT-6FmEJtzUzme2nvSoj7vi8oTK822f",
+      "resolvedDriveFileId": "1_TT-6FmEJtzUzme2nvSoj7vi8oTK822f",
+      "publicPath": "/assets/images/public/gallery/1_TT-6FmEJtzUzme2nvSoj7vi8oTK822f.jpg"
+    },
+    {
+      "id": "16J3GHLUdzWNEQYDbIVc88KUlvPyxOmZ8",
+      "category": "bath",
+      "label": "Bathroom",
+      "index": 45,
+      "sourceDriveFileId": "16J3GHLUdzWNEQYDbIVc88KUlvPyxOmZ8",
+      "resolvedDriveFileId": "16J3GHLUdzWNEQYDbIVc88KUlvPyxOmZ8",
+      "publicPath": "/assets/images/public/gallery/16J3GHLUdzWNEQYDbIVc88KUlvPyxOmZ8.jpg"
+    },
+    {
+      "id": "1LYhrO-f2QGZcyxsXdgGhl922_kY06yWj",
+      "category": "bath",
+      "label": "Bathroom",
+      "index": 46,
+      "sourceDriveFileId": "1LYhrO-f2QGZcyxsXdgGhl922_kY06yWj",
+      "resolvedDriveFileId": "1LYhrO-f2QGZcyxsXdgGhl922_kY06yWj",
+      "publicPath": "/assets/images/public/gallery/1LYhrO-f2QGZcyxsXdgGhl922_kY06yWj.jpg"
+    },
+    {
+      "id": "10e-3ry9wEVTqrLomPB0s70D0DD5Tvy07",
+      "category": "bath",
+      "label": "Bathroom",
+      "index": 47,
+      "sourceDriveFileId": "10e-3ry9wEVTqrLomPB0s70D0DD5Tvy07",
+      "resolvedDriveFileId": "10e-3ry9wEVTqrLomPB0s70D0DD5Tvy07",
+      "publicPath": "/assets/images/public/gallery/10e-3ry9wEVTqrLomPB0s70D0DD5Tvy07.jpg"
+    },
+    {
+      "id": "1ixcf53Yo75CnfJgRZxdM4lTuaTV2BHNm",
+      "category": "bath",
+      "label": "Bathroom",
+      "index": 48,
+      "sourceDriveFileId": "1ixcf53Yo75CnfJgRZxdM4lTuaTV2BHNm",
+      "resolvedDriveFileId": "1P55Ba4LnbWVTowwiwCjkefB7ZCRxuC2F",
+      "publicPath": "/assets/images/public/gallery/1P55Ba4LnbWVTowwiwCjkefB7ZCRxuC2F.jpg"
+    }
+  ],
+  "roomGroups": [
+    {
+      "name": "Master Bedroom",
+      "sourceFolderId": "1IxJqk17K7skT9ss5LMXQ6_WrFuCbp5W_",
+      "photos": [
+        {
+          "name": "28.jpg",
+          "sourceDriveFileId": "1PpvUxJlvb1JjWqg7EBZzkbGAtvOUGqTM",
+          "publicPath": "/assets/images/public/rooms/1PpvUxJlvb1JjWqg7EBZzkbGAtvOUGqTM.jpg"
+        },
+        {
+          "name": "27.jpg",
+          "sourceDriveFileId": "1MjehyQ64R8MZTZ6EEuOLs3jLNTYI9FvB",
+          "publicPath": "/assets/images/public/rooms/1MjehyQ64R8MZTZ6EEuOLs3jLNTYI9FvB.jpg"
+        },
+        {
+          "name": "9.jpg",
+          "sourceDriveFileId": "1dOEt1mcytUnoQR-JQ_PwS_wnt9cUv98f",
+          "publicPath": "/assets/images/public/rooms/1dOEt1mcytUnoQR-JQ_PwS_wnt9cUv98f.jpg"
+        },
+        {
+          "name": "12.jpg",
+          "sourceDriveFileId": "1lf3xMpvuNuXFM8shiyVqz9a1alPF8SdJ",
+          "publicPath": "/assets/images/public/rooms/1lf3xMpvuNuXFM8shiyVqz9a1alPF8SdJ.jpg"
+        },
+        {
+          "name": "52.jpg",
+          "sourceDriveFileId": "1P55Ba4LnbWVTowwiwCjkefB7ZCRxuC2F",
+          "publicPath": "/assets/images/public/rooms/1P55Ba4LnbWVTowwiwCjkefB7ZCRxuC2F.jpg"
+        }
+      ]
+    },
+    {
+      "name": "Boho Room",
+      "sourceFolderId": "1PHttJna7uy8D_d47gs_9Qz19oIdW7kJh",
+      "photos": [
+        {
+          "name": "41.jpg",
+          "sourceDriveFileId": "1JlfPna3S8STdFA7sjuA5uhMLDemk0NXe",
+          "publicPath": "/assets/images/public/rooms/1JlfPna3S8STdFA7sjuA5uhMLDemk0NXe.jpg"
+        },
+        {
+          "name": "42.jpg",
+          "sourceDriveFileId": "1Wul5n_SRp9LutOrS-Ptjfc7KKq6-S02r",
+          "publicPath": "/assets/images/public/rooms/1Wul5n_SRp9LutOrS-Ptjfc7KKq6-S02r.jpg"
+        }
+      ]
+    },
+    {
+      "name": "Glam Room",
+      "sourceFolderId": "1kk2QcvsaZxM8NJqqr9agvAmNWLWmsRQY",
+      "photos": [
+        {
+          "name": "43.jpg",
+          "sourceDriveFileId": "1QAuZGsYQLHfmzX8gisj1C9rvS33TTg0I",
+          "publicPath": "/assets/images/public/rooms/1QAuZGsYQLHfmzX8gisj1C9rvS33TTg0I.jpg"
+        },
+        {
+          "name": "44.jpg",
+          "sourceDriveFileId": "1hT6T9fbkp-N5iHoiaj5OaH-bjYPOeJAS",
+          "publicPath": "/assets/images/public/rooms/1hT6T9fbkp-N5iHoiaj5OaH-bjYPOeJAS.jpg"
+        }
+      ]
+    },
+    {
+      "name": "Flex Room",
+      "sourceFolderId": "1o-nrG3bMMqgZ4-Egm2XzNmXZ00MD2YGd",
+      "photos": [
+        {
+          "name": "39.jpg",
+          "sourceDriveFileId": "1yzwWdsT001Ngn1kZMG27ztplFyvm5yFk",
+          "publicPath": "/assets/images/public/rooms/1yzwWdsT001Ngn1kZMG27ztplFyvm5yFk.jpg"
+        },
+        {
+          "name": "40.jpg",
+          "sourceDriveFileId": "1oHaZh2tPCh5J0bWbY6rnrJQxbqzbMmXu",
+          "publicPath": "/assets/images/public/rooms/1oHaZh2tPCh5J0bWbY6rnrJQxbqzbMmXu.jpg"
+        }
+      ]
+    },
+    {
+      "name": "Bunk Room",
+      "sourceFolderId": "1ui0dfMhlt5S4d2wLA34rtyteAHp9PQlk",
+      "photos": [
+        {
+          "name": "37.jpg",
+          "sourceDriveFileId": "1V_iLI4_uvax7dlTllW8N2sXBOl7tGZtW",
+          "publicPath": "/assets/images/public/rooms/1V_iLI4_uvax7dlTllW8N2sXBOl7tGZtW.jpg"
+        }
+      ]
+    }
+  ],
+  "aerialPhotos": [
+    {
+      "sourceDriveFileId": "1s78bXdJorG0Ob9gjmDFT1FXnFcA2vi-l",
+      "alt": "Aerial neighborhood view of Sand and Sea Manor",
+      "publicPath": "/assets/images/public/gallery/1s78bXdJorG0Ob9gjmDFT1FXnFcA2vi-l.jpg"
+    },
+    {
+      "sourceDriveFileId": "1BPh-xpmSKQIsLzd4xRdxF3byK6Xs4CQj",
+      "alt": "Top-down aerial view of Sand and Sea Manor",
+      "publicPath": "/assets/images/public/gallery/1BPh-xpmSKQIsLzd4xRdxF3byK6Xs4CQj.jpg"
+    }
+  ],
+  "knownLimitations": [
+    "Two bathroom gallery source files were missing from Drive at publish time (1X3hp-PjGqeo8QYBluU4-FDOxXmfAw4k8, 1l-gDbm4blFAKAq6zwcVmXqD6RABJWD0K)."
+  ],
+  "missingSourceFiles": [
+    {
+      "sourceDriveFileId": "1X3hp-PjGqeo8QYBluU4-FDOxXmfAw4k8",
+      "category": "bath",
+      "label": "Bathroom",
+      "reason": "Drive file not found during publish (entity missing)"
+    },
+    {
+      "sourceDriveFileId": "1l-gDbm4blFAKAq6zwcVmXqD6RABJWD0K",
+      "category": "bath",
+      "label": "Bathroom",
+      "reason": "Drive file not found during publish (entity missing)"
+    }
+  ]
+}
