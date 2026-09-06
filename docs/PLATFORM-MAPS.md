@@ -180,7 +180,7 @@ The `password_reset_tokens` and `audit_log` tables are present on the Neon reorg
 
 At the owner's request, application-password gates were temporarily bypassed for **preview GET/read access from 8:25 PM to 9:25 PM Central on Sep 5, 2026**. The bypass is coded with a fixed expiration timestamp and only activates when `VERCEL_ENV=preview`; production authentication is unchanged.
 
-Data-changing POST/write actions remain session-protected during temporary password-free preview windows because the preview database connection may still point at production.
+Data-changing POST/write actions remain session-protected during temporary password-free preview windows. Database access is also fail-closed for Vercel Preview unless `CJT_DB_TARGET=preview`; `CJT_ALLOW_PROD_DB=1` is accepted only in Vercel Production. The Preview `DATABASE_URL` must still be verified in Vercel/Neon as the reorganization or disposable development branch.
 
 Reserved Under construction routes currently cover:
 
