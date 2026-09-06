@@ -30,29 +30,39 @@
     img.src=thumb(replacement,width);
   },true);
 
-  /* Restore the exact property-photo set used on the booking page before the listing redesign.
-     These four source files are already publicly viewable. Do not invent a fifth image. */
+  /* Owner-selected opening photo set supplied directly on Sep 5, 2026.
+     Use these six exact public Drive files in the supplied order. */
   const originalMosaic=[
-    {id:'1FYUDJapvuncWuAgi-5GrjBd7yIdT3rgq',alt:'Sand and Sea Manor front exterior'},
-    {id:'1RJDq9stveaJn6bOXrCThEXZ_PG0AgPwS',alt:'Sand and Sea Manor fire-pit area'},
-    {id:'1drjbEb5SCm_XXPNrNknsqrIvOBG7vqCS',alt:'Sand and Sea Manor hot tub'},
-    {id:'1qULKBwPz44P3iomZSxd9USXTG25RcHxg',alt:'Sand and Sea Manor living room'}
+    {id:'19qVu5W92D3HZ98fmkJtYWkon10RoQb9A',alt:'Private hot tub at Sand and Sea Manor'},
+    {id:'1R1PEWlj45mU7lhPQPG5xIe5qkos723la',alt:'Porch and outdoor amenities at Sand and Sea Manor'},
+    {id:'1S_cxUhVmopWmuDoEZViX4QDXg94JKb_f',alt:'Living room at Sand and Sea Manor'},
+    {id:'1YCvLJWjz6csiaFDEnlpoi7zGQdEOtuAq',alt:'Fire-pit seating at Sand and Sea Manor'},
+    {id:'1mou-dVzjGrc41Ws9WnSB2k5dvriLoYhV',alt:'Bedroom at Sand and Sea Manor'},
+    {id:'1z3V_SUJMrVu_Ciw-m2HOUk4nTWkouVMO',alt:'Breakfast table and kitchen island at Sand and Sea Manor'}
   ];
   const mosaic=document.querySelector('.v2-mosaic');
   if(mosaic){
-    const items=[...mosaic.querySelectorAll('.gallery-item')];
+    let items=[...mosaic.querySelectorAll('.gallery-item')];
+    const showPhotos=mosaic.querySelector('.show-photos');
+    while(items.length<originalMosaic.length){
+      const seed=items[items.length-1]||items[0];if(!seed)break;
+      const extra=seed.cloneNode(true);extra.style.display='';
+      if(showPhotos)mosaic.insertBefore(extra,showPhotos);else mosaic.appendChild(extra);
+      items=[...mosaic.querySelectorAll('.gallery-item')];
+    }
     originalMosaic.forEach((photo,i)=>{
       const old=items[i];if(!old)return;
       const fresh=old.cloneNode(true);
+      fresh.style.display='';
       fresh.removeAttribute('data-photo-index');
       const img=fresh.querySelector('img');
-      if(img){img.src=thumb(photo.id,i===0?1800:1400);img.alt=photo.alt;img.onerror=()=>{img.style.visibility='hidden';fresh.classList.add('image-unavailable')}}
+      if(img){img.src=thumb(photo.id,i===0?1800:1400);img.alt=photo.alt;img.style.visibility='';img.onerror=()=>{img.style.visibility='hidden';fresh.classList.add('image-unavailable')}}
       fresh.addEventListener('click',()=>document.querySelector('[data-open-gallery="all"]')?.click());
       old.replaceWith(fresh);
     });
-    if(items[4])items[4].style.display='none';
+    [...mosaic.querySelectorAll('.gallery-item')].slice(originalMosaic.length).forEach(el=>el.style.display='none');
     const mosaicStyle=document.createElement('style');
-    mosaicStyle.textContent='.v2-mosaic{grid-template-columns:2fr 1fr 1fr;grid-template-rows:245px 245px}.v2-mosaic .gallery-item:nth-of-type(1){grid-column:1;grid-row:1/3}.v2-mosaic .gallery-item:nth-of-type(2){grid-column:2;grid-row:1}.v2-mosaic .gallery-item:nth-of-type(3){grid-column:3;grid-row:1}.v2-mosaic .gallery-item:nth-of-type(4){grid-column:2/4;grid-row:2}.v2-mosaic .gallery-item:nth-of-type(5){display:none!important}.v2-mosaic .image-unavailable{background:#eef2f0}.v2-mosaic .image-unavailable:after{content:"Property photo";position:absolute;inset:0;display:grid;place-items:center;color:#6b7d80;font-weight:800}@media(max-width:780px){.v2-mosaic{grid-template-columns:1fr 1fr;grid-template-rows:275px 165px}.v2-mosaic .gallery-item:nth-of-type(1){grid-column:1/3;grid-row:1}.v2-mosaic .gallery-item:nth-of-type(2){grid-column:1;grid-row:2}.v2-mosaic .gallery-item:nth-of-type(3){grid-column:2;grid-row:2}.v2-mosaic .gallery-item:nth-of-type(4){display:none}}';
+    mosaicStyle.textContent='.v2-mosaic{grid-template-columns:2fr 1fr 1fr;grid-template-rows:165px 165px 165px}.v2-mosaic .gallery-item:nth-of-type(1){grid-column:1;grid-row:1/4}.v2-mosaic .gallery-item:nth-of-type(2){grid-column:2;grid-row:1}.v2-mosaic .gallery-item:nth-of-type(3){grid-column:3;grid-row:1}.v2-mosaic .gallery-item:nth-of-type(4){grid-column:2;grid-row:2}.v2-mosaic .gallery-item:nth-of-type(5){grid-column:3;grid-row:2}.v2-mosaic .gallery-item:nth-of-type(6){grid-column:2/4;grid-row:3}.v2-mosaic .image-unavailable{background:#eef2f0}.v2-mosaic .image-unavailable:after{content:"Property photo";position:absolute;inset:0;display:grid;place-items:center;color:#6b7d80;font-weight:800}@media(max-width:780px){.v2-mosaic{grid-template-columns:1fr 1fr;grid-template-rows:275px 165px}.v2-mosaic .gallery-item:nth-of-type(1){grid-column:1/3;grid-row:1}.v2-mosaic .gallery-item:nth-of-type(2){grid-column:1;grid-row:2}.v2-mosaic .gallery-item:nth-of-type(3){grid-column:2;grid-row:2}.v2-mosaic .gallery-item:nth-of-type(n+4){display:none!important}}';
     document.head.appendChild(mosaicStyle);
   }
 
