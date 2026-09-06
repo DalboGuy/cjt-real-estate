@@ -25,8 +25,8 @@
         <div class="nav-section">Architecture</div>
         <a href="/admin-v1/maps"><span>Platform Maps</span><span class="count">Live</span></a>
         <div class="nav-section">Security</div>
-        <button data-coming-soon="Audit Log"><span>Audit Log</span></button>
-        <button data-coming-soon="Sessions"><span>Sessions</span></button>
+        <a href="/admin-v1/audit"><span>Audit Log</span><span class="count">Live</span></a>
+        <a href="/admin-v1/sessions"><span>Sessions</span><span class="count">Live</span></a>
       </nav>
       <div class="sidebar-footer"><a href="/owner-v1">Owner Portal</a><a href="/account-v1">My Account</a><button id="logout" type="button">Sign out</button></div>
     </aside>
@@ -37,7 +37,7 @@
         <div class="top-actions"><a class="btn btn-secondary" href="/account-v1">My Account</a></div>
       </header>
       <div class="content">
-        <div class="section-title"><div><h2>User Directory</h2><p>Named users now have individual credentials and sessions. Invitations and expanded role profiles come next.</p></div><span class="status-pill">Foundation live</span></div>
+        <div class="section-title"><div><h2>User Directory</h2><p>Named users have individual credentials and sessions. Property-scoped access, enforcement and invitations are logged for later rather than being built now.</p></div><span class="status-pill">Foundation live</span></div>
         <div id="notice" class="notice hidden"></div>
         <div id="summary" class="summary-grid"></div>
         <section class="card">
@@ -45,8 +45,8 @@
           <div id="users" class="list"><div class="skeleton big"></div><div class="skeleton"></div></div>
         </section>
         <section class="grid" style="margin-top:16px">
-          <article class="card span-6"><div class="card-head"><div><h3>Next: invitations</h3><p>Admins invite users without knowing their permanent passwords.</p></div><span class="badge warn">Planned</span></div><div class="empty">Invitation email → secure, time-limited link → user chooses password → role/property access becomes active.</div></article>
-          <article class="card span-6"><div class="card-head"><div><h3>Next: expanded roles</h3><p>Current foundation supports Administrator, Owner and Manager.</p></div><span class="badge warn">Schema phase</span></div><div class="empty">Co-host, Accounting and Read Only will be added with property-scoped permissions after the role model is migrated on the reorganization database branch.</div></article>
+          <article class="card span-6"><div class="card-head"><div><h3>Deferred: property-scoped access</h3><p>Recorded in Platform Maps for a later build.</p></div><span class="badge">Deferred</span></div><div class="empty">Assign users to specific properties and roles only when we return to access expansion.</div></article>
+          <article class="card span-6"><div class="card-head"><div><h3>Deferred: enforcement + invitations</h3><p>Also recorded in Platform Maps.</p></div><span class="badge">Deferred</span></div><div class="empty">Navigation/API permission enforcement and invitation emails are intentionally not part of the current scope. Current work is password recovery, sessions and audit.</div></article>
         </section>
       </div>
     </main>
