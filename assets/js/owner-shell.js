@@ -100,7 +100,7 @@
 
   if(location.pathname.replace(/\/$/,'')==='/admin-v1/maps'){
     const version=[...document.querySelectorAll('.status-pill')].find(el=>/^Version\s/i.test(el.textContent||''));
-    if(version)version.textContent='Version 1.0';
+    if(version)version.textContent='Version 1.1';
     const note=document.querySelector('#navigation .flow-note');
     if(note)note.textContent='Desktop: the pane can collapse and reopen. Mobile: a compact arrow-only handle stays around the middle of the left edge, clear of bottom filters and browser controls, and opens the slide-out drawer. The browser Back button is not required.';
 
@@ -113,7 +113,7 @@
     if(roadmap&&!document.getElementById('security-scope')){
       const section=document.createElement('section');
       section.id='security-scope';section.className='card map-card';section.style.marginBottom='16px';
-      section.innerHTML='<div class="card-head"><div><h3>Security Scope Decision</h3><p>Current owner-directed priority: build only items 4 and 5; keep items 1–3 visible for later.</p></div><span class="badge good">Recorded</span></div><div class="list"><div class="list-row"><div><strong>1 · Property-scoped users & permissions</strong><span>Assign users to properties and roles.</span></div><span class="badge">Deferred</span></div><div class="list-row"><div><strong>2 · Permission enforcement</strong><span>Role-aware navigation and API authorization.</span></div><span class="badge">Deferred</span></div><div class="list-row"><div><strong>3 · Invitations</strong><span>Email invite → user-created account → access activation.</span></div><span class="badge">Deferred</span></div><div class="list-row"><div><strong>4 · Password recovery</strong><span>30-minute one-time reset token, password replacement and session invalidation. Automated email uses a runtime delivery hook.</span></div><span class="badge good">Built foundation</span></div><div class="list-row"><div><strong>5 · Sessions & audit</strong><span>Named-account session review/revocation plus a shared audit event stream. Audit storage is present on the reorganization database branch.</span></div><span class="badge good">Built</span></div></div>';
+      section.innerHTML='<div class="card-head"><div><h3>Security Scope Decision</h3><p>Current owner-directed priority: build only items 4 and 5; keep items 1–3 visible for later.</p></div><span class="badge good">Recorded</span></div><div class="list"><div class="list-row"><div><strong>1 · Property-scoped users & permissions</strong><span>Assign users to properties and roles.</span></div><span class="badge">Deferred</span></div><div class="list-row"><div><strong>2 · Permission enforcement</strong><span>Role-aware navigation and API authorization.</span></div><span class="badge">Deferred</span></div><div class="list-row"><div><strong>3 · Invitations</strong><span>Email invite → user-created account → access activation.</span></div><span class="badge">Deferred</span></div><div class="list-row"><div><strong>4 · Password recovery</strong><span>30-minute one-time reset token, password replacement and session invalidation. Automated email uses a runtime delivery hook.</span></div><span class="badge good">Built foundation</span></div><div class="list-row"><div><strong>5 · Sessions & audit</strong><span>Named-account session review/revocation plus a shared audit event stream.</span></div><span class="badge good">Built</span></div></div>';
       roadmap.parentNode.insertBefore(section,roadmap);
       const toolbar=document.querySelector('.map-toolbar');
       if(toolbar){const a=document.createElement('a');a.href='#security-scope';a.textContent='Security Scope';toolbar.appendChild(a)}
@@ -126,8 +126,16 @@
       const toolbar=document.querySelector('.map-toolbar');
       if(toolbar){const a=document.createElement('a');a.href='#temporary-preview-access';a.textContent='Temporary Access';toolbar.appendChild(a)}
     }
+    if(roadmap&&!document.getElementById('direct-booking-engine')){
+      const section=document.createElement('section');
+      section.id='direct-booking-engine';section.className='card map-card';section.style.marginBottom='16px';
+      section.innerHTML='<div class="card-head"><div><h3>Direct Booking Engine · Primary Product</h3><p>The working booking page and owner booking dashboard are now the platform priority.</p></div><span class="badge good">Core build</span></div><div class="map-board"><div class="map-root"><div class="map-row"><div class="map-node public built"><strong>Guest Booking Page</strong><span>click dates · synced calendar</span></div><div class="map-arrow">→</div><div class="map-node core built"><strong>/api/quote</strong><span>seasonal rates · min stay · cleaning · tax</span></div><div class="map-arrow">→</div><div class="map-node core built"><strong>/api/inquiries</strong><span>recheck → 24-hour hold</span></div><div class="map-arrow">→</div><div class="map-node data built"><strong>reservations + booking_events</strong><span>booking record + quote snapshot</span></div><div class="map-arrow">→</div><div class="map-node owner built"><strong>Direct Booking Dashboard</strong><span>accept · adjust · extend · release</span></div></div><div class="map-arrow">↓</div><div class="map-row"><div class="map-node owner built"><strong>Contract / Deposit Milestones</strong><span>existing lifecycle controls</span></div><div class="map-arrow planned">···→</div><div class="map-node external progress"><strong>Payment / Checkout</strong><span>next missing booking-engine step</span></div><div class="map-arrow planned">···→</div><div class="map-node public progress"><strong>Guest Confirmation</strong></div></div><div class="flow-note">Published online pricing currently runs through Aug 15, 2027. Communications, Documents and expanded access work are deferred behind completion of the booking loop.</div></div></div>';
+      roadmap.parentNode.insertBefore(section,roadmap);
+      const toolbar=document.querySelector('.map-toolbar');
+      if(toolbar){const a=document.createElement('a');a.href='#direct-booking-engine';a.textContent='Direct Booking';toolbar.appendChild(a)}
+    }
     const nextRow=[...roadmap?.querySelectorAll('.list-row')||[]].find(row=>row.querySelector('strong')?.textContent.trim()==='Next');
-    if(nextRow){const span=nextRow.querySelector('div span');if(span)span.textContent='Items 1–3 remain logged as deferred. No additional identity/access work is in scope beyond password recovery, sessions and audit.';const badge=nextRow.querySelector('.badge');if(badge){badge.textContent='Deferred';badge.classList.remove('warn')}}
+    if(nextRow){const span=nextRow.querySelector('div span');if(span)span.textContent='Complete the direct-booking loop: payment/checkout and final guest confirmation. Communications, Documents and items 1–3 of access expansion remain deferred.';const badge=nextRow.querySelector('.badge');if(badge){badge.textContent='Booking engine';badge.classList.add('warn')}}
   }
 
   requestAnimationFrame(revealActive);
