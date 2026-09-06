@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const { db, ensureSchema, expireHolds } = require('../lib/db');
-const { getOtaBlockedDates, eachDate } = require('../lib/availability');
+const { getOtaBlockedDates } = require('../lib/availability');
+const { quoteStay, eachDate } = require('../lib/pricing');
 
 function clean(v,max=500){return String(v||'').trim().slice(0,max);}
 function validDate(v){return /^\d{4}-\d{2}-\d{2}$/.test(String(v||''));}
@@ -20,6 +21,11 @@ module.exports=async function(req,res){
     if(checkout<=checkin) return res.status(400).json({error:'invalid_dates',message:'Check-out must be after check-in.'});
     const today=new Date().toISOString().slice(0,10);
     if(checkin<today) return res.status(400).json({error:'past_date',message:'Check-in must be a future date.'});
+
+    let quote;
+    try{quote=quoteStay(checkin,checkout,guests);}catch(e){
+      return res.status(e.status||422).json({error:e.code||'pricing_unavailable',message:e.message||'Pricing is not available for those dates.'});
+    }
 
     const {dates:otaBlocked}=await getOtaBlockedDates();
     const requested=eachDate(checkin,checkout);
@@ -50,9 +56,9 @@ module.exports=async function(req,res){
       }
       throw e;
     }
-    await sql`INSERT INTO booking_events (reservation_id,event_type,actor,metadata) VALUES (${id},'inquiry_created','guest',${JSON.stringify({guests})}::jsonb)`;
+    await sql`INSERT INTO booking_events (reservation_id,event_type,actor,metadata) VALUES (${id},'inquiry_created','guest',${JSON.stringify({guests,quote})}::jsonb)`;
     res.setHeader('Cache-Control','no-store');
-    return res.status(201).json({reservation:rows[0],message:'Your dates are temporarily held for 24 hours while CJT reviews your request.'});
+    return res.status(201).json({reservation:rows[0],quote,message:'Your dates and quoted total are temporarily held for 24 hours while CJT reviews your request.'});
   }catch(e){
     console.error('inquiry error',e);
     return res.status(500).json({error:'booking_unavailable',message:'We could not place the hold. Please contact CJT directly.'});
