@@ -58,3 +58,14 @@ Every PR must state:
 9. Configuration handoff: exact environment-variable names only, required versus optional status, target Vercel environments, and whether Joel has set them; never include values.
 
 If any acceptance criterion is unverified, mark the feature `Partial` or `Needs review`, not `Built`.
+
+
+## Issue #21 handoff — Stripe payment and confirmation loop
+
+- **Branch/PR status:** Partial / Needs review; do not mark Built until Joel runs Stripe test-mode checkout and webhook acceptance on a preview database.
+- **What changed:** Added server-derived Checkout Session creation, Stripe webhook and session verification, append-only payment status events, owner confirmation gating, and a guest return/confirmation page.
+- **Files changed:** `api/payments.js`, `lib/payments.js`, `api/owner.js`, `assets/js/reservations-v1.js`, `payment-confirmation.html`, `assets/js/payment-confirmation.js`, `docs/STRIPE-PAYMENTS.md`.
+- **Environment names:** `STRIPE_SECRET_KEY` (required server secret), `STRIPE_WEBHOOK_SECRET` (required webhook secret), `STRIPE_PUBLISHABLE_KEY` (documented optional/future), `PUBLIC_SITE_URL` (optional stable return URL). Values are not stored in Git.
+- **Data/schema impact:** No migration; payment state is recorded in existing `booking_events.metadata`. Preview database isolation and pricing formulas are unchanged.
+- **Known limitations:** Joel must configure a preview Stripe test account/webhook and perform a real test. Email delivery, refunds, cancellation/refund handling, receipts, payout reconciliation, and contract/signature integration remain outside this slice.
+- **Production impact:** No production database or `main` branch changes. Do not set production Stripe/database configuration until preview acceptance is complete.
