@@ -1,0 +1,13 @@
+const {JSDOM}=require('jsdom');const fs=require('node:fs');const assert=require('node:assert/strict');
+const dom=new JSDOM('<html><head></head><body><section id="reservations"><div class="sectionhead"><h2></h2><p class="meta"></p></div><div id="reservationList"></div></section></body></html>',{runScripts:'outside-only',url:'https://example.invalid'});
+const w=dom.window;let submitted;w.confirm=()=>true;w.HTMLElement.prototype.scrollIntoView=()=>{};w.HTMLDialogElement.prototype.showModal=function(){this.open=true};w.HTMLDialogElement.prototype.close=function(){this.open=false};
+w.state={reservations:[{id:'A',guest_name:'<script>bad</script>',guest_email:'test@example.invalid',guests:2,checkin:'2090-01-01',checkout:'2090-01-02',status:'inquiry_hold',review_stage:'pending',updated_at:'2026-09-05 01:02:03.123456+00'},{id:'B',guest_name:'Closed',status:'released',review_stage:'rejected'}]};
+w.load=async()=>{};w.fetch=async(url,opts)=>{assert.equal(url,'/api/owner');submitted=JSON.parse(opts.body);return {ok:true,json:async()=>({ok:true})}};
+w.eval(fs.readFileSync('owner-live-reservations.js','utf8'));
+assert.equal(w.document.querySelectorAll('.inquiry-card').length,1);assert.equal(w.document.querySelectorAll('script').length,0);
+assert(w.document.querySelector('[data-action="accept"]'));assert(!w.document.querySelector('[data-action="deposit_received"]'));
+w.document.querySelector('[data-action="processing"]').click();
+setImmediate(()=>{assert.equal(submitted.action,'reservation_update');assert.equal(submitted.expected_updated_at,'2026-09-05 01:02:03.123456+00');assert(!('passcode' in submitted));
+ w.CJTInquiryWorkflow.open('B');assert.equal(w.document.querySelectorAll('.inquiry-card').length,1);assert.equal(w.document.querySelectorAll('.inquiry-card button').length,0);
+ w.CJTInquiryWorkflow.reviewBlock([{source:'direct',reservationId:'A',start:'2090-01-01',end:'2090-01-02'},{source:'airbnb',start:'2090-01-01',end:'2090-01-02'}]);assert(w.document.querySelector('dialog a').href.startsWith('https://www.airbnb.com/'));assert(w.document.querySelector('dialog').textContent.includes('Review inquiry / release dates'));
+ console.log('PASS: inquiry rendering, escaping, session action, closed history, calendar paths');w.close();});

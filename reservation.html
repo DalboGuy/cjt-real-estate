@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#0d2b31" />
+  <title>Guest App | Sand & Sea Manor</title>
+  <link rel="stylesheet" href="/customer-app.css?v=20260904-1" />
+</head>
+<body>
+<div class="app-shell">
+  <header class="app-top">
+    <div class="top-inner">
+      <div class="brand">SAND & SEA MANOR<small>Guest App · Galveston, Texas</small></div>
+      <div class="privacy">Private reservation access</div>
+    </div>
+  </header>
+
+  <main class="app-main">
+    <div id="demoBanner" class="notice" hidden><strong>Demo preview</strong> · Sample reservation data only. Nothing you do here changes a real booking.</div>
+    <section id="loadingScreen" class="screen active" data-screen="loading"><div id="appLoading" class="loading">Loading your stay…</div></section>
+
+    <section class="screen" data-screen="home">
+      <div class="screen-heading"><div class="eyebrow">Sand & Sea Manor</div><h1 id="homeGreeting">Your Galveston stay</h1><p class="lead">Everything for your direct booking in one place.</p></div>
+      <article class="hero-card">
+        <div class="eyebrow">Upcoming stay</div>
+        <div id="homeDates" class="stay-dates">Loading…</div>
+        <div class="countdown"><strong id="countdownValue">—</strong><span id="countdownLabel">until check-in</span></div>
+        <div id="homeTotalWrap" hidden><span style="color:rgba(255,255,255,.68);font-size:.8rem">Reservation total</span><strong id="homeTotal" style="display:block;font-size:1.2rem"></strong></div>
+        <div class="hero-actions"><button class="btn btn-light" data-go="stay">View My Stay</button><button class="btn btn-outline" style="border-color:rgba(255,255,255,.35);color:#fff" data-go="messages">Messages</button></div>
+      </article>
+      <article class="card">
+        <div class="card-head"><div><h2>Booking progress</h2><p>Your current direct-booking status.</p></div></div>
+        <div class="status-grid">
+          <div id="reservationBox" class="status-box"><span>Reservation</span><strong id="reservationState">Loading</strong></div>
+          <div id="agreementBox" class="status-box"><span>Agreement</span><strong id="agreementState">Loading</strong></div>
+          <div id="depositBox" class="status-box"><span>Deposit</span><strong id="depositState">Loading</strong></div>
+        </div>
+      </article>
+      <article class="card"><div class="card-head"><div><h2>Next step</h2></div></div><div class="next-step"><strong id="nextTitle">Loading…</strong><span id="nextBody"></span></div></article>
+      <div class="quick-grid">
+        <button class="quick" data-go="messages"><strong>Messages</strong><span id="homeMessageMeta">Private conversation with CJT</span></button>
+        <button class="quick" data-go="house"><strong>House</strong><span>Property guide and stay information</span></button>
+        <button class="quick" data-go="stay"><strong>My Stay</strong><span>Dates, guests, quote and booking timeline</span></button>
+        <button class="quick" data-go="help"><strong>Help</strong><span>Contact CJT and find support</span></button>
+      </div>
+    </section>
+
+    <section class="screen" data-screen="stay">
+      <div class="section-title"><div class="eyebrow">My Stay</div><h1>Reservation</h1><p>Your dates, booking progress and direct-booking quote.</p></div>
+      <article id="stayContent" class="card"><div class="loading">Loading reservation…</div></article>
+      <article class="card"><div class="card-head"><div><h2>Stay pricing</h2><p>Pricing attached to this reservation.</p></div></div><div id="quoteContent"></div></article>
+    </section>
+
+    <section class="screen" data-screen="messages">
+      <div class="section-title"><div class="eyebrow">Messages</div><h1>Talk with CJT</h1><p>Your private conversation stays attached to this reservation.</p></div>
+      <article class="card chat-card">
+        <div class="chat-head"><div><h2>Guest messages</h2><p style="margin:3px 0 0;color:var(--muted);font-size:.86rem">Sand & Sea Manor</p></div><span id="chatState" class="chat-state">Open chat</span></div>
+        <div id="chatList" class="chat-list"><div class="chat-empty">Open this tab to load your messages.</div></div>
+        <form id="chatForm" class="chat-form"><textarea id="chatBody" maxlength="4000" placeholder="Ask CJT a question or send an update…" required></textarea><button id="chatSend" class="btn btn-primary" type="submit">Send</button><div class="chat-note">Private reservation conversation. Do not send payment card information here.</div></form>
+      </article>
+    </section>
+
+    <section class="screen" data-screen="house">
+      <div class="section-title"><div class="eyebrow">House</div><h1>Your house guide</h1><p>The guest manual will live here so stay information is easy to find on a phone.</p></div>
+      <div class="guide-grid">
+        <article class="guide-card"><h3>Property</h3><div class="fact-list"><div class="fact"><span>Bedrooms</span><strong>5</strong></div><div class="fact"><span>Bathrooms</span><strong>3</strong></div><div class="fact"><span>Maximum guests</span><strong>14</strong></div></div></article>
+        <article class="guide-card"><h3>Outdoor spaces</h3><p>Private hot tub and a separate fire-pit area. The property does not have a pool.</p></article>
+        <article class="guide-card"><h3>Arrival & parking</h3><p>Detailed arrival, parking and access instructions will be published here from the CJT guest manual.</p></article>
+        <article class="guide-card"><h3>During your stay</h3><p>Wi-Fi, HVAC, appliance, hot-tub, fire-pit and house guidance will be searchable here.</p></article>
+        <article class="guide-card"><h3>Checkout</h3><p>Checkout instructions and departure reminders will appear here before the end of the stay.</p></article>
+        <article class="guide-card"><h3>Guest manual</h3><p>This section is the app shell. The existing Digital Guest Manual is the source we will migrate into it next.</p></article>
+      </div>
+    </section>
+
+    <section class="screen" data-screen="help">
+      <div class="section-title"><div class="eyebrow">Help</div><h1>Need something?</h1><p>Keep guest support connected to the reservation instead of scattered across different channels.</p></div>
+      <article class="card">
+        <h2>Contact CJT</h2><p class="lead" style="font-size:.92rem">For property or reservation questions, Messages is the preferred channel because it stays with your booking.</p>
+        <div class="help-actions"><button class="help-action" data-go="messages"><div>Message CJT<br><span>Open your reservation conversation</span></div><strong>Open</strong></button><a class="help-action" href="mailto:cjtrealestateholdings@gmail.com?subject=Sand%20%26%20Sea%20Manor%20Guest%20Help"><div>Email CJT<br><span>cjtrealestateholdings@gmail.com</span></div><strong>Email</strong></a></div>
+      </article>
+      <article class="card"><h2>Property issue</h2><div class="notice">The next support build will add issue categories, photo upload and automatic creation of a CJT Owner Portal task. For now, send the issue through Messages.</div></article>
+      <article class="card"><h2>Emergency</h2><p class="lead" style="font-size:.9rem">For an immediate life-safety emergency, contact local emergency services first. Then notify CJT through Messages when safe to do so.</p></article>
+    </section>
+  </main>
+
+  <nav class="bottom-nav" aria-label="Guest app navigation"><div class="bottom-inner">
+    <button class="nav-btn active" data-tab="home">Home</button>
+    <button class="nav-btn" data-tab="stay">My Stay</button>
+    <button class="nav-btn" data-tab="messages">Messages<span id="messageBadge" class="nav-badge"></span></button>
+    <button class="nav-btn" data-tab="house">House</button>
+    <button class="nav-btn" data-tab="help">Help</button>
+  </div></nav>
+</div>
+<script src="/customer-app.js?v=20260904-1"></script>
+</body>
+</html>

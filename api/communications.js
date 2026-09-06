@@ -8,7 +8,7 @@ async function authenticated(req){
   const token=parseCookies(req.headers.cookie||'').cjt_owner_session;
   if(!token)return false;
   const sql=db();
-  const rows=await sql`SELECT token_hash FROM owner_sessions WHERE token_hash=${hash(token)} AND expires_at>now() LIMIT 1`;
+  const rows=await sql`SELECT s.token_hash FROM owner_sessions s JOIN owner_users u ON u.id=s.user_id WHERE s.token_hash=${hash(token)} AND s.expires_at>now() AND u.active=true AND u.must_change_password=false LIMIT 1`;
   return rows.length>0;
 }
 
