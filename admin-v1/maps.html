@@ -54,7 +54,7 @@
 
       <div class="content">
         <div class="section-title">
-          <div><h2>CJT Data Flow Map</h2><p>Read left-to-right or top-to-bottom: source → intake → normalize → store/index → portal → action.</p><div class="map-meta"><span class="status-pill">Version 0.6</span><span class="status-pill">Updated Sep 5, 2026</span><span class="status-pill">Branch: reorg/platform-v1</span></div></div>
+          <div><h2>CJT Data Flow Map</h2><p>Read left-to-right or top-to-bottom: source → intake → normalize → store/index → portal → action.</p><div class="map-meta"><span class="status-pill">Version 0.7</span><span class="status-pill">Updated Sep 5, 2026</span><span class="status-pill">Branch: reorg/platform-v1</span></div></div>
           <span class="status-pill">Living documentation</span>
         </div>
         <div id="moduleNotice" class="notice hidden"></div>
@@ -154,9 +154,10 @@
         </section>
 
         <section id="roadmap" class="card map-card">
-          <div class="card-head"><div><h3>8 · Build State</h3><p>Navigation and flow documentation move with the platform.</p></div><span class="badge good">Current</span></div>
-          <div class="summary-grid"><div class="summary-card"><span>Dashboard</span><b>Built</b></div><div class="summary-card"><span>Communications</span><b>Built shell</b></div><div class="summary-card"><span>Reservations</span><b>Built shell</b></div><div class="summary-card"><span>Accounts</span><b>Built foundation</b></div><div class="summary-card"><span>Navigation pane</span><b>Scrollable + flyout</b></div><div class="summary-card"><span>Other modules</span><b>Under construction routes</b></div></div>
+          <div class="card-head"><div><h3>8 · Build State</h3><p>Navigation, responsive layout and flow documentation move with the platform.</p></div><span class="badge good">Current</span></div>
+          <div class="summary-grid"><div class="summary-card"><span>Dashboard</span><b>Built</b></div><div class="summary-card"><span>Communications</span><b>Built shell</b></div><div class="summary-card"><span>Reservations</span><b>Built shell</b></div><div class="summary-card"><span>Accounts</span><b>Built foundation</b></div><div class="summary-card"><span>Navigation pane</span><b>Scrollable + flyout</b></div><div class="summary-card"><span>Mobile layout</span><b>Responsive fit</b></div><div class="summary-card"><span>Other modules</span><b>Under construction routes</b></div></div>
           <div class="list" style="margin-top:16px">
+            <div class="list-row"><div><strong>Mobile viewport</strong><span>Portal content, cards, modules and maps are clamped to the device width. Dense maps stack vertically and wide tables scroll inside their own card instead of widening the page.</span></div><span class="badge good">Built</span></div>
             <div class="list-row"><div><strong>Navigation visibility</strong><span>The module list scrolls independently and the active item is kept in view.</span></div><span class="badge good">Built</span></div>
             <div class="list-row"><div><strong>Navigation return</strong><span>Chevron hides the pane; persistent Menu › flyout restores it from the current page.</span></div><span class="badge good">Built</span></div>
             <div class="list-row"><div><strong>No dead navigation</strong><span>Every visible navigation item opens a real route; unfinished routes say Under construction.</span></div><span class="badge good">Built</span></div>
