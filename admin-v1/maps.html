@@ -29,19 +29,19 @@
       <nav class="nav" aria-label="Admin Portal">
         <a href="/admin-v1"><span>Admin Dashboard</span></a>
         <a href="/admin-v1/users"><span>Users & Access</span><span class="count">Live</span></a>
-        <button data-coming-soon="Properties"><span>Properties</span><span class="count">Build</span></button>
-        <button data-coming-soon="Roles & Permissions"><span>Roles & Permissions</span><span class="count">Build</span></button>
+        <button data-coming-soon="Properties"><span>Properties</span><span class="count">Planned</span></button>
+        <button data-coming-soon="Roles & Permissions"><span>Roles & Permissions</span><span class="count">Planned</span></button>
         <div class="nav-section">Automation</div>
-        <button data-coming-soon="Integrations"><span>Integrations</span><span class="count">Build</span></button>
+        <button data-coming-soon="Integrations"><span>Integrations</span><span class="count">Planned</span></button>
         <a href="/owner-v1/documents"><span>Documents & Cloud</span></a>
-        <button data-coming-soon="Notifications"><span>Notifications</span><span class="count">Build</span></button>
+        <button data-coming-soon="Notifications"><span>Notifications</span><span class="count">Planned</span></button>
         <div class="nav-section">Architecture</div>
         <a class="active" href="/admin-v1/maps"><span>Platform Maps</span><span class="count">Live</span></a>
         <div class="nav-section">Security</div>
-        <button data-coming-soon="Audit Log"><span>Audit Log</span><span class="count">Build</span></button>
-        <button data-coming-soon="Sessions"><span>Sessions</span><span class="count">Build</span></button>
+        <a href="/admin-v1/audit"><span>Audit Log</span><span class="count">Live</span></a>
+        <a href="/admin-v1/sessions"><span>Sessions</span><span class="count">Live</span></a>
         <div class="nav-section">System</div>
-        <button data-coming-soon="System & Data"><span>System & Data</span><span class="count">Build</span></button>
+        <button data-coming-soon="System & Data"><span>System & Data</span><span class="count">Planned</span></button>
       </nav>
       <div class="sidebar-footer"><a href="/owner-v1">Owner Portal</a><a href="/account-v1">My Account</a><button id="logout" type="button">Sign out</button></div>
     </aside>
@@ -54,7 +54,7 @@
 
       <div class="content">
         <div class="section-title">
-          <div><h2>CJT Data Flow Map</h2><p>Read left-to-right or top-to-bottom: source → intake → normalize → store/index → portal → action.</p><div class="map-meta"><span class="status-pill">Version 0.7</span><span class="status-pill">Updated Sep 5, 2026</span><span class="status-pill">Branch: reorg/platform-v1</span></div></div>
+          <div><h2>CJT Data Flow Map</h2><p>Read left-to-right or top-to-bottom: source → intake → normalize → store/index → portal → action.</p><div class="map-meta"><span class="status-pill">Version 1.6</span><span class="status-pill">Updated Sep 5, 2026</span><span class="status-pill">Branch: reorg/platform-v1</span></div></div>
           <span class="status-pill">Living documentation</span>
         </div>
         <div id="moduleNotice" class="notice hidden"></div>
@@ -71,11 +71,11 @@
             <div class="legend-card cloud"><strong>Cloud File</strong><span>Authoritative document file.</span></div>
             <div class="legend-card"><strong>Core Application</strong><span>Vercel APIs and business logic.</span></div>
           </div>
-          <div class="flow-key"><span><b>→</b> data/system flow</span><span><b>↔</b> sync</span><span><b>⇢</b> human handoff</span><span><b>···→</b> planned flow</span><span><span class="badge good">Built</span> working</span><span><span class="badge warn">Build</span> under construction</span></div>
+          <div class="flow-key"><span><b>→</b> data/system flow</span><span><b>↔</b> sync</span><span><b>⇢</b> human handoff</span><span><b>···→</b> planned flow</span><span><span class="badge good">Built</span> working</span><span><span class="badge warn">Partial</span> in progress / needs review</span><span><span class="badge">Deferred</span> deferred</span><span><span class="badge">Planned</span> planned</span></div>
         </section>
 
         <nav class="map-toolbar">
-          <a href="#overall">Overall Intake</a><a href="#communications">Communications</a><a href="#reservations">Reservations</a><a href="#documents">Documents</a><a href="#truth">Source of Truth</a><a href="#identity">Identity</a><a href="#navigation">Navigation</a><a href="#roadmap">Build State</a>
+          <a href="#overall">Overall Intake</a><a href="#communications">Communications</a><a href="#reservations">Reservations</a><a href="#documents">Documents</a><a href="#truth">Source of Truth</a><a href="#identity">Identity</a><a href="#navigation">Navigation</a><a href="#security-scope">Security</a><a href="#temporary-preview-access">Preview Access</a><a href="#direct-booking-engine">Direct Booking</a><a href="#guest-listing-experience">Guest Listing</a><a href="#roadmap">Build State</a>
         </nav>
 
         <section id="overall" class="card map-card" style="margin-bottom:16px">
@@ -91,7 +91,7 @@
         </section>
 
         <section id="communications" class="card map-card" style="margin-bottom:16px">
-          <div class="card-head"><div><h3>2 · Guest Communications Flow</h3><p>Messages become one organized inbox while official OTA threads remain the reply location where required.</p></div><a class="card-link" href="/owner-v1/communications">Open Communications ↗</a></div>
+          <div class="card-head"><div><h3>2 · Guest Communications Flow</h3><p>Messages become one organized inbox while official OTA threads remain the reply location where required.</p></div><span class="badge warn">Partial</span><a class="card-link" href="/owner-v1/communications">Open Communications ↗</a></div>
           <div class="map-board"><div class="map-root">
             <div class="map-row"><div class="map-node external"><strong>Airbnb / Vrbo</strong><span>Guest message + thread URL</span></div><div class="map-node external"><strong>Booking.com / Houfy</strong><span>After message sources are verified</span></div><div class="map-node external built"><strong>tawk.to</strong><span>Direct website chat</span></div><div class="map-node external"><strong>Gmail</strong><span>Message intake</span></div></div>
             <div class="map-arrow">↓</div><div class="map-node core"><strong>Communications Intake</strong><span>detect → parse → de-duplicate → normalize</span></div>
@@ -102,21 +102,21 @@
         </section>
 
         <section id="reservations" class="card map-card" style="margin-bottom:16px">
-          <div class="card-head"><div><h3>3 · Reservation Flow</h3><p>Booking data drives operations, money, messages, documents and calendar visibility.</p></div><a class="card-link" href="/owner-v1/reservations">Open Reservations ↗</a></div>
+          <div class="card-head"><div><h3>3 · Reservation Flow</h3><p>Booking data drives operations, money, messages, documents and calendar visibility.</p></div><span class="badge warn">Partial</span><a class="card-link" href="/owner-v1/reservations">Open Reservations ↗</a></div>
           <div class="map-board"><div class="map-root">
             <div class="map-row"><div class="map-node external"><strong>OTA / Houfy Booking</strong><span>Channel reservation source</span></div><div class="map-node public built"><strong>Direct Booking</strong><span>CJT website / inquiry lifecycle</span></div></div>
             <div class="map-arrow">↓</div><div class="map-node core"><strong>Reservation Intake / Lifecycle</strong><span>dates · guest · channel · hold · contract · deposit · status</span></div>
             <div class="map-arrow">↓</div><div class="map-node data built"><strong>Reservation Record</strong><span>canonical CJT operating record</span></div>
-            <div class="map-arrow">↓</div><div class="map-row"><div class="map-node owner built"><strong>Reservations</strong></div><div class="map-node owner progress"><strong>Calendar</strong></div><div class="map-node owner progress"><strong>Financials</strong></div><div class="map-node owner built"><strong>Communications</strong></div><div class="map-node owner progress"><strong>Documents</strong></div></div>
+            <div class="map-arrow">↓</div><div class="map-row"><div class="map-node owner built"><strong>Reservations</strong></div><div class="map-node owner progress"><strong>Calendar</strong><span>Deferred</span></div><div class="map-node owner progress"><strong>Financials</strong><span>Deferred</span></div><div class="map-node owner progress"><strong>Communications</strong><span>Partial</span></div><div class="map-node owner progress"><strong>Documents</strong><span>Deferred</span></div></div>
           </div></div>
         </section>
 
         <section id="documents" class="card map-card" style="margin-bottom:16px">
-          <div class="card-head"><div><h3>4 · Cloud Document Intake</h3><p>Hands-off intake is preferred. CJT organizes files without becoming the primary file warehouse.</p></div><a class="card-link" href="/owner-v1/documents">Open Documents ↗</a></div>
+          <div class="card-head"><div><h3>4 · Cloud Document Intake</h3><p>Hands-off intake is preferred. CJT organizes files without becoming the primary file warehouse.</p></div><span class="badge">Deferred</span><a class="card-link" href="/owner-v1/documents">Open Documents ↗</a></div>
           <div class="map-board"><div class="map-root">
             <div class="map-row"><div class="map-node external"><strong>Email Attachment</strong></div><div class="map-node external"><strong>Signed Agreement</strong></div><div class="map-node external"><strong>Generated Report</strong></div><div class="map-node external"><strong>Watched Cloud Folder</strong></div></div>
             <div class="map-arrow">↓</div><div class="map-row"><div class="flow-stage"><strong>Detect</strong></div><div class="map-arrow">→</div><div class="flow-stage"><strong>Classify</strong><span>type · property · reservation · vendor · period</span></div><div class="map-arrow">→</div><div class="flow-stage cloud"><strong>Cloud Storage</strong><span>authoritative file</span></div><div class="map-arrow">→</div><div class="flow-stage store"><strong>CJT Index</strong><span>metadata · cloud ID · tags · relationships</span></div></div>
-            <div class="map-arrow">↓</div><div class="map-row"><div class="map-node owner progress"><strong>Documents</strong></div><div class="map-node owner progress"><strong>Reservations</strong></div><div class="map-node owner progress"><strong>Financials</strong></div><div class="map-node owner progress"><strong>Maintenance</strong></div></div>
+            <div class="map-arrow">↓</div><div class="map-row"><div class="map-node owner progress"><strong>Documents</strong><span>Deferred</span></div><div class="map-node owner progress"><strong>Reservations</strong><span>Partial</span></div><div class="map-node owner progress"><strong>Financials</strong><span>Deferred</span></div><div class="map-node owner progress"><strong>Maintenance</strong><span>Deferred</span></div></div>
           </div></div>
         </section>
 
@@ -134,11 +134,11 @@
         </section>
 
         <section id="identity" class="card map-card" style="margin-bottom:16px">
-          <div class="card-head"><div><h3>6 · Identity & Access Flow</h3><p>Identity determines which property and administrative data a user can reach.</p></div><span class="badge warn">Authorization expansion in progress</span></div>
+          <div class="card-head"><div><h3>6 · Identity & Access Flow</h3><p>Identity determines which property and administrative data a user can reach.</p></div><span class="badge warn">Partial</span></div>
           <div class="map-board"><div class="map-root">
-            <div class="map-row"><div class="map-node account built"><strong>Named Login</strong><span>email + password · 5 character minimum</span></div><div class="map-node external"><strong>Invitation / Recovery</strong><span>email-driven setup planned</span></div></div>
+            <div class="map-row"><div class="map-node account built"><strong>Named Login</strong><span>email + password · 5 character minimum</span></div><div class="map-node account progress"><strong>Password Recovery</strong><span>Built foundation; delivery hook remains configuration-dependent</span></div><div class="map-node external progress"><strong>Invitations</strong><span>Deferred</span></div></div>
             <div class="map-arrow">↓</div><div class="map-node core"><strong>Authentication</strong><span>verify identity → user-aware session</span></div>
-            <div class="map-arrow">↓</div><div class="map-row"><div class="map-node data built"><strong>owner_users</strong></div><div class="map-node data built"><strong>owner_sessions</strong></div><div class="map-node data progress"><strong>user_property_access</strong></div></div>
+            <div class="map-arrow">↓</div><div class="map-row"><div class="map-node data built"><strong>owner_users</strong></div><div class="map-node data built"><strong>owner_sessions</strong></div><div class="map-node data progress"><strong>user_property_access</strong><span>Deferred</span></div></div>
             <div class="map-arrow">↓</div><div class="map-row"><div class="map-node owner built"><strong>Owner Portal</strong></div><div class="map-node admin progress"><strong>Admin Portal</strong></div><div class="map-node account built"><strong>Account Center</strong></div></div>
           </div></div>
         </section>
@@ -153,15 +153,52 @@
           </div></div>
         </section>
 
+        <section id="security-scope" class="card map-card" style="margin-bottom:16px">
+          <div class="card-head"><div><h3>8 · Security Scope Decision</h3><p>Owner-directed security scope keeps property access expansion visible without treating deferred work as complete.</p></div><span class="badge">Recorded</span></div>
+          <div class="list">
+            <div class="list-row"><div><strong>1 · Property-scoped users &amp; permissions</strong><span>Assign users to properties and roles.</span></div><span class="badge">Deferred</span></div>
+            <div class="list-row"><div><strong>2 · Permission enforcement</strong><span>Role-aware navigation and API authorization.</span></div><span class="badge">Deferred</span></div>
+            <div class="list-row"><div><strong>3 · Invitations</strong><span>Email invitation and account activation.</span></div><span class="badge">Deferred</span></div>
+            <div class="list-row"><div><strong>4 · Password recovery</strong><span>One-time reset tokens, password replacement and session invalidation are built; automated delivery remains configuration-dependent.</span></div><span class="badge warn">Partial</span></div>
+            <div class="list-row"><div><strong>5 · Sessions &amp; audit</strong><span>Named-account session review/revocation and shared audit events.</span></div><span class="badge good">Built</span></div>
+          </div>
+        </section>
+
+        <section id="temporary-preview-access" class="card map-card" style="margin-bottom:16px">
+          <div class="card-head"><div><h3>9 · Temporary Preview Access</h3><p>The requested password-free preview window was time-limited and is no longer active.</p></div><span class="badge">Auto-expired</span></div>
+          <div class="list">
+            <div class="list-row"><div><strong>Preview window</strong><span>Sep 5, 2026, 8:25–9:25 PM Central; preview GET/read access was temporarily allowed.</span></div><span class="badge">Expired</span></div>
+            <div class="list-row"><div><strong>Production</strong><span>Production authentication was unchanged.</span></div><span class="badge good">Protected</span></div>
+            <div class="list-row"><div><strong>Data-changing actions</strong><span>POST/write operations remained session-protected because preview data could still point at production.</span></div><span class="badge">Guardrail</span></div>
+          </div>
+        </section>
+
+        <section id="direct-booking-engine" class="card map-card" style="margin-bottom:16px">
+          <div class="card-head"><div><h3>10 · Direct Booking Engine</h3><p>Quote, inquiry hold and owner lifecycle controls are working; payment and final confirmation remain acceptance work.</p></div><span class="badge warn">Partial</span></div>
+          <div class="map-board"><div class="map-root">
+            <div class="map-row"><div class="map-node public built"><strong>Guest Booking Page</strong><span>listing → dates → guests</span></div><div class="map-arrow">→</div><div class="map-node core built"><strong>/api/quote</strong><span>seasonal rates · minimum stay · cleaning · tax · payment timing</span></div><div class="map-arrow">→</div><div class="map-node core built"><strong>/api/inquiries</strong><span>recheck → 24-hour hold</span></div><div class="map-arrow">→</div><div class="map-node data built"><strong>reservations + booking_events</strong><span>booking record + quote snapshot</span></div><div class="map-arrow">→</div><div class="map-node owner built"><strong>Direct Booking Dashboard</strong><span>accept · adjust · extend · release</span></div></div>
+            <div class="map-arrow">↓</div><div class="map-row"><div class="map-node owner progress"><strong>Agreement / Deposit Milestones</strong><span>lifecycle controls exist; contract workflow remains incomplete</span></div><div class="map-arrow planned">···→</div><div class="map-node external progress"><strong>Stripe Checkout</strong><span>next transactional connection</span></div><div class="map-arrow planned">···→</div><div class="map-node public progress"><strong>Guest Confirmation</strong><span>final confirmation remains planned</span></div></div>
+            <div class="flow-note">The approved capacity is 14 guests, but the existing production reservation constraint still requires an additive migration before 13–14 guest requests can complete.</div>
+          </div></div>
+        </section>
+
+        <section id="guest-listing-experience" class="card map-card" style="margin-bottom:16px">
+          <div class="card-head"><div><h3>11 · Guest Listing Experience</h3><p>Listing-first booking UI follows the documented v1.6 structure without claiming acceptance for unfinished image, content or map work.</p></div><span class="badge warn">Partial</span></div>
+          <div class="map-board"><div class="map-root">
+            <div class="map-row"><div class="map-node public progress"><strong>Owner-approved six-photo manifest</strong><span>static public assets are present; anonymous visual acceptance remains pending</span></div><div class="map-arrow">→</div><div class="map-node public progress"><strong>Bedroom Cards</strong><span>owner folder names and public image matches; publishing model remains a snapshot</span></div><div class="map-arrow">→</div><div class="map-node public progress"><strong>Amenity Directory</strong><span>Booking.com-style grouping; every item still needs verified property-fact acceptance</span></div><div class="map-arrow">→</div><div class="map-node external progress"><strong>Review Summaries</strong><span>owner-provided Airbnb / Booking.com summaries; normalized all-source model is incomplete</span></div><div class="map-arrow">→</div><div class="map-node public progress"><strong>Guest Review Rail</strong><span>selected comments exist; no all-sources claim</span></div><div class="map-arrow">→</div><div class="map-node external progress"><strong>Grounded Map + Aerials</strong><span>visual leader-line implementation; controlled marker acceptance remains open</span></div><div class="map-arrow">→</div><div class="map-node public progress"><strong>Book Now</strong><span>booking controls remain under acceptance review</span></div></div>
+            <div class="flow-note">This board deliberately does not describe the old four-photo collage as restored. Image delivery remains Partial / Needs review under Issue #12 and merged PR #14; amenities, review-source aggregation and map implementation remain Partial per the repair backlog.</div>
+          </div></div>
+        </section>
+
         <section id="roadmap" class="card map-card">
-          <div class="card-head"><div><h3>8 · Build State</h3><p>Navigation, responsive layout and flow documentation move with the platform.</p></div><span class="badge good">Current</span></div>
-          <div class="summary-grid"><div class="summary-card"><span>Dashboard</span><b>Built</b></div><div class="summary-card"><span>Communications</span><b>Built shell</b></div><div class="summary-card"><span>Reservations</span><b>Built shell</b></div><div class="summary-card"><span>Accounts</span><b>Built foundation</b></div><div class="summary-card"><span>Navigation pane</span><b>Scrollable + flyout</b></div><div class="summary-card"><span>Mobile layout</span><b>Responsive fit</b></div><div class="summary-card"><span>Other modules</span><b>Under construction routes</b></div></div>
+          <div class="card-head"><div><h3>12 · Build State</h3><p>Navigation, responsive layout and flow documentation move with the platform.</p></div><span class="badge good">Current</span></div>
+          <div class="summary-grid"><div class="summary-card"><span>Dashboard</span><b>Built</b></div><div class="summary-card"><span>Communications</span><b>Partial</b></div><div class="summary-card"><span>Reservations</span><b>Partial</b></div><div class="summary-card"><span>Accounts</span><b>Partial</b></div><div class="summary-card"><span>Navigation pane</span><b>Built</b></div><div class="summary-card"><span>Mobile layout</span><b>Built</b></div><div class="summary-card"><span>Other modules</span><b>Deferred</b></div></div>
           <div class="list" style="margin-top:16px">
             <div class="list-row"><div><strong>Mobile viewport</strong><span>Portal content, cards, modules and maps are clamped to the device width. Dense maps stack vertically and wide tables scroll inside their own card instead of widening the page.</span></div><span class="badge good">Built</span></div>
             <div class="list-row"><div><strong>Navigation visibility</strong><span>The module list scrolls independently and the active item is kept in view.</span></div><span class="badge good">Built</span></div>
             <div class="list-row"><div><strong>Navigation return</strong><span>Chevron hides the pane; persistent Menu › flyout restores it from the current page.</span></div><span class="badge good">Built</span></div>
             <div class="list-row"><div><strong>No dead navigation</strong><span>Every visible navigation item opens a real route; unfinished routes say Under construction.</span></div><span class="badge good">Built</span></div>
-            <div class="list-row"><div><strong>Next</strong><span>Property-scoped permissions, invitations/recovery, then communications and document automation.</span></div><span class="badge warn">Build</span></div>
+            <div class="list-row"><div><strong>Next</strong><span>Booking-page acceptance, image delivery review, verified amenities/reviews, map acceptance, then payment/confirmation and the 14-guest migration.</span></div><span class="badge warn">Partial</span></div>
           </div>
         </section>
       </div>
