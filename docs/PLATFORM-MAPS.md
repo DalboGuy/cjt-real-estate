@@ -4,7 +4,7 @@ Status: **Living architecture documentation**
 
 Authoritative preview route: `/admin-v1/maps`
 
-Current version: **1.5 — 2026-09-05**
+Current version: **1.6 — 2026-09-05**
 
 ## Purpose
 
@@ -97,29 +97,31 @@ The published online pricing horizon runs through **2027-08-15**. Dates beyond t
 
 The guest UI, quote engine and inquiry validation recognize the owner-approved capacity of 14. The existing production `reservations` table was originally created with a 12-guest check constraint. Until an additive production migration is explicitly approved, requests for 13–14 guests return a clear migration-pending message rather than silently changing the production schema. This is a known release item, not a change in the approved property capacity.
 
-## Guest Listing Experience — v1.5
+## Guest Listing Experience — v1.6
 
 The guest UI follows the familiar interaction pattern of a modern vacation-rental listing while keeping CJT branding and content:
 
-`Listing header → original pre-redesign photo collage → property summary → highlights → description → room-folder widgets → Booking.com-style amenity directory → source-rating summaries + guest review rail → live map + grounded aerial rail → Hosted by CJT Realty → rules/cancellation`
+`Listing header → owner-selected six-photo collage → property summary → highlights → description → room-folder widgets → Booking.com-style amenity directory → source-rating summaries + guest review rail → live map + grounded aerial rail → Hosted by CJT Realty → rules/cancellation`
 
 Desktop keeps a sticky booking card beside the listing content. Directly beneath it, source-summary cards show the owner-provided review summaries. Mobile places the same summaries near the top of the listing. Dates open in a dedicated calendar modal; guest count is adjusted in a compact picker; live quote details remain beside the Book Now action. The full property photo collection remains available in the categorized gallery and fullscreen viewer.
 
-### v1.5 booking UI audit and corrections
+### v1.6 booking photo correction
 
-The Sep 5 booking-page review compared the current implementation directly against the owner's instructions and the pre-redesign source rather than relying on memory of the earlier page.
+The owner supplied the six exact Google Drive files that should be used in the opening booking-page collage. All six are publicly shared and the page now uses those files directly, in the supplied order.
 
-- The opening collage now uses the **exact four images present immediately before the redesign**: the exterior `35.jpg`, fire-pit `5.jpg`, hot-tub `8.jpg`, and living-room `14.jpg`. The previous pass incorrectly described a different five-photo mix as the pre-redesign gallery; that was corrected rather than inventing a fifth image.
-- The five owner-created Google Drive bedroom folders are connected using their **folder names as the guest-facing room names**: Master Bedroom, Boho Room, Glam Room, Flex Room, and Bunk Room.
+- Opening collage: `Copy of 8.jpg`, `30.jpg`, `Copy of 14.jpg`, `Copy of 5.jpg`, `Copy of 40.jpg`, and `Copy of 23.jpg`.
+- Desktop shows all six images: one large feature image on the left and five supporting images on the right.
+- Mobile keeps the compact listing pattern by showing the first three collage images while `Show all photos` remains available for the complete collection.
+- The five owner-created Google Drive bedroom folders remain connected using their **folder names as the guest-facing room names**: Master Bedroom, Boho Room, Glam Room, Flex Room, and Bunk Room.
 - Room-folder membership is taken from the files the owner placed in each folder. The new copied folder files are not consistently public, so the booking page uses the matching public originals from the pre-redesign master photo collection. Matches were made by image filename and exact file size; room identity was not guessed.
-- The room rail now shows a real cover image, room-folder name, photo count, and a focused room-photo modal. It no longer shows the previous generic `Primary bedroom / Bedroom 2 / Bedroom 3` labels.
-- The categorized `Show all photos` gallery still contains some references to later private Drive copies. A recovery map now swaps those failed URLs to the exact public master originals so bedroom/bathroom gallery items do not remain blank when viewed anonymously.
+- The room rail shows a real cover image, room-folder name, photo count, and a focused room-photo modal. It no longer shows the previous generic `Primary bedroom / Bedroom 2 / Bedroom 3` labels.
+- The categorized `Show all photos` gallery contains recovery mappings for known private Drive copies so bedroom/bathroom gallery items do not remain blank when viewed anonymously.
 - Amenities follow the owner-provided Booking.com organization: popular amenities first, followed by Parking, Internet, Kitchen, Bedroom, Bathroom, Living Area, Media & Technology, Room amenities, Pets, Accessibility, Outdoors, Spa, Food & Drink, Entertainment & Family Services, Miscellaneous, Safety & security, and Languages Spoken.
 - Review summaries sit directly beneath the desktop booking controls using the owner-provided source values: Airbnb **4.86/5 with 22 reviews and Guest favorite**, and Booking.com **9.4/10 Exceptional with 9 verified reviews**. Booking.com subratings shown are Cleanliness **9.6**, Location **9.8**, and Check-in **9.4**.
 - The main reviews section is titled `See what guests loved the most` and uses horizontally scrolling guest cards with source and source rating visible on each card. Room and Family topic controls filter only reviews whose text supports those themes.
 - The connected Houfy review feed remains available in a bounded scrolling window beneath the selected-review rail.
 - Location keeps the actual Sand & Sea Manor aerial photographs floating to the right of the map. A custom property marker stays fixed over the address while dynamically calculated SVG leader lines connect the marker to each aerial card.
-- Hover/focus highlights the corresponding leader line and property marker. Clicking an aerial card now only persists or clears that map relationship, matching the owner's selected interaction; it no longer inherits the generic photo-viewer click behavior.
+- Hover/focus highlights the corresponding leader line and property marker. Clicking an aerial card only persists or clears that map relationship; it does not inherit the generic photo-viewer click behavior.
 - The embedded map is kept centered on the address so the visual leader lines remain grounded. A separate `Open interactive map` control opens Google Maps for panning/navigation.
 - Mobile stacks the map and aerial cards and removes decorative leader lines where the desktop relationship would not remain visually clear.
 
