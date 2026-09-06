@@ -3,6 +3,7 @@ const {
   normalizeEmail,safeEqual,createPassword,verifyPassword,
   createSession,getSession,destroySession,requireNamedUser
 }=require('../lib/auth');
+const {writeAudit}=require('../lib/audit');
 
 function bodyOf(req){return typeof req.body==='string'?JSON.parse(req.body||'{}'):(req.body||{});}
 function publicUser(user){
@@ -54,6 +55,7 @@ module.exports=async function(req,res){
       `;
       const user=rows[0];
       await createSession(res,user.id);
+      await writeAudit({req,actorUserId:user.id,eventType:'auth.bootstrap_admin',targetType:'user',targetId:String(user.id)});
       return res.status(201).json({ok:true,user:{id:user.id,name:user.name,email:user.email,role:user.role,active:user.active,mustChangePassword:user.must_change_password}});
     }
 
@@ -69,10 +71,13 @@ module.exports=async function(req,res){
       const user=rows[0];
       if(!user||!user.active||!verifyPassword(password,user.password_salt,user.password_hash))return res.status(401).json({error:'invalid_credentials'});
       await createSession(res,user.id);
+      await writeAudit({req,actorUserId:user.id,eventType:'auth.login',targetType:'user',targetId:String(user.id)});
       return res.status(200).json({ok:true,user:{id:user.id,name:user.name,email:user.email,role:user.role,active:user.active,mustChangePassword:user.must_change_password}});
     }
 
     if(body.action==='logout'){
+      const session=await getSession(req);
+      if(session?.user)await writeAudit({req,actorUserId:session.user.id,eventType:'auth.logout',targetType:'user',targetId:String(session.user.id)});
       await destroySession(req,res);
       return res.status(200).json({ok:true});
     }
@@ -87,6 +92,7 @@ module.exports=async function(req,res){
       if(!rows.length||!verifyPassword(currentPassword,rows[0].password_salt,rows[0].password_hash))return res.status(401).json({error:'current_password_invalid'});
       const creds=createPassword(newPassword);
       await sql`UPDATE owner_users SET password_salt=${creds.salt},password_hash=${creds.hash},must_change_password=false,updated_at=now() WHERE id=${session.user.id}`;
+      await writeAudit({req,actorUserId:session.user.id,eventType:'auth.password_changed',targetType:'user',targetId:String(session.user.id)});
       return res.status(200).json({ok:true});
     }
 
