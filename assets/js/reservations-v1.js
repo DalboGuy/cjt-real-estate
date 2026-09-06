@@ -73,7 +73,7 @@ function quoteMarkup(r){
   const q=r.quote;
   if(!q)return '<div class="empty" style="margin-top:12px">No stored quote on this older reservation.</div>';
   const lines=(q.priceLines||[]).map(x=>`<div class="list-row"><div><strong>${esc(x.season)}</strong><span>${esc(x.nights)} night${Number(x.nights)===1?'':'s'} × ${esc(money(x.nightlyRate))}</span></div><b>${esc(money(x.subtotal))}</b></div>`).join('');
-  return `<div class="card" style="margin-top:14px;padding:14px;background:var(--cjt-soft)"><div class="card-head"><div><h3 style="font-size:1rem">Direct quote</h3><p>${esc(q.nights)} nights · average ${esc(money(q.averageNightly||Number(q.lodgingSubtotal||0)/Math.max(Number(q.nights||1),1)))}/night${q.ownerAdjusted?' · owner adjusted':''}</p></div><strong style="font-size:1.25rem">${esc(money(q.total))}</strong></div><div class="list compact-list">${lines}<div class="list-row"><div><strong>Lodging</strong></div><b>${esc(money(q.lodgingSubtotal))}</b></div><div class="list-row"><div><strong>Cleaning</strong></div><b>${esc(money(q.cleaningFee))}</b></div><div class="list-row"><div><strong>Tax</strong><span>${Math.round(Number(q.taxRate||0)*100)}%</span></div><b>${esc(money(q.taxes))}</b></div>${paymentMarkup(q)}</div></div>`;
+  return `<div class="card" style="margin-top:14px;padding:14px;background:var(--cjt-soft)"><div class="card-head"><div><h3 style="font-size:1rem">Direct quote</h3><p>${esc(q.nights)} nights · average ${esc(money(q.averageNightly||Number(q.lodgingSubtotal||0)/Math.max(Number(q.nights||1),1)))}/night${q.ownerAdjusted?' · owner adjusted':''}</p></div><strong style="font-size:1.25rem">${esc(money(q.total))}</strong></div><div class="list compact-list">${lines}<div class="list-row"><div><strong>Lodging</strong></div><b>${esc(money(q.lodgingSubtotal))}</b></div><div class="list-row"><div><strong>Cleaning</strong></div><b>${esc(money(q.cleaningFee))}</b></div><div class="list-row"><div><strong>Tax</strong><span>${Math.round(Number(q.taxRate||0)*100)}%</span></div><b>${esc(money(q.taxes))}</b></div>${paymentMarkup(q)}${r.payment?.verified?`<div class="list-row"><div><strong>Stripe payment</strong><span>${esc(r.payment.paymentType||'payment')} verified</span></div><b>${esc(money(r.payment.verifiedAmount))}</b></div>`:`<div class="list-row"><div><strong>Stripe payment</strong><span>Awaiting verified payment</span></div><span class="badge warn">Pending</span></div>`}</div></div>`;
 }
 
 function actionMarkup(r){
@@ -81,7 +81,7 @@ function actionMarkup(r){
   const primary=r.status==='inquiry_hold'?'<button class="btn btn-primary" data-action="accept_request">Accept Request</button>':'';
   const adjust=r.quote?'<button class="btn btn-secondary" data-quote="adjust">Adjust Quote</button>':'';
   const reject=!['confirmed'].includes(r.status)?'<button class="btn danger-btn" data-action="reject_request">Reject / Release</button>':'';
-  return `${primary}${adjust}<button class="btn btn-secondary" data-action="maintain_hold">Extend Hold</button><a class="btn btn-secondary" target="_blank" rel="noopener" href="${TEMPLATE}">Open Contract ↗</a><button class="btn btn-secondary" data-action="contract_sent">Contract Sent</button><button class="btn btn-secondary" data-action="contract_signed">Contract Signed</button><button class="btn btn-primary" data-action="deposit_received">Deposit Received</button>${reject}`;
+  return `${primary}${adjust}<button class="btn btn-secondary" data-action="maintain_hold">Extend Hold</button><a class="btn btn-secondary" target="_blank" rel="noopener" href="${TEMPLATE}">Open Contract ↗</a><button class="btn btn-secondary" data-action="contract_sent">Contract Sent</button><button class="btn btn-secondary" data-action="contract_signed">Contract Signed</button><button class="btn btn-secondary" data-payment="create">Create Payment Link</button>${r.payment?.verified?'': '<button class="btn btn-primary" data-action="deposit_received">Deposit Received</button>'}${reject}`;
 }
 
 function renderReservations(){
@@ -93,9 +93,21 @@ function renderReservations(){
     card.className='reservation-card';
     card.innerHTML=`<div class="reservation-grid"><div><span class="badge ${statusClass(r.status)}">${esc(statusLabel(r.status))}</span><h3>${esc(r.guest_name)} · ${esc(r.checkin)} → ${esc(r.checkout)}</h3><div class="reservation-meta">${esc(r.id)} · ${esc(r.guests)} guests · ${esc(r.guest_email)}${r.guest_phone?' · '+esc(r.guest_phone):''}</div>${r.notes?`<p class="reservation-meta">${esc(r.notes)}</p>`:''}<div class="reservation-badges">${hold}<span class="badge ${r.contract_sent_at?'good':''}">Contract ${r.contract_sent_at?'sent':'pending'}</span><span class="badge ${r.contract_signed_at?'good':''}">Signed ${r.contract_signed_at?'yes':'pending'}</span><span class="badge ${r.deposit_received_at?'good':''}">Deposit ${r.deposit_received_at?'received':'pending'}</span></div>${quoteMarkup(r)}</div><div><div class="reservation-meta">Created ${esc(fmt(r.created_at))}</div><div class="actions" style="margin-top:14px">${actionMarkup(r)}</div></div></div>`;
     card.querySelectorAll('button[data-action]').forEach(b=>b.onclick=()=>updateReservation(r.id,b.dataset.action));
+    card.querySelector('[data-payment="create"]')?.addEventListener('click',()=>createPaymentLink(r));
     card.querySelector('[data-quote="adjust"]')?.addEventListener('click',()=>adjustQuote(r));
     reservationList.appendChild(card);
   });
+}
+
+async function createPaymentLink(r){
+  try{
+    const response=await fetch('/api/payments',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'create_checkout',reservationId:r.id,email:r.guest_email,paymentType:'deposit'})});
+    const data=await response.json().catch(()=>({}));
+    if(!response.ok)throw new Error(data.message||data.error||'payment_link_failed');
+    const url=data.checkout?.url||'';
+    if(url&&navigator.clipboard)await navigator.clipboard.writeText(url);
+    notice(url?'Payment link created and copied to the clipboard.':'Payment link created.');
+  }catch(e){notice(`Payment link could not be created: ${e.message}`);}
 }
 
 async function updateReservation(id,status){
