@@ -3,6 +3,7 @@ const {
   assembleEvents,
   buildNightMap,
   occupancyForRange,
+  countsTowardOccupancy,
   reservationStatusBucket,
   monthBounds,
   addDays,
@@ -66,8 +67,13 @@ assert.strictEqual(reservationStatusBucket('inquiry_hold'), 'hold');
 assert.strictEqual(reservationStatusBucket('confirmed'), 'confirmed');
 assert.strictEqual(reservationStatusBucket('cancelled'), 'cancelled');
 
+assert.strictEqual(DEFAULT_SETTINGS.prepBufferEnabled, false);
+assert.strictEqual(DEFAULT_SETTINGS.showGuestNames, true);
+assert.strictEqual(DEFAULT_SETTINGS.showGuestContact, false);
+
 const reservations = [
   { id: 'DB-1', guest_name: 'Ada', guests: 4, guest_email: 'ada@example.com', guest_phone: '555', notes: 'late check-in', checkin: '2026-09-10', checkout: '2026-09-13', status: 'confirmed' },
+  { id: 'DB-HOLD', guest_name: 'Hold Guest', guests: 2, checkin: '2026-09-16', checkout: '2026-09-18', status: 'inquiry_hold' },
   { id: 'DB-2', guest_name: 'Cancelled', guests: 2, checkin: '2026-09-18', checkout: '2026-09-20', status: 'cancelled' }
 ];
 const otaEvents = [
@@ -96,11 +102,15 @@ assert.ok(nights['2026-09-10'].checkins.includes('direct:DB-1'));
 assert.ok(nights['2026-09-13'].checkouts.includes('direct:DB-1'));
 
 const occ = occupancyForRange(events, '2026-09-01', '2026-10-01');
-assert.ok(occ.booked >= 3);
 assert.strictEqual(occ.total, 30);
-assert.ok(!events.filter((e) => e.start === '2026-09-01').every((e) => e.occupancy), 'owner stay is excluded from occupancy');
-const ownerNightBooked = events.some((e) => e.occupancy && e.start <= '2026-09-01' && '2026-09-01' < e.end);
-assert.strictEqual(ownerNightBooked, false);
+assert.strictEqual(occ.booked, 9, 'holds+confirmed+OTA only; owner stay and manual block excluded');
+assert.strictEqual(occupancyForRange(events, '2026-09-01', '2026-09-03').booked, 0);
+assert.strictEqual(occupancyForRange(events, '2026-09-28', '2026-09-30').booked, 0);
+assert.strictEqual(occupancyForRange(events, '2026-09-16', '2026-09-18').booked, 2);
+assert.ok(!countsTowardOccupancy(events.find((e) => e.channel === 'owner_stay')));
+assert.ok(!countsTowardOccupancy(events.find((e) => e.channel === 'manual_block')));
+assert.ok(countsTowardOccupancy(events.find((e) => e.reservationId === 'DB-HOLD')));
+assert.ok(countsTowardOccupancy(events.find((e) => e.channel === 'airbnb')));
 
 const withPrep = assembleEvents({
   otaEvents,

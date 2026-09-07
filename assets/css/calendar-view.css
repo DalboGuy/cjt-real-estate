@@ -1,4 +1,6 @@
+.cal-occupancy{grid-template-columns:repeat(3,minmax(0,1fr))!important}
 .cal-occupancy .summary-card b{font-size:1.2rem}
+.cal-occupancy-note{margin:-4px 0 14px}
 .cal-sync{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 16px}
 .cal-sync-chip{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--cjt-line);border-radius:999px;padding:7px 11px;font-size:.78rem;font-weight:800}
 .cal-sync-chip i{width:8px;height:8px;border-radius:50%;background:#8aa}
@@ -61,6 +63,7 @@
 .swatch-prep{background:#b5812d}
 .swatch-other{background:#6b7d80}
 @media(max-width:850px){
+  .cal-occupancy{grid-template-columns:1fr!important}
   .cal-day{min-height:74px;padding:5px;border-radius:10px}
   .cal-week .cal-day{min-height:110px}
   .cal-pill{font-size:.58rem}

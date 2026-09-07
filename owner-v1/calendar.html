@@ -56,6 +56,7 @@
         <div class="section-title"><div><h2>Property calendar</h2><p>Direct holds, OTA iCal blocks, owner stays, and manual blackouts on one grid. Outbound push to live Airbnb/VRBO is paused; other sites import the CJT .ics link in Connections.</p></div><span class="status-pill" id="viewStatusPill">Loading…</span></div>
         <div id="moduleNotice" class="notice hidden"></div>
         <div id="occupancyStrip" class="summary-grid cal-occupancy"></div>
+        <p class="metric-label cal-occupancy-note">Occupancy counts guest holds, confirmed stays, and OTA blocks. Owner stays and manual blocks close nights but are not booked %.</p>
         <div id="syncStrip" class="cal-sync" aria-live="polite"></div>
         <div id="conflictBanner" class="notice cal-conflict hidden"></div>
 
@@ -76,9 +77,9 @@
         <div class="filter-row" id="channelFilters"></div>
         <div class="filter-row" id="statusFilters" style="margin-top:8px"></div>
         <div class="cal-privacy">
-          <label><input id="showGuestNames" type="checkbox" checked> Show guest names</label>
-          <label><input id="showGuestContact" type="checkbox"> Show guest contact</label>
-          <label><input id="prepBuffer" type="checkbox"> 1-day prep after checkout</label>
+          <label><input id="showGuestNames" type="checkbox" checked> Show guest names in details</label>
+          <label><input id="showGuestContact" type="checkbox"> Show guest phone/email</label>
+          <label><input id="prepBuffer" type="checkbox"> 1-day prep after checkout (off until you opt in)</label>
         </div>
         <div id="calendarLegend" class="cal-legend"></div>
         <div id="calendarMount"></div>
@@ -87,7 +88,7 @@
         <div class="module-grid" style="margin-top:18px">
           <section class="module-main">
             <div class="card">
-              <div class="card-head"><div><h3>Upcoming stays and blocks</h3><p>From today forward. Owner stays are listed but excluded from occupancy %.</p></div></div>
+              <div class="card-head"><div><h3>Upcoming stays and blocks</h3><p>From today forward. Owner stays and manual blocks are listed but excluded from occupancy %.</p></div></div>
               <div id="upcomingList" class="list compact-list"></div>
             </div>
           </section>

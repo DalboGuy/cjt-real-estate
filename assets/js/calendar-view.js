@@ -123,9 +123,9 @@
     const next90=snapshot.occupancy.next90;
     const thisMonth=snapshot.range.year===Number(snapshot.range.today.slice(0,4))&&snapshot.range.month===Number(snapshot.range.today.slice(5,7));
     const cards=[
-      [thisMonth?'This month':'Viewed month', `${viewed.pct}%`, `${viewed.booked} of ${viewed.total} nights booked (guest occupancy)`],
-      ['Next 30 days', `${next30.pct}%`, `${next30.booked} of ${next30.total} nights`],
-      ['Next 90 days', `${next90.pct}%`, `${next90.booked} of ${next90.total} nights`]
+      [thisMonth?'This month':'Viewed month', `${viewed.pct}%`, `${viewed.booked} of ${viewed.total} guest nights`],
+      ['Next 30 days', `${next30.pct}%`, `${next30.booked} of ${next30.total} guest nights`],
+      ['Next 90 days', `${next90.pct}%`, `${next90.booked} of ${next90.total} guest nights`]
     ];
     el.innerHTML=cards.map(c=>`<div class="summary-card"><span>${esc(c[0])}</span><b>${esc(c[1])}</b><span>${esc(c[2])}</span></div>`).join('');
   }
