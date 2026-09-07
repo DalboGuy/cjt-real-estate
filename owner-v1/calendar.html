@@ -55,7 +55,21 @@
       <div class="content">
         <div class="section-title"><div><h2>Property calendar</h2><p>One surface for nights, stays, and blocks. Outbound Airbnb/VRBO push stays paused.</p></div><span class="status-pill" id="viewStatusPill">Loading…</span></div>
         <div id="moduleNotice" class="notice hidden"></div>
+        <div class="cal-ops" id="calOps">
+          <button type="button" class="cal-sync-status" id="syncStatusBtn" aria-expanded="false" aria-controls="syncDetails">
+            <span id="syncStatusFull">Checking calendars…</span>
+            <span id="syncStatusCompact" class="cal-sync-compact">…</span>
+          </button>
+          <div class="cal-ops-actions">
+            <button class="btn btn-primary" id="syncCalendarsBtn" type="button">
+              <span class="cal-sync-label-full">Sync Calendars</span>
+              <span class="cal-sync-label-short">Sync</span>
+            </button>
+            <button class="btn btn-secondary" id="blockDatesBtn" type="button">+ Block Dates</button>
+          </div>
+        </div>
         <div id="occupancyStrip" class="cal-occupancy-inline" aria-live="polite"></div>
+        <p class="cal-occ-secondary" id="occSecondary"></p>
         <div id="conflictBanner" class="notice cal-conflict hidden"></div>
 
         <div class="cal-chrome">
@@ -123,31 +137,9 @@
         <div id="calendarMount"></div>
         <div id="calendarEmpty" class="empty cal-empty-note hidden">No stays or blocks in this view. Open nights stay bookable on the guest page unless an OTA feed is missing.</div>
 
-        <div class="module-grid" style="margin-top:18px">
-          <section class="module-main">
-            <div class="card">
-              <div class="card-head"><div><h3>Upcoming stays and blocks</h3><p>From today forward. Owner stays and manual blocks are listed but excluded from occupancy %.</p></div></div>
-              <div id="upcomingList" class="list compact-list cal-upcoming"></div>
-            </div>
-          </section>
-          <aside class="module-side">
-            <div class="card">
-              <div class="card-head"><div><h3>Close nights</h3><p>Manual blackout or owner personal stay. End date is the morning the home is available again.</p></div><span class="badge">Sand &amp; Sea Manor</span></div>
-              <form id="blockForm" class="cal-form">
-                <label>Type
-                  <select id="blockKind" required>
-                    <option value="manual_block">Manual block</option>
-                    <option value="owner_stay">Owner stay</option>
-                  </select>
-                </label>
-                <label>Start (check-in / first closed night)<input id="blockStart" type="date" required></label>
-                <label>Available again (check-out)<input id="blockEnd" type="date" required></label>
-                <label>Notes <input id="blockNotes" maxlength="500" placeholder="Maintenance, family stay…"></label>
-                <button class="btn btn-primary" type="submit">Save on calendar</button>
-              </form>
-              <p class="metric-label" style="margin-top:12px">These nights are blocked on the guest booking calendar. They are also added to the exported CJT .ics so other sites can import them. Pricing overlay is not in this view.</p>
-            </div>
-          </aside>
+        <div class="card cal-agenda-card">
+          <div class="card-head"><div><h3>Operations agenda</h3><p>Real check-ins, checkouts, owner stays, and blocks from today forward. Owner stays and manual blocks stay out of occupancy %.</p></div></div>
+          <div id="upcomingList" class="list compact-list cal-upcoming"></div>
         </div>
 
         <details class="cal-connections">
@@ -176,12 +168,12 @@
             </article>
 
             <article class="card span-12" id="refreshAllWidget">
-              <div class="card-head"><div><h3>Refresh all links</h3><p>Re-check every saved calendar and env feed.</p></div><span class="badge" id="refreshAllBadge">Ready</span></div>
-              <div class="metric-label" id="refreshAllMeta">Last refresh: not run yet on this page.</div>
+              <div class="card-head"><div><h3>Test all connections</h3><p>Probe saved and env iCal URLs for connection health. This does not reload the calendar grid — use Sync Calendars for a full data refresh.</p></div><span class="badge" id="refreshAllBadge">Ready</span></div>
+              <div class="metric-label" id="refreshAllMeta">Last connection test: not run yet on this page.</div>
               <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-                <button id="refreshAllLinks" class="btn btn-secondary" type="button">Refresh all links</button>
-                <button id="refreshFeeds" class="btn btn-secondary" type="button" hidden>Refresh</button>
-                <span class="meta" id="refreshAllHint">Does not change saved URLs — only re-tests them.</span>
+                <button id="refreshAllLinks" class="btn btn-secondary" type="button">Test all connections</button>
+                <button id="refreshFeeds" class="btn btn-secondary" type="button" hidden>Test connections</button>
+                <span class="meta" id="refreshAllHint">Does not change saved URLs. Connection probe only — not the primary calendar sync.</span>
               </div>
             </article>
 
@@ -204,6 +196,26 @@
     <h2 id="drawerTitle">Night detail</h2>
     <p id="drawerMeta" class="metric-label"></p>
     <div id="drawerBody"></div>
+  </aside>
+
+  <div id="blockDrawerBackdrop" class="cal-drawer-backdrop hidden"></div>
+  <aside id="blockDrawer" class="cal-drawer hidden" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="blockDrawerTitle">
+    <button class="btn btn-secondary" id="blockDrawerClose" type="button">Close</button>
+    <h2 id="blockDrawerTitle">Block dates</h2>
+    <p class="metric-label">Manual blackout or owner personal stay. Available again is the morning the home can take guests.</p>
+    <form id="blockForm" class="cal-form">
+      <label>Type
+        <select id="blockKind" required>
+          <option value="manual_block">Manual block</option>
+          <option value="owner_stay">Owner stay</option>
+        </select>
+      </label>
+      <label>Start (check-in / first closed night)<input id="blockStart" type="date" required></label>
+      <label>Available again (check-out / end)<input id="blockEnd" type="date" required></label>
+      <label>Notes <input id="blockNotes" maxlength="500" placeholder="Maintenance, family stay…"></label>
+      <button class="btn btn-primary" type="submit">Save on calendar</button>
+    </form>
+    <p class="metric-label" style="margin-top:12px">These nights are blocked on the guest booking calendar and added to the exported CJT .ics. Pricing overlay is not in this view.</p>
   </aside>
 
   <script src="/assets/js/owner-shell.js"></script>

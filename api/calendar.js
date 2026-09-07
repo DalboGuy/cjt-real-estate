@@ -1,35 +1,25 @@
 const { getGuestBlockedDates } = require('../lib/calendar-view');
-const { getActiveReservations } = require('../lib/db');
-const { eachDate } = require('../lib/availability');
 
 module.exports=async function(req,res){
-  const all=new Set();
-  const sources=[];
-  let otaConfigError=null;
   try{
     const merged=await getGuestBlockedDates();
-    merged.dates.forEach(d=>all.add(d));
-    sources.push(...(merged.sources||[]));
+    res.setHeader('Cache-Control','s-maxage=60, stale-while-revalidate=180');
+    return res.status(200).json({
+      blockedDates:[...merged.dates].sort(),
+      sources:merged.sources||[],
+      checkedAt:new Date().toISOString()
+    });
   }catch(e){
-    otaConfigError=e.code==='OTA_FEED_CONFIG_MISSING'?e:null;
-    sources.push({name:'ota',ok:false,error:e.message,missingEnv:e.missingEnv});
-    try{
-      const reservations=await getActiveReservations();
-      for(const r of reservations) eachDate(r.checkin,r.checkout).forEach(d=>all.add(d));
-      sources.push({name:'direct',ok:true,count:reservations.length});
-    }catch(directError){
-      sources.push({name:'direct',ok:false,error:directError.message});
-    }
-  }
-  res.setHeader('Cache-Control','s-maxage=60, stale-while-revalidate=180');
-  if(otaConfigError){
+    const missing=e.code==='OTA_FEED_CONFIG_MISSING';
+    const unverified=e.code==='OTA_AVAILABILITY_UNVERIFIED';
+    res.setHeader('Cache-Control','no-store');
     return res.status(503).json({
       blockedDates:[],
-      sources,
-      error:'ota_calendar_configuration_missing',
-      missingEnv:otaConfigError.missingEnv,
+      sources:e.sources||[{name:'ota',ok:false,error:e.message,missingEnv:e.missingEnv}],
+      error:missing?'ota_calendar_configuration_missing':(unverified?'ota_availability_unverified':'calendar_unavailable'),
+      message:e.message,
+      missingEnv:e.missingEnv,
       checkedAt:new Date().toISOString()
     });
   }
-  res.status(200).json({blockedDates:[...all].sort(),sources,checkedAt:new Date().toISOString()});
 };

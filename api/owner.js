@@ -185,12 +185,14 @@ module.exports=async function(req,res){
       return res.status(200).json({ok:true, id});
     }
 
-    if(req.method==='POST'&&body.action==='calendar_view'){
+    if(req.method==='POST'&&(body.action==='calendar_view'||body.action==='calendar_sync')){
       const view=String(body.view||'month');
       const year=Number(body.year)||undefined;
       const month=Number(body.month)||undefined;
       const focusDate=validIsoDate(body.focusDate)?body.focusDate:undefined;
-      const snapshot=await buildOwnerCalendarView({view,year,month,focusDate});
+      const syncMode=body.action==='calendar_sync'?'full_refresh':'view';
+      const snapshot=await buildOwnerCalendarView({view,year,month,focusDate,syncMode});
+      res.setHeader('Cache-Control','no-store');
       return res.status(200).json(snapshot);
     }
 

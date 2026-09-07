@@ -9,7 +9,22 @@ module.exports=async function(req,res){
     const guests=Number(req.query?.guests||1);
     const quote=await quoteStay(checkin,checkout,guests);
 
-    const blocked=await getGuestBlockedDates();
+    let blocked;
+    try{
+      blocked=await getGuestBlockedDates();
+    }catch(e){
+      if(e.code==='OTA_AVAILABILITY_UNVERIFIED'||e.code==='OTA_FEED_CONFIG_MISSING'){
+        res.setHeader('Cache-Control','no-store');
+        return res.status(503).json({
+          error:e.code,
+          message:e.code==='OTA_FEED_CONFIG_MISSING'
+            ?'Direct booking is paused until calendar feeds are configured.'
+            :'Required OTA availability could not be verified. Direct booking is paused until those calendars can be checked.',
+          sources:e.sources||[]
+        });
+      }
+      throw e;
+    }
     const requested=eachDate(checkin,checkout);
     if(requested.some(d=>blocked.dates.has(d))){
       return res.status(409).json({error:'dates_unavailable',message:'One or more requested nights are no longer available.'});

@@ -63,13 +63,13 @@
     }
   }
 
-  async function load(){
+  async function load(opts={}){
     const r=await fetch('/api/owner',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'calendar_feeds_status'})});
     const d=await r.json().catch(()=>({}));
     if(r.status===401)return;
     if(!r.ok)throw new Error(d.message||d.error||'Could not load calendar connections');
     render(d);
-    window.dispatchEvent(new CustomEvent('cjt-calendar-feeds-updated'));
+    if(!opts.probeOnly) window.dispatchEvent(new CustomEvent('cjt-calendar-feeds-updated'));
   }
 
   async function refreshAll(){
@@ -77,15 +77,15 @@
     const badge=document.getElementById('refreshAllBadge');
     const meta=document.getElementById('refreshAllMeta');
     if(btn)btn.disabled=true;
-    if(badge){badge.textContent='Refreshing…';badge.className='badge warn';}
+    if(badge){badge.textContent='Testing…';badge.className='badge warn';}
     try{
-      await load();
-      if(badge){badge.textContent='Updated';badge.className='badge good';}
-      if(meta)meta.textContent=`Last refresh: ${new Date().toLocaleString()}`;
-      showNotice('All calendar links refreshed');
+      await load({probeOnly:true});
+      if(badge){badge.textContent='Tested';badge.className='badge good';}
+      if(meta)meta.textContent=`Last connection test: ${new Date().toLocaleString()}`;
+      showNotice('Connection test finished — calendar grid was not reloaded. Use Sync Calendars for a full refresh.');
     }catch(e){
       if(badge){badge.textContent='Failed';badge.className='badge warn';}
-      showNotice(e.message||'Refresh failed');
+      showNotice(e.message||'Connection test failed');
     }finally{
       if(btn)btn.disabled=false;
     }

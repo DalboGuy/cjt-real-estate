@@ -53,7 +53,12 @@ function renderFilters(){
   document.querySelectorAll('[data-filter]').forEach(b=>b.onclick=()=>{currentCommunicationFilter=b.dataset.filter;renderFilters();renderList()});
 }
 
+function reservationFromUrl(){
+  try{return new URLSearchParams(location.search).get('reservation')||'';}catch{return '';}
+}
+
 function filteredMessages(){
+  const param=reservationFromUrl();
   const q=document.getElementById('communicationSearch').value.trim().toLowerCase();
   return communicationsMessages.filter(m=>{
     const p=String(m.platform||'').toLowerCase();
@@ -61,6 +66,9 @@ function filteredMessages(){
     const ok=currentCommunicationFilter==='all'||platformMatch||(currentCommunicationFilter==='open'&&m.status==='open')||(currentCommunicationFilter==='archived'&&m.status==='archived');
     if(!ok)return false;
     if(!q)return true;
+    if(param && q===param.toLowerCase()){
+      return String(m.reservation_ref||'').toLowerCase()===q;
+    }
     return [m.guest_name,m.subject,m.snippet,m.body,m.reservation_ref,m.platform].join(' ').toLowerCase().includes(q);
   });
 }
@@ -112,6 +120,9 @@ async function loadCommunications(reselectId){
     const [d,dashboard]=await Promise.all([commApi(),dashboardApi()]);
     communicationsMessages=d.messages||[];
     showApp();
+    const reservationId=reservationFromUrl();
+    const search=document.getElementById('communicationSearch');
+    if(reservationId&&search&&!search.value) search.value=reservationId;
     renderSummary(d.counts||[]);
     renderFilters();
     renderList();

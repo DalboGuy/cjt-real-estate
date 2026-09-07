@@ -39,6 +39,9 @@ function isMtdRow(row){
   const key=chicagoParts().key;
   return Boolean(key)&&day.startsWith(`${key}-`);
 }
+function bookingFromUrl(){
+  try{return new URLSearchParams(location.search).get('booking')||'';}catch{return '';}
+}
 function reservationHref(id){return `/owner-v1/reservations?booking=${encodeURIComponent(id||'')}`}
 function countOrDash(v){return v==null||v===''?'—':String(v)}
 
@@ -162,6 +165,8 @@ async function loadFinancials(){
     const data=await financialsApi();
     financialRows=data.bookings||[];
     showApp();
+    const focusId=bookingFromUrl();
+    if(focusId&&financialSearch&&!financialSearch.value) financialSearch.value=focusId;
     renderSummary(data.summary||{});
     renderBookings();
     document.getElementById('lastChecked').textContent=`Updated ${new Date(data.checkedAt||Date.now()).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})}`;

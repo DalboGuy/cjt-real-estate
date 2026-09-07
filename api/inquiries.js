@@ -31,7 +31,20 @@ module.exports=async function(req,res){
       return res.status(e.status||422).json({error:e.code||'pricing_unavailable',message:e.message||'Pricing is not available for those dates.'});
     }
 
-    const {dates:blockedDates}=await getGuestBlockedDates();
+    let blockedDates;
+    try{
+      ({dates:blockedDates}=await getGuestBlockedDates());
+    }catch(e){
+      if(e.code==='OTA_AVAILABILITY_UNVERIFIED'||e.code==='OTA_FEED_CONFIG_MISSING'){
+        return res.status(503).json({
+          error:e.code,
+          message:e.code==='OTA_FEED_CONFIG_MISSING'
+            ?'Direct booking is paused until calendar feeds are configured.'
+            :'Required OTA availability could not be verified. Direct booking is paused until those calendars can be checked.'
+        });
+      }
+      throw e;
+    }
     const requested=eachDate(checkin,checkout);
     if(requested.some(d=>blockedDates.has(d))){
       return res.status(409).json({error:'dates_unavailable',message:'One or more requested dates are no longer available.'});

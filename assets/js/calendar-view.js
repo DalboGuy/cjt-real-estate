@@ -26,12 +26,17 @@
   let statusFilter='all';
   let savingSettings=false;
   let loadTimer=null;
+  let syncing=false;
+  let lastFullSyncAt=null;
+  let syncButtonReset=null;
 
   const noticeEl=document.getElementById('moduleNotice');
   const mount=document.getElementById('calendarMount');
   const drawer=document.getElementById('nightDrawer');
   const drawerBackdrop=document.getElementById('drawerBackdrop');
   const drawerBody=document.getElementById('drawerBody');
+  const blockDrawer=document.getElementById('blockDrawer');
+  const blockDrawerBackdrop=document.getElementById('blockDrawerBackdrop');
 
   function esc(v=''){return String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
   function showNotice(text,ms=4500){
@@ -156,64 +161,195 @@
   }
 
   function viewedOccupancy(){
-    if(!snapshot)return {pct:0,booked:0,total:0};
+    if(!snapshot)return {pct:0,booked:0,total:0,arrivals:0,departures:0};
     if(view==='year') return snapshot.occupancy.viewedYear||snapshot.occupancy.viewedMonth;
-    if(view==='week'||view==='day') return snapshot.occupancy.viewedWeek||snapshot.occupancy.viewedMonth;
+    if(view==='week') return snapshot.occupancy.viewedWeek||snapshot.occupancy.viewedMonth;
+    if(view==='day') return snapshot.occupancy.viewedDay||snapshot.occupancy.viewedMonth;
     return snapshot.occupancy.viewedMonth;
   }
 
   function viewedOccupancyLabel(){
     if(view==='year') return snapshot&&year===Number(snapshot.range.today.slice(0,4))?'This year':'Viewed year';
-    if(view==='week'||view==='day') return 'This week';
+    if(view==='week') return 'This week';
+    if(view==='day') return 'This day';
     const thisMonth=snapshot&&snapshot.range.year===Number(snapshot.range.today.slice(0,4))&&snapshot.range.month===Number(snapshot.range.today.slice(5,7));
     return thisMonth?'This month':'Viewed month';
   }
 
   function renderOccupancy(){
     const el=document.getElementById('occupancyStrip');
+    const secondary=document.getElementById('occSecondary');
     if(!el||!snapshot)return;
     const viewed=viewedOccupancy();
     const next30=snapshot.occupancy.next30;
     const next90=snapshot.occupancy.next90;
     const cards=[
-      [viewedOccupancyLabel(), `${viewed.pct}%`, `${viewed.booked} of ${viewed.total} guest nights`],
-      ['Next 30 days', `${next30.pct}%`, `${next30.booked} of ${next30.total} guest nights`],
-      ['Next 90 days', `${next90.pct}%`, `${next90.booked} of ${next90.total} guest nights`]
+      ['Guest occupancy', `${viewed.pct}%`, viewedOccupancyLabel()],
+      ['Guest nights', String(viewed.booked||0), `${viewed.booked||0} of ${viewed.total||0}`],
+      ['Arrivals', String(viewed.arrivals||0), viewedOccupancyLabel()],
+      ['Departures', String(viewed.departures||0), viewedOccupancyLabel()]
     ];
     el.innerHTML=cards.map(c=>`<span class="cal-occ-item"><span>${esc(c[0])}</span><b>${esc(c[1])}</b><span class="cal-occ-sub">${esc(c[2])}</span></span>`).join('');
+    if(secondary){
+      secondary.textContent=`Next 30: ${next30.pct}% (${next30.booked} of ${next30.total}) · Next 90: ${next90.pct}% (${next90.booked} of ${next90.total})`;
+      secondary.title=`Next 30 days ${next30.pct}% guest occupancy · Next 90 days ${next90.pct}%`;
+    }
   }
 
   function sourceLabel(s){
-    if(s.duplicateOf) return `${s.label||s.name} · same URL as ${s.duplicateOf}`;
-    if(s.origin==='env') return `${s.label||s.name} · env`;
-    if(s.origin==='owner') return `${s.label||s.name} · imported`;
-    return s.label||s.name;
+    if(s.duplicateOf) return `${s.name||s.label} · same URL as ${s.duplicateOf}`;
+    if(s.origin==='env') return `${s.name||s.label} · env`;
+    if(s.origin==='owner') return `${s.name||s.label} · imported`;
+    if(s.kind==='database'||s.live) return `${s.name||'Direct / CJT'} · database`;
+    return s.name||s.label||'Calendar';
+  }
+
+  function relativeChecked(iso){
+    if(!iso) return null;
+    const ms=Date.now()-new Date(iso).getTime();
+    if(!Number.isFinite(ms)||ms<0) return null;
+    if(ms<45000) return 'just now';
+    if(ms<3600000) return `${Math.max(1,Math.round(ms/60000))}m ago`;
+    const d=new Date(iso);
+    const today=new Date();
+    if(d.toDateString()===today.toDateString()){
+      return `checked ${d.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})}`;
+    }
+    return `checked ${d.toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}`;
+  }
+
+  function formatCheckedAt(iso){
+    if(!iso) return null;
+    return new Date(iso).toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
+  }
+
+  function icalSources(){
+    return (snapshot?.sync?.sources||[]).filter(s=>s.kind!=='database'&&!s.duplicateOf);
+  }
+
+  function setSyncButton(state){
+    const btn=document.getElementById('syncCalendarsBtn');
+    if(!btn)return;
+    btn.disabled=state==='syncing';
+    btn.setAttribute('aria-busy',state==='syncing'?'true':'false');
+    const labels={
+      idle:{full:'Sync Calendars',short:'Sync'},
+      syncing:{full:'Syncing…',short:'Syncing…'},
+      synced:{full:'Synced',short:'Synced'},
+      issue:{full:'Sync issue',short:'Sync issue'}
+    };
+    const t=labels[state]||labels.idle;
+    const full=btn.querySelector('.cal-sync-label-full');
+    const short=btn.querySelector('.cal-sync-label-short');
+    if(full) full.textContent=t.full;
+    if(short) short.textContent=t.short;
+    if(!full&&!short) btn.textContent=t.full;
+  }
+
+  function syncStatusCopy(){
+    const configError=snapshot?.sync?.configError;
+    const unique=(snapshot?.sync?.sources||[]).filter(s=>!s.duplicateOf);
+    const feeds=icalSources();
+    const when=relativeChecked(lastFullSyncAt||snapshot?.sync?.checkedAt)||'—';
+    if(configError||!feeds.length){
+      return {
+        full:'⚠ Calendar sources not configured',
+        compact:'⚠ Not configured',
+        warn:true
+      };
+    }
+    const ok=feeds.filter(s=>s.ok!==false).length;
+    const fail=feeds.filter(s=>s.ok===false);
+    if(!fail.length){
+      if(when==='just now'){
+        return {full:'✓ All calendars synced · just now',compact:'✓ Synced just now',warn:false};
+      }
+      return {
+        full:`✓ ${unique.length} source${unique.length===1?'':'s'} healthy · ${when}`,
+        compact:`✓ Synced ${when.replace(/^checked /,'')}`,
+        warn:false
+      };
+    }
+    const name=fail[0].name||fail[0].channel||'A calendar';
+    return {
+      full:`⚠ ${ok} of ${feeds.length} calendars synced · ${name} needs attention`,
+      compact:`⚠ ${ok}/${feeds.length} synced`,
+      warn:true
+    };
+  }
+
+  function sourceStatusLabel(s){
+    if(s.kind==='database'||s.live) return 'Live';
+    if(s.duplicateOf) return 'Duplicate';
+    if(s.ok===false) return 'Issue';
+    return 'Connected';
   }
 
   function renderSync(){
     const el=document.getElementById('syncStrip');
     const summary=document.getElementById('syncSummary');
     const pill=document.getElementById('viewStatusPill');
-    if(!el||!snapshot)return;
+    const full=document.getElementById('syncStatusFull');
+    const compact=document.getElementById('syncStatusCompact');
+    const statusBtn=document.getElementById('syncStatusBtn');
+    if(!snapshot)return;
     const sources=snapshot.sync.sources||[];
-    const checked=snapshot.sync.checkedAt?new Date(snapshot.sync.checkedAt).toLocaleString():'—';
-    const ok=sources.filter(s=>s.ok!==false&&!s.duplicateOf).length;
-    const fail=sources.filter(s=>s.ok===false).length;
-    if(pill) pill.textContent=snapshot.sync.configError?'Feeds missing':`${ok} source${ok===1?'':'s'}`;
-    if(summary){
-      if(!sources.length) summary.textContent='No calendar sources yet';
-      else if(fail) summary.textContent=`${ok} connected · ${fail} issue${fail===1?'':'s'} · ${checked}`;
-      else summary.textContent=`${ok} source${ok===1?'':'s'} · checked ${checked}`;
+    const copy=syncStatusCopy();
+    const feeds=icalSources();
+    const fail=feeds.filter(s=>s.ok===false).length;
+    if(pill) pill.textContent=snapshot.sync.configError?'Feeds missing':(fail?`${fail} issue${fail===1?'':'s'}`:`${feeds.length+1} source${feeds.length===0?'':'s'}`);
+    if(summary) summary.textContent='Source details';
+    if(full) full.textContent=copy.full;
+    if(compact) compact.textContent=copy.compact;
+    if(statusBtn){
+      statusBtn.classList.toggle('warn',copy.warn);
+      statusBtn.classList.toggle('ok',!copy.warn);
     }
+    if(!el)return;
     if(!sources.length){
-      el.innerHTML='<span class="cal-sync-chip fail"><i></i>No iCal sources yet. Guest booking stays fail-closed until a feed is connected.</span>';
+      el.innerHTML='<div class="cal-source-list"><div class="cal-source"><div class="cal-source-head"><strong>No calendar sources</strong><span class="badge warn">Issue</span></div><div class="cal-source-meta">Guest booking stays fail-closed until a feed is connected.</div></div></div>';
       return;
     }
+    el.className='cal-source-list';
     el.innerHTML=sources.map(s=>{
-      const cls=s.duplicateOf?'dup':(s.ok===false?'fail':'ok');
-      const detail=s.ok===false?(s.error||'failed'):(s.skipped?'deduped':`${s.count||0} nights`);
-      return `<span class="cal-sync-chip ${cls}"><i></i>${esc(sourceLabel(s))} · ${esc(detail)}</span>`;
+      const status=sourceStatusLabel(s);
+      const badge=s.ok===false?'warn':(s.duplicateOf?'':'good');
+      const lastChecked=formatCheckedAt(s.checkedAt||snapshot.sync.checkedAt);
+      const lastOk=s.lastSuccessfulAt?formatCheckedAt(s.lastSuccessfulAt):null;
+      const detail=s.kind==='database'||s.live
+        ? 'Live / database'
+        : (s.ok===false?(s.error||'Could not fetch this feed'):`${s.nights||s.count||0} nights`);
+      const successLine=(!s.live&&lastOk)?`<div class="cal-source-meta">Last successful: ${esc(lastOk)}</div>`:'';
+      const checkedLine=lastChecked?`<div class="cal-source-meta">Last checked: ${esc(s.live?'live read · '+lastChecked:lastChecked)}</div>`:'<div class="cal-source-meta">Last successful: not stored</div>';
+      return `<article class="cal-source">
+        <div class="cal-source-head"><strong>${esc(sourceLabel(s))}</strong><span class="badge ${badge}">${esc(status)}</span></div>
+        <div class="cal-source-meta">${esc(detail)}</div>
+        ${checkedLine}
+        ${s.ok===false?'':successLine}
+      </article>`;
     }).join('');
+  }
+
+  function moduleLinksHtml(ev){
+    if(ev?.reservationId){
+      const id=encodeURIComponent(ev.reservationId);
+      return `<div class="cal-module-links">
+        <a href="/owner-v1/reservations?booking=${id}">View Reservation</a>
+        <a href="/owner-v1/financials?booking=${id}">View Financials</a>
+        <a href="/owner-v1/communications?reservation=${id}">View Guest Messages</a>
+      </div>`;
+    }
+    if(ev && (ev.kind==='ota'||ev.origin==='ota'||ev.origin==='env'||(ev.origin==='owner'&&ev.kind==='ota'))){
+      return '<p class="cal-feed-note">Detailed reservation record is not available from this calendar feed.</p>';
+    }
+    return '';
+  }
+
+  function turnBadges(date,ev){
+    const bits=[];
+    if(ev.start===date) bits.push('<span class="cal-turn cal-turn-in">Check-in</span>');
+    if(ev.end===date) bits.push('<span class="cal-turn cal-turn-out">Check-out</span>');
+    return bits.join(' ');
   }
 
   function renderConflicts(){
@@ -319,8 +455,10 @@
       const ci=night.checkins.filter(id=>eventVisible(map.get(id)||{})).length;
       const co=night.checkouts.filter(id=>eventVisible(map.get(id)||{})).length;
       const pills=evs.filter(ev=>ev.start<=date&&date<ev.end).slice(0,view==='week'?6:3);
+      const ciLabel=view==='week'?(ci?`<span class="cal-ci">Check-in</span>`:''):(ci?`<span class="cal-ci">CI</span>`:'');
+      const coLabel=view==='week'?(co?`<span class="cal-co">Check-out</span>`:''):(co?`<span class="cal-co">CO</span>`:'');
       btn.innerHTML=`<span class="cal-day-num">${Number(date.slice(8,10))}</span>
-        <span class="cal-markers">${ci?`<span class="cal-ci">CI</span>`:''}${co?`<span class="cal-co">CO</span>`:''}${night.conflict?`<span class="cal-co">Overlap</span>`:''}</span>
+        <span class="cal-markers">${ciLabel}${coLabel}${night.conflict?`<span class="cal-co">Overlap</span>`:''}</span>
         <span class="cal-pills">${pills.map(ev=>`<span class="cal-pill ${esc(ev.channel)}">${esc(ev.label)}</span>`).join('')}</span>`;
       btn.addEventListener('click',()=>openDrawer(date));
       grid.appendChild(btn);
@@ -383,11 +521,12 @@
         <div class="widget-footer"><button class="btn btn-primary" type="button" data-fill="${date}">Block or owner stay</button></div>`;
     }else{
       wrap.innerHTML=evs.map(ev=>`<article class="card">
-        <div class="card-head"><div><h3>${esc(ev.label)}</h3><p>${esc(ev.start)} → ${esc(ev.end)} · ${esc(ev.nights)} night${ev.nights===1?'':'s'}</p></div><span class="badge ${ev.statusBucket==='hold'?'warn':ev.statusBucket==='cancelled'?'':'good'}">${esc(ev.statusBucket)}</span></div>
+        <div class="card-head"><div><h3>${esc(ev.label)} ${turnBadges(date,ev)}</h3><p>${esc(ev.start)} → ${esc(ev.end)} · ${esc(ev.nights)} night${ev.nights===1?'':'s'}</p></div><span class="badge ${ev.statusBucket==='hold'?'warn':ev.statusBucket==='cancelled'?'':'good'}">${esc(ev.statusBucket)}</span></div>
         <div class="reservation-meta">${esc(drawerGuestLabel(ev))}${ev.guestCount?` · ${esc(ev.guestCount)} guests`:''}${ev.sourceLabel?` · ${esc(ev.sourceLabel)}`:''}</div>
         ${contactLine(ev)}
         ${ev.notes?`<p class="reservation-meta">${esc(ev.notes)}</p>`:''}
         ${ev.occupancy?'':'<div class="metric-label">Excluded from occupancy %.</div>'}
+        ${moduleLinksHtml(ev)}
         <div class="widget-footer">
           <button class="btn btn-secondary" type="button" data-open="${esc(date)}">Night details</button>
           ${ev.canDelete?`<button class="btn danger-btn" type="button" data-del="${ev.entryId}">Remove</button>`:''}
@@ -441,11 +580,12 @@
         <div class="widget-footer"><button class="btn btn-primary" type="button" data-fill="${date}">Block or owner stay</button></div>`;
     }else{
       drawerBody.innerHTML=evs.map(ev=>`<article class="card" style="margin-top:12px;padding:14px">
-        <div class="card-head"><div><h3>${esc(ev.label)}</h3><p>${esc(ev.start)} → ${esc(ev.end)} · ${esc(ev.nights)} night${ev.nights===1?'':'s'}</p></div><span class="badge ${ev.statusBucket==='hold'?'warn':ev.statusBucket==='cancelled'?'':'good'}">${esc(ev.statusBucket)}</span></div>
+        <div class="card-head"><div><h3>${esc(ev.label)} ${turnBadges(date,ev)}</h3><p>${esc(ev.start)} → ${esc(ev.end)} · ${esc(ev.nights)} night${ev.nights===1?'':'s'}</p></div><span class="badge ${ev.statusBucket==='hold'?'warn':ev.statusBucket==='cancelled'?'':'good'}">${esc(ev.statusBucket)}</span></div>
         <div class="reservation-meta">${esc(drawerGuestLabel(ev))}${ev.guestCount?` · ${esc(ev.guestCount)} guests`:''}${ev.sourceLabel?` · ${esc(ev.sourceLabel)}`:''}</div>
         ${contactLine(ev)}
         ${ev.notes?`<p class="reservation-meta">${esc(ev.notes)}</p>`:''}
         ${ev.occupancy?'':'<div class="metric-label">Excluded from occupancy %.</div>'}
+        ${moduleLinksHtml(ev)}
         ${ev.canDelete?`<div class="widget-footer"><button class="btn danger-btn" type="button" data-del="${ev.entryId}">Remove</button></div>`:''}
       </article>`).join('')+`<div class="widget-footer"><button class="btn btn-secondary" type="button" data-fill="${date}">Add another block</button></div>`;
     }
@@ -466,12 +606,25 @@
     drawer?.setAttribute('aria-hidden','true');
   }
 
+  function openBlockDrawer(){
+    blockDrawer?.classList.remove('hidden');
+    blockDrawerBackdrop?.classList.remove('hidden');
+    blockDrawer?.setAttribute('aria-hidden','false');
+    document.getElementById('blockKind')?.focus();
+  }
+
+  function closeBlockDrawer(){
+    blockDrawer?.classList.add('hidden');
+    blockDrawerBackdrop?.classList.add('hidden');
+    blockDrawer?.setAttribute('aria-hidden','true');
+  }
+
   function fillForm(date){
     const start=document.getElementById('blockStart');
     const end=document.getElementById('blockEnd');
-    if(start) start.value=date;
-    if(end) end.value=addDays(date,1);
-    document.getElementById('blockForm')?.scrollIntoView({behavior:'smooth',block:'center'});
+    if(start) start.value=date||'';
+    if(end) end.value=date?addDays(date,1):'';
+    openBlockDrawer();
   }
 
   async function removeEntry(id){
@@ -484,15 +637,34 @@
     }catch(e){showNotice(e.message||'Could not remove');}
   }
 
+  function agendaDayLabel(date){
+    const today=snapshot?.range?.today;
+    if(date===today) return 'Today';
+    if(today&&date===addDays(today,1)) return 'Tomorrow';
+    return fmt(date);
+  }
+
   function renderUpcoming(){
     const el=document.getElementById('upcomingList');
     if(!el||!snapshot)return;
-    const rows=(snapshot.upcoming||[]).filter(eventVisible);
-    if(!rows.length){el.innerHTML='<div class="empty">No upcoming stays or blocks.</div>';return;}
-    el.innerHTML=rows.map(ev=>{
-      const extra=ev.statusBucket==='hold'?' · hold':(ev.occupancy?'':' · not in occupancy');
-      return `<div class="list-row" data-open="${esc(ev.start)}"><div><strong>${esc(ev.label)}</strong><span>${esc(ev.start)} → ${esc(ev.end)} · ${esc(ev.nights)} night${ev.nights===1?'':'s'}${extra}</span></div><span class="badge ${ev.statusBucket==='hold'?'warn':''}">${esc(ev.channel)}</span></div>`;
-    }).join('');
+    const rows=(snapshot.operationsAgenda||[]).filter(item=>{
+      if(channelFilter!=='all'&&item.channel!==channelFilter) return false;
+      return true;
+    });
+    if(!rows.length){el.innerHTML='<div class="empty">No upcoming operations.</div>';return;}
+    const groups=[];
+    for(const item of rows){
+      const last=groups[groups.length-1];
+      if(!last||last.date!==item.date) groups.push({date:item.date,items:[item]});
+      else last.items.push(item);
+    }
+    el.innerHTML=groups.map(group=>`<div class="cal-agenda-day">
+      <h4>${esc(agendaDayLabel(group.date))}</h4>
+      ${group.items.map(item=>{
+        const extra=item.guestName?` · ${esc(item.guestName)}`:'';
+        return `<div class="list-row" data-open="${esc(item.kind==='check_out'||item.kind==='owner_stay_ends'||item.kind==='block_ends'?addDays(item.date,-1):item.date)}"><div><strong>${esc(item.label)}</strong><span>${esc(item.sourceLabel||item.channel)}${extra}</span></div><span class="badge">${esc(item.channel)}</span></div>`;
+      }).join('')}
+    </div>`).join('');
     el.querySelectorAll('[data-open]').forEach(row=>row.addEventListener('click',()=>openDrawer(row.getAttribute('data-open'))));
   }
 
@@ -567,19 +739,42 @@
     renderUpcoming();
   }
 
-  async function load(){
+  async function load(opts={}){
+    const action=opts.fullRefresh?'calendar_sync':'calendar_view';
     try{
-      const data=await ownerApi('calendar_view',{view,year,month,focusDate});
+      const data=await ownerApi(action,{view,year,month,focusDate});
       snapshot=data;
       year=data.range.year;
       month=data.range.month;
       if((view==='week'||view==='day')&&!focusDate) focusDate=view==='day'?data.range.day:data.range.weekStart;
       if(view==='day'&&data.range.day) focusDate=data.range.day;
+      if(opts.fullRefresh) lastFullSyncAt=data.sync?.checkedAt||new Date().toISOString();
       applySettings(data.settings);
       render();
+      return data;
     }catch(e){
       if(e.message==='unauthorized')return;
       showNotice(e.message||'Could not load calendar');
+      if(opts.fullRefresh) throw e;
+    }
+  }
+
+  async function syncCalendars(){
+    if(syncing) return;
+    syncing=true;
+    clearTimeout(syncButtonReset);
+    setSyncButton('syncing');
+    try{
+      const data=await load({fullRefresh:true});
+      const fail=icalSources().some(s=>s.ok===false)||data?.sync?.configError;
+      setSyncButton(fail?'issue':'synced');
+      if(!fail){
+        syncButtonReset=setTimeout(()=>{if(!syncing) setSyncButton('idle');},2200);
+      }
+    }catch{
+      setSyncButton('issue');
+    }finally{
+      syncing=false;
     }
   }
 
@@ -687,7 +882,22 @@
   document.getElementById('prepBuffer')?.addEventListener('change',()=>saveSettings(true));
   document.getElementById('drawerClose')?.addEventListener('click',closeDrawer);
   drawerBackdrop?.addEventListener('click',closeDrawer);
-  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer();});
+  document.getElementById('blockDrawerClose')?.addEventListener('click',closeBlockDrawer);
+  blockDrawerBackdrop?.addEventListener('click',closeBlockDrawer);
+  document.getElementById('blockDatesBtn')?.addEventListener('click',()=>openBlockDrawer());
+  document.getElementById('syncCalendarsBtn')?.addEventListener('click',()=>syncCalendars());
+  document.getElementById('syncStatusBtn')?.addEventListener('click',()=>{
+    const details=document.getElementById('syncDetails');
+    if(!details)return;
+    details.open=true;
+    details.scrollIntoView({behavior:'smooth',block:'nearest'});
+    document.getElementById('syncStatusBtn')?.setAttribute('aria-expanded','true');
+  });
+  document.addEventListener('keydown',e=>{
+    if(e.key!=='Escape')return;
+    closeDrawer();
+    closeBlockDrawer();
+  });
 
   document.getElementById('blockForm')?.addEventListener('submit',async e=>{
     e.preventDefault();
@@ -701,6 +911,7 @@
       e.target.reset();
       const saved=kind==='owner_stay'?'Owner stay saved':'Manual block saved';
       showNotice(overlap.length?`${saved}. Overlaps an existing guest stay or OTA block.`:saved, overlap.length?7000:4500);
+      closeBlockDrawer();
       await load();
     }catch(err){showNotice(err.message||'Could not save');}
   });

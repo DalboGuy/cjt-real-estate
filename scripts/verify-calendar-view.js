@@ -14,7 +14,13 @@ const {
   DEFAULT_SETTINGS,
   settingsFromRow,
   snapshotFromInputs,
-  publicEvent
+  publicEvent,
+  arrivalsDepartures,
+  operationsAgenda,
+  isRequiredOtaSource,
+  unverifiedRequiredOta,
+  assertRequiredOtaVerified,
+  buildSyncSources
 } = require('../lib/calendar-view');
 const {
   parseIcalEvents,
@@ -216,6 +222,47 @@ assert.strictEqual(daySnap.view, 'day');
 assert.strictEqual(daySnap.range.day, '2026-09-10');
 assert.ok(daySnap.nights['2026-09-10']);
 assert.strictEqual(daySnap.occupancy.viewedDay.booked, 1);
+
+const turns = arrivalsDepartures(events, '2026-09-01', '2026-10-01');
+assert.strictEqual(turns.arrivals, 4, 'direct confirmed + hold + airbnb + vrbo arrivals');
+assert.strictEqual(turns.departures, 4);
+assert.strictEqual(snap.occupancy.viewedMonth.arrivals, 4);
+assert.strictEqual(snap.occupancy.viewedMonth.departures, 4);
+assert.strictEqual(weekSnap.occupancy.viewedWeek.arrivals, 2);
+assert.strictEqual(daySnap.occupancy.viewedDay.arrivals, 1);
+assert.strictEqual(daySnap.occupancy.viewedDay.departures, 0);
+
+const agenda = operationsAgenda(events, '2026-09-07', 21);
+assert.ok(agenda.some((i) => i.kind === 'check_in' && i.date === '2026-09-10' && i.reservationId === 'DB-1'));
+assert.ok(agenda.some((i) => i.kind === 'check_out' && i.date === '2026-09-13' && i.reservationId === 'DB-1'));
+assert.ok(agenda.some((i) => i.kind === 'check_in' && i.date === '2026-09-12' && !i.reservationId));
+assert.ok(agenda.some((i) => i.kind === 'maintenance_block' && i.date === '2026-09-28'));
+assert.ok(!agenda.some((i) => i.date === '2026-09-01'), 'past owner stay start is outside the window');
+assert.ok(Array.isArray(snap.operationsAgenda));
+assert.ok(snap.sync.sources.some((s) => s.id === 'direct' && s.live && s.status === 'live'));
+assert.ok(!snap.sync.sources.find((s) => s.id === 'direct').lastSuccessfulAt, 'Direct does not invent a last-successful iCal timestamp');
+
+assert.strictEqual(isRequiredOtaSource({ channel: 'airbnb', ok: true }), true);
+assert.strictEqual(isRequiredOtaSource({ name: 'vrbo', ok: false }), true);
+assert.strictEqual(isRequiredOtaSource({ channel: 'booking.com', ok: false }), false);
+assert.strictEqual(isRequiredOtaSource({ channel: 'airbnb', duplicateOf: 'airbnb', ok: false }), false);
+assert.strictEqual(unverifiedRequiredOta([
+  { channel: 'airbnb', name: 'airbnb', ok: false },
+  { channel: 'vrbo', name: 'vrbo', ok: true },
+  { channel: 'booking.com', name: 'booking.com', ok: false }
+]).length, 1);
+assertRequiredOtaVerified({ sources: [{ channel: 'booking.com', name: 'booking.com', ok: false }] });
+expectThrow(() => {
+  assertRequiredOtaVerified({ sources: [{ channel: 'airbnb', name: 'airbnb', ok: false, label: 'Airbnb' }] });
+}, 'could not be verified');
+
+const syncSources = buildSyncSources({
+  reservations,
+  ota: { sources: [{ name: 'airbnb', channel: 'airbnb', ok: true, count: 3, origin: 'env' }, { name: 'vrbo', channel: 'vrbo', ok: false, error: '500', origin: 'env' }] }
+}, '2026-09-07T12:00:00.000Z');
+assert.strictEqual(syncSources[0].id, 'direct');
+assert.strictEqual(syncSources.find((s) => s.channel === 'airbnb').lastSuccessfulAt, '2026-09-07T12:00:00.000Z');
+assert.ok(!('lastSuccessfulAt' in syncSources.find((s) => s.channel === 'vrbo')), 'failed feeds do not invent last-successful timestamps');
 
 assert.strictEqual(snapshotFromInputs({
   ota: { events: otaEvents, sources: [] },
