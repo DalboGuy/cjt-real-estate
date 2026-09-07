@@ -1,5 +1,5 @@
 const crypto = require('crypto');
-const { db, ensureSchema, expireHolds } = require('../lib/db');
+const { db, ensureSchema } = require('../lib/db');
 const { getGuestBlockedDates } = require('../lib/calendar-view');
 const { quoteStay, eachDate } = require('../lib/pricing');
 const { loadPricingCatalog } = require('../lib/pricing-store');
@@ -13,7 +13,6 @@ module.exports=async function(req,res){
   if(req.method!=='POST') return res.status(405).json({error:'method_not_allowed'});
   try{
     await ensureSchema();
-    await expireHolds();
     const body=typeof req.body==='string'?JSON.parse(req.body||'{}'):(req.body||{});
     const guest_name=clean(body.name,120),guest_email=clean(body.email,180),guest_phone=clean(body.phone,60),notes=clean(body.message,2000);
     const checkin=clean(body.checkin,10),checkout=clean(body.checkout,10),guests=Number(body.guests);
@@ -51,7 +50,7 @@ module.exports=async function(req,res){
     try{
       rows=await sql`
         INSERT INTO reservations (id,guest_name,guest_email,guest_phone,guests,notes,checkin,checkout,status,hold_expires_at)
-        VALUES (${id},${guest_name},${guest_email},${guest_phone||null},${guests},${notes||null},${checkin}::date,${checkout}::date,'inquiry_hold',now()+interval '24 hours')
+        VALUES (${id},${guest_name},${guest_email},${guest_phone||null},${guests},${notes||null},${checkin}::date,${checkout}::date,'inquiry_hold',NULL)
         RETURNING id,checkin::text,checkout::text,status,hold_expires_at
       `;
     }catch(e){
@@ -66,7 +65,7 @@ module.exports=async function(req,res){
     }
     await sql`INSERT INTO booking_events (reservation_id,event_type,actor,metadata) VALUES (${id},'inquiry_created','guest',${JSON.stringify({guests,quote})}::jsonb)`;
     res.setHeader('Cache-Control','no-store');
-    return res.status(201).json({reservation:rows[0],quote,message:'Your dates and quoted total are temporarily held for 24 hours while CJT reviews your request.'});
+    return res.status(201).json({reservation:rows[0],quote,message:'Your dates are reserved while CJT reviews your request and remain unavailable until an owner releases them.'});
   }catch(e){
     console.error('inquiry error',e);
     return res.status(500).json({error:'booking_unavailable',message:'We could not place the hold. Please contact CJT Realty directly.'});
