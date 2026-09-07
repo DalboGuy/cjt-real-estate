@@ -8,9 +8,9 @@
   <link rel="stylesheet" href="/assets/css/owner-shell.css">
   <link rel="stylesheet" href="/assets/css/modules.css">
   <style>
-    .pricing-table-wrap{overflow:auto;border:1px solid var(--cjt-line);border-radius:12px;background:#fff}.pricing-table{width:100%;border-collapse:collapse;min-width:680px}.pricing-table th,.pricing-table td{padding:11px 12px;border-bottom:1px solid var(--cjt-line);text-align:left;white-space:nowrap}.pricing-table th{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--cjt-muted);background:#fafbf9}.pricing-table tr:last-child td{border-bottom:0}.pricing-table td:first-child{font-weight:800}.pricing-table .money{text-align:right}.pricing-form{display:grid;gap:12px}.pricing-form label{display:grid;gap:5px;color:var(--cjt-muted);font-size:.78rem;font-weight:800}.pricing-form input{width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid var(--cjt-line);border-radius:10px;background:#fff;color:var(--cjt-ink);font:inherit}.quote-result{margin-top:16px;border-top:1px solid var(--cjt-line);padding-top:14px}.quote-grid{display:grid;grid-template-columns:1fr auto;gap:8px;margin:0}.quote-grid dt{color:var(--cjt-muted)}.quote-grid dd{margin:0;font-weight:800;text-align:right}.quote-total{font-size:1.15rem;padding-top:9px;border-top:1px solid var(--cjt-line);margin-top:5px}.quote-error{color:#8b2f2f;background:#fff5f3;border:1px solid #e7b7ad;border-radius:10px;padding:10px 12px;font-size:.84rem}.pricing-note{color:var(--cjt-muted);font-size:.82rem;line-height:1.5}.schedule{margin-top:14px;padding:12px;border-radius:10px;background:#f4f8f5;border:1px solid var(--cjt-line);font-size:.83rem}.schedule strong{display:block;margin-bottom:3px}.disabled-card{opacity:.78}
-  
+    .pricing-table-wrap{overflow:auto;border:1px solid var(--cjt-line);border-radius:12px;background:#fff}.pricing-table{width:100%;border-collapse:collapse;min-width:760px}.pricing-table th,.pricing-table td{padding:11px 12px;border-bottom:1px solid var(--cjt-line);text-align:left;white-space:nowrap}.pricing-table th{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--cjt-muted);background:#fafbf9}.pricing-table tr:last-child td{border-bottom:0}.pricing-table td:first-child{font-weight:800}.pricing-table .money{text-align:right}.pricing-table tr.editing{background:#f4f8f5}.pricing-form{display:grid;gap:12px}.pricing-form label{display:grid;gap:5px;color:var(--cjt-muted);font-size:.78rem;font-weight:800}.pricing-form input,.settings-form input,.season-editor input{width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid var(--cjt-line);border-radius:10px;background:#fff;color:var(--cjt-ink);font:inherit}.quote-result{margin-top:16px;border-top:1px solid var(--cjt-line);padding-top:14px}.quote-grid{display:grid;grid-template-columns:1fr auto;gap:8px;margin:0}.quote-grid dt{color:var(--cjt-muted)}.quote-grid dd{margin:0;font-weight:800;text-align:right}.quote-total{font-size:1.15rem;padding-top:9px;border-top:1px solid var(--cjt-line);margin-top:5px}.quote-error{color:#8b2f2f;background:#fff5f3;border:1px solid #e7b7ad;border-radius:10px;padding:10px 12px;font-size:.84rem}.pricing-note{color:var(--cjt-muted);font-size:.82rem;line-height:1.5}.schedule{margin-top:14px;padding:12px;border-radius:10px;background:#f4f8f5;border:1px solid var(--cjt-line);font-size:.83rem}.schedule strong{display:block;margin-bottom:3px}
     .season-groups{display:grid;gap:10px}.season-group{border:1px solid var(--cjt-line);border-radius:12px;background:#fff;overflow:hidden}.season-group summary{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 14px;cursor:pointer;list-style:none}.season-group summary::-webkit-details-marker{display:none}.season-group summary:focus-visible{outline:3px solid var(--cjt-accent,#6b8f71);outline-offset:-3px}.season-group-heading{display:grid;gap:3px;min-width:0}.season-group-heading strong{font-size:.96rem}.season-group-heading span{font-size:.78rem;color:var(--cjt-muted);font-weight:700}.season-group-chevron{font-size:1.2rem;color:var(--cjt-muted);transition:transform .15s ease}.season-group[open] summary{border-bottom:1px solid var(--cjt-line)}.season-group[open] .season-group-chevron{transform:rotate(180deg)}.season-group-body{padding:0 10px 10px}.season-group-body .pricing-table-wrap{border:0;border-radius:0}@media(max-width:600px){.season-group summary{padding:12px}.season-group-heading span{line-height:1.35}.season-group-body{padding:0 4px 4px}}
+    .settings-form{display:grid;gap:12px}.settings-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.settings-grid label,.season-editor label{display:grid;gap:5px;color:var(--cjt-muted);font-size:.78rem;font-weight:800}.weekend-days{display:flex;flex-wrap:wrap;gap:8px}.weekend-days label{display:flex;align-items:center;gap:6px;font-size:.78rem;font-weight:800;color:var(--cjt-ink);padding:7px 10px;border:1px solid var(--cjt-line);border-radius:999px;background:#fff;cursor:pointer}.weekend-days input{width:auto;margin:0;accent-color:var(--cjt-deep,#12383e)}.form-actions{display:flex;flex-wrap:wrap;align-items:center;gap:10px}.form-status{font-size:.82rem;font-weight:700}.form-status.ok{color:#2f6b46}.form-status.err{color:#8b2f2f}.field-error{color:#8b2f2f;font-size:.74rem;font-weight:700}.row-actions{display:flex;gap:6px;justify-content:flex-end}.btn-tiny{border:1px solid var(--cjt-line);background:#fff;color:var(--cjt-ink);border-radius:8px;padding:6px 9px;font-size:.74rem;font-weight:800;cursor:pointer}.btn-tiny.danger{color:#7a2929;border-color:#e7b7ad;background:#fff5f3}.btn-tiny:disabled{opacity:.55;cursor:not-allowed}.season-editor{display:grid;gap:12px}.season-editor-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.notice.ok{background:#f4f8f5;color:#2f6b46}.notice.err{background:#fff5f3;color:#8b2f2f;border-color:#e7b7ad}@media(max-width:850px){.settings-grid,.season-editor-grid{grid-template-columns:1fr 1fr}}@media(max-width:600px){.settings-grid,.season-editor-grid{grid-template-columns:1fr}.pricing-table{min-width:640px}}
   </style>
 </head>
 <body>
@@ -28,7 +28,7 @@
   <div id="ownerApp" class="owner-app hidden">
     <aside id="ownerSidebar" class="sidebar">
       <div class="brand">CJT REALTY<small>Owner Operations</small></div>
-      <div class="property-chip"><strong>Sand & Sea Manor</strong><span>1720 Avenue M · Galveston, TX</span></div>
+      <div class="property-chip"><strong>Sand &amp; Sea Manor</strong><span>1720 Avenue M · Galveston, TX</span></div>
       <nav class="nav" aria-label="Owner Portal">
         <a href="/owner-v1"><span>Dashboard</span></a>
         <a href="/owner-v1/communications"><span>Communications</span></a>
@@ -52,28 +52,70 @@
 
     <main class="main">
       <header class="topbar">
-        <div style="display:flex;align-items:center;gap:10px"><button id="mobileMenu" class="icon-btn mobile-menu" type="button" aria-label="Open menu">☰</button><div><h1>Pricing</h1><div class="meta">Published seasonal schedule and quote tester</div></div></div>
+        <div style="display:flex;align-items:center;gap:10px"><button id="mobileMenu" class="icon-btn mobile-menu" type="button" aria-label="Open menu">☰</button><div><h1>Pricing</h1><div class="meta">Edit seasons, rates, and fees used by guest quotes</div></div></div>
         <div class="top-actions"><span id="lastChecked" class="meta">Loading…</span><a class="btn btn-secondary" href="/" target="_blank" rel="noopener">Open Booking Page ↗</a></div>
       </header>
 
       <div class="content">
-        <div class="section-title"><div><h2>Pricing &amp; payments</h2><p>Read-only view of the published direct-booking schedule used by guest quotes.</p></div><span class="status-pill">Published schedule</span></div>
+        <div class="section-title"><div><h2>Pricing &amp; payments</h2><p>Changes saved here become the live schedule for guest quotes. No code or database edits are required.</p></div><span class="status-pill">Owner editable</span></div>
         <div id="moduleNotice" class="notice hidden"></div>
         <div id="pricingSummary" class="summary-grid"></div>
+
+        <form id="settingsForm" class="card settings-form" style="margin-bottom:16px">
+          <div class="card-head"><div><h3>Fees &amp; quote rules</h3><p>Cleaning, tax, occupancy, published window, weekend days, and payment split.</p></div></div>
+          <div class="settings-grid">
+            <label>Cleaning fee ($)<input id="settingCleaningFee" name="cleaningFee" type="number" min="0" max="10000" step="1" required><span class="field-error" data-field="cleaningFee"></span></label>
+            <label>Tax rate (%)<input id="settingTaxRate" name="taxRate" type="number" min="0" max="100" step="0.01" required><span class="field-error" data-field="taxRate"></span></label>
+            <label>Max guests<input id="settingMaxGuests" name="maxGuests" type="number" min="1" max="14" step="1" required><span class="field-error" data-field="maxGuests"></span></label>
+            <label>Pricing through<input id="settingPricingThrough" name="pricingThrough" type="date" required><span class="field-error" data-field="pricingThrough"></span></label>
+            <label>Advance payment (%)<input id="settingAdvancePct" name="advancePaymentPct" type="number" min="1" max="100" step="1" required><span class="field-error" data-field="advancePaymentPct"></span></label>
+            <label>Split threshold (days)<input id="settingSplitDays" name="splitPaymentThresholdDays" type="number" min="0" max="365" step="1" required><span class="field-error" data-field="splitPaymentThresholdDays"></span></label>
+          </div>
+          <div>
+            <div class="pricing-note" style="margin-bottom:8px">Weekend days use the weekend nightly rate. Leave all unchecked to price every night at the weekday rate.</div>
+            <div id="weekendDays" class="weekend-days"></div>
+            <span class="field-error" data-field="weekendDays"></span>
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-primary" type="submit" id="saveSettingsBtn">Save settings</button>
+            <span id="settingsStatus" class="form-status"></span>
+          </div>
+        </form>
 
         <div class="module-grid">
           <section class="module-main">
             <div class="card">
-              <div class="card-head"><div><h3>Season schedule</h3><p>Rates and minimum stays are loaded from the booking engine.</p></div><span id="seasonCount" class="badge good">Loading…</span></div>
+              <div class="card-head"><div><h3>Season schedule</h3><p>Add, edit, or delete seasons. Overlapping dates are rejected.</p></div><span id="seasonCount" class="badge good">Loading…</span></div>
+              <div class="form-actions" style="margin-bottom:12px">
+                <button class="btn btn-secondary" type="button" id="addSeasonBtn">Add season</button>
+                <span id="weekendNote" class="pricing-note" style="margin:0">Weekend rates and the published window load with the schedule.</span>
+              </div>
               <div id="seasonTable"><div class="empty">Loading published seasons…</div></div>
-              <p id="weekendNote" class="pricing-note" style="margin-bottom:0">Weekend rates and the published window load with the schedule.</p>
             </div>
-            <div class="card disabled-card" style="margin-top:16px"><div class="card-head"><div><h3>Season overrides</h3><p>Date-level changes will be managed here in a future owner workflow.</p></div><span class="badge">Planned</span></div><button class="btn btn-secondary" type="button" disabled>Overrides coming soon</button></div>
+            <div class="card" id="seasonEditorCard" style="margin-top:16px">
+              <div class="card-head"><div><h3 id="seasonEditorTitle">Add season</h3><p id="seasonEditorHelp">Create a new date range with weekday/weekend rates and a minimum stay.</p></div></div>
+              <form id="seasonForm" class="season-editor">
+                <input id="seasonId" type="hidden">
+                <div class="season-editor-grid">
+                  <label style="grid-column:1/-1">Season name<input id="seasonName" name="name" maxlength="120" required><span class="field-error" data-field="name"></span></label>
+                  <label>Start date<input id="seasonStart" name="start" type="date" required><span class="field-error" data-field="start"></span></label>
+                  <label>End date<input id="seasonEnd" name="end" type="date" required><span class="field-error" data-field="end"></span></label>
+                  <label>Weekday rate ($)<input id="seasonWeekday" name="weekday" type="number" min="1" max="20000" step="1" required><span class="field-error" data-field="weekday"></span></label>
+                  <label>Weekend rate ($)<input id="seasonWeekend" name="weekend" type="number" min="1" max="20000" step="1" required><span class="field-error" data-field="weekend"></span></label>
+                  <label>Minimum nights<input id="seasonMinNights" name="minNights" type="number" min="1" max="30" step="1" required><span class="field-error" data-field="minNights"></span></label>
+                </div>
+                <div class="form-actions">
+                  <button class="btn btn-primary" type="submit" id="saveSeasonBtn">Save season</button>
+                  <button class="btn btn-secondary" type="button" id="cancelSeasonBtn">Cancel</button>
+                  <span id="seasonStatus" class="form-status"></span>
+                </div>
+              </form>
+            </div>
           </section>
 
           <aside class="module-side">
             <div class="card quick-card">
-              <div class="card-head"><div><h3>Quote tester</h3><p>Run the same availability-backed quote as the guest site.</p></div></div>
+              <div class="card-head"><div><h3>Quote tester</h3><p>Uses the saved Neon schedule, same as the guest site.</p></div></div>
               <form id="quoteForm" class="pricing-form">
                 <label>Check-in<input id="quoteCheckin" type="date" required></label>
                 <label>Check-out<input id="quoteCheckout" type="date" required></label>
@@ -89,113 +131,6 @@
   </div>
 
   <script src="/assets/js/owner-shell.js"></script>
-  <script>
-    const loginShell=document.getElementById('loginShell'),ownerApp=document.getElementById('ownerApp'),loginForm=document.getElementById('loginForm'),loginMsg=document.getElementById('loginMsg');
-    const notice=document.getElementById('moduleNotice'),summary=document.getElementById('pricingSummary'),seasonTable=document.getElementById('seasonTable'),quoteResult=document.getElementById('quoteResult');
-    function esc(v=''){return String(v).replace(/[&<>\"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[m]))}
-    function money(v){return Number(v||0).toLocaleString(undefined,{style:'currency',currency:'USD',maximumFractionDigits:0})}
-    function date(v){if(!v)return '—';return new Date(`${v}T12:00:00Z`).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric',timeZone:'UTC'})}
-    function showLogin(){ownerApp.classList.add('hidden');loginShell.classList.remove('hidden')}
-    function showApp(){loginShell.classList.add('hidden');ownerApp.classList.remove('hidden')}
-    function showNotice(message){notice.textContent=message;notice.classList.remove('hidden')}
-    async function getPricing(){
-      const r=await fetch('/api/pricing',{cache:'no-store'}),d=await r.json().catch(()=>({}));
-      if(r.status===401)throw new Error('unauthorized');
-      if(!r.ok)throw new Error(d.message||'Pricing data could not be loaded.');
-      return d;
-    }
-    function joinDays(days){
-      const list=(days||[]).filter(Boolean);
-      if(!list.length)return 'the configured weekend days';
-      if(list.length===1)return list[0];
-      if(list.length===2)return `${list[0]} and ${list[1]}`;
-      return `${list.slice(0,-1).join(', ')}, and ${list[list.length-1]}`;
-    }
-    function monthKey(value){
-      const match=String(value||'').match(/^(\d{4})-(\d{2})-/);
-      return match?`${match[1]}-${match[2]}`:'';
-    }
-    function monthLabel(key){
-      const [year,month]=key.split('-').map(Number);
-      return new Date(Date.UTC(year,month-1,1)).toLocaleDateString(undefined,{month:'short',year:'numeric',timeZone:'UTC'});
-    }
-    function monthKeyForDate(value){
-      return `${value.getFullYear()}-${String(value.getMonth()+1).padStart(2,'0')}`;
-    }
-    function seasonTableMarkup(seasons){
-      return `<div class="pricing-table-wrap"><table class="pricing-table"><thead><tr><th>Season</th><th>Start</th><th>End</th><th class="money">Weekday</th><th class="money">Weekend</th><th>Min nights</th></tr></thead><tbody>${seasons.map(s=>`<tr><td>${esc(s.name)}</td><td>${esc(date(s.start))}</td><td>${esc(date(s.end))}</td><td class="money">${money(s.weekday)}</td><td class="money">${money(s.weekend)}</td><td>${esc(s.minNights)}</td></tr>`).join('')}</tbody></table></div>`;
-    }
-    function renderSeasonSchedule(seasons){
-      const grouped=new Map();
-      seasons.forEach(s=>{
-        const key=monthKey(s.start);
-        if(!key)return;
-        if(!grouped.has(key))grouped.set(key,[]);
-        grouped.get(key).push(s);
-      });
-      const now=new Date();
-      const openMonths=new Set([monthKeyForDate(now),monthKeyForDate(new Date(now.getFullYear(),now.getMonth()+1,1))]);
-      const groups=[...grouped.entries()].sort(([a],[b])=>a.localeCompare(b));
-      seasonTable.innerHTML=`<div class="season-groups">${groups.map(([key,items])=>{
-        const rates=items.flatMap(s=>[Number(s.weekday),Number(s.weekend)]).filter(Number.isFinite);
-        const min=rates.length?Math.min(...rates):0;
-        const max=rates.length?Math.max(...rates):0;
-        const countLabel=`${items.length} season${items.length===1?'':'s'}`;
-        return `<details class="season-group"${openMonths.has(key)?' open':''}><summary><span class="season-group-heading"><strong>${esc(monthLabel(key))}</strong><span>${countLabel} · ${money(min)}–${money(max)} / night</span></span><span class="season-group-chevron" aria-hidden="true">⌄</span></summary><div class="season-group-body">${seasonTableMarkup(items)}</div></details>`;
-      }).join('')}</div>`;
-    }
-    function renderPricing(d){
-      const split=`${Math.round(Number(d.advancePaymentPct)*100)}% at booking · balance ${d.splitPaymentThresholdDays} days before arrival`;
-      const weekendLabel=joinDays(d.weekendDays);
-      summary.innerHTML=[['Cleaning fee',money(d.cleaningFee)],['Tax rate',`${Number(d.taxRate)*100}%`],['Pricing through',date(d.pricingThrough)],['Max guests',d.maxGuests],['Weekend days',(d.weekendDays||[]).map(v=>v.slice(0,3)).join(' / ')],['Payment terms',split]].map(([label,value])=>`<div class="summary-card"><span>${esc(label)}</span><b>${esc(value)}</b></div>`).join('');
-      document.getElementById('seasonCount').textContent=`${d.seasons.length} seasons`;
-      document.getElementById('weekendNote').textContent=`Weekend rates apply ${weekendLabel}. Dates outside the published window are not available for online direct-booking quotes.`;
-      const guestsInput=document.getElementById('quoteGuests');
-      const maxGuests=Number(d.maxGuests)||14;
-      guestsInput.max=String(maxGuests);
-      if(Number(guestsInput.value)>maxGuests)guestsInput.value=String(maxGuests);
-      renderSeasonSchedule(d.seasons);
-      document.getElementById('lastChecked').textContent='Schedule loaded';
-    }
-    function quoteError(payload){
-      const code=payload&&payload.code;
-      const msg=payload&&payload.message;
-      let title='Quote could not be calculated';
-      let detail=msg||'Try again with different dates or guests.';
-      if(code==='OTA_FEED_CONFIG_MISSING'||/Missing required OTA calendar feed/i.test(msg||'')){
-        title='Calendar feeds are not configured';
-        detail='Preview is missing AIRBNB_ICAL_URL and/or VRBO_ICAL_URL, so availability-backed quotes fail closed. The season schedule above is still valid; fix calendar env, then retry the tester.';
-      }else if(code==='dates_unavailable'){
-        title='Those nights are unavailable';
-        detail=msg||'One or more requested nights are blocked on the live calendar.';
-      }else if(code==='pricing_not_published'){
-        title='Outside the published pricing window';
-        detail=msg;
-      }else if(code==='minimum_stay'||code==='invalid_dates'||code==='invalid_guests'){
-        title='Quote rules blocked this stay';
-        detail=msg;
-      }else if(code==='quote_unavailable'){
-        title='Quote service unavailable';
-        detail=msg||'The booking engine could not calculate this quote right now.';
-      }
-      return `<div class="quote-error"><strong style="display:block;margin-bottom:4px">${esc(title)}</strong>${esc(detail)}</div>`;
-    }
-    function renderQuote(q){
-      const s=q.paymentSchedule||{};
-      const schedule=s.mode==='split'?`<strong>Split payment</strong>${money(s.dueAtBooking)} due at booking · ${money(s.remainingBalance)} due ${esc(s.balanceDueDateLabel||'before arrival')}.`:`<strong>Full payment</strong>${money(s.dueAtBooking||q.total)} due at booking.`;
-      quoteResult.innerHTML=`<div class="meta">${esc(q.nights)} nights · ${esc(q.guests)} guests</div><dl class="quote-grid"><dt>Lodging</dt><dd>${money(q.lodgingSubtotal)}</dd><dt>Cleaning fee</dt><dd>${money(q.cleaningFee)}</dd><dt>Tax</dt><dd>${money(q.taxes)}</dd><dt class="quote-total">Total</dt><dd class="quote-total">${money(q.total)}</dd></dl><div class="schedule">${schedule}</div>`;
-      quoteResult.classList.remove('hidden');
-    }
-    document.getElementById('quoteForm').addEventListener('submit',async e=>{
-      e.preventDefault();quoteResult.classList.remove('hidden');quoteResult.innerHTML='<div class="meta">Calculating…</div>';
-      const params=new URLSearchParams({checkin:document.getElementById('quoteCheckin').value,checkout:document.getElementById('quoteCheckout').value,guests:document.getElementById('quoteGuests').value});
-      try{const r=await fetch(`/api/quote?${params}`,{cache:'no-store'}),d=await r.json().catch(()=>({}));if(!r.ok){quoteResult.innerHTML=quoteError({code:d.error||d.code,message:d.message||'The quote could not be calculated.'});return}renderQuote(d.quote)}catch(error){quoteResult.innerHTML=quoteError({code:'quote_unavailable',message:error.message})}
-    });
-    loginForm.addEventListener('submit',async e=>{
-      e.preventDefault();loginMsg.textContent='Signing in…';
-      try{const r=await fetch('/api/owner',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'login',passcode:document.getElementById('passcode').value})}),d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'invalid_passcode');document.getElementById('passcode').value='';loginMsg.textContent='';showApp();renderPricing(await getPricing())}catch(error){loginMsg.textContent=error.message==='owner_login_not_configured'?'Owner login is not configured for this environment.':'Invalid passcode.'}
-    });
-    (async()=>{try{const data=await getPricing();showApp();renderPricing(data)}catch(error){if(error.message==='unauthorized')showLogin();else{showApp();showNotice(error.message)}}})();
-  </script>
+  <script src="/assets/js/pricing-v1.js"></script>
 </body>
 </html>
