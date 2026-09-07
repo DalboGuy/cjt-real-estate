@@ -69,6 +69,7 @@ body.amenities-sheet-open .widget-visible{visibility:hidden!important;pointer-ev
 
 /* Guest quote payment trust block */
 .booking-agreement-line{text-align:center;margin:2px 0 8px;font-size:.82rem}
+.booking-card:has(.quote-breakdown.show) .booking-agreement-line{display:none}
 .booking-agreement-line a,.mobile-agreement,.agreement-link{color:var(--deep);font-weight:750;text-decoration:underline}
 .quote-trust{margin-top:14px}
 .quote-trust-schedule{display:grid;gap:2px}
