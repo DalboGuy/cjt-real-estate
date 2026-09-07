@@ -122,9 +122,62 @@
     const payload={name:f.get('name'),email:f.get('email'),phone:f.get('phone'),checkin:selectedStart,checkout:selectedEnd,guests:String(guests),message:details.join('\n')};
     try{const r=await fetch('/api/inquiries',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}),d=await r.json();if(!r.ok)throw new Error(d.message||'We could not place the booking hold.');msg.className='form-message show';msg.innerHTML=`<strong>Your dates are held for 24 hours.</strong><br>Booking reference: ${esc(d.reservation.id)}<br>CJT Realty will review the request and continue the agreement/payment process.`;btn.style.display='none';await refreshAvailability()}catch(err){msg.className='form-message error show';msg.textContent=err.message}finally{btn.disabled=false;btn.textContent='Book Now — Hold These Dates'}});
 
-  $('amenitiesBtn').onclick=()=>{$('amenitiesModal').classList.add('show');document.body.classList.add('modal-open')};$('amenitiesClose').onclick=()=>{$('amenitiesModal').classList.remove('show');document.body.classList.remove('modal-open')};$('amenitiesModal').addEventListener('click',e=>{if(e.target===$('amenitiesModal'))$('amenitiesClose').click()});
+  const amenitiesModal=$('amenitiesModal');
+  let amenitiesHistoryOpen=false;
+  function applyTawkHidden(hidden){
+    try{
+      const api=window.Tawk_API;
+      if(!api)return;
+      if(hidden){
+        if(typeof api.minimize==='function')api.minimize();
+        if(typeof api.hideWidget==='function')api.hideWidget();
+      }else if(typeof api.showWidget==='function')api.showWidget();
+    }catch{}
+  }
+  function hookTawk(){
+    window.Tawk_API=window.Tawk_API||{};
+    if(window.Tawk_API.__cjtAmenitiesHook)return;
+    const prev=window.Tawk_API.onLoad;
+    window.Tawk_API.__cjtAmenitiesHook=true;
+    window.Tawk_API.onLoad=function(){
+      if(typeof prev==='function')prev();
+      if(amenitiesModal.classList.contains('show'))applyTawkHidden(true);
+    };
+  }
+  function openAmenities(){
+    if(amenitiesModal.classList.contains('show'))return;
+    hookTawk();
+    amenitiesModal.classList.add('show');
+    document.body.classList.add('modal-open','amenities-sheet-open');
+    applyTawkHidden(true);
+    if(!amenitiesHistoryOpen){
+      history.pushState({cjtAmenities:1},'',location.href);
+      amenitiesHistoryOpen=true;
+    }
+  }
+  function closeAmenities(fromPopstate){
+    if(!amenitiesModal.classList.contains('show')){
+      amenitiesHistoryOpen=false;
+      return;
+    }
+    amenitiesModal.classList.remove('show');
+    document.body.classList.remove('modal-open','amenities-sheet-open');
+    applyTawkHidden(false);
+    if(amenitiesHistoryOpen&&!fromPopstate&&history.state&&history.state.cjtAmenities){
+      amenitiesHistoryOpen=false;
+      history.back();
+      return;
+    }
+    amenitiesHistoryOpen=false;
+  }
+  hookTawk();
+  $('amenitiesBtn').onclick=openAmenities;
+  $('amenitiesClose').onclick=()=>closeAmenities(false);
+  $('amenitiesDone').onclick=()=>closeAmenities(false);
+  amenitiesModal.addEventListener('click',e=>{if(e.target===amenitiesModal)closeAmenities(false)});
+  window.addEventListener('popstate',()=>{if(amenitiesModal.classList.contains('show'))closeAmenities(true)});
 
   window.addEventListener('message',e=>{if(e.origin!==location.origin||e.data?.type!=='cjt-reviews-height')return;const frame=$('houfyReviews');if(frame&&Number(e.data.height)>200)frame.style.height=`${Math.min(2200,Number(e.data.height)+12)}px`});
-  document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(calendarModal.classList.contains('show'))closeCalendar();if(bookingModal.classList.contains('show'))closeBooking();if($('amenitiesModal').classList.contains('show'))$('amenitiesClose').click()});
+  document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(calendarModal.classList.contains('show'))closeCalendar();if(bookingModal.classList.contains('show'))closeBooking();if(amenitiesModal.classList.contains('show'))closeAmenities(false)});
   hydrateMobileSourceSummaries();hydrateAmenitiesModal();updateSelectors();resetQuote();renderGallery();loadAssetManifest();
 })();
