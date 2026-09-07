@@ -3,49 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>CJT Owner Portal · Financials</title>
+  <title>CJT Owner Portal · Financial Performance</title>
   <link rel="stylesheet" href="/assets/css/tokens.css">
   <link rel="stylesheet" href="/assets/css/owner-shell.css">
   <link rel="stylesheet" href="/assets/css/modules.css">
-  <style>
-    .finance-table-wrap{overflow:auto;border:1px solid var(--cjt-line);border-radius:12px;background:#fff}
-    .finance-table{width:100%;border-collapse:collapse;min-width:920px}
-    .finance-chart{background:#fff;border:1px solid var(--cjt-line);border-radius:14px;padding:16px 18px 12px;margin-bottom:16px}
-    .finance-chart-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:12px}
-    .finance-chart-head strong{font-size:.92rem}
-    .finance-chart-head span{color:var(--cjt-muted);font-size:.78rem}
-    .finance-chart-plot{display:flex;align-items:flex-end;gap:6px;min-height:150px}
-    .finance-chart-col{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px}
-    .finance-chart-stack{width:100%;height:130px;display:flex;flex-direction:column;justify-content:flex-end;background:#f4f7f6;border-radius:8px 8px 3px 3px;overflow:hidden}
-    .finance-chart-bar{width:100%;min-height:0}
-    .finance-chart-bar.direct{background:var(--cjt-deep)}
-    .finance-chart-bar.ota{background:#6b8f88}
-    .finance-chart-col em{font-style:normal;font-size:.62rem;font-weight:800;color:var(--cjt-muted);letter-spacing:.02em}
-    .finance-chart-empty{color:var(--cjt-muted);font-size:.84rem;padding:28px 0;text-align:center}
-    .finance-source{font-weight:800;font-size:.78rem}
-    .finance-table th,.finance-table td{padding:12px 14px;border-bottom:1px solid var(--cjt-line);text-align:left;vertical-align:top}
-    .finance-table th{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--cjt-muted);background:#fafbf9;white-space:nowrap}
-    .finance-table tr:last-child td{border-bottom:0}
-    .finance-table .money{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
-    .finance-table .muted{color:var(--cjt-muted);font-size:.78rem}
-    .finance-guest{font-weight:800}
-    .finance-booking-link{color:inherit;font-weight:800;text-decoration:underline;text-underline-offset:2px}
-    .finance-booking-link:hover{color:var(--cjt-deep)}
-    .finance-table tbody tr:hover{background:#fafbf9}
-    .finance-quote-badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
-    @media(max-width:720px){
-      .finance-table{min-width:0}
-      .finance-table thead{display:none}
-      .finance-table,.finance-table tbody,.finance-table tr,.finance-table td{display:block;width:100%}
-      .finance-table tr{border-bottom:1px solid var(--cjt-line);padding:12px 14px}
-      .finance-table tr:last-child{border-bottom:0}
-      .finance-table td{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;border:0;padding:6px 0}
-      .finance-table td:first-child{padding-top:0}
-      .finance-table td::before{content:attr(data-label);color:var(--cjt-muted);font-size:.68rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase;flex:0 0 38%;max-width:120px}
-      .finance-table td.money{text-align:right;white-space:normal}
-      .finance-table tbody tr:hover{background:transparent}
-    }
-  </style>
+  <link rel="stylesheet" href="/assets/css/financials.css">
 </head>
 <body>
   <section id="loginShell" class="login-shell hidden">
@@ -62,10 +24,10 @@
   <div id="ownerApp" class="owner-app hidden">
     <aside id="ownerSidebar" class="sidebar">
       <div class="brand">CJT REALTY<small>Owner Operations</small></div>
-      <div class="property-chip"><strong>Sand & Sea Manor</strong><span>1720 Avenue M · Galveston, TX</span></div>
+      <div class="property-chip"><strong>Sand &amp; Sea Manor</strong><span>1720 Avenue M · Galveston, TX</span></div>
       <nav class="nav" aria-label="Owner Portal">
         <a href="/owner-v1"><span>Dashboard</span></a>
-        <a href="/owner-v1/communications"><span>Communications</span><span id="communicationsNavCount" class="count">0</span></a>
+        <a href="/owner-v1/communications"><span>Communications</span></a>
         <a href="/owner-v1/reservations"><span>Reservations</span></a>
         <a href="/owner-v1/calendar"><span>Calendar</span><span class="count">Live</span></a>
         <a href="/owner-v1/pricing"><span>Pricing</span><span class="count">Live</span></a>
@@ -86,95 +48,198 @@
 
     <main class="main">
       <header class="topbar">
-        <div class="topbar-start">
+        <div class="topbar-start" style="display:flex;align-items:center;gap:10px">
           <button id="mobileMenu" class="icon-btn mobile-menu" type="button" aria-label="Open menu">☰</button>
           <div>
-            <h1>Financials</h1>
-            <div class="meta" id="financialSubtitle">Direct quotes and imported OTA stays · <span id="mtdMonthHint">America/Chicago</span></div>
+            <h1>Financial Performance</h1>
+            <div class="meta">Sand &amp; Sea Manor</div>
           </div>
         </div>
         <div class="top-actions">
           <span id="lastChecked" class="meta">Loading…</span>
           <button id="refreshFinancials" class="btn btn-secondary" type="button">Refresh</button>
-          <a class="btn btn-secondary" href="/owner-v1/reservations">Reservations ↗</a>
         </div>
       </header>
 
-      <div class="content">
+      <div class="content fp-page">
         <div id="moduleNotice" class="notice hidden"></div>
 
-        <div class="filter-bar" role="search" aria-label="Financials filters">
-          <div class="filter-field filter-field-range">
-            <span>Period</span>
-            <div id="filterRange" class="segmented" role="group" aria-label="Date range">
-              <button type="button" class="filter-btn" data-range="month">This month</button>
-              <button type="button" class="filter-btn active" data-range="year">This year</button>
-              <button type="button" class="filter-btn" data-range="all">All</button>
-              <button type="button" class="filter-btn" data-range="custom">Custom</button>
+        <div class="fp-toolbar" role="search" aria-label="Financials period and channel">
+          <div class="fp-toolbar-main">
+            <div id="filterRange" class="fp-pills" role="group" aria-label="Period">
+              <button type="button" class="fp-pill" data-range="month">This Month</button>
+              <button type="button" class="fp-pill active" data-range="ytd">YTD</button>
+              <button type="button" class="fp-pill" data-range="last12">Last 12 Months</button>
+              <button type="button" class="fp-pill" data-range="2025">2025</button>
+              <button type="button" class="fp-pill" data-range="custom">Custom</button>
+            </div>
+            <div class="fp-custom hidden">
+              <input id="filterFrom" class="fp-date" type="date" aria-label="From date">
+              <input id="filterTo" class="fp-date" type="date" aria-label="To date">
+            </div>
+            <label class="fp-visually-hidden" for="filterChannel" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">Channel</label>
+            <select id="filterChannel" class="fp-select" aria-label="Channel">
+              <option value="all">All Channels</option>
+            </select>
+          </div>
+          <div class="fp-toolbar-end" style="position:relative">
+            <button id="openFilters" class="fp-ghost" type="button">Filters</button>
+            <button id="openMethod" class="fp-icon-btn" type="button" aria-label="How financials are calculated" title="How financials are calculated">ⓘ</button>
+            <button id="clearFilters" class="fp-clear hidden" type="button">Clear</button>
+            <div id="filterPopover" class="fp-popover hidden" role="dialog" aria-label="Advanced filters">
+          <div class="fp-filter-grid">
+            <label>Status
+              <select id="filterStatus" class="fp-select">
+                <option value="all">All statuses</option>
+                <option value="active">Active</option>
+                <option value="closed">Closed</option>
+              </select>
+            </label>
+            <label>Source
+              <select id="filterSource" class="fp-select">
+                <option value="all">All sources</option>
+                <option value="direct">Direct</option>
+                <option value="ota">OTA</option>
+              </select>
+            </label>
+            <label>Payment
+              <select id="filterPayment" class="fp-select">
+                <option value="all">All payments</option>
+                <option value="paid">Paid</option>
+                <option value="pending">Pending</option>
+                <option value="upcoming">Upcoming</option>
+              </select>
+            </label>
+            <label>Stripe
+              <select id="filterStripe" class="fp-select">
+                <option value="all">All Stripe</option>
+                <option value="verified">Verified</option>
+                <option value="pending">Pending</option>
+              </select>
+            </label>
+            <label>Check-in from
+              <input id="advFrom" class="fp-date" type="date">
+            </label>
+            <label>Check-in to
+              <input id="advTo" class="fp-date" type="date">
+            </label>
+            <label class="span-2">Guest
+              <input id="filterGuest" class="fp-search" type="search" placeholder="Guest name">
+            </label>
+            <label class="span-2">Reservation ID
+              <input id="filterId" class="fp-search" type="search" placeholder="Booking or reservation ID">
+            </label>
+          </div>
+          <div class="fp-filter-actions">
+            <button id="resetAdvanced" class="btn btn-secondary" type="button">Reset</button>
+            <button id="applyFilters" class="btn btn-primary" type="button">Done</button>
+          </div>
             </div>
           </div>
-          <label class="filter-field filter-custom hidden">
-            <span>From</span>
-            <input id="filterFrom" class="filter-date" type="date" aria-label="From date">
-          </label>
-          <label class="filter-field filter-custom hidden">
-            <span>To</span>
-            <input id="filterTo" class="filter-date" type="date" aria-label="To date">
-          </label>
-          <label class="filter-field">
-            <span>Source</span>
-            <select id="filterSource" class="filter-select" aria-label="Source">
-              <option value="all">All sources</option>
-              <option value="direct">Direct</option>
-              <option value="ota">OTA</option>
-            </select>
-          </label>
-          <label class="filter-field">
-            <span>Status</span>
-            <select id="filterStatus" class="filter-select" aria-label="Status">
-              <option value="all">All statuses</option>
-              <option value="active">Active</option>
-              <option value="closed">Closed</option>
-            </select>
-          </label>
-          <label class="filter-field">
-            <span>Stripe</span>
-            <select id="filterStripe" class="filter-select" aria-label="Stripe">
-              <option value="all">All Stripe</option>
-              <option value="verified">Verified</option>
-              <option value="pending">Pending</option>
-            </select>
-          </label>
-          <label class="filter-field filter-field-search">
-            <span>Search</span>
-            <input id="financialSearch" class="search-box" type="search" placeholder="Guest, booking ID, source…">
-          </label>
-          <button id="clearFilters" class="filter-clear hidden" type="button">Clear filters</button>
         </div>
 
-        <div id="financialSummary" class="kpi-grid is-loading">
-          <div class="summary-card"><span>Revenue</span><b>—</b><span>Quoted + imported OTA</span></div>
-          <div class="summary-card"><span>Expected payout</span><b>—</b><span>Direct quotes + OTA payout</span></div>
-          <div class="summary-card"><span>Booked nights</span><b>—</b><span>Active stays in range</span></div>
-          <div class="summary-card"><span>Revenue / night</span><b>—</b><span>When nights and revenue exist</span></div>
-        </div>
+        <section id="financialKpis" class="fp-kpis is-loading" aria-label="Performance snapshot">
+          <article class="fp-kpi"><span class="label">Gross Revenue</span><b class="value">—</b><span class="hint">Quoted + imported stays</span></article>
+          <article class="fp-kpi owner"><span class="label">Owner Revenue</span><b class="value">—</b><span class="hint">After channel / payment fees</span></article>
+          <article class="fp-kpi"><span class="label">Booked Nights</span><b class="value">—</b><span class="hint">Occupancy when calculable</span></article>
+          <article class="fp-kpi"><span class="label">ADR</span><b class="value">—</b><span class="hint">Average daily rate</span></article>
+          <article class="fp-kpi"><span class="label">Upcoming Revenue</span><b class="value">—</b><span class="hint">Booked next 90 days</span></article>
+        </section>
 
-        <div id="financialChart" class="finance-chart hidden"></div>
+        <section class="fp-stage">
+          <article class="fp-card">
+            <div class="fp-card-head">
+              <div>
+                <h2>Revenue Performance</h2>
+                <p id="chartHint">Monthly totals for the selected period</p>
+              </div>
+              <div id="chartToggle" class="fp-toggle" role="group" aria-label="Chart metric">
+                <button type="button" class="active" data-chart="revenue">Revenue</button>
+                <button type="button" data-chart="occupancy">Occupancy</button>
+                <button type="button" data-chart="adr">ADR</button>
+              </div>
+            </div>
+            <div id="financialChart"></div>
+          </article>
+          <article class="fp-card">
+            <div class="fp-card-head">
+              <div>
+                <h3>Financial Summary</h3>
+                <p id="summaryHint">Gross to owner revenue</p>
+              </div>
+            </div>
+            <div id="financialSummary"></div>
+          </article>
+        </section>
 
-        <details class="about-disclosure">
-          <summary>About these numbers</summary>
-          <div class="about-body">
-            <p>Date-range buttons use America/Chicago month and year boundaries. KPIs, chart, and table all follow the same check-in range.</p>
-            <p>Direct rows use stored reservation quotes (lodging + cleaning + tax). OTA rows come from imported Airbnb, Vrbo, and Booking.com stays — real stored amounts, not invented zeros.</p>
-            <p>Quoted / imported total is the stay total when it exists. Expected payout is lodging + cleaning on Direct quotes, or the stored OTA payout. Missing money stays <strong>—</strong>.</p>
-            <p id="stripeNote">Stripe is Direct-booking only and is not live. Pending means no verified payment event yet. OTA stays settle on their channel.</p>
+        <section class="fp-card">
+          <div class="fp-card-head">
+            <div>
+              <h2>Revenue by Channel</h2>
+              <p>Only platforms with stored stays in this view</p>
+            </div>
           </div>
-        </details>
+          <div id="channelShare" class="fp-share hidden" aria-hidden="true"></div>
+          <div id="channelCards" class="fp-channels"></div>
+        </section>
 
-        <div class="report-meta"><span id="financialCount">Stays</span></div>
-        <div id="financialList"><div class="empty">Loading stored quotes and payment status…</div></div>
+        <section class="fp-card">
+          <div class="fp-card-head">
+            <div>
+              <h2>Gross to Owner Revenue</h2>
+              <p>Known deductions only — cleaning, taxes, and maintenance expand later when stored</p>
+            </div>
+          </div>
+          <div id="grossNetStory" class="fp-flow"></div>
+        </section>
+
+        <section class="fp-card">
+          <div class="fp-card-head">
+            <div>
+              <h2>Already on the books</h2>
+              <p>Upcoming booked revenue, nights, and occupancy for the next 30 / 60 / 90 days</p>
+            </div>
+          </div>
+          <div id="pacingCards" class="fp-pacing"></div>
+        </section>
+
+        <section class="fp-card">
+          <div class="fp-tx-head">
+            <div>
+              <h2 style="margin:0;font-size:1.02rem">Stays</h2>
+              <div id="financialCount" class="fp-count">Stays</div>
+            </div>
+            <div class="fp-tx-tools">
+              <div id="stayTabs" class="fp-tabs" role="tablist" aria-label="Stay status">
+                <button type="button" class="active" data-tab="all">All</button>
+                <button type="button" data-tab="paid">Paid</button>
+                <button type="button" data-tab="pending">Pending</button>
+                <button type="button" data-tab="upcoming">Upcoming</button>
+              </div>
+              <input id="financialSearch" class="fp-search" type="search" placeholder="Search guest or ID">
+            </div>
+          </div>
+          <div id="financialList"><div class="empty">Loading stored quotes and payment status…</div></div>
+        </section>
       </div>
     </main>
+  </div>
+
+  <div id="fpScrim" class="fp-scrim hidden"></div>
+  <aside id="stayDrawer" class="fp-drawer hidden" role="dialog" aria-label="Stay details"></aside>
+  <div id="methodModal" class="fp-modal hidden" role="dialog" aria-labelledby="methodTitle">
+    <div class="fp-modal-head">
+      <h2 id="methodTitle">How financials are calculated</h2>
+      <button id="closeMethod" class="icon-btn" type="button" aria-label="Close">×</button>
+    </div>
+    <div class="fp-method">
+      <p>Periods use Sand &amp; Sea Manor’s local calendar (America/Chicago). KPIs, the chart, and channel mix follow check-in dates in the selected range.</p>
+      <p><strong>Gross Revenue</strong> is the stored stay total: Direct quotes (lodging + cleaning + tax) plus imported OTA gross. Missing amounts stay as dashes — never invented zeros.</p>
+      <p><strong>Owner Revenue</strong> is Direct lodging + cleaning, or the stored OTA expected payout. Guest taxes are not treated as owner revenue.</p>
+      <p><strong>Channel / OTA fees</strong> are derived only when an imported stay has both gross and payout. Stripe processing fees are not stored, so payment processing stays unavailable.</p>
+      <p><strong>ADR</strong> is gross ÷ booked nights when both exist. Occupancy is unique guest nights overlapping the period ÷ nights in the period for this one home. Owner blocks and calendar holds are not subtracted here.</p>
+      <p><strong>OTA rows</strong> come from imported Airbnb, Vrbo, and Booking.com stays. Direct rows use reservation quotes. Stripe is Direct-only and is not live — unverified payments stay pending. OTA stays settle on their channel.</p>
+    </div>
   </div>
 
   <script src="/assets/js/owner-shell.js"></script>
