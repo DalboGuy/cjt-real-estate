@@ -1,7 +1,7 @@
 const crypto=require('crypto');
 const {db,ensureSchema}=require('../lib/db');
 const {previewPasswordFreeActive}=require('../lib/preview-access');
-const {SEASONS,CLEANING_FEE,TAX_RATE,PRICING_THROUGH,MAX_GUESTS,SPLIT_PAYMENT_THRESHOLD_DAYS,ADVANCE_PAYMENT_PCT}=require('../lib/pricing');
+const {WEEKEND_DAYS,SEASONS,CLEANING_FEE,TAX_RATE,PRICING_THROUGH,MAX_GUESTS,SPLIT_PAYMENT_THRESHOLD_DAYS,ADVANCE_PAYMENT_PCT}=require('../lib/pricing');
 
 function parseCookies(header=''){
   return Object.fromEntries(header.split(';').map(v=>v.trim()).filter(Boolean).map(v=>{
@@ -31,7 +31,7 @@ module.exports=async function(req,res){
       taxRate:TAX_RATE,
       pricingThrough:PRICING_THROUGH,
       maxGuests:MAX_GUESTS,
-      weekendDays:['Friday','Saturday'],
+      weekendDays:Array.from(WEEKEND_DAYS).map(day=>({0:'Sunday',1:'Monday',2:'Tuesday',3:'Wednesday',4:'Thursday',5:'Friday',6:'Saturday'}[day])),
       splitPaymentThresholdDays:SPLIT_PAYMENT_THRESHOLD_DAYS,
       advancePaymentPct:ADVANCE_PAYMENT_PCT
     });
