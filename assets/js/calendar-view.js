@@ -26,6 +26,9 @@
   let loadGeneration=0;
   let syncUi='idle';
   let syncFlashTimer=null;
+  let drawerDate=null;
+  let editingEntryId=null;
+  let savingNotes=false;
 
   const noticeEl=document.getElementById('moduleNotice');
   const mount=document.getElementById('calendarMount');
@@ -35,16 +38,28 @@
   const drawerActions=document.getElementById('drawerActions');
 
   function esc(v=''){return String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
-  function showNotice(text,ms=4500){
+  function showNotice(text,ms=4500,kind){
     if(!noticeEl)return;
     noticeEl.textContent=text;
     noticeEl.classList.remove('hidden','err','ok');
     if(!text){noticeEl.classList.add('hidden');return;}
+    if(kind==='ok') noticeEl.classList.add('ok');
+    if(kind==='err') noticeEl.classList.add('err');
     if(ms===0)return;
     setTimeout(()=>{
       if(noticeEl.textContent===text)noticeEl.classList.add('hidden');
     },ms);
   }
+  function drawerNoticeEl(){return document.getElementById('drawerNotice');}
+  function setDrawerNotice(text,kind){
+    const el=drawerNoticeEl();
+    if(!el)return;
+    el.textContent=text||'';
+    el.classList.toggle('hidden',!text);
+    el.classList.toggle('ok',kind==='ok');
+    el.classList.toggle('err',kind==='err');
+  }
+  function clearDrawerNotice(){setDrawerNotice('');}
   function showLoadError(text){
     if(!noticeEl)return;
     noticeEl.textContent=text;
@@ -674,22 +689,105 @@
         `<a class="btn btn-secondary" href="${esc(messagesHref(id))}">Messages</a>`
       ];
     }).join('');
+    const edits=deletable.map(ev=>`<button class="btn btn-secondary" type="button" data-edit="${esc(ev.entryId)}">Edit notes</button>`).join('');
     const removes=deletable.map(ev=>`<button class="btn danger-btn" type="button" data-del="${esc(ev.entryId)}">Remove ${esc(ev.label||'block')}</button>`).join('');
     const otaNote=otaOnly?'<p class="metric-label cal-ota-note">OTA feed only — there is no detailed reservation record in the owner portal for this night.</p>':'';
     drawerActions.innerHTML=`<div class="cal-drawer-action-list">
       <button class="btn btn-primary" type="button" data-fill="${esc(date)}" data-kind="manual_block">Block dates</button>
       <button class="btn btn-secondary" type="button" data-fill="${esc(date)}" data-kind="owner_stay">Owner stay</button>
-      ${links}${removes}
+      ${links}${edits}${removes}
     </div>${otaNote}`;
     drawerActions.querySelectorAll('[data-fill]').forEach(btn=>btn.addEventListener('click',()=>{
       fillForm(btn.getAttribute('data-fill'),btn.getAttribute('data-kind'));
       closeDrawer();
     }));
+    drawerActions.querySelectorAll('[data-edit]').forEach(btn=>btn.addEventListener('click',()=>startEditNotes(Number(btn.getAttribute('data-edit')))));
     drawerActions.querySelectorAll('[data-del]').forEach(btn=>btn.addEventListener('click',()=>removeEntry(Number(btn.getAttribute('data-del')))));
   }
 
-  function openDrawer(date){
+  function eventByEntryId(id){
+    return (snapshot?.events||[]).find(ev=>Number(ev.entryId)===Number(id));
+  }
+  function applyEntryNotes(id,entry){
+    const notes=entry&&Object.prototype.hasOwnProperty.call(entry,'notes')?entry.notes:null;
+    (snapshot?.events||[]).forEach(ev=>{
+      if(Number(ev.entryId)===Number(id)) ev.notes=notes||null;
+    });
+  }
+  function closeEditNotes(){
+    editingEntryId=null;
+    savingNotes=false;
+    const panel=document.getElementById('drawerNotesEdit');
+    const field=document.getElementById('drawerNotesField');
+    const saveBtn=document.getElementById('drawerNotesSave');
+    panel?.classList.add('hidden');
+    if(field) field.value='';
+    if(saveBtn) saveBtn.disabled=false;
+  }
+  function startEditNotes(id){
+    const ev=eventByEntryId(id);
+    if(!ev||!ev.canDelete||!ev.entryId) return;
+    editingEntryId=Number(ev.entryId);
+    clearDrawerNotice();
+    const panel=document.getElementById('drawerNotesEdit');
+    const field=document.getElementById('drawerNotesField');
+    const saveBtn=document.getElementById('drawerNotesSave');
+    if(field) field.value=ev.notes||'';
+    if(saveBtn) saveBtn.disabled=false;
+    panel?.classList.remove('hidden');
+    saveBtn?.scrollIntoView({block:'nearest',inline:'nearest'});
+    field?.focus();
+  }
+  function syncDrawerKeyboardInset(){
+    if(!drawer||drawer.classList.contains('hidden')){
+      drawer?.style.setProperty('--cal-keyboard-inset','0px');
+      return;
+    }
+    const vp=window.visualViewport;
+    const inset=vp?Math.max(0,window.innerHeight-vp.height-vp.offsetTop):0;
+    drawer.style.setProperty('--cal-keyboard-inset',`${Math.round(inset)}px`);
+  }
+  async function saveEntryNotes(e){
+    e?.preventDefault();
+    if(savingNotes||!editingEntryId) return;
+    const field=document.getElementById('drawerNotesField');
+    const saveBtn=document.getElementById('drawerNotesSave');
+    const notes=String(field?.value||'').trim().slice(0,500);
+    const id=editingEntryId;
+    const date=drawerDate;
+    savingNotes=true;
+    if(saveBtn) saveBtn.disabled=true;
+    clearDrawerNotice();
+    try{
+      const d=await ownerApi('calendar_entry_update',{id,notes});
+      if(d.ok!==true) throw new Error(d.message||d.error||'Could not save notes');
+      applyEntryNotes(id,d.entry||{notes});
+      const confirm=d.message||'Saved.';
+      closeEditNotes();
+      if(date) openDrawer(date,{keepNotice:true});
+      setDrawerNotice(confirm,'ok');
+      showNotice(confirm,4500,'ok');
+      await load().catch(()=>{});
+      if(date&&drawer&&!drawer.classList.contains('hidden')) openDrawer(date,{keepNotice:true});
+      setDrawerNotice(confirm,'ok');
+    }catch(err){
+      if(err.message==='unauthorized'){clearFailedChrome('Sign in to view Calendar.',{unauthorized:true});return;}
+      const msg=err.message||'Could not save notes';
+      setDrawerNotice(msg,'err');
+      showNotice(msg,4500,'err');
+      if(field) field.removeAttribute('readonly');
+      field?.focus();
+    }finally{
+      savingNotes=false;
+      if(saveBtn&&editingEntryId) saveBtn.disabled=false;
+    }
+  }
+
+  function openDrawer(date,opts={}){
     if(!drawer)return;
+    drawerDate=date;
+    if(!opts.keepNotice) clearDrawerNotice();
+    if(!opts.keepEdit) closeEditNotes();
     const evs=nightEvents(date);
     const night=snapshot?.nights?.[date];
     document.getElementById('drawerTitle').textContent=fmt(date);
@@ -702,20 +800,27 @@
         <div class="card-head"><div><h3>${esc(ev.label)}</h3><p>${esc(ev.start)} → ${esc(ev.end)} · ${esc(ev.nights)} night${ev.nights===1?'':'s'}</p></div><span class="badge ${ev.statusBucket==='hold'?'warn':ev.statusBucket==='cancelled'?'':'good'}">${esc(statusLabel(ev.statusBucket))}</span></div>
         <div class="reservation-meta">${esc(drawerGuestLabel(ev))}${ev.guestCount?` · ${esc(ev.guestCount)} guests`:''}${ev.sourceLabel?` · ${esc(ev.sourceLabel)}`:''}</div>
         ${contactLine(ev)}
-        ${ev.notes?`<p class="reservation-meta">${esc(ev.notes)}</p>`:''}
+        ${ev.canDelete&&ev.entryId
+          ?`<p class="reservation-meta cal-entry-notes">${ev.notes?esc(ev.notes):'No notes yet.'}</p>`
+          :(ev.notes?`<p class="reservation-meta">${esc(ev.notes)}</p>`:'')}
         ${ev.occupancy?'':'<div class="metric-label">Excluded from occupancy %.</div>'}
       </article>`).join('');
     }
     drawer.classList.remove('hidden');
     drawerBackdrop?.classList.remove('hidden');
     drawer.setAttribute('aria-hidden','false');
-    document.getElementById('drawerClose')?.focus();
+    syncDrawerKeyboardInset();
+    if(!opts.keepEdit) document.getElementById('drawerClose')?.focus();
   }
 
   function closeDrawer(){
+    closeEditNotes();
+    clearDrawerNotice();
+    drawerDate=null;
     drawer?.classList.add('hidden');
     drawerBackdrop?.classList.add('hidden');
     drawer?.setAttribute('aria-hidden','true');
+    drawer?.style.setProperty('--cal-keyboard-inset','0px');
   }
 
   function fillForm(date,kind){
@@ -963,7 +1068,26 @@
   document.getElementById('prepBuffer')?.addEventListener('change',()=>saveSettings(true));
   document.getElementById('drawerClose')?.addEventListener('click',closeDrawer);
   drawerBackdrop?.addEventListener('click',closeDrawer);
-  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer();});
+  document.addEventListener('keydown',e=>{
+    if(e.key!=='Escape') return;
+    if(editingEntryId){
+      closeEditNotes();
+      clearDrawerNotice();
+      return;
+    }
+    closeDrawer();
+  });
+  document.getElementById('drawerNotesForm')?.addEventListener('submit',saveEntryNotes);
+  document.getElementById('drawerNotesCancel')?.addEventListener('click',()=>{
+    closeEditNotes();
+    clearDrawerNotice();
+  });
+  document.getElementById('drawerNotesField')?.addEventListener('focus',()=>{
+    document.getElementById('drawerNotesSave')?.scrollIntoView({block:'nearest',inline:'nearest'});
+    syncDrawerKeyboardInset();
+  });
+  window.visualViewport?.addEventListener('resize',syncDrawerKeyboardInset);
+  window.visualViewport?.addEventListener('scroll',syncDrawerKeyboardInset);
 
   document.getElementById('blockForm')?.addEventListener('submit',async e=>{
     e.preventDefault();

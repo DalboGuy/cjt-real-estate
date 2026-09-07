@@ -93,12 +93,21 @@
 .cal-failed-note{border-color:#e7b7ad;color:#7a2929;background:#fff5f3}
 .notice.err{background:#fff5f3;color:#7a2929;border-color:#e7b7ad}
 .cal-drawer-backdrop{position:fixed;inset:0;background:rgba(13,43,49,.36);z-index:34}
-.cal-drawer{position:fixed;top:0;right:0;bottom:0;width:min(420px,100%);background:#fff;z-index:36;padding:22px;overflow:auto;box-shadow:-18px 0 40px rgba(13,43,49,.12)}
+.cal-drawer{position:fixed;top:0;right:0;bottom:0;width:min(420px,100%);background:#fff;z-index:36;padding:22px;padding-bottom:calc(22px + var(--cal-keyboard-inset,0px));overflow:auto;overflow-x:hidden;box-shadow:-18px 0 40px rgba(13,43,49,.12);max-width:100%}
 .cal-drawer h2{font-family:Georgia,serif;font-weight:500;margin:.2rem 0 .4rem}
 .cal-drawer-actions{margin:12px 0 4px}
 .cal-drawer-action-list{display:flex;flex-wrap:wrap;gap:8px}
 .cal-drawer-action-list .btn{flex:1 1 calc(50% - 8px);min-width:0;text-align:center}
+.cal-drawer-action-list [data-edit]{min-height:44px}
 .cal-ota-note{margin:10px 0 0}
+#drawerNotice{margin:8px 0 10px}
+.notice.ok{background:#e8f5ec;color:#245c38;border-color:#b7d8c2}
+.cal-notes-edit{margin:8px 0 12px;min-width:0;max-width:100%}
+.cal-notes-form{display:grid;gap:10px;min-width:0}
+.cal-notes-toolbar{display:flex;flex-wrap:wrap;gap:8px;position:sticky;top:0;z-index:2;background:#fff;padding:2px 0 6px}
+.cal-notes-toolbar .btn{flex:1 1 calc(50% - 8px);min-height:44px;min-width:0}
+.cal-notes-label{display:grid;gap:6px;font-weight:800;font-size:.8rem;color:var(--cjt-muted);min-width:0}
+.cal-notes-label textarea{width:100%;min-width:0;max-width:100%;min-height:96px;padding:11px 12px;border:1px solid var(--cjt-line);border-radius:10px;background:#fff;color:var(--cjt-ink);font:inherit;resize:vertical;box-sizing:border-box}
 .cal-form{display:grid;gap:10px}
 .cal-form label{display:grid;gap:5px;font-weight:800;font-size:.8rem;color:var(--cjt-muted)}
 .cal-form input,.cal-form select,.cal-form textarea{width:100%;padding:11px 12px;border:1px solid var(--cjt-line);border-radius:10px;background:#fff;color:var(--cjt-ink);font:inherit}
@@ -130,15 +139,16 @@
   .cal-year-months{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
 @media(max-width:780px){
-  .cal-drawer{width:100%;padding:16px 16px calc(28px + env(safe-area-inset-bottom))}
-  .owner-app.has-bottom-nav .cal-drawer{padding-bottom:calc(96px + env(safe-area-inset-bottom))}
+  .cal-drawer{width:100%;padding:16px 16px calc(28px + env(safe-area-inset-bottom) + var(--cal-keyboard-inset,0px))}
+  .owner-app.has-bottom-nav .cal-drawer{padding-bottom:calc(110px + env(safe-area-inset-bottom) + var(--cal-keyboard-inset,0px))}
   .cal-drawer-action-list .btn,.cal-drawer>.btn{flex:1 1 100%;min-height:44px}
+  .cal-notes-toolbar .btn{flex:1 1 calc(50% - 8px);min-height:44px}
 }
 @media(max-width:600px){
   .cal-dow,.cal-grid{gap:4px}
   .cal-day,.cal-day-skel{min-height:68px}
   .cal-pills{gap:2px}
-  .cal-drawer{padding:16px 16px calc(28px + env(safe-area-inset-bottom))}
+  .cal-drawer{padding:16px 16px calc(28px + env(safe-area-inset-bottom) + var(--cal-keyboard-inset,0px))}
   .cal-section-title .status-pill{max-width:100%;font-size:.72rem;padding:6px 9px}
   .cal-connections summary{align-items:flex-start}
   .cal-connections summary .status-pill{font-size:.72rem;padding:6px 9px}
