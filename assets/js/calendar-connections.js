@@ -69,6 +69,7 @@
     if(r.status===401)return;
     if(!r.ok)throw new Error(d.message||d.error||'Could not load calendar connections');
     render(d);
+    window.dispatchEvent(new CustomEvent('cjt-calendar-feeds-updated'));
   }
 
   async function refreshAll(){

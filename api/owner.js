@@ -3,7 +3,8 @@ const { db, ensureSchema, expireHolds }=require('../lib/db');
 const {previewPasswordFreeActive}=require('../lib/preview-access');
 const {ownerAdjustedQuote,normalizeOwnerQuote}=require('../lib/pricing');
 const {paymentSnapshot}=require('../lib/payments');
-const {getOtaBlockedDates, listOwnerConnections, FEED_ENV_BY_SOURCE, MAX_OWNER_CALENDARS, urlHostHint}=require('../lib/availability');
+const {getOtaBlockedDates, listOwnerConnections, FEED_ENV_BY_SOURCE, MAX_OWNER_CALENDARS, urlHostHint, eachDate}=require('../lib/availability');
+const {buildOwnerCalendarView, validIsoDate}=require('../lib/calendar-view');
 
 function parseCookies(header=''){return Object.fromEntries(header.split(';').map(v=>v.trim()).filter(Boolean).map(v=>{const i=v.indexOf('=');return [decodeURIComponent(v.slice(0,i)),decodeURIComponent(v.slice(i+1))];}));}
 function hash(v){return crypto.createHash('sha256').update(v).digest('hex');}
@@ -182,6 +183,70 @@ module.exports=async function(req,res){
       if(!Number.isInteger(id)||id<1) return res.status(400).json({error:'invalid_id'});
       await sql`DELETE FROM calendar_connections WHERE id=${id}`;
       return res.status(200).json({ok:true, id});
+    }
+
+    if(req.method==='POST'&&body.action==='calendar_view'){
+      const view=String(body.view||'month')==='week'?'week':'month';
+      const year=Number(body.year)||undefined;
+      const month=Number(body.month)||undefined;
+      const focusDate=validIsoDate(body.focusDate)?body.focusDate:undefined;
+      const snapshot=await buildOwnerCalendarView({view,year,month,focusDate});
+      return res.status(200).json(snapshot);
+    }
+
+    if(req.method==='POST'&&body.action==='calendar_entry_save'){
+      const kind=String(body.kind||'').trim();
+      const startDate=String(body.startDate||'').trim();
+      const endDate=String(body.endDate||'').trim();
+      const notes=String(body.notes||'').trim().slice(0,500)||null;
+      if(!['manual_block','owner_stay'].includes(kind)){
+        return res.status(400).json({error:'invalid_kind',message:'Choose a manual block or an owner stay.'});
+      }
+      if(!validIsoDate(startDate)||!validIsoDate(endDate)||endDate<=startDate){
+        return res.status(400).json({error:'invalid_dates',message:'End date must be after the start date. End date is the morning the home is available again.'});
+      }
+      const nights=eachDate(startDate,endDate).length;
+      if(nights<1||nights>180){
+        return res.status(400).json({error:'invalid_range',message:'Choose a stay or block between 1 and 180 nights.'});
+      }
+      const rows=await sql`
+        INSERT INTO owner_calendar_entries(property_id, kind, start_date, end_date, notes, updated_at, created_by)
+        VALUES ('sand-sea-manor', ${kind}, ${startDate}::date, ${endDate}::date, ${notes}, now(), 'owner')
+        RETURNING id, kind, start_date::text, end_date::text, notes
+      `;
+      return res.status(200).json({ok:true, entry:rows[0]});
+    }
+
+    if(req.method==='POST'&&body.action==='calendar_entry_delete'){
+      const id=Number(body.id);
+      if(!Number.isInteger(id)||id<1) return res.status(400).json({error:'invalid_id'});
+      const rows=await sql`DELETE FROM owner_calendar_entries WHERE id=${id} RETURNING id`;
+      if(!rows.length) return res.status(404).json({error:'not_found',message:'That block or stay was already removed.'});
+      return res.status(200).json({ok:true, id});
+    }
+
+    if(req.method==='POST'&&body.action==='calendar_settings_save'){
+      const prepBufferEnabled=body.prepBufferEnabled===true;
+      const showGuestNames=body.showGuestNames!==false;
+      const showGuestContact=body.showGuestContact===true;
+      const rows=await sql`
+        INSERT INTO owner_calendar_settings(property_id, prep_buffer_enabled, show_guest_names, show_guest_contact, updated_at)
+        VALUES ('sand-sea-manor', ${prepBufferEnabled}, ${showGuestNames}, ${showGuestContact}, now())
+        ON CONFLICT (property_id) DO UPDATE SET
+          prep_buffer_enabled=EXCLUDED.prep_buffer_enabled,
+          show_guest_names=EXCLUDED.show_guest_names,
+          show_guest_contact=EXCLUDED.show_guest_contact,
+          updated_at=now()
+        RETURNING property_id, prep_buffer_enabled, show_guest_names, show_guest_contact
+      `;
+      return res.status(200).json({
+        ok:true,
+        settings:{
+          prepBufferEnabled:rows[0].prep_buffer_enabled===true,
+          showGuestNames:rows[0].show_guest_names!==false,
+          showGuestContact:rows[0].show_guest_contact===true
+        }
+      });
     }
 
     return res.status(405).json({error:'method_not_allowed'});

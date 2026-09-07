@@ -1,6 +1,6 @@
 const crypto = require('crypto');
 const { db, ensureSchema, expireHolds } = require('../lib/db');
-const { getOtaBlockedDates } = require('../lib/availability');
+const { getGuestBlockedDates } = require('../lib/calendar-view');
 const { quoteStay, eachDate } = require('../lib/pricing');
 const { loadPricingCatalog } = require('../lib/pricing-store');
 
@@ -31,9 +31,9 @@ module.exports=async function(req,res){
       return res.status(e.status||422).json({error:e.code||'pricing_unavailable',message:e.message||'Pricing is not available for those dates.'});
     }
 
-    const {dates:otaBlocked}=await getOtaBlockedDates();
+    const {dates:blockedDates}=await getGuestBlockedDates();
     const requested=eachDate(checkin,checkout);
-    if(requested.some(d=>otaBlocked.has(d))){
+    if(requested.some(d=>blockedDates.has(d))){
       return res.status(409).json({error:'dates_unavailable',message:'One or more requested dates are no longer available.'});
     }
 
