@@ -135,6 +135,23 @@
     });
   }
   function esc(v=''){return String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+  function safeNextPath(){
+    const next=String(new URLSearchParams(location.search).get('next')||'').trim();
+    if(!next.startsWith('/owner-v1'))return '';
+    if(next.startsWith('//')||/^[a-z]+:/i.test(next))return '';
+    return next.split('#')[0];
+  }
+  function afterLogin(){
+    const next=safeNextPath();
+    if(!next)return false;
+    try{
+      const dest=new URL(next,location.origin);
+      if(dest.origin!==location.origin||!dest.pathname.startsWith('/owner-v1'))return false;
+      if(normalizePath(dest.pathname)===path&&dest.search===location.search)return false;
+      location.assign(`${dest.pathname}${dest.search}`);
+      return true;
+    }catch(e){return false;}
+  }
   function cannotApply(selection,page){
     const what=String(selection||'that selection').trim()||'that selection';
     const where=String(page||'this page').trim()||'this page';
@@ -171,6 +188,8 @@
     paymentLabel,
     bookingFacts,
     displayContextValue,
+    safeNextPath,
+    afterLogin,
     primary:PRIMARY,
     secondary:SECONDARY
   };
@@ -229,16 +248,11 @@
     booking.target='_blank';
     booking.rel='noopener';
     booking.textContent='View Booking Page';
-    const guest=document.createElement('a');
-    guest.href='/';
-    guest.target='_blank';
-    guest.rel='noopener';
-    guest.textContent='Guest site';
     const logout=document.createElement('button');
     logout.id='logout';
     logout.type='button';
     logout.textContent='Sign out';
-    footer.append(booking,guest,logout);
+    footer.append(booking,logout);
     bindLogout(logout);
   }
 

@@ -32,7 +32,7 @@ function guestPaymentTrust(quote) {
   const pct = percentLabel(p.depositPct);
   const threshold = thresholdLabel(p.splitPaymentThresholdDays);
   const dueNow = p.dueAtBooking != null ? p.dueAtBooking : q.total;
-  const holdNote = "You won't be charged until CJT accepts this request. Book Now places a 24-hour hold.";
+  const holdNote = "You won't be charged until CJT accepts this request. Book Now reserves these dates until an owner releases them.";
   const agreementHref = '/booking-agreement';
   const agreementLabel = 'Booking agreement';
 
@@ -60,7 +60,7 @@ function guestPaymentTrust(quote) {
     remainingAmount: 0,
     showRemaining: false,
     holdNote: nearArrival
-      ? `This stay begins within ${threshold}, so the full balance is due when CJT accepts. You won't be charged until then. Book Now places a 24-hour hold.`
+      ? `This stay begins within ${threshold}, so the full balance is due when CJT accepts. You won't be charged until then. Book Now reserves these dates until an owner releases them.`
       : holdNote,
     mobileNote: nearArrival ? 'Full balance due when accepted' : 'Due when accepted · no charge yet',
     agreementHref,

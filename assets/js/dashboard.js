@@ -189,6 +189,7 @@ loginForm.addEventListener('submit',async e=>{
     if(!r.ok)throw new Error(d.error||'invalid_passcode');
     document.getElementById('passcode').value='';
     loginMsg.textContent='';
+    if(window.CJTOwnerShell?.afterLogin?.())return;
     await load();
   }catch(err){
     loginMsg.textContent=err.message==='owner_login_not_configured'?'Owner login is not configured for this environment.':'Invalid passcode.';

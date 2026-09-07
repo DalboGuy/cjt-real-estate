@@ -139,7 +139,9 @@ loginForm.addEventListener('submit',async e=>{
     const r=await fetch('/api/owner',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'login',passcode:document.getElementById('passcode').value})});
     const d=await r.json().catch(()=>({}));
     if(!r.ok){loginMsg.textContent=d.error==='owner_login_not_configured'?'Owner login is not configured for this environment.':'Invalid passcode.';return}
-    document.getElementById('passcode').value='';loginMsg.textContent='';loadTasks();
+    document.getElementById('passcode').value='';loginMsg.textContent='';
+    if(window.CJTOwnerShell?.afterLogin?.())return;
+    loadTasks();
   }catch(err){
     loginMsg.textContent='Sign-in could not be completed. Try again.';
   }finally{

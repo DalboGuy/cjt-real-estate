@@ -81,6 +81,14 @@
     if(document.getElementById('viewYear')?.classList.contains('active'))return 'year';
     return 'month';
   }
+  function currentDate(){
+    const year=document.getElementById('calYearSelect')?.value;
+    const monthNum=Number(document.getElementById('calMonthSelect')?.value);
+    const dayNum=Number(document.getElementById('calDaySelect')?.value||1);
+    if(!/^\d{4}$/.test(String(year||''))||!Number.isInteger(monthNum)||monthNum<1||monthNum>12)return '';
+    const dd=Number.isInteger(dayNum)&&dayNum>=1&&dayNum<=31?String(dayNum).padStart(2,'0'):'01';
+    return `${year}-${String(monthNum).padStart(2,'0')}-${dd}`;
+  }
   function persistFromUi(push){
     if(applying||!shell?.writeContext)return;
     const ctx=shell.readContext();
@@ -90,7 +98,7 @@
     const statusSelect=document.getElementById('statusFilter');
     shell.writeContext({
       view:currentView(),
-      date:ctx.date||null,
+      date:currentDate()||ctx.date||null,
       channel:channelBtn?.getAttribute('data-channel')||channelSelect?.value||null,
       status:statusBtn?.getAttribute('data-status')||statusSelect?.value||null
     },{push:Boolean(push)});
@@ -128,4 +136,7 @@
   document.getElementById('statusFilters')?.addEventListener('click',()=>setTimeout(()=>persistFromUi(true),0));
   document.getElementById('channelFilter')?.addEventListener('change',()=>persistFromUi(true));
   document.getElementById('statusFilter')?.addEventListener('change',()=>persistFromUi(true));
+  ['calMonthSelect','calYearSelect','calDaySelect'].forEach(id=>{
+    document.getElementById(id)?.addEventListener('change',()=>persistFromUi(true));
+  });
 })();

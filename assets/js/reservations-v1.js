@@ -118,9 +118,9 @@ function quoteMarkup(r){
 
 function actionMarkup(r){
   if(!isActive(r))return '<span class="reservation-meta">Closed reservation · no active actions</span>';
-  const primary=r.status==='inquiry_hold'?'<button class="btn btn-primary" data-action="accept_request">Owner approved</button>':'';
+  const primary=r.status==='inquiry_hold'?'<button class="btn btn-primary" data-action="accept_request">Accept request</button>':'';
   const reject=!['confirmed'].includes(r.status)?'<button class="btn danger-btn" data-action="reject_request">Reject / Release</button>':'';
-  return `${primary}<button class="btn btn-secondary" data-action="maintain_hold">Keep dates blocked</button><a class="btn btn-secondary" target="_blank" rel="noopener" href="${TEMPLATE}">Open Contract ↗</a><button class="btn btn-secondary" data-action="contract_sent">Contract sent</button><button class="btn btn-secondary" data-action="contract_signed">Contract completed</button><p class="metric-label" style="margin:8px 0 0">Stripe is on hold — no checkout or charges from this page.</p>${r.payment?.verified?'': '<button class="btn btn-primary" data-action="deposit_received">Payment received</button>'}${reject}`;
+  return `${primary}<a class="btn btn-secondary" target="_blank" rel="noopener" href="${TEMPLATE}">Open Contract ↗</a><button class="btn btn-secondary" data-action="contract_sent">Contract sent</button><button class="btn btn-secondary" data-action="contract_signed">Contract completed</button><p class="metric-label" style="margin:8px 0 0">Stripe is on hold — no checkout or charges from this page. Payment received is recorded from a verified payment event, not from this button.</p>${reject}`;
 }
 
 function statusFromUrl(){
@@ -150,7 +150,7 @@ function renderReservations(){
   const rows=filteredReservations();
   reservationList.innerHTML=rows.length?'':'<div class="empty">No matching direct bookings.</div>';
   rows.forEach(r=>{
-    const hold=r.status==='inquiry_hold'?'<span class="badge warn">Dates blocked until you act</span>':'';
+    const hold=r.status==='inquiry_hold'?'<span class="badge warn">Dates blocked until you accept, reject, or release</span>':(isActive(r)?'<span class="badge">Dates locked until you release</span>':'');
     const card=document.createElement('article');
     card.className='reservation-card';
     card.id=`booking-${r.id}`;
@@ -165,6 +165,10 @@ function renderReservations(){
 }
 
 async function updateReservation(id,status,card){
+  if(status==='maintain_hold'){
+    notice('Dates stay locked until you release them. Accept request is the only step that marks Owner approved.');
+    return;
+  }
   if(busyIds.has(id))return;
   if(['reject_request','release_dates'].includes(status)&&!confirm('Release these dates back to inventory?'))return;
   busyIds.add(id);
@@ -221,6 +225,7 @@ function renderCommunicationsQuick(data){
 }
 
 async function loadReservations(){
+  reservationList.innerHTML='<div class="empty" aria-busy="true">Loading bookings…</div>';
   try{
     const [d,dashboard]=await Promise.all([ownerApi(),dashboardApi()]);
     reservationRows=d.reservations||[];
@@ -272,7 +277,9 @@ loginForm.addEventListener('submit',async e=>{
     const r=await fetch('/api/owner',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'login',passcode:document.getElementById('passcode').value})});
     const d=await r.json().catch(()=>({}));
     if(!r.ok){loginMsg.textContent=d.error==='owner_login_not_configured'?'Owner login is not configured for this environment.':'Invalid passcode.';return}
-    document.getElementById('passcode').value='';loginMsg.textContent='';loadReservations();
+    document.getElementById('passcode').value='';loginMsg.textContent='';
+    if(window.CJTOwnerShell?.afterLogin?.())return;
+    loadReservations();
   }catch(err){
     loginMsg.textContent='Sign-in could not be completed. Try again.';
   }finally{

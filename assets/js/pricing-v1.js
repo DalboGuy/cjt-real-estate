@@ -401,6 +401,7 @@
       if(!r.ok)throw new Error(d.error||'invalid_passcode');
       document.getElementById('passcode').value='';
       loginMsg.textContent='';
+      if(window.CJTOwnerShell?.afterLogin?.())return;
       showApp();
       resetSeasonForm();
       renderPricing(await getPricing());
