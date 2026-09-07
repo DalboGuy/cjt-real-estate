@@ -67,7 +67,11 @@
   const CTA_SUBMIT='Send hold request — not a confirmed booking';
   let blocked=new Set(),calendarHealthy=false,selectedStart='',selectedEnd='',guests=1,currentQuote=null;
   let pickerCursor=new Date();pickerCursor=new Date(pickerCursor.getFullYear(),pickerCursor.getMonth(),1);
+  let ignoreBackdropUntil=0;
   const calendarModal=$('calendarModal');
+  function isMobileBooking(){return window.matchMedia('(max-width:780px)').matches}
+  function guardBackdrop(){ignoreBackdropUntil=Date.now()+600}
+  function shouldIgnoreBackdrop(){return Date.now()<ignoreBackdropUntil}
   function canCheckoutOn(date){return selectedStart&&!selectedEnd&&date>selectedStart&&!eachDate(selectedStart,date).some(d=>blocked.has(d))}
   function renderMonth(target,date,secondary=false){
     target.innerHTML='';const title=document.createElement('h3');title.textContent=date.toLocaleDateString('en-US',{month:'long',year:'numeric'});target.appendChild(title);
@@ -77,7 +81,7 @@
     for(let day=1;day<=days;day++){
       const k=`${y}-${String(m+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`,past=k<today,isBlocked=blocked.has(k),checkoutOption=isBlocked&&canCheckoutOn(k),b=document.createElement('button');
       b.type='button';b.className='day';b.textContent=day;if(selectedStart===k||selectedEnd===k)b.classList.add('selected');else if(selectedStart&&selectedEnd&&k>selectedStart&&k<selectedEnd)b.classList.add('range');
-      b.disabled=past||(isBlocked&&!checkoutOption);b.title=isBlocked&&!checkoutOption?'Unavailable':'';if(!b.disabled)b.onclick=()=>selectDate(k,isBlocked);grid.appendChild(b)
+      b.disabled=past||(isBlocked&&!checkoutOption);b.title=isBlocked&&!checkoutOption?'Unavailable':'';if(!b.disabled)b.onclick=e=>{e.preventDefault();e.stopPropagation();selectDate(k,isBlocked)};grid.appendChild(b)
     }
     target.appendChild(grid);target.classList.toggle('secondary',secondary);
   }
@@ -89,16 +93,50 @@
     [$('bookNowBtn'),$('mobileBookBtn')].forEach(btn=>{if(!btn)return;btn.textContent=label;btn.classList.toggle('cta-hold',ready)});
     const note=document.querySelector('.charge-note');
     if(note)note.textContent=ready?'All-in quote shown. This requests a 24-hour hold for CJT review. No payment now. Not a confirmed booking.':'Choose dates to see the all-in price. No payment to check availability.';
+    syncTripDatesClass();
+  }
+  function syncTripDatesClass(){
+    const hasDates=!!(selectedStart&&selectedEnd);
+    document.body.classList.toggle('has-trip-dates',hasDates);
+    const card=$('bookingCard')||document.querySelector('.booking-card');
+    if(card)card.classList.toggle('is-next-step',hasDates);
+    syncSupportChat();
+  }
+  function revealBookingStep(){
+    if(!(selectedStart&&selectedEnd))return;
+    document.body.classList.remove('booking-step-collapsed');
+    syncTripDatesClass();
+    const card=$('bookingCard')||document.querySelector('.booking-card');
+    const mobile=isMobileBooking();
+    if(card){card.classList.add('is-next-step');if(!mobile){try{card.scrollIntoView({behavior:'smooth',block:'center'})}catch{}}}
+    const cta=$(mobile?'mobileBookBtn':'bookNowBtn');
+    if(cta)setTimeout(()=>{try{cta.focus({preventScroll:true})}catch{}},280);
   }
   function resetQuote(){currentQuote=null;$('quoteBreakdown').classList.remove('show');$('quoteError').hidden=true;$('bookPrice').innerHTML='<span class="price-main">Add dates for prices</span>';$('mobilePrice').innerHTML='<strong>Add dates</strong><span>See total price</span>';$('bookNowBtn').disabled=false;if($('mobileBookBtn'))$('mobileBookBtn').disabled=false;paintPrimaryCtas()}
   function selectDate(date,isBlocked){
     if(!selectedStart||selectedEnd||date<=selectedStart){if(isBlocked)return;selectedStart=date;selectedEnd='';resetQuote()}
     else{const nights=eachDate(selectedStart,date);if(nights.some(d=>blocked.has(d))){if(!isBlocked){selectedStart=date;selectedEnd='';resetQuote()}return}else{selectedEnd=date;resetQuote()}}
-    updateSelectors();renderPicker();if(selectedStart&&selectedEnd){setTimeout(closeCalendar,180);loadQuote()}
+    updateSelectors();renderPicker();
+    if(selectedStart&&selectedEnd)completeDatePick();
   }
-  function openCalendar(){if(selectedStart){const d=toUtc(selectedStart);pickerCursor=new Date(d.getUTCFullYear(),d.getUTCMonth(),1)}renderPicker();calendarModal.classList.add('show');document.body.classList.add('modal-open')}
+  function completeDatePick(){
+    guardBackdrop();
+    calendarModal.classList.remove('show');
+    document.body.classList.remove('modal-open');
+    revealBookingStep();
+    Promise.resolve(loadQuote()).finally(()=>revealBookingStep());
+  }
+  function openCalendar(){
+    guardBackdrop();
+    if(selectedStart){const d=toUtc(selectedStart);pickerCursor=new Date(d.getUTCFullYear(),d.getUTCMonth(),1)}
+    renderPicker();calendarModal.classList.add('show');document.body.classList.add('modal-open');
+  }
   function closeCalendar(){calendarModal.classList.remove('show');document.body.classList.remove('modal-open')}
-  document.querySelectorAll('[data-open-calendar]').forEach(b=>b.onclick=openCalendar);$('calendarClose').onclick=closeCalendar;$('calPrev').onclick=()=>{pickerCursor=new Date(pickerCursor.getFullYear(),pickerCursor.getMonth()-1,1);renderPicker()};$('calNext').onclick=()=>{pickerCursor=new Date(pickerCursor.getFullYear(),pickerCursor.getMonth()+1,1);renderPicker()};calendarModal.addEventListener('click',e=>{if(e.target===calendarModal)closeCalendar()});
+  document.querySelectorAll('[data-open-calendar]').forEach(b=>b.onclick=e=>{e.preventDefault();e.stopPropagation();openCalendar()});
+  $('calendarClose').onclick=closeCalendar;
+  $('calPrev').onclick=()=>{pickerCursor=new Date(pickerCursor.getFullYear(),pickerCursor.getMonth()-1,1);renderPicker()};
+  $('calNext').onclick=()=>{pickerCursor=new Date(pickerCursor.getFullYear(),pickerCursor.getMonth()+1,1);renderPicker()};
+  calendarModal.addEventListener('pointerdown',e=>{if(e.target!==calendarModal||shouldIgnoreBackdrop())return;closeCalendar()});
   function sourceChannel(s){
     if(s&&s.channel)return String(s.channel).toLowerCase();
     const hay=`${s&&s.name||''} ${s&&s.label||''} ${s&&s.hostHint||''}`.toLowerCase();
@@ -162,6 +200,7 @@
   function openBooking(){if(!selectedStart||!selectedEnd){openCalendar();return}if(!currentQuote){loadQuote();return}$('bookingSummary').innerHTML=`<strong>${fmt(selectedStart)} – ${fmt(selectedEnd)} · ${guests} guest${guests===1?'':'s'}</strong><span>${currentQuote.nights} nights · ${money(currentQuote.total)} total</span>`;bookingModal.classList.add('show');document.body.classList.add('modal-open')}
   function closeBooking(){bookingModal.classList.remove('show');document.body.classList.remove('modal-open')}
   $('bookNowBtn').onclick=openBooking;$('mobileBookBtn').onclick=openBooking;$('bookingClose').onclick=closeBooking;bookingModal.addEventListener('click',e=>{if(e.target===bookingModal)closeBooking()});
+  $('dismissBookingStep')?.addEventListener('click',()=>{document.body.classList.add('booking-step-collapsed');document.body.classList.remove('has-trip-dates');const card=$('bookingCard');if(card)card.classList.remove('is-next-step');syncSupportChat();const bar=document.querySelector('.mobile-bookbar');if(bar)try{bar.scrollIntoView({behavior:'smooth',block:'end'})}catch{}});
   bookingForm.addEventListener('submit',async e=>{
     e.preventDefault();if(!currentQuote||!selectedStart||!selectedEnd)return;const btn=$('bookingSubmit'),msg=$('bookingMessage'),f=new FormData(bookingForm);btn.disabled=true;btn.textContent='Sending your request…';msg.className='form-message';msg.textContent='';
     const payload={name:f.get('name'),email:f.get('email'),phone:f.get('phone'),checkin:selectedStart,checkout:selectedEnd,guests:String(guests),message:String(f.get('message')||'').trim(),pets:f.get('pets'),event:f.get('event'),trip_type:f.get('trip_type')};
@@ -174,10 +213,10 @@
   function syncSupportChat(){
     const api=window.Tawk_API;
     if(!api)return;
-    const open=document.body.classList.contains('modal-open');
+    const hide=document.body.classList.contains('modal-open')||(isMobileBooking()&&!!(selectedStart&&selectedEnd));
     try{
-      if(open&&typeof api.hideWidget==='function')api.hideWidget();
-      else if(!open&&typeof api.showWidget==='function')api.showWidget();
+      if(hide&&typeof api.hideWidget==='function')api.hideWidget();
+      else if(!hide&&typeof api.showWidget==='function')api.showWidget();
     }catch{}
   }
   new MutationObserver(syncSupportChat).observe(document.body,{attributes:true,attributeFilter:['class']});

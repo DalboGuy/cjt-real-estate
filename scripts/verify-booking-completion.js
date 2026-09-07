@@ -196,5 +196,12 @@ assert.match(guestHtml, /Send hold request — not a confirmed booking/);
 assert.doesNotMatch(guestHtml, /Book Now/);
 assert.doesNotMatch(guestHtml, />Check dates</);
 assert.doesNotMatch(guestHtml, />Request to Book</);
+assert.match(guestHtml, /id="bookingCard"/);
+assert.match(listingSrc, /ignoreBackdropUntil/);
+assert.match(listingSrc, /completeDatePick/);
+assert.match(listingSrc, /revealBookingStep/);
+assert.match(listingSrc, /has-trip-dates/);
+assert.match(listingSrc, /shouldIgnoreBackdrop/);
+assert.doesNotMatch(listingSrc, /setTimeout\(closeCalendar,180\)/);
 
 console.log('verify-booking-completion: ok');

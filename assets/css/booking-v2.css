@@ -29,15 +29,35 @@
 
 /* Option A CTAs: Check availability, then hold request. Keep tawk off calendar/form. */
 #bookNowBtn,#mobileBookBtn{white-space:normal;line-height:1.25;min-height:48px;text-align:center}
+.booking-card{scroll-margin-top:96px}
+.booking-card.is-next-step{box-shadow:0 16px 44px rgba(13,43,49,.2);outline:2px solid var(--deep)}
+.booking-step-dismiss{display:none}
 @media(max-width:780px){
   .header-check-cta{display:none}
   .mobile-bookbar{z-index:80;align-items:center;gap:10px}
   .mobile-bookbar .btn{min-width:min(228px,54vw);font-size:.82rem;padding:10px 12px}
   body.modal-open .mobile-bookbar{display:none}
+  body.has-trip-dates:not(.booking-step-collapsed) .side-column{
+    display:block;
+    position:fixed;
+    left:12px;
+    right:12px;
+    bottom:86px;
+    z-index:85;
+    max-height:min(68vh,560px);
+    overflow:auto;
+    margin:0;
+  }
+  body.has-trip-dates:not(.booking-step-collapsed) .side-column .desktop-source-summaries{display:none!important}
+  body.has-trip-dates:not(.booking-step-collapsed) .booking-step-dismiss{display:inline-block;margin-top:10px}
+  body.has-trip-dates:not(.booking-step-collapsed) .mobile-bookbar{z-index:86}
 }
 body.modal-open iframe[src*="tawk.to"],
 body.modal-open iframe[title*="chat"],
-body.modal-open .tawk-min-container{
+body.modal-open .tawk-min-container,
+body.has-trip-dates iframe[src*="tawk.to"],
+body.has-trip-dates iframe[title*="chat"],
+body.has-trip-dates .tawk-min-container{
   opacity:0!important;
   pointer-events:none!important;
   visibility:hidden!important;

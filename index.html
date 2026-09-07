@@ -179,7 +179,7 @@
 
       <aside class="side-column" aria-label="Booking controls">
         <div class="booking-sidebar-stack">
-          <div class="booking-card">
+          <div id="bookingCard" class="booking-card">
             <div id="bookPrice" class="booking-price"><span class="price-main">Add dates for prices</span></div>
             <div class="booking-selectors">
               <div class="date-selector-row">
@@ -193,6 +193,7 @@
             </div>
             <button id="bookNowBtn" class="btn btn-primary" type="button">Check availability</button>
             <div class="charge-note">Choose dates to see the all-in price. No payment to check availability.</div>
+            <button type="button" id="dismissBookingStep" class="micro-link booking-step-dismiss">Keep browsing</button>
             <div id="quoteError" class="quote-error" hidden></div>
             <div id="quoteBreakdown" class="quote-breakdown">
               <div class="quote-row"><span>Lodging</span><strong id="quoteLodging">—</strong></div>
