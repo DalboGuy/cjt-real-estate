@@ -6,8 +6,12 @@ const {
   countsTowardOccupancy,
   reservationStatusBucket,
   monthBounds,
+  weekBounds,
   addDays,
-  DEFAULT_SETTINGS
+  DEFAULT_SETTINGS,
+  settingsFromRow,
+  snapshotFromInputs,
+  publicEvent
 } = require('../lib/calendar-view');
 const {
   parseIcalEvents,
@@ -127,6 +131,49 @@ const month = monthBounds(2026, 9);
 assert.strictEqual(month.start, '2026-09-01');
 assert.strictEqual(month.end, '2026-10-01');
 assert.strictEqual(addDays('2026-09-30', 1), '2026-10-01');
+const week = weekBounds('2026-09-10');
+assert.strictEqual(week.start, '2026-09-06');
+assert.strictEqual(week.end, '2026-09-13');
+
+assert.deepStrictEqual(settingsFromRow(null), { ...DEFAULT_SETTINGS });
+assert.strictEqual(settingsFromRow({ prep_buffer_enabled: true, show_guest_names: false, show_guest_contact: true }).prepBufferEnabled, true);
+assert.strictEqual(settingsFromRow({ prep_buffer_enabled: true, show_guest_names: false, show_guest_contact: true }).showGuestNames, false);
+assert.strictEqual(settingsFromRow({ prep_buffer_enabled: true, show_guest_names: false, show_guest_contact: true }).showGuestContact, true);
+
+const hiddenContact = publicEvent(events.find((e) => e.reservationId === 'DB-1'), DEFAULT_SETTINGS);
+assert.strictEqual(hiddenContact.guestName, 'Ada');
+assert.strictEqual(hiddenContact.guestEmail, null);
+assert.strictEqual(hiddenContact.guestPhone, null);
+const shownContact = publicEvent(events.find((e) => e.reservationId === 'DB-1'), { ...DEFAULT_SETTINGS, showGuestContact: true });
+assert.strictEqual(shownContact.guestEmail, 'ada@example.com');
+assert.strictEqual(shownContact.guestPhone, '555');
+const hiddenName = publicEvent(events.find((e) => e.reservationId === 'DB-1'), { ...DEFAULT_SETTINGS, showGuestNames: false });
+assert.strictEqual(hiddenName.guestName, null);
+
+const snap = snapshotFromInputs({
+  ota: { events: otaEvents, sources: [] },
+  reservations,
+  entries,
+  settings: DEFAULT_SETTINGS
+}, { year: 2026, month: 9, view: 'month', focusDate: '2026-09-10' });
+assert.strictEqual(snap.view, 'month');
+assert.strictEqual(snap.settings.showGuestContact, false);
+assert.strictEqual(snap.events.find((e) => e.reservationId === 'DB-1').guestEmail, null);
+assert.strictEqual(snap.occupancy.viewedMonth.booked, 9);
+assert.ok(snap.occupancy.viewedWeek);
+assert.strictEqual(snap.occupancy.viewedWeek.total, 7);
+assert.strictEqual(snap.occupancy.viewedWeek.booked, 3, 'Sep 10–12 guest nights in the week of Sep 6');
+assert.ok(!snap.upcoming.some((e) => e.guestEmail));
+
+const weekSnap = snapshotFromInputs({
+  ota: { events: otaEvents, sources: [] },
+  reservations,
+  entries,
+  settings: DEFAULT_SETTINGS
+}, { year: 2026, month: 9, view: 'week', focusDate: '2026-09-10' });
+assert.strictEqual(weekSnap.view, 'week');
+assert.strictEqual(weekSnap.range.weekStart, '2026-09-06');
+assert.strictEqual(weekSnap.occupancy.viewedWeek.booked, 3);
 
 expectThrow(() => {
   throw new Error('No calendar feeds configured');

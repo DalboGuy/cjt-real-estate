@@ -18,6 +18,7 @@
   let channelFilter='all';
   let statusFilter='all';
   let savingSettings=false;
+  let loadTimer=null;
 
   const noticeEl=document.getElementById('moduleNotice');
   const mount=document.getElementById('calendarMount');
@@ -72,12 +73,10 @@
     if(prep) prep.checked=settings.prepBufferEnabled===true;
   }
 
-  function guestLabel(ev){
+  function drawerGuestLabel(ev){
     const settings=snapshot?.settings||settingsFromForm();
-    if(ev.guestName){
-      if(settings.showGuestNames===false) return 'Guest';
-      return ev.guestName;
-    }
+    if(settings.showGuestNames===false) return ev.summary&&ev.summary!==ev.label?ev.summary:'';
+    if(ev.guestName) return ev.guestName;
     if(ev.summary&&ev.summary!==ev.label) return ev.summary;
     return '';
   }
@@ -118,12 +117,13 @@
   function renderOccupancy(){
     const el=document.getElementById('occupancyStrip');
     if(!el||!snapshot)return;
-    const viewed=snapshot.occupancy.viewedMonth;
+    const viewed=view==='week'?(snapshot.occupancy.viewedWeek||snapshot.occupancy.viewedMonth):snapshot.occupancy.viewedMonth;
     const next30=snapshot.occupancy.next30;
     const next90=snapshot.occupancy.next90;
     const thisMonth=snapshot.range.year===Number(snapshot.range.today.slice(0,4))&&snapshot.range.month===Number(snapshot.range.today.slice(5,7));
+    const period=view==='week'?'This week':(thisMonth?'This month':'Viewed month');
     const cards=[
-      [thisMonth?'This month':'Viewed month', `${viewed.pct}%`, `${viewed.booked} of ${viewed.total} guest nights`],
+      [period, `${viewed.pct}%`, `${viewed.booked} of ${viewed.total} guest nights`],
       ['Next 30 days', `${next30.pct}%`, `${next30.booked} of ${next30.total} guest nights`],
       ['Next 90 days', `${next90.pct}%`, `${next90.booked} of ${next90.total} guest nights`]
     ];
@@ -246,7 +246,7 @@
     }else{
       drawerBody.innerHTML=evs.map(ev=>`<article class="card" style="margin-top:12px;padding:14px">
         <div class="card-head"><div><h3>${esc(ev.label)}</h3><p>${esc(ev.start)} → ${esc(ev.end)} · ${esc(ev.nights)} night${ev.nights===1?'':'s'}</p></div><span class="badge ${ev.statusBucket==='hold'?'warn':ev.statusBucket==='cancelled'?'':'good'}">${esc(ev.statusBucket)}</span></div>
-        <div class="reservation-meta">${esc(guestLabel(ev))}${ev.guestCount?` · ${esc(ev.guestCount)} guests`:''}${ev.sourceLabel?` · ${esc(ev.sourceLabel)}`:''}</div>
+        <div class="reservation-meta">${esc(drawerGuestLabel(ev))}${ev.guestCount?` · ${esc(ev.guestCount)} guests`:''}${ev.sourceLabel?` · ${esc(ev.sourceLabel)}`:''}</div>
         ${contactLine(ev)}
         ${ev.notes?`<p class="reservation-meta">${esc(ev.notes)}</p>`:''}
         ${ev.occupancy?'':'<div class="metric-label">Excluded from occupancy %.</div>'}
@@ -255,6 +255,8 @@
     }
     drawer.classList.remove('hidden');
     drawerBackdrop?.classList.remove('hidden');
+    drawer.setAttribute('aria-hidden','false');
+    document.getElementById('drawerClose')?.focus();
     drawerBody.querySelector('[data-fill]')?.addEventListener('click',e=>{
       fillForm(e.currentTarget.getAttribute('data-fill'));
       closeDrawer();
@@ -265,6 +267,7 @@
   function closeDrawer(){
     drawer?.classList.add('hidden');
     drawerBackdrop?.classList.add('hidden');
+    drawer?.setAttribute('aria-hidden','true');
   }
 
   function fillForm(date){
@@ -291,33 +294,54 @@
     const rows=(snapshot.upcoming||[]).filter(eventVisible);
     if(!rows.length){el.innerHTML='<div class="empty">No upcoming stays or blocks.</div>';return;}
     el.innerHTML=rows.map(ev=>{
-      const who=guestLabel(ev);
-      return `<div class="list-row" data-open="${esc(ev.start)}"><div><strong>${esc(ev.label)}${who?` · ${esc(who)}`:''}</strong><span>${esc(ev.start)} → ${esc(ev.end)} · ${esc(ev.nights)} night${ev.nights===1?'':'s'}${ev.statusBucket==='hold'?' · hold':''}</span></div><span class="badge ${ev.statusBucket==='hold'?'warn':''}">${esc(ev.channel)}</span></div>`;
+      const extra=ev.statusBucket==='hold'?' · hold':(ev.occupancy?'':' · not in occupancy');
+      return `<div class="list-row" data-open="${esc(ev.start)}"><div><strong>${esc(ev.label)}</strong><span>${esc(ev.start)} → ${esc(ev.end)} · ${esc(ev.nights)} night${ev.nights===1?'':'s'}${extra}</span></div><span class="badge ${ev.statusBucket==='hold'?'warn':''}">${esc(ev.channel)}</span></div>`;
     }).join('');
     el.querySelectorAll('[data-open]').forEach(row=>row.addEventListener('click',()=>openDrawer(row.getAttribute('data-open'))));
+  }
+
+  function summaryRange(){
+    if(view==='week') return {start:snapshot.range.weekStart,end:snapshot.range.weekEnd,label:`Week of ${fmt(snapshot.range.weekStart)}`};
+    return {start:snapshot.range.start,end:snapshot.range.end,label:monthTitle(snapshot.range.year,snapshot.range.month)};
   }
 
   function monthSummaryText(){
     if(!snapshot)return '';
     const settings=snapshot.settings||{};
+    const range=summaryRange();
+    const occ=view==='week'?(snapshot.occupancy.viewedWeek||snapshot.occupancy.viewedMonth):snapshot.occupancy.viewedMonth;
     const lines=[
-      `${snapshot.property.name} — ${monthTitle(snapshot.range.year,snapshot.range.month)}`,
-      `Occupancy (guest nights): ${snapshot.occupancy.viewedMonth.pct}% this view · ${snapshot.occupancy.next30.pct}% next 30 · ${snapshot.occupancy.next90.pct}% next 90`,
+      `${snapshot.property.name} — ${range.label}`,
+      `Occupancy (guest holds + confirmed + OTA only): ${occ.pct}% this view · ${snapshot.occupancy.next30.pct}% next 30 · ${snapshot.occupancy.next90.pct}% next 90`,
       `Conflicts: ${snapshot.conflicts.length}`,
       'Outbound Airbnb/VRBO push: paused',
       ''
     ];
-    const rows=(snapshot.events||[]).filter(ev=>ev.end>snapshot.range.start&&ev.start<snapshot.range.end&&ev.statusBucket!=='cancelled').sort((a,b)=>a.start.localeCompare(b.start));
+    const rows=(snapshot.events||[]).filter(ev=>ev.end>range.start&&ev.start<range.end&&ev.statusBucket!=='cancelled').sort((a,b)=>a.start.localeCompare(b.start));
     for(const ev of rows){
-      const who=settings.showGuestNames===false&&ev.guestName?'Guest':(ev.guestName||ev.summary);
-      lines.push(`${ev.start} → ${ev.end} · ${ev.label} · ${ev.statusBucket}${who?` · ${who}`:''}${ev.guestCount?` · ${ev.guestCount} guests`:''}`);
+      const who=settings.showGuestNames!==false?drawerGuestLabel(ev):'';
+      lines.push(`${ev.start} → ${ev.end} · ${ev.label} · ${ev.statusBucket}${who?` · ${who}`:''}${ev.guestCount?` · ${ev.guestCount} guests`:''}${settings.showGuestContact&&(ev.guestEmail||ev.guestPhone)?` · ${[ev.guestEmail,ev.guestPhone].filter(Boolean).join(' / ')}`:''}`);
     }
-    if(!rows.length) lines.push('No stays or blocks in this month.');
+    if(!rows.length) lines.push('No stays or blocks in this view.');
     return lines.join('\n');
+  }
+
+  function weekFocusDate(){
+    if(focusDate) return focusDate;
+    const today=snapshot?.range?.today;
+    if(today&&year&&month&&Number(today.slice(0,4))===year&&Number(today.slice(5,7))===month) return today;
+    if(year&&month) return `${year}-${pad(month)}-01`;
+    return today||null;
+  }
+
+  function overlappingEvents(startDate,endDate){
+    return (snapshot?.events||[]).filter(ev=>ev.statusBucket!=='cancelled'&&ev.start<endDate&&startDate<ev.end);
   }
 
   function render(){
     if(!snapshot)return;
+    const copyBtn=document.getElementById('copySummary');
+    if(copyBtn) copyBtn.textContent=view==='week'?'Copy week summary':'Copy month summary';
     renderLegend();
     renderFilters();
     renderOccupancy();
@@ -333,12 +357,18 @@
       snapshot=data;
       year=data.range.year;
       month=data.range.month;
+      if(view==='week'&&!focusDate) focusDate=data.range.weekStart;
       applySettings(data.settings);
       render();
     }catch(e){
       if(e.message==='unauthorized')return;
       showNotice(e.message||'Could not load calendar');
     }
+  }
+
+  function requestLoad(){
+    clearTimeout(loadTimer);
+    loadTimer=setTimeout(()=>{load();},120);
   }
 
   async function saveSettings(reload){
@@ -356,25 +386,44 @@
 
   document.getElementById('calPrev')?.addEventListener('click',()=>{
     if(!year||!month)return;
-    if(view==='week'&&focusDate){focusDate=addDays(focusDate,-7);return load();}
+    if(view==='week'){
+      focusDate=addDays(weekFocusDate(),-7);
+      year=Number(focusDate.slice(0,4));
+      month=Number(focusDate.slice(5,7));
+      return load();
+    }
     month-=1;if(month<1){month=12;year-=1;}load();
   });
   document.getElementById('calNext')?.addEventListener('click',()=>{
     if(!year||!month)return;
-    if(view==='week'&&focusDate){focusDate=addDays(focusDate,7);return load();}
+    if(view==='week'){
+      focusDate=addDays(weekFocusDate(),7);
+      year=Number(focusDate.slice(0,4));
+      month=Number(focusDate.slice(5,7));
+      return load();
+    }
     month+=1;if(month>12){month=1;year+=1;}load();
   });
-  document.getElementById('calToday')?.addEventListener('click',()=>{year=null;month=null;focusDate=null;load();});
+  document.getElementById('calToday')?.addEventListener('click',()=>{
+    year=null;
+    month=null;
+    focusDate=snapshot?.range?.today||null;
+    load();
+  });
   document.getElementById('viewMonth')?.addEventListener('click',()=>{view='month';load();});
-  document.getElementById('viewWeek')?.addEventListener('click',()=>{view='week';focusDate=snapshot?.range?.today||focusDate;load();});
+  document.getElementById('viewWeek')?.addEventListener('click',()=>{
+    view='week';
+    focusDate=weekFocusDate();
+    load();
+  });
   document.getElementById('copySummary')?.addEventListener('click',async()=>{
     try{
       await navigator.clipboard.writeText(monthSummaryText());
-      showNotice('Month summary copied');
+      showNotice(view==='week'?'Week summary copied':'Month summary copied');
     }catch{showNotice('Select and copy the summary from the calendar list');}
   });
-  document.getElementById('showGuestNames')?.addEventListener('change',()=>saveSettings(false));
-  document.getElementById('showGuestContact')?.addEventListener('change',()=>saveSettings(false));
+  document.getElementById('showGuestNames')?.addEventListener('change',()=>saveSettings(true));
+  document.getElementById('showGuestContact')?.addEventListener('change',()=>saveSettings(true));
   document.getElementById('prepBuffer')?.addEventListener('change',()=>saveSettings(true));
   document.getElementById('drawerClose')?.addEventListener('click',closeDrawer);
   drawerBackdrop?.addEventListener('click',closeDrawer);
@@ -387,15 +436,17 @@
     const endDate=document.getElementById('blockEnd')?.value;
     const notes=document.getElementById('blockNotes')?.value||'';
     try{
+      const overlap=overlappingEvents(startDate,endDate).filter(ev=>ev.occupancy);
       await ownerApi('calendar_entry_save',{kind,startDate,endDate,notes});
       e.target.reset();
-      showNotice(kind==='owner_stay'?'Owner stay saved':'Manual block saved');
+      const saved=kind==='owner_stay'?'Owner stay saved':'Manual block saved';
+      showNotice(overlap.length?`${saved}. Overlaps an existing guest stay or OTA block.`:saved, overlap.length?7000:4500);
       await load();
     }catch(err){showNotice(err.message||'Could not save');}
   });
 
-  window.addEventListener('cjt-calendar-feeds-updated',()=>load());
-  const boot=()=>{if(!document.getElementById('ownerApp')?.classList.contains('hidden'))load();};
+  window.addEventListener('cjt-calendar-feeds-updated',()=>requestLoad());
+  const boot=()=>{if(!document.getElementById('ownerApp')?.classList.contains('hidden'))requestLoad();};
   setTimeout(boot,400);
   setTimeout(boot,1200);
 })();
