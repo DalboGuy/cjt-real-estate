@@ -309,10 +309,7 @@
     const noteRow=$('reviewMessageRow');
     if(noteRow)noteRow.hidden=!details.message;
     const pay=$('reviewPaymentCopy');
-    if(pay){
-      if(window.CJTQuoteTrust&&window.CJTQuoteTrust.guestPaymentTrustMarkup)pay.innerHTML=window.CJTQuoteTrust.guestPaymentTrustMarkup(currentQuote,money);
-      else pay.innerHTML='';
-    }
+    if(pay)pay.innerHTML=`<p class="quote-hold-note">${esc(LISTING_CHARGE_NOTE)}</p>`;
   }
   function showRequestStep(step){
     requestStep=['info','review','done'].includes(step)?step:'info';
