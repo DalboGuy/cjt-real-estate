@@ -80,7 +80,27 @@
     }catch(err){showNotice(err.message||'Remove failed'); btn.disabled=false;}
   });
 
-  document.getElementById('refreshFeeds')?.addEventListener('click',load);
+  async function refreshAll(){
+    const btn=document.getElementById('refreshAllLinks')||document.getElementById('refreshFeeds');
+    const badge=document.getElementById('refreshAllBadge');
+    const meta=document.getElementById('refreshAllMeta');
+    if(btn)btn.disabled=true;
+    if(badge){badge.textContent='Refreshing…';badge.className='badge warn';}
+    try{
+      await load();
+      if(badge){badge.textContent='Updated';badge.className='badge good';}
+      if(meta)meta.textContent=`Last refresh: ${new Date().toLocaleString()}`;
+      showNotice('All calendar links refreshed');
+    }catch(e){
+      if(badge){badge.textContent='Failed';badge.className='badge warn';}
+      showNotice(e.message||'Refresh failed');
+    }finally{
+      if(btn)btn.disabled=false;
+    }
+  }
+
+  document.getElementById('refreshAllLinks')?.addEventListener('click',refreshAll);
+  document.getElementById('refreshFeeds')?.addEventListener('click',refreshAll);
   const boot=()=>{if(!document.getElementById('ownerApp')?.classList.contains('hidden'))load();};
   setTimeout(boot,400);
   setTimeout(boot,1200);
