@@ -275,7 +275,7 @@
   function paintBookingSummary(){
     const nights=currentQuote?`${currentQuote.nights} night${currentQuote.nights===1?'':'s'} · ${money(currentQuote.total)} total`:'Dates selected';
     const summary=$('bookingSummary');
-    if(summary)summary.innerHTML=`<strong>${fmt(selectedStart)} – ${fmt(selectedEnd)} · ${guests} guest${guests===1?'':'s'}</strong><span>${nights}</span><span class="selector-value">Tap check-in or checkout on the listing to change dates.</span>`;
+    if(summary)summary.innerHTML=`<strong>${fmt(selectedStart)} – ${fmt(selectedEnd)} · ${guests} guest${guests===1?'':'s'}</strong><span>${nights}</span>`;
   }
   function keepBrowsing(){
     bookingModal.classList.remove('show');
