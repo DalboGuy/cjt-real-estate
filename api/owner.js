@@ -6,6 +6,7 @@ const {paymentSnapshot}=require('../lib/payments');
 const {getOtaBlockedDates, listOwnerConnections, FEED_ENV_BY_SOURCE, MAX_OWNER_CALENDARS, urlHostHint, eachDate}=require('../lib/availability');
 const {buildOwnerCalendarView, validIsoDate}=require('../lib/calendar-view');
 const {planOwnerTransition,notUpdatedError,conflictBody}=require('../lib/booking-transitions');
+const {assertSendConfigured, createAndSendDocument, parseMetadata}=require('../lib/opensign');
 
 function parseCookies(header=''){return Object.fromEntries(header.split(';').map(v=>v.trim()).filter(Boolean).map(v=>{const i=v.indexOf('=');return [decodeURIComponent(v.slice(0,i)),decodeURIComponent(v.slice(i+1))];}));}
 function hash(v){return crypto.createHash('sha256').update(v).digest('hex');}
@@ -101,6 +102,7 @@ module.exports=async function(req,res){
       const plan=planOwnerTransition(current.status,next);
       if(!plan.ok)return res.status(409).json(conflictBody(plan.error));
       let eventType;
+      let eventMetadata=null;
       let changed=[];
       if(next==='accept_request'){
         changed=await sql`UPDATE reservations SET status='hold_verified',hold_expires_at=NULL,updated_at=now() WHERE id=${id} AND status='inquiry_hold' RETURNING id,status`;
@@ -112,11 +114,54 @@ module.exports=async function(req,res){
         changed=await sql`UPDATE reservations SET hold_expires_at=NULL,updated_at=now() WHERE id=${id} AND status IN ('inquiry_hold','hold_verified') RETURNING id,status`;
         eventType='hold_maintained';
       }else if(next==='contract_sent'){
-        changed=await sql`UPDATE reservations SET status='contract_sent',contract_sent_at=COALESCE(contract_sent_at,now()),hold_expires_at=NULL,updated_at=now() WHERE id=${id} AND status NOT IN ('released','cancelled','expired') RETURNING id,status`;
+        try{assertSendConfigured();}catch(error){
+          return res.status(error.status||503).json({error:error.code||'opensign_not_configured',message:error.message||'OpenSign is not configured.'});
+        }
+        const rows=await sql`
+          SELECT r.id,r.guest_name,r.guest_email,r.guest_phone,r.guests,r.checkin::text,r.checkout::text,r.status,q.quote
+          FROM reservations r
+          LEFT JOIN LATERAL (
+            SELECT e.metadata->'quote' AS quote
+            FROM booking_events e
+            WHERE e.reservation_id=r.id AND e.metadata ? 'quote'
+            ORDER BY e.created_at DESC,e.id DESC LIMIT 1
+          ) q ON true
+          WHERE r.id=${id} LIMIT 1
+        `;
+        const row=rows[0];
+        if(!row)return res.status(404).json({error:'reservation_not_found'});
+        if(['released','cancelled','expired'].includes(row.status))return res.status(409).json({error:'reservation_closed',message:'This reservation is no longer open to send a contract.'});
+        let sent;
+        try{
+          sent=await createAndSendDocument({
+            reservationId:row.id,
+            guestName:row.guest_name,
+            guestEmail:row.guest_email,
+            guestPhone:row.guest_phone,
+            guests:row.guests,
+            checkin:row.checkin,
+            checkout:row.checkout,
+            quote:row.quote && typeof row.quote==='object'?row.quote:parseMetadata(row.quote)
+          });
+        }catch(error){
+          console.error('opensign send failed',error);
+          return res.status(error.status||502).json({error:error.code||'opensign_send_failed',message:error.message||'OpenSign could not send the booking agreement. The contract was not marked sent.'});
+        }
+        changed=await sql`UPDATE reservations SET status='contract_sent',contract_sent_at=COALESCE(contract_sent_at,now()),hold_expires_at=NULL,updated_at=now() WHERE id=${id} AND status NOT IN ('released','cancelled','expired') RETURNING id,status,contract_sent_at`;
         eventType='contract_sent';
+        eventMetadata={
+          source:'opensign',
+          opensignDocumentId:sent.documentId,
+          opensignSigningUrl:sent.signingUrl,
+          opensignTemplateId:sent.templateId,
+          opensignSignerRole:sent.signerRole,
+          quoteTotal:sent.quoteTotal,
+          quoteVersion:sent.quoteVersion
+        };
       }else if(next==='contract_signed'){
         changed=await sql`UPDATE reservations SET status='contract_signed',contract_signed_at=COALESCE(contract_signed_at,now()),hold_expires_at=NULL,updated_at=now() WHERE id=${id} AND status NOT IN ('released','cancelled','expired') RETURNING id,status`;
         eventType='contract_signed';
+        eventMetadata={source:'owner_manual',breakGlass:true};
       }else if(next==='deposit_received'){
         const payment=await paymentSnapshot(sql,id);
         if(!payment.verified)return res.status(409).json({error:'payment_not_verified',message:'A verified Stripe payment is required before confirmation.'});
@@ -129,8 +174,8 @@ module.exports=async function(req,res){
         return res.status(400).json({error:'invalid_status'});
       }
       if(!changed.length)return res.status(409).json(conflictBody(notUpdatedError({from:plan.from,to:plan.to,action:plan.action})));
-      await sql`INSERT INTO booking_events(reservation_id,event_type,actor) VALUES (${id},${eventType},'owner')`;
-      return res.status(200).json({ok:true,reservation:changed[0]});
+      await sql`INSERT INTO booking_events(reservation_id,event_type,actor,metadata) VALUES (${id},${eventType},'owner',${JSON.stringify(eventMetadata||{})}::jsonb)`;
+      return res.status(200).json({ok:true,reservation:changed[0],...(eventMetadata&&eventMetadata.opensignDocumentId?{opensign:{documentId:eventMetadata.opensignDocumentId,signingUrl:eventMetadata.opensignSigningUrl||null}}: {})});
     }
 
 

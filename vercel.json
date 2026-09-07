@@ -82,7 +82,10 @@
       "maxDuration": 10
     },
     "api/owner.js": {
-      "maxDuration": 15
+      "maxDuration": 20
+    },
+    "api/opensign.js": {
+      "maxDuration": 10
     },
     "api/financials.js": {
       "maxDuration": 10

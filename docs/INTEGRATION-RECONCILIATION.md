@@ -1,11 +1,11 @@
 # Integration reconciliation — bot baseline
 
 **Status:** Shared coordination document for bots working on `reorg/platform-v1`.  
-**Verified:** 2026-09-07 (re-checked with `gh` + Vercel before this commit).  
-**Scope:** Documentation only. This file does not change application code, merge other PRs, or close other bots’ work.
+**Verified:** 2026-09-07 (git tip re-checked with `git fetch origin reorg/platform-v1` for this OpenSign slice).  
+**Scope:** Documentation only for this file. Application OpenSign wiring lives in a separate bounded PR; this file does not merge other PRs or close other bots’ work.
 
 **Path for other bots:** `docs/INTEGRATION-RECONCILIATION.md`  
-**Baseline commit:** `5c06fa838ed534f83cdeffaff5c1a35e827c7e82` (or the current `reorg/platform-v1` tip if it has moved — re-verify before writing).
+**Baseline commit:** `b90b5c46b70bb389aa6c7c3056190b8874f11243` (or the current `reorg/platform-v1` tip if it has moved — re-verify before writing).
 
 Do not treat `docs/PLATFORM-MAPS.md` as the merge-order or lock-semantics source of truth until it is updated after acceptance. This file is the current integration baseline for bots.
 
@@ -16,10 +16,10 @@ Do not treat `docs/PLATFORM-MAPS.md` as the merge-order or lock-semantics source
 | Surface | Value (verified 2026-09-07) |
 | --- | --- |
 | Integration branch | `reorg/platform-v1` |
-| Integration tip SHA | `5c06fa838ed534f83cdeffaff5c1a35e827c7e82` |
-| Tip commit | Reorder guest sleep room cards and Master Bedroom photos (#63) |
+| Integration tip SHA | `b90b5c46b70bb389aa6c7c3056190b8874f11243` |
+| Tip commit | Merge pull request #64 from DalboGuy/cursor/preview-database-docs-9e15 |
 | Preview alias | https://cjtbookingpage-git-reorg-platform-v1-jibbailey82-7655.vercel.app |
-| Preview deploy | `dpl_GxHRodDs7qHn4FH3hNtatpaEFFGo` — SHA **matches** tip; `githubCommitRef=reorg/platform-v1`; `target` is Preview (not Production) |
+| Preview deploy | Last fully verified in the prior reconciliation pass (`dpl_GxHRodDs7qHn4FH3hNtatpaEFFGo` on `5c06fa8`). **Re-verify** before Preview writes; this SHA update is git-only. |
 | Production branch | `main` |
 | Production tip SHA | `f8a120462db36b27df898a9f400a8cefda6c5239` — “Link owner portal to communications hub” |
 | Production deploy | `dpl_7LP9PXzR5EAZYwEfKQ8J39fWKxQc` — aliases include `cjtrealty.com`; `target=production` |
@@ -38,7 +38,9 @@ All Vercel Preview deployments for this project share the same Preview env vars 
 
 Sibling Neon branch `reorg-platform-v1` (host prefix `ep-long-hall`) is **not** the Preview target. See also open docs PR #64.
 
-Canonical Preview env write-up: `docs/PREVIEW-DATABASE-SETUP.md` (stale on this tip until #64 merges). Do not put connection strings, secrets, or signed URLs in Git.
+Canonical Preview env write-up: `docs/PREVIEW-DATABASE-SETUP.md`. Do not put connection strings, secrets, or signed URLs in Git.
+
+**Landed after the previous baseline (still on this tip):** lock semantics from **#67** — dates lock until owner release; `expireHolds()` is a compatibility no-op. **Stripe remains on hold.** **OpenSign is in progress** (bounded PR: owner `contract_sent` → send; webhook → `contract_signed`). See [docs/OPENSIGN.md](./OPENSIGN.md).
 
 ---
 
@@ -81,15 +83,9 @@ Both open drafts into `reorg/platform-v1`. Shared files include at least:
 
 **Disposition:** reconcile before merge. Prefer **#62’s indefinite lock semantics** as the approved business rule. **#47 must not reintroduce 24h expiry.**
 
-### Automatic 24-hour hold expiration — still on integration tip
+### Automatic 24-hour hold expiration — removed on current tip
 
-Confirmed on `5c06fa838ed534f83cdeffaff5c1a35e827c7e82`:
-
-- `lib/db.js` `expireHolds()` still marks `inquiry_hold` / `hold_verified` rows `expired` when `hold_expires_at <= now()`.
-- `api/inquiries.js` inserts `hold_expires_at = now()+interval '24 hours'` and GETs/POSTs call `expireHolds`.
-- Owner/dashboard/financials GETs also call `expireHolds`. Guest copy still says “24-hour hold”.
-
-#62 removes that automatic expiry. Approved Joel rule: **no automatic 24-hour expiration; dates lock until the owner releases.**
+On the previous baseline (`5c06fa8`) `expireHolds()` still auto-expired holds. **#67 has since merged** into `b90b5c46`: `expireHolds()` is a compatibility no-op; new inquiries do not set a 24h `hold_expires_at`. Guest copy may still mention 24-hour holds in some surfaces; do not reintroduce auto-expiry.
 
 ---
 
@@ -119,8 +115,8 @@ Approved model: **availability lock, owner approval, contract, payment, and conf
 | --- | --- | --- | --- | --- |
 | **Availability lock** | Submitted booking request locks dates. Dates stay locked until the owner **explicitly releases**. No automatic 24h expiration. | 24h hold: `hold_expires_at = now()+24h`; `expireHolds()` auto-expires. | New inquiries use no expiry timestamp; `expireHolds` becomes a compatibility no-op; lock lasts until owner release. | **Approved.** |
 | **Owner approval** | Owner acceptance **preserves** the lock. Approval is not payment and is not full confirmation. | Owner can accept / extend (+24h) / release. Extend Hold still exists. | Acceptance remains owner-controlled; Extend Hold removed; lock is not on a timer. | **Approved** for lock + accept/release. Later approval UX belongs to reconciled #47, not a new sequence. |
-| **Contract** | Separate fact from lock, payment, and confirmation. | Owner actions can set `contract_sent` / `contract_signed` timestamps. OpenSign is not an automated, accepted trigger on this tip. | #62 does not define the contract send path. | **Unresolved** — see §5. Do not invent when the contract is sent or what sets `contract_signed`. |
-| **Payment** | Separate fact. **Stripe is on hold.** | Payment code exists (Issue #21 / `docs/STRIPE-PAYMENTS.md`) and is **not** accepted as live. | Unchanged by #62. | **Unresolved** — whether payment is required before `confirmed` is not decided. Do not collect live charges in Preview work unless Joel says so. |
+| **Contract** | Separate fact from lock, payment, and confirmation. | Owner `contract_sent` now sends via OpenSign when env is configured (fail closed if not). `contract_signed` is set by a verified OpenSign completion webhook; owner **Contract Signed** remains break-glass. | This OpenSign slice uses the **existing** owner `contract_sent` action. It does **not** auto-send after accept. | **In progress** — trigger assumption documented in [docs/OPENSIGN.md](./OPENSIGN.md). Joel still decides whether send should later auto-fire after accept. |
+| **Payment** | Separate fact. **Stripe is on hold.** | Payment code exists (Issue #21 / `docs/STRIPE-PAYMENTS.md`) and is **not** accepted as live. | Unchanged by the OpenSign slice. Stripe stays off. | **Unresolved** — whether payment is required before `confirmed` is not decided. Do not collect live charges in Preview work unless Joel says so. |
 | **Confirmation** | Blocking ≠ paid ≠ fully confirmed. Do not invent the confirmation sequence. | `confirmed` status and payment-gated confirm paths exist in code; they are **not** an approved product sequence. | Do not add a new confirmation story in lock or guest-UX PRs. | **Unresolved** — do not invent the sequence. |
 
 Guest-facing #47 path (Dates → Guests → Price → Reserve → Your info → Review → Reservation received) is UX on top of the existing inquiry/hold architecture. After rebase it must keep **#62 lock semantics** and must not claim Stripe/OpenSign completion.
@@ -142,7 +138,7 @@ Guest-facing #47 path (Dates → Guests → Price → Reserve → Your info → 
 
 ### Unresolved — flag; do not guess
 
-- Exact OpenSign / contract send trigger, and what sets `contract_signed`.
+- Exact OpenSign / contract send trigger, and what sets `contract_signed`. **This OpenSign PR assumes:** send = existing owner `contract_sent`; signed = verified OpenSign webhook (owner button is break-glass only). Do not treat that assumption as the final product decision.
 - Whether payment is required before `confirmed` (Stripe paused).
 - Fate of `pricing_overrides` / `midweek_offer` / `long_stay_offer` vs seasons-only quotes.
 - Whether a `cancelled` status will be used vs **released** only.
@@ -213,7 +209,7 @@ Every bot that will POST an inquiry, owner action, calendar block, or any other 
 | Repository path | `docs/INTEGRATION-RECONCILIATION.md` |
 | Pointer | `AGENTS.md` item 6 under “Read before changing code” |
 | Integration branch | `reorg/platform-v1` |
-| Baseline SHA | `5c06fa838ed534f83cdeffaff5c1a35e827c7e82` |
+| Baseline SHA | `b90b5c46b70bb389aa6c7c3056190b8874f11243` |
 | If tip moved | Re-fetch `origin/reorg/platform-v1` and record the new SHA in your PR; do not assume this file’s SHA is still HEAD |
 
 Before starting feature work: read this file, then the assigned Issue, then `docs/PLATFORM-V1-ARCHITECTURE.md`. Do not merge #50/#51 as written. Do not touch draft PR #24. Do not invent contract, payment, or confirmation sequence.
@@ -232,6 +228,8 @@ Verified present in this repo (2026-09-07):
 | [docs/BOOKING-ACCEPTANCE-LEDGER-2026-09-06.md](./BOOKING-ACCEPTANCE-LEDGER-2026-09-06.md) | Guest booking page section-by-section acceptance ledger |
 | [docs/PLATFORM-V1-ARCHITECTURE.md](./PLATFORM-V1-ARCHITECTURE.md) | Platform-v1 architecture |
 | [docs/AI-COLLABORATION.md](./AI-COLLABORATION.md) | Cross-agent collaboration / handoff rules |
+| [docs/OPENSIGN.md](./OPENSIGN.md) | Bounded OpenSign send/webhook slice (in progress; Stripe still held) |
+| [docs/STRIPE-PAYMENTS.md](./STRIPE-PAYMENTS.md) | Stripe Checkout slice — **not live**; still held |
 
 ---
 
