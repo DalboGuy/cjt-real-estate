@@ -12,6 +12,12 @@
   const WEEKDAY_NAMES=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   let pricing=null;
   let editingSeasonId=null;
+  const seasonFilters={year:'all',months:'near',q:''};
+  const filterYear=document.getElementById('filterYear');
+  const filterMonths=document.getElementById('filterMonths');
+  const seasonSearch=document.getElementById('seasonSearch');
+  const clearSeasonFilters=document.getElementById('clearSeasonFilters');
+  const shell=()=>window.CJTOwnerShell;
 
   function esc(v=''){return String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
   function money(v){return Number(v||0).toLocaleString(undefined,{style:'currency',currency:'USD',maximumFractionDigits:0})}
@@ -87,6 +93,43 @@
   function monthKeyForDate(value){
     return `${value.getFullYear()}-${String(value.getMonth()+1).padStart(2,'0')}`;
   }
+  function seasonFiltersActive(){
+    return seasonFilters.year!=='all'||seasonFilters.months!=='near'||Boolean((seasonSearch?.value||'').trim());
+  }
+  function syncSeasonFilterControls(){
+    filterMonths?.querySelectorAll('[data-months]').forEach(btn=>{
+      btn.classList.toggle('active',btn.dataset.months===seasonFilters.months);
+    });
+    if(filterYear)filterYear.value=seasonFilters.year;
+    clearSeasonFilters?.classList.toggle('hidden',!seasonFiltersActive());
+  }
+  function populateYearOptions(seasons){
+    if(!filterYear)return;
+    const years=[...new Set((seasons||[]).map(s=>monthKey(s.start).slice(0,4)).filter(Boolean))].sort();
+    const current=seasonFilters.year;
+    filterYear.innerHTML=`<option value="all">All years</option>${years.map(year=>`<option value="${esc(year)}">${esc(year)}</option>`).join('')}`;
+    if(current!=='all'&&!years.includes(current))seasonFilters.year='all';
+    filterYear.value=seasonFilters.year;
+  }
+  function seasonVisible(s){
+    if(editingSeasonId&&Number(s.id)===Number(editingSeasonId))return true;
+    if(seasonFilters.year!=='all'&&monthKey(s.start).slice(0,4)!==seasonFilters.year)return false;
+    const q=seasonFilters.q.trim().toLowerCase();
+    if(q&&!String(s.name||'').toLowerCase().includes(q))return false;
+    return true;
+  }
+  function refreshSeasonView(){
+    const all=pricing?.seasons||[];
+    const visible=all.filter(seasonVisible);
+    const countMeta=document.getElementById('seasonCountMeta');
+    if(countMeta){
+      if(!all.length)countMeta.textContent='No seasons yet';
+      else if(visible.length===all.length)countMeta.textContent=`${all.length} season${all.length===1?'':'s'}`;
+      else countMeta.textContent=`${visible.length} of ${all.length} seasons`;
+    }
+    syncSeasonFilterControls();
+    renderSeasonSchedule(all);
+  }
 
   function renderWeekendChecks(selected){
     const chosen=new Set((selected||[]).map(Number));
@@ -138,24 +181,32 @@
   }
 
   function renderSeasonSchedule(seasons){
-    if(!seasons.length){
+    const all=seasons||[];
+    if(!all.length){
       seasonTable.innerHTML='<div class="empty">No seasons published yet. Use Add season to create the first date range.</div>';
       return;
     }
+    const visible=all.filter(seasonVisible);
+    if(!visible.length){
+      seasonTable.innerHTML='<div class="empty">No seasons match these filters. The published schedule is unchanged — try Clear filters.</div>';
+      return;
+    }
     const grouped=new Map();
-    seasons.forEach(s=>{
+    visible.forEach(s=>{
       const key=monthKey(s.start);
       if(!key)return;
       if(!grouped.has(key))grouped.set(key,[]);
       grouped.get(key).push(s);
     });
     const now=new Date();
-    const openMonths=new Set([monthKeyForDate(now),monthKeyForDate(new Date(now.getFullYear(),now.getMonth()+1,1))]);
+    const groups=[...grouped.entries()].sort(([a],[b])=>a.localeCompare(b));
+    const openMonths=new Set(seasonFilters.months==='all'
+      ?groups.map(([key])=>key)
+      :[monthKeyForDate(now),monthKeyForDate(new Date(now.getFullYear(),now.getMonth()+1,1))]);
     if(editingSeasonId){
-      const editing=seasons.find(s=>Number(s.id)===Number(editingSeasonId));
+      const editing=all.find(s=>Number(s.id)===Number(editingSeasonId));
       if(editing)openMonths.add(monthKey(editing.start));
     }
-    const groups=[...grouped.entries()].sort(([a],[b])=>a.localeCompare(b));
     seasonTable.innerHTML=`<div class="season-groups">${groups.map(([key,items])=>{
       const rates=items.flatMap(s=>[Number(s.weekday),Number(s.weekend)]).filter(Number.isFinite);
       const min=rates.length?Math.min(...rates):0;
@@ -196,9 +247,16 @@
 
   function renderPricing(d){
     pricing=d;
-    const split=`${Math.round(Number(d.advancePaymentPct)*100)}% deposit at booking · balance ${d.splitPaymentThresholdDays} days before arrival`;
     const weekendLabel=joinDays(d.weekendDays);
-    summary.innerHTML=[['Cleaning fee',money(d.cleaningFee)],['Tax rate',`${Math.round(Number(d.taxRate||0)*10000)/100}%`],['Pricing through',date(d.pricingThrough)],['Max guests',d.maxGuests],['Weekend days',(d.weekendDays||[]).map(v=>v.slice(0,3)).join(' / ')||'None'],['Payment terms',split]].map(([label,value])=>`<div class="summary-card"><span>${esc(label)}</span><b>${esc(value)}</b></div>`).join('');
+    const taxPct=`${Math.round(Number(d.taxRate||0)*10000)/100}%`;
+    const cards=[
+      ['Published seasons',String((d.seasons||[]).length),'On the guest quote schedule'],
+      ['Pricing through',date(d.pricingThrough),'Online quotes stop after this date'],
+      ['Cleaning fee',money(d.cleaningFee),'Added to every stay'],
+      ['Tax rate',taxPct,'Applied to lodging + cleaning']
+    ];
+    if(shell()?.renderKpiCards)shell().renderKpiCards(summary,cards);
+    else summary.innerHTML=cards.map(([label,value,hint])=>`<div class="summary-card"><span>${esc(label)}</span><b>${esc(value)}</b><span>${esc(hint)}</span></div>`).join('');
     document.getElementById('seasonCount').textContent=`${(d.seasons||[]).length} seasons`;
     document.getElementById('weekendNote').textContent=`Weekend rates apply ${weekendLabel}. Dates outside the published window are not available for online direct-booking quotes.`;
     const guestsInput=document.getElementById('quoteGuests');
@@ -206,8 +264,11 @@
     guestsInput.max=String(maxGuests);
     if(Number(guestsInput.value)>maxGuests)guestsInput.value=String(maxGuests);
     fillSettingsForm(d);
-    renderSeasonSchedule(d.seasons||[]);
-    document.getElementById('lastChecked').textContent=d.source==='fallback'?'Using built-in defaults until the first save':'Schedule saved in Neon';
+    populateYearOptions(d.seasons||[]);
+    refreshSeasonView();
+    const checked=d.source==='fallback'?'Using built-in defaults until the first save':'Schedule saved in Neon';
+    if(shell()?.setLastChecked)shell().setLastChecked(checked);
+    else document.getElementById('lastChecked').textContent=checked;
     if(d.source==='fallback')showNotice('The published schedule is still using built-in defaults. Save settings or add a season to write it into Neon. After that, this page is the only write path.','err');
     else if(notice.classList.contains('err')&&/built-in defaults/i.test(notice.textContent))showNotice('');
     applyPricingContext(d);
@@ -348,7 +409,7 @@
   });
   document.getElementById('cancelSeasonBtn').addEventListener('click',()=>{
     resetSeasonForm();
-    if(pricing)renderSeasonSchedule(pricing.seasons||[]);
+    refreshSeasonView();
   });
 
   seasonTable.addEventListener('click',async e=>{
@@ -358,7 +419,7 @@
       const season=(pricing?.seasons||[]).find(s=>Number(s.id)===id);
       if(!season)return;
       fillSeasonForm(season);
-      renderSeasonSchedule(pricing.seasons||[]);
+      refreshSeasonView();
       return;
     }
     const deleteBtn=e.target.closest('[data-delete-season]');
@@ -389,6 +450,53 @@
     else document.getElementById('saveSettingsBtn')?.click();
   });
 
+  filterMonths?.addEventListener('click',e=>{
+    const btn=e.target.closest('[data-months]');
+    if(!btn)return;
+    seasonFilters.months=btn.dataset.months;
+    refreshSeasonView();
+  });
+  filterYear?.addEventListener('change',()=>{
+    seasonFilters.year=filterYear.value;
+    refreshSeasonView();
+  });
+  seasonSearch?.addEventListener('input',()=>{
+    seasonFilters.q=seasonSearch.value;
+    refreshSeasonView();
+  });
+  clearSeasonFilters?.addEventListener('click',()=>{
+    seasonFilters.year='all';
+    seasonFilters.months='near';
+    seasonFilters.q='';
+    if(seasonSearch)seasonSearch.value='';
+    refreshSeasonView();
+  });
+
+  async function loadPricing(){
+    const refreshBtn=document.getElementById('refreshPricing');
+    if(refreshBtn)refreshBtn.disabled=true;
+    summary?.classList.add('is-loading');
+    try{
+      const data=await getPricing();
+      showApp();
+      const keepId=editingSeasonId;
+      if(!keepId)resetSeasonForm();
+      renderPricing(data);
+      if(keepId){
+        const updated=(data.seasons||[]).find(s=>Number(s.id)===Number(keepId));
+        if(updated)fillSeasonForm(updated);
+        else resetSeasonForm();
+      }
+    }catch(error){
+      summary?.classList.remove('is-loading');
+      if(error.message==='unauthorized')showLogin();
+      else{showApp();showNotice(error.message,'err')}
+    }finally{
+      if(refreshBtn)refreshBtn.disabled=false;
+    }
+  }
+  document.getElementById('refreshPricing')?.addEventListener('click',loadPricing);
+
   loginForm.addEventListener('submit',async e=>{
     e.preventDefault();
     const btn=loginForm.querySelector('button[type="submit"]');
@@ -403,8 +511,7 @@
       loginMsg.textContent='';
       if(window.CJTOwnerShell?.afterLogin?.())return;
       showApp();
-      resetSeasonForm();
-      renderPricing(await getPricing());
+      loadPricing();
     }catch(error){
       loginMsg.textContent=error.message==='owner_login_not_configured'?'Owner login is not configured for this environment.':'Invalid passcode.';
     }finally{
@@ -412,15 +519,5 @@
     }
   });
 
-  (async()=>{
-    try{
-      const data=await getPricing();
-      showApp();
-      resetSeasonForm();
-      renderPricing(data);
-    }catch(error){
-      if(error.message==='unauthorized')showLogin();
-      else{showApp();showNotice(error.message,'err')}
-    }
-  })();
+  loadPricing();
 })();

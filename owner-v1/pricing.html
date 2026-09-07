@@ -31,9 +31,9 @@
       <div class="property-chip"><strong>Sand &amp; Sea Manor</strong><span>1720 Avenue M · Galveston, TX</span></div>
       <nav class="nav" aria-label="Owner Portal">
         <a href="/owner-v1"><span>Dashboard</span></a>
-        <a href="/owner-v1/communications"><span>Communications</span></a>
+        <a href="/owner-v1/communications"><span>Communications</span><span id="communicationsNavCount" class="count">0</span></a>
         <a href="/owner-v1/reservations"><span>Reservations</span></a>
-        <button data-coming-soon="Calendar"><span>Calendar</span><span class="count">Soon</span></button>
+        <a href="/owner-v1/calendar"><span>Calendar</span><span class="count">Live</span></a>
         <a class="active" href="/owner-v1/pricing"><span>Pricing</span><span class="count">Live</span></a>
         <a href="/owner-v1/financials"><span>Financials</span><span class="count">Live</span></a>
         <div class="nav-section">Property</div>
@@ -57,9 +57,47 @@
       </header>
 
       <div class="content">
-        <div class="section-title"><div><h2>Pricing &amp; payments</h2><p>Changes saved here become the live schedule for guest quotes. No code or database edits are required.</p></div><span class="status-pill">Owner editable</span></div>
         <div id="moduleNotice" class="notice hidden"></div>
-        <div id="pricingSummary" class="summary-grid"></div>
+
+        <div class="filter-bar" role="search" aria-label="Season filters">
+          <div class="filter-field filter-field-range">
+            <span>Months</span>
+            <div id="filterMonths" class="segmented" role="group" aria-label="Season months">
+              <button type="button" class="filter-btn active" data-months="near">This month + next</button>
+              <button type="button" class="filter-btn" data-months="all">All months</button>
+            </div>
+          </div>
+          <label class="filter-field">
+            <span>Year</span>
+            <select id="filterYear" class="filter-select" aria-label="Season year">
+              <option value="all">All years</option>
+            </select>
+          </label>
+          <label class="filter-field filter-field-search">
+            <span>Search</span>
+            <input id="seasonSearch" class="search-box" type="search" placeholder="Season name…">
+          </label>
+          <button id="clearSeasonFilters" class="filter-clear hidden" type="button">Clear filters</button>
+          <div class="filter-bar-end">
+            <button class="btn btn-primary" type="button" id="addSeasonBtn">Add season</button>
+          </div>
+        </div>
+
+        <div id="pricingSummary" class="kpi-grid is-loading">
+          <div class="summary-card"><span>Published seasons</span><b>—</b><span>On the guest quote schedule</span></div>
+          <div class="summary-card"><span>Pricing through</span><b>—</b><span>Online quotes stop after this date</span></div>
+          <div class="summary-card"><span>Cleaning fee</span><b>—</b><span>Added to every stay</span></div>
+          <div class="summary-card"><span>Tax rate</span><b>—</b><span>Applied to lodging + cleaning</span></div>
+        </div>
+
+        <details class="about-disclosure">
+          <summary>About these numbers</summary>
+          <div class="about-body">
+            <p>Guest quotes use this Neon schedule: seasons, cleaning, tax, occupancy cap, weekend days, and the published window. Saving here updates the public booking page — no code or database edits required.</p>
+            <p>Weekend nights use the weekend rate. Unchecked days use the weekday rate. Overlapping seasons are rejected. Dates outside the published window cannot be booked online.</p>
+            <p>The quote tester calls the same quote engine as the guest site, including live calendar availability.</p>
+          </div>
+        </details>
 
         <form id="settingsForm" class="card settings-form" style="margin-bottom:16px">
           <div class="card-head"><div><h3>Fees &amp; quote rules</h3><p>Cleaning, tax, occupancy, published window, weekend days, and payment split.</p></div></div>
@@ -86,10 +124,7 @@
           <section class="module-main">
             <div class="card">
               <div class="card-head"><div><h3>Season schedule</h3><p>Add, edit, or delete seasons. Overlapping dates are rejected.</p></div><span id="seasonCount" class="badge good">Loading…</span></div>
-              <div class="form-actions" style="margin-bottom:12px">
-                <button class="btn btn-secondary" type="button" id="addSeasonBtn">Add season</button>
-                <span id="weekendNote" class="pricing-note" style="margin:0">Weekend rates and the published window load with the schedule.</span>
-              </div>
+              <div class="report-meta"><span id="seasonCountMeta">Seasons</span><span id="weekendNote">Weekend rates and the published window load with the schedule.</span></div>
               <div id="seasonTable"><div class="empty">Loading published seasons…</div></div>
             </div>
             <div class="card" id="seasonEditorCard" style="margin-top:16px">

@@ -140,7 +140,9 @@ function renderSummary(period,range,summary){
     ['Booked nights',countOrDash(period.nights),'Active stays in this range'],
     ['Revenue / night',money(period.revenuePerNight),'When nights and revenue exist']
   ];
-  document.getElementById('financialSummary').innerHTML=cards.map(c=>`<div class="summary-card"><span>${esc(c[0])}</span><b>${esc(c[1])}</b><span>${esc(c[2])}</span></div>`).join('');
+  const summaryEl=document.getElementById('financialSummary');
+  if(window.CJTOwnerShell?.renderKpiCards)window.CJTOwnerShell.renderKpiCards(summaryEl,cards);
+  else summaryEl.innerHTML=cards.map(c=>`<div class="summary-card"><span>${esc(c[0])}</span><b>${esc(c[1])}</b><span>${esc(c[2])}</span></div>`).join('');
   const monthHint=document.getElementById('mtdMonthHint');
   if(monthHint)monthHint.textContent=`${rangeLabel(range)} · ${PROPERTY_TZ}`;
   if(summary?.stripeNote){
@@ -293,6 +295,7 @@ function renderBookings(){
 async function loadFinancials(){
   const refreshBtn=document.getElementById('refreshFinancials');
   if(refreshBtn)refreshBtn.disabled=true;
+  document.getElementById('financialSummary')?.classList.add('is-loading');
   try{
     const data=await financialsApi();
     financialRows=data.bookings||[];
@@ -301,8 +304,11 @@ async function loadFinancials(){
     showApp();
     syncRangeButtons();
     renderBookings();
-    document.getElementById('lastChecked').textContent=`Updated ${new Date(data.checkedAt||Date.now()).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})}`;
+    const stamp=`Updated ${new Date(data.checkedAt||Date.now()).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})}`;
+    if(window.CJTOwnerShell?.setLastChecked)window.CJTOwnerShell.setLastChecked(stamp);
+    else document.getElementById('lastChecked').textContent=stamp;
   }catch(e){
+    document.getElementById('financialSummary')?.classList.remove('is-loading');
     if(e.message==='unauthorized')return showLogin();
     showApp();
     notice('Financials could not be loaded. Stored quotes and payments were not changed.');

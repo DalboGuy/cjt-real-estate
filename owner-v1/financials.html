@@ -65,7 +65,7 @@
       <div class="property-chip"><strong>Sand & Sea Manor</strong><span>1720 Avenue M · Galveston, TX</span></div>
       <nav class="nav" aria-label="Owner Portal">
         <a href="/owner-v1"><span>Dashboard</span></a>
-        <a href="/owner-v1/communications"><span>Communications</span></a>
+        <a href="/owner-v1/communications"><span>Communications</span><span id="communicationsNavCount" class="count">0</span></a>
         <a href="/owner-v1/reservations"><span>Reservations</span></a>
         <a href="/owner-v1/calendar"><span>Calendar</span><span class="count">Live</span></a>
         <a href="/owner-v1/pricing"><span>Pricing</span><span class="count">Live</span></a>
@@ -86,7 +86,7 @@
 
     <main class="main">
       <header class="topbar">
-        <div style="display:flex;align-items:center;gap:10px">
+        <div class="topbar-start">
           <button id="mobileMenu" class="icon-btn mobile-menu" type="button" aria-label="Open menu">☰</button>
           <div>
             <h1>Financials</h1>
@@ -152,7 +152,7 @@
           <button id="clearFilters" class="filter-clear hidden" type="button">Clear filters</button>
         </div>
 
-        <div id="financialSummary" class="kpi-grid">
+        <div id="financialSummary" class="kpi-grid is-loading">
           <div class="summary-card"><span>Revenue</span><b>—</b><span>Quoted + imported OTA</span></div>
           <div class="summary-card"><span>Expected payout</span><b>—</b><span>Direct quotes + OTA payout</span></div>
           <div class="summary-card"><span>Booked nights</span><b>—</b><span>Active stays in range</span></div>
