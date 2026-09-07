@@ -6,10 +6,14 @@ const loginMsg=document.getElementById('loginMsg');
 function esc(v=''){return String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 function money(v){const n=Number(v||0);return n.toLocaleString(undefined,{style:'currency',currency:'USD',maximumFractionDigits:0})}
 function moneyOrDash(v){if(v==null||v==='')return '—';return money(v)}
-function date(v){if(!v)return 'None scheduled';const d=new Date(`${v}T12:00:00`);return d.toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'})}
+function countOrDash(v,available=true){if(!available||v==null||v==='')return '—';return String(v)}
+function date(v){if(!v)return 'None scheduled';const d=new Date(`${v}T12:00:00`);return d.toLocaleDateString(undefined,{month:'short',day:'numeric'})}
 function dateTime(v){if(!v)return '';return new Date(v).toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}
+function weekday(v){return new Date(`${v}T12:00:00`).toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'})}
 function statusClass(status=''){return ['confirmed','contract_signed'].includes(status)?'good':['inquiry_hold','hold_verified','contract_sent'].includes(status)?'warn':''}
 function statusLabel(v=''){return String(v).replaceAll('_',' ')}
+function showLogin(){ownerApp.classList.add('hidden');loginShell.classList.remove('hidden')}
+function showApp(){loginShell.classList.add('hidden');ownerApp.classList.remove('hidden')}
 
 async function fetchDashboard(){
   const r=await fetch('/api/dashboard',{cache:'no-store'});
@@ -19,75 +23,146 @@ async function fetchDashboard(){
   return d;
 }
 
-function showLogin(){ownerApp.classList.add('hidden');loginShell.classList.remove('hidden')}
-function showApp(){loginShell.classList.add('hidden');ownerApp.classList.remove('hidden')}
+function kpiCard({label,value,hint,href,available=true}){
+  const display=available?esc(value):'—';
+  const note=available?esc(hint||''):esc(hint||'Source unavailable');
+  if(!href||!available){
+    return `<div class="mini kpi-card is-static" aria-disabled="true"><b>${display}</b><span>${esc(label)}</span><span>${note}</span></div>`;
+  }
+  return `<a class="mini kpi-card" href="${esc(href)}"><b>${display}</b><span>${esc(label)}</span><span>${note}</span></a>`;
+}
 
-function renderCommunications(data){
-  const s=data.summary||{};
-  document.getElementById('commUnread').textContent=s.unread||0;
-  document.getElementById('communicationsNavCount').textContent=s.unread||0;
-  document.getElementById('commBreakdown').innerHTML=`
-    <div class="mini"><b>${s.airbnb_unread||0}</b><span>Airbnb unread</span></div>
-    <div class="mini"><b>${s.vrbo_unread||0}</b><span>Vrbo unread</span></div>
-    <div class="mini"><b>${(s.booking_unread||0)+(s.houfy_unread||0)}</b><span>Other unread</span></div>`;
-  const rows=data.recent||[];
-  document.getElementById('commRecent').innerHTML=rows.length?rows.map(m=>`
+function renderAttention(items){
+  const host=document.getElementById('needsAttention');
+  if(!items.length){
+    host.innerHTML='<div class="empty">Nothing needs attention right now. Booking holds stay blocked until you release them.</div>';
+    return;
+  }
+  host.innerHTML=items.map(item=>`
     <div class="list-row">
-      <div><strong>${esc(m.guest_name||m.subject||'Guest message')}</strong><span>${esc(m.platform)} · ${esc(m.snippet||m.subject||'')}</span></div>
-      <span class="badge ${m.is_read?'':'warn'}">${m.is_read?'read':'unread'}</span>
-    </div>`).join(''):'<div class="empty">No OTA messages have been ingested into production yet.</div>';
+      <div><a href="${esc(item.href)}"><strong>${esc(item.label)}</strong><span>Opens the destination with this filter</span></a></div>
+      <span class="badge ${esc(item.tone||'warn')}">Review</span>
+    </div>`).join('');
 }
 
-function renderReservations(data){
-  const s=data.summary||{};
-  document.getElementById('resUpcoming').textContent=s.upcoming||0;
-  document.getElementById('resAction').textContent=s.action_needed||0;
-  document.getElementById('nextArrival').textContent=date(s.next_checkin);
-  const rows=data.recent||[];
-  document.getElementById('resRecent').innerHTML=rows.length?rows.map(r=>`
+function renderWeek(data){
+  const week=data.todayNext7||{};
+  const dest=data.destinations||{};
+  document.getElementById('openAgenda').href=dest.calendarAgenda||'/owner-v1/calendar';
+  document.getElementById('todayNext7').innerHTML=`
+    ${kpiCard({label:'Arrivals',value:week.arrivals?.length||0,hint:'Direct check-ins',href:dest.calendarAgenda})}
+    ${kpiCard({label:'Departures',value:week.departures?.length||0,hint:'Direct check-outs',href:dest.calendarAgenda})}
+    ${kpiCard({label:'In house',value:week.staying?.length||0,hint:'Direct stays tonight',href:dest.calendarAgenda})}`;
+  const rows=[
+    ...(week.arrivals||[]).map(r=>({...r,kind:'Arrival'})),
+    ...(week.departures||[]).map(r=>({...r,kind:'Departure'}))
+  ];
+  document.getElementById('weekList').innerHTML=rows.length?rows.map(r=>`
     <div class="list-row">
-      <div><strong>${esc(r.guest_name)} · ${esc(r.checkin)} → ${esc(r.checkout)}</strong><span>${esc(r.id)} · ${esc(r.guests)} guests</span></div>
-      <span class="badge ${statusClass(r.status)}">${esc(statusLabel(r.status))}</span>
-    </div>`).join(''):'<div class="empty">No active direct-booking stays are currently scheduled.</div>';
+      <div><strong>${esc(r.kind)} · ${esc(r.guest_name)}</strong><span>${esc(r.checkin)} → ${esc(r.checkout)}</span></div>
+      <a class="badge ${statusClass(r.status)}" href="/owner-v1/reservations?booking=${esc(r.id)}&property=sand-sea-manor">${esc(statusLabel(r.status))}</a>
+    </div>`).join(''):'<div class="empty">No direct arrivals or departures in the next 7 days. OTA nights are on Calendar.</div>';
 }
 
-function renderFinancials(f){
-  const month=f.mtdMonthLabel?` · ${f.mtdMonthLabel}`:'';
-  document.getElementById('mtdGross').textContent=moneyOrDash(f.mtd_gross);
-  document.getElementById('mtdPayout').textContent=moneyOrDash(f.mtd_expected_payout);
-  const grossLabel=document.getElementById('mtdGrossLabel');
-  const payoutLabel=document.getElementById('mtdPayoutLabel');
-  if(grossLabel)grossLabel.textContent=`MTD quoted total${month}`;
-  if(payoutLabel)payoutLabel.textContent=`MTD expected payout${month}`;
-  document.getElementById('financialRecords').textContent=f.records||0;
-  document.getElementById('stripeVerified').textContent=f.stripe_verified||0;
-  document.getElementById('stripePending').textContent=f.stripe_pending||0;
+function renderKpis(data){
+  const dest=data.destinations||{};
+  const res=data.reservations?.summary||{};
+  const comm=data.communications?.summary||{};
+  const tasks=data.tasks||{};
+  const cal=data.calendar||{};
+  const sourcesOk=cal.available&&!cal.sources?.disconnected;
+  document.getElementById('kpiRow').innerHTML=[
+    kpiCard({label:'Pending bookings',value:res.pending||0,hint:'Awaiting owner review',href:dest.bookingsPending}),
+    kpiCard({label:'Unread messages',value:comm.unread||0,hint:'Guest inbox',href:dest.messagesUnread}),
+    kpiCard({label:'Overdue tasks',value:countOrDash(tasks.overdue,tasks.available!==false),hint:tasks.available===false?'Tasks source unavailable':'Open and past due',href:dest.tasksOverdue,available:tasks.available!==false}),
+    kpiCard({label:'Calendar conflicts',value:countOrDash(cal.conflicts,cal.available),hint:cal.available?'Overlapping nights':'Calendar snapshot unavailable',href:dest.calendarConflicts,available:cal.available}),
+    kpiCard({label:'Sources',value:cal.sources?.disconnected?'Not verified':(cal.sources?.connected??'—'),hint:cal.sources?.note||'Inbound iCal only',href:dest.calendarSources,available:cal.available}),
+    kpiCard({label:'Need action',value:res.action_needed||0,hint:'Booking next steps',href:dest.bookingsAction})
+  ].join('');
+  if(!sourcesOk){
+    const sourceCard=document.querySelector('#kpiRow a, #kpiRow .kpi-card');
+    void sourceCard;
+  }
 }
-function renderPricing(p,d){
-  document.getElementById('pricingSeasons').textContent=d?.seasons?.length||'—';
-  document.getElementById('pricingThrough').textContent=d?.pricingThrough?date(d.pricingThrough):'—';
+
+function renderCalendarPreview(data){
+  const cal=data.calendar||{};
+  const host=document.getElementById('calendarPreview');
+  const note=document.getElementById('calendarSourceNote');
+  note.textContent=cal.sources?.note||'Calendar preview uses inbound iCal plus Direct holds. Refreshing does not mean OTAs imported the CJT export.';
+  if(!cal.available){
+    host.innerHTML='<div class="empty" style="grid-column:1/-1">Calendar preview is unavailable. Open Calendar to inspect nights and connections.</div>';
+    return;
+  }
+  host.innerHTML=(cal.preview||[]).map(night=>{
+    const cls=night.conflict?'conflict':(night.open?'open-night':'busy');
+    const label=night.conflict?'Overlap':(night.open?'Open':(night.channels||[]).slice(0,2).join(', ')||'Busy');
+    return `<a class="${cls}" href="/owner-v1/calendar?date=${esc(night.date)}&property=sand-sea-manor"><strong>${esc(weekday(night.date))}</strong><span>${esc(label)}</span></a>`;
+  }).join('')||'<div class="empty" style="grid-column:1/-1">No preview nights returned.</div>';
 }
-function renderTasks(t){
-  document.getElementById('openTasks').textContent=t.open||0;
-  document.getElementById('highTasks').textContent=t.high_priority||0;
+
+function renderFinancials(data){
+  const f=data.financials||{};
+  const dest=data.destinations||{};
+  document.getElementById('openFinancials').href=dest.financialsPeriod||'/owner-v1/financials';
+  document.getElementById('financialSnapshot').innerHTML=`
+    ${kpiCard({label:'Quoted / imported',value:moneyOrDash(f.mtd_gross),hint:'Not profit or NOI',href:dest.financialsPeriod})}
+    ${kpiCard({label:'Expected payout',value:moneyOrDash(f.mtd_expected_payout),hint:'Before operating expenses',href:dest.financialsPeriod})}
+    ${kpiCard({label:'Stays with amounts',value:f.records||0,hint:'Direct + imported OTA',href:dest.financialsStays})}
+    ${kpiCard({label:'Stripe verified',value:f.stripe_verified||0,hint:'Received on Direct only',href:`${dest.financialsPeriod||'/owner-v1/financials'}&stripe=verified`})}`;
+}
+
+function renderTasks(data){
+  const t=data.tasks||{};
+  const dest=data.destinations||{};
+  const available=t.available!==false;
+  document.getElementById('taskSnapshot').innerHTML=`
+    ${kpiCard({label:'Open',value:countOrDash(t.open,available),hint:available?'Not done or cancelled':'Tasks table unavailable',href:dest.tasksOpen,available})}
+    ${kpiCard({label:'Overdue',value:countOrDash(t.overdue,available),hint:available?'Past due and open':'Not verified',href:dest.tasksOverdue,available})}`;
+}
+
+function renderActivity(data){
+  const bookings=(data.reservations?.recent||[]).map(r=>({
+    href:`/owner-v1/reservations?booking=${encodeURIComponent(r.id)}&property=sand-sea-manor`,
+    title:`${r.guest_name} · ${r.checkin} → ${r.checkout}`,
+    meta:`Booking · ${statusLabel(r.status)}`,
+    badge:statusLabel(r.status),
+    tone:statusClass(r.status)
+  }));
+  const messages=(data.communications?.recent||[]).map(m=>({
+    href:`/owner-v1/communications?message=${encodeURIComponent(m.id)}&property=sand-sea-manor`,
+    title:m.guest_name||m.subject||'Guest message',
+    meta:`${m.platform} · ${m.snippet||m.subject||''}`,
+    badge:m.is_read?'read':'unread',
+    tone:m.is_read?'':'warn'
+  }));
+  const rows=[...bookings.slice(0,3),...messages.slice(0,3)];
+  document.getElementById('recentActivity').innerHTML=rows.length?rows.map(r=>`
+    <div class="list-row">
+      <div><a href="${esc(r.href)}"><strong>${esc(r.title)}</strong><span>${esc(r.meta)}</span></a></div>
+      <span class="badge ${esc(r.tone)}">${esc(r.badge)}</span>
+    </div>`).join(''):'<div class="empty">No recent bookings or messages yet.</div>';
 }
 
 async function load(){
   try{
     const data=await fetchDashboard();
     showApp();
-    renderCommunications(data.communications||{});
-    renderReservations(data.reservations||{});
-    renderFinancials(data.financials||{});
-    let publishedPricing={};
-    try{const r=await fetch('/api/pricing',{cache:'no-store'});if(r.ok)publishedPricing=await r.json()}catch(e){}
-    renderPricing(data.pricing||{},publishedPricing);
-    renderTasks(data.tasks||{});
+    const unread=data.communications?.summary?.unread;
+    const navCount=document.getElementById('communicationsNavCount');
+    if(navCount&&unread!=null)navCount.textContent=unread;
+    renderAttention(data.needsAttention||[]);
+    renderWeek(data);
+    renderKpis(data);
+    renderCalendarPreview(data);
+    renderFinancials(data);
+    renderTasks(data);
+    renderActivity(data);
     document.getElementById('lastChecked').textContent=`Updated ${dateTime(data.checkedAt)}`;
   }catch(e){
     if(e.message==='unauthorized')return showLogin();
     showApp();
-    document.getElementById('moduleNotice').textContent='Dashboard data could not be loaded. Existing production workflows remain available through the compatibility links.';
+    document.getElementById('moduleNotice').textContent='Overview data could not be loaded. Existing production workflows remain on the current portal.';
     document.getElementById('moduleNotice').classList.remove('hidden');
   }
 }

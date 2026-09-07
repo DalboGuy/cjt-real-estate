@@ -103,7 +103,13 @@
       <div class="content">
         <div id="moduleNotice" class="notice hidden"></div>
 
-        <div class="filter-bar" role="search" aria-label="Financials filters">
+        <nav class="owner-section-nav" aria-label="Financials sections">
+          <a href="#finance-overview" data-section="overview">Overview</a>
+          <a href="#finance-channels" data-section="channels">Channels</a>
+          <a href="#finance-upcoming" data-section="upcoming">Upcoming</a>
+          <a href="#finance-stays" data-section="stays">Stays</a>
+        </nav>
+        <div class="filter-bar owner-sticky-controls" role="search" aria-label="Financials filters">
           <div class="filter-field filter-field-range">
             <span>Period</span>
             <div id="filterRange" class="segmented" role="group" aria-label="Date range">
@@ -152,6 +158,7 @@
           <button id="clearFilters" class="filter-clear hidden" type="button">Clear filters</button>
         </div>
 
+        <div id="finance-overview"></div>
         <div id="financialSummary" class="kpi-grid">
           <div class="summary-card"><span>Revenue</span><b>—</b><span>Quoted + imported OTA</span></div>
           <div class="summary-card"><span>Expected payout</span><b>—</b><span>Direct quotes + OTA payout</span></div>
@@ -160,6 +167,8 @@
         </div>
 
         <div id="financialChart" class="finance-chart hidden"></div>
+        <div id="finance-channels" class="channel-cards"></div>
+        <div id="finance-upcoming"></div>
 
         <details class="about-disclosure">
           <summary>About these numbers</summary>
@@ -171,7 +180,7 @@
           </div>
         </details>
 
-        <div class="report-meta"><span id="financialCount">Stays</span></div>
+        <div id="finance-stays" class="report-meta"><span id="financialCount">Stays</span></div>
         <div id="financialList"><div class="empty">Loading stored quotes and payment status…</div></div>
       </div>
     </main>

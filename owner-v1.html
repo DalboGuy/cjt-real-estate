@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>CJT Owner Portal · Platform v1 Preview</title>
+  <title>CJT Owner Portal · Overview</title>
   <link rel="stylesheet" href="/assets/css/tokens.css">
   <link rel="stylesheet" href="/assets/css/owner-shell.css">
 </head>
@@ -11,7 +11,7 @@
   <section id="loginShell" class="login-shell hidden">
     <div class="login-card">
       <div class="brand" style="color:var(--cjt-ink)">CJT REALTY<small style="color:var(--cjt-muted)">Owner Operations</small></div>
-      <h1>Platform v1 Preview</h1>
+      <h1>Owner Overview</h1>
       <p>Use the existing Owner Portal passcode. This preview is isolated from the production route.</p>
       <form id="loginForm">
         <input id="passcode" type="password" placeholder="Owner passcode" autocomplete="current-password" required>
@@ -26,121 +26,78 @@
     <aside id="ownerSidebar" class="sidebar">
       <div class="brand">CJT REALTY<small>Owner Operations</small></div>
       <div class="property-chip"><strong>Sand & Sea Manor</strong><span>1720 Avenue M · Galveston, TX</span></div>
-      <nav class="nav" aria-label="Owner Portal">
-        <a class="active" href="/owner-v1"><span>Dashboard</span></a>
-        <a href="/owner-v1/communications"><span>Communications</span><span id="communicationsNavCount" class="count">0</span></a>
-        <a href="/owner-v1/reservations"><span>Reservations</span></a>
-        <a href="/owner-v1/calendar"><span>Calendar</span><span class="count">Live</span></a>
-        <a href="/owner-v1/pricing"><span>Pricing</span><span class="count">Live</span></a>
-        <a href="/owner-v1/financials"><span>Financials</span><span class="count">Live</span></a>
-        <div class="nav-section">Property</div>
-        <button data-coming-soon="Property"><span>Property</span></button>
-        <button data-coming-soon="Maintenance"><span>Maintenance</span></button>
-        <a href="/owner-v1/documents"><span>Documents</span><span class="count">Plan</span></a>
-        <div class="nav-section">Reporting</div>
-        <button data-coming-soon="Analytics"><span>Analytics</span></button>
-        <div class="nav-section">System</div>
-        <a href="/account-v1"><span>My Account</span></a>
-        <a href="/admin-v1"><span>Admin</span><span class="count">Preview</span></a>
-        <button data-coming-soon="Settings"><span>Settings</span></button>
-      </nav>
-      <div class="sidebar-footer">
-        <a href="/" target="_blank" rel="noopener">Guest site ↗</a>
-        <button id="logout" type="button">Sign out</button>
-      </div>
+      <nav class="nav" aria-label="Owner Portal"></nav>
+      <div class="sidebar-footer"></div>
     </aside>
 
     <main class="main">
       <header class="topbar">
         <div style="display:flex;align-items:center;gap:10px">
           <button id="mobileMenu" class="icon-btn mobile-menu" type="button" aria-label="Open menu">☰</button>
-          <div><h1>Owner Dashboard</h1><div class="meta">Platform v1 preview · production route unchanged</div></div>
+          <div><h1>Overview</h1><div class="meta">Daily operations · Sand &amp; Sea Manor</div></div>
         </div>
-        <div class="top-actions"><span id="lastChecked" class="meta">Loading…</span><a class="btn btn-secondary" href="/owner">Current Portal ↗</a></div>
+        <div class="top-actions">
+          <span id="lastChecked" class="meta">Loading…</span>
+          <a class="btn btn-secondary" href="/" target="_blank" rel="noopener">View Booking Page ↗</a>
+        </div>
       </header>
 
       <div class="content">
         <div class="hero-row">
-          <div><h2>Sand & Sea Manor</h2><p>One place to see what needs attention across guests, bookings, pricing, finances and property operations.</p></div>
-          <div class="status-strip"><span class="status-pill">Preview branch</span><span class="status-pill">Production unchanged</span></div>
+          <div><h2>Sand &amp; Sea Manor</h2><p>What needs attention today, then the next seven days, then the numbers behind it.</p></div>
+          <div class="status-strip"><span class="status-pill">Preview</span><span class="status-pill">Production unchanged</span></div>
         </div>
 
         <div id="moduleNotice" class="card hidden" style="margin-bottom:16px"></div>
 
-        <section class="grid" aria-label="Owner dashboard widgets">
-          <article class="card span-6">
-            <div class="card-head"><div><h3>Communications</h3><p>Guest messages across connected channels</p></div><a class="card-link" href="/owner-v1/communications">Open module ↗</a></div>
-            <div style="display:flex;align-items:end;gap:10px;margin-bottom:14px"><div><div id="commUnread" class="metric">0</div><div class="metric-label">Unread messages</div></div></div>
-            <div id="commBreakdown" class="split-metrics"><div class="mini"><b>0</b><span>Airbnb unread</span></div><div class="mini"><b>0</b><span>Vrbo unread</span></div><div class="mini"><b>0</b><span>Other unread</span></div></div>
-            <div id="commRecent" class="list" style="margin-top:16px"><div class="skeleton big"></div><div class="skeleton"></div></div>
-            <div class="widget-footer"><a class="btn btn-primary" href="/owner-v1/communications">Open Communications</a></div>
+        <section class="grid" aria-label="Owner overview">
+          <article class="card span-12">
+            <div class="card-head"><div><h3>Needs attention</h3><p>Actionable items first. Zeros are hidden unless a source confirmed them.</p></div></div>
+            <div id="needsAttention" class="attention-list list"><div class="skeleton big"></div></div>
           </article>
 
-          <article class="card span-6">
-            <div class="card-head"><div><h3>Reservations</h3><p>Direct-booking lifecycle and upcoming stays</p></div><a class="card-link" href="/owner-v1/reservations">Open module ↗</a></div>
-            <div class="split-metrics">
-              <div class="mini"><b id="resUpcoming">0</b><span>Upcoming / active</span></div>
-              <div class="mini"><b id="resAction">0</b><span>Need action</span></div>
-              <div class="mini"><b id="nextArrival" style="font-size:.9rem">—</b><span>Next direct arrival</span></div>
-            </div>
-            <div id="resRecent" class="list" style="margin-top:16px"><div class="skeleton big"></div><div class="skeleton"></div></div>
-            <div class="widget-footer"><a class="btn btn-primary" href="/owner-v1/reservations">Manage Reservations</a></div>
+          <article class="card span-12">
+            <div class="card-head"><div><h3>Today and next 7 days</h3><p>Direct arrivals, departures, and in-house stays</p></div><a class="card-link" id="openAgenda" href="/owner-v1/calendar">Calendar agenda ↗</a></div>
+            <div id="todayNext7" class="split-metrics"><div class="skeleton big"></div></div>
+            <div id="weekList" class="list" style="margin-top:14px"></div>
           </article>
 
-          <article class="card span-4">
-            <div class="card-head"><div><h3>Calendar</h3><p>Consolidated availability</p></div><button class="card-link" style="border:0;background:none;cursor:pointer" data-coming-soon="Calendar">Module soon</button></div>
-            <div class="metric" id="calendarNext">Shared service</div><div class="metric-label">Public availability remains live during migration.</div>
-            <div class="widget-footer"><a class="btn btn-secondary" href="/#availability" target="_blank" rel="noopener">View Live Calendar ↗</a></div>
+          <article class="card span-12">
+            <div class="card-head"><div><h3>Snapshot</h3><p>Each figure opens the module with the current property and filter.</p></div></div>
+            <div id="kpiRow" class="split-metrics" style="grid-template-columns:repeat(6,minmax(0,1fr))"></div>
           </article>
 
-          <article class="card span-4">
-            <div class="card-head"><div><h3>Pricing</h3><p>Published seasonal schedule and quote tester</p></div><a class="card-link" href="/owner-v1/pricing">Open module ↗</a></div>
-            <div class="split-metrics" style="grid-template-columns:1fr 1fr">
-              <div class="mini"><b id="pricingSeasons">—</b><span>Published seasons</span></div>
-              <div class="mini"><b id="pricingThrough" style="font-size:.9rem">—</b><span>Pricing through</span></div>
-            </div>
-            <div class="widget-footer"><a class="btn btn-secondary" href="/owner-v1/pricing">Test a quote</a></div>
+          <article class="card span-7">
+            <div class="card-head"><div><h3>Calendar preview</h3><p>Next seven nights. Inbound iCal is not the same as OTA import of our export.</p></div><a class="card-link" href="/owner-v1/calendar">Open calendar ↗</a></div>
+            <div id="calendarPreview" class="cal-preview"><div class="skeleton big"></div></div>
+            <div id="calendarSourceNote" class="metric-label" style="margin-top:10px"></div>
           </article>
 
-          <article class="card span-4">
-            <div class="card-head"><div><h3>Property Operations</h3><p>Tasks and maintenance</p></div><button class="card-link" style="border:0;background:none;cursor:pointer" data-coming-soon="Maintenance">Module soon</button></div>
-            <div class="split-metrics" style="grid-template-columns:1fr 1fr">
-              <div class="mini"><b id="openTasks">0</b><span>Open tasks</span></div>
-              <div class="mini"><b id="highTasks">0</b><span>High priority</span></div>
-            </div>
-            <div class="empty" style="margin-top:14px">The existing task table will become the shared operations engine rather than creating a second maintenance task system.</div>
+          <article class="card span-5">
+            <div class="card-head"><div><h3>Financial snapshot</h3><p>Quoted, expected payout, and verified receipts — not profit or NOI.</p></div><a class="card-link" id="openFinancials" href="/owner-v1/financials">Financials ↗</a></div>
+            <div id="financialSnapshot" class="split-metrics" style="grid-template-columns:1fr"></div>
           </article>
 
           <article class="card span-8">
-            <div class="card-head"><div><h3>Financials</h3><p>Direct quotes, imported OTA stays, and Stripe status</p></div><a class="card-link" href="/owner-v1/financials">Open module ↗</a></div>
-            <div class="split-metrics">
-              <div class="mini"><b id="mtdGross">—</b><span id="mtdGrossLabel">MTD quoted total</span></div>
-              <div class="mini"><b id="mtdPayout">—</b><span id="mtdPayoutLabel">MTD expected payout</span></div>
-              <div class="mini"><b id="financialRecords">0</b><span>Stays with amounts</span></div>
-            </div>
-            <div class="split-metrics" style="grid-template-columns:1fr 1fr;margin-top:10px">
-              <div class="mini"><b id="stripeVerified">0</b><span>Stripe verified</span></div>
-              <div class="mini"><b id="stripePending">0</b><span>Stripe pending</span></div>
-            </div>
-            <div class="empty" style="margin-top:14px">MTD uses America/Chicago. Direct quotes and imported OTA stays both count. Stripe is not live; unverified Direct payments stay pending.</div>
-            <div class="widget-footer"><a class="btn btn-primary" href="/owner-v1/financials">Open Financials</a></div>
+            <div class="card-head"><div><h3>Recent activity</h3><p>Latest bookings and guest messages</p></div></div>
+            <div id="recentActivity" class="list"><div class="skeleton"></div></div>
           </article>
 
           <article class="card span-4">
-            <div class="card-head"><div><h3>Documents</h3><p>Cloud-first document index and automation</p></div><a class="card-link" href="/owner-v1/documents">Open plan ↗</a></div>
-            <div class="metric">Cloud</div><div class="metric-label">Files stay in connected cloud storage; CJT organizes and links them.</div>
-            <div class="widget-footer"><a class="btn btn-secondary" href="/owner-v1/documents">View Documents Plan</a></div>
+            <div class="card-head"><div><h3>Tasks</h3><p>Operations list for the property</p></div><a class="card-link" href="/owner-v1/tasks">Open Tasks ↗</a></div>
+            <div id="taskSnapshot" class="split-metrics" style="grid-template-columns:1fr 1fr"></div>
+            <div class="widget-footer"><a class="btn btn-primary" href="/owner-v1/tasks">Open Tasks</a></div>
           </article>
 
-          <article class="card span-8">
-            <div class="card-head"><div><h3>Platform Status</h3><p>Reorganization guardrails and architecture checkpoints</p></div><a class="card-link" href="/admin-v1">Admin preview ↗</a></div>
-            <div class="list">
-              <div class="list-row"><div><strong>Production</strong><span>Current owner workflows remain untouched.</span></div><span class="badge good">Safe</span></div>
-              <div class="list-row"><div><strong>Database</strong><span>Production snapshot + reorg branch created.</span></div><span class="badge good">Backed up</span></div>
-              <div class="list-row"><div><strong>Modules</strong><span>Communications and Reservations are integrated into the new shell.</span></div><span class="badge good">Phase 2</span></div>
-              <div class="list-row"><div><strong>Documents</strong><span>Cloud-first, email-driven document intake plan is now recorded in the portal.</span></div><span class="badge good">Recorded</span></div>
-              <div class="list-row"><div><strong>Admin & Accounts</strong><span>Admin Portal and Account Center planning shells are now available.</span></div><span class="badge warn">Foundation next</span></div>
-            </div>
+          <article class="card span-12 ops-note">
+            <details>
+              <summary>Platform and architecture notes</summary>
+              <div class="list" style="margin-top:12px">
+                <div class="list-row"><div><strong>Production</strong><span>Current owner workflows remain on /owner until cutover.</span></div><span class="badge good">Safe</span></div>
+                <div class="list-row"><div><strong>Preview</strong><span>This Overview is for daily ops. Admin maps and architecture live under Admin.</span></div><span class="badge">Moved</span></div>
+                <div class="list-row"><div><strong>Holds</strong><span>Booking-request dates stay blocked until you accept, reject, or release. Acceptance keeps them blocked.</span></div><span class="badge good">Owner-controlled</span></div>
+              </div>
+            </details>
           </article>
         </section>
       </div>

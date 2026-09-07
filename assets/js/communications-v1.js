@@ -48,9 +48,14 @@ function renderSummary(counts){
 }
 
 function renderFilters(){
-  const vals=[['all','All'],['airbnb','Airbnb'],['vrbo','Vrbo'],['booking','Booking.com'],['houfy','Houfy'],['open','Open'],['archived','Archived']];
+  const vals=[['all','All'],['unread','Unread'],['airbnb','Airbnb'],['vrbo','Vrbo'],['booking','Booking.com'],['houfy','Houfy'],['open','Open'],['archived','Archived']];
   document.getElementById('communicationFilters').innerHTML=vals.map(([v,l])=>`<button class="filter-btn ${currentCommunicationFilter===v?'active':''}" data-filter="${v}">${l}</button>`).join('');
-  document.querySelectorAll('[data-filter]').forEach(b=>b.onclick=()=>{currentCommunicationFilter=b.dataset.filter;renderFilters();renderList()});
+  document.querySelectorAll('[data-filter]').forEach(b=>b.onclick=()=>{
+    currentCommunicationFilter=b.dataset.filter;
+    window.CJTOwnerShell?.writeContext?.({unread:currentCommunicationFilter==='unread'?'1':null,status:['open','archived'].includes(currentCommunicationFilter)?currentCommunicationFilter:null,channel:['airbnb','vrbo','booking','houfy'].includes(currentCommunicationFilter)?currentCommunicationFilter:null},{push:true});
+    renderFilters();
+    renderList();
+  });
 }
 
 function filteredMessages(){
@@ -58,7 +63,7 @@ function filteredMessages(){
   return communicationsMessages.filter(m=>{
     const p=String(m.platform||'').toLowerCase();
     const platformMatch=currentCommunicationFilter==='booking'?(p==='booking'||p==='booking.com'):p===currentCommunicationFilter;
-    const ok=currentCommunicationFilter==='all'||platformMatch||(currentCommunicationFilter==='open'&&m.status==='open')||(currentCommunicationFilter==='archived'&&m.status==='archived');
+    const ok=currentCommunicationFilter==='all'||platformMatch||(currentCommunicationFilter==='unread'&&!m.is_read)||(currentCommunicationFilter==='open'&&m.status==='open')||(currentCommunicationFilter==='archived'&&m.status==='archived');
     if(!ok)return false;
     if(!q)return true;
     return [m.guest_name,m.subject,m.snippet,m.body,m.reservation_ref,m.platform].join(' ').toLowerCase().includes(q);
@@ -107,19 +112,37 @@ function renderReservationQuick(data){
   document.getElementById('quickReservations').innerHTML=rows.length?rows.map(r=>`<div class="list-row"><div><strong>${esc(r.guest_name)}</strong><span>${esc(r.checkin)} → ${esc(r.checkout)}</span></div><span class="badge">${esc(String(r.status||'').replaceAll('_',' '))}</span></div>`).join(''):'<div class="empty">No active direct-booking stays.</div>';
 }
 
+function messageFromUrl(){
+  const ctx=window.CJTOwnerShell?.readContext?.()||{};
+  return ctx.message||ctx.id||new URLSearchParams(location.search).get('message')||'';
+}
+function applyMessageContext(){
+  const ctx=window.CJTOwnerShell?.readContext?.()||{};
+  if(ctx.unread==='1'||ctx.unread==='true')currentCommunicationFilter='unread';
+  else if(ctx.channel)currentCommunicationFilter=ctx.channel;
+  else if(ctx.status==='open'||ctx.status==='archived')currentCommunicationFilter=ctx.status;
+  const search=document.getElementById('communicationSearch');
+  if(search&&ctx.q!=null)search.value=ctx.q;
+}
+
 async function loadCommunications(reselectId){
   try{
     const [d,dashboard]=await Promise.all([commApi(),dashboardApi()]);
     communicationsMessages=d.messages||[];
     showApp();
+    applyMessageContext();
     renderSummary(d.counts||[]);
     renderFilters();
     renderList();
     renderReservationQuick(dashboard);
     document.getElementById('lastChecked').textContent=`Updated ${new Date(dashboard.checkedAt).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})}`;
-    const target=communicationsMessages.find(x=>x.id===(reselectId||selectedCommunicationId));
+    const wanted=reselectId||selectedCommunicationId||messageFromUrl();
+    const target=communicationsMessages.find(x=>String(x.id)===String(wanted));
     if(target)selectMessage(target);
-    else if(!communicationsMessages.length)messageDetail.innerHTML='<div class="empty">No communications have been ingested into production yet.</div>';
+    else if(wanted){
+      document.getElementById('moduleNotice').textContent=window.CJTOwnerShell?.cannotApply?.('the selected message','Messages')||'Messages could not apply the selected message.';
+      document.getElementById('moduleNotice').classList.remove('hidden');
+    }else if(!communicationsMessages.length)messageDetail.innerHTML='<div class="empty">No communications have been ingested into production yet.</div>';
   }catch(e){
     if(e.message==='unauthorized')return showLogin();
     showApp();
@@ -128,7 +151,15 @@ async function loadCommunications(reselectId){
   }
 }
 
-document.getElementById('communicationSearch').addEventListener('input',renderList);
+document.getElementById('communicationSearch').addEventListener('input',()=>{
+  window.CJTOwnerShell?.writeContext?.({q:document.getElementById('communicationSearch').value},{push:false});
+  renderList();
+});
+window.addEventListener('cjt-context-change',()=>{
+  applyMessageContext();
+  renderFilters();
+  renderList();
+});
 loginForm.addEventListener('submit',async e=>{
   e.preventDefault();
   loginMsg.textContent='Signing in…';

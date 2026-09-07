@@ -19,6 +19,25 @@
   let statusFilter='all';
   let savingSettings=false;
   let loadTimer=null;
+  let focusApplied=false;
+
+  // Additive owner-shell context. Calendar lane owns day-press, sync, and view guts.
+  try{
+    const params=new URLSearchParams(location.search);
+    const requestedView=String(params.get('view')||'').toLowerCase();
+    if(requestedView==='week'||requestedView==='agenda') view='week';
+    else if(requestedView==='month') view='month';
+    const requestedDate=params.get('date')||params.get('focusDate');
+    if(/^\d{4}-\d{2}-\d{2}$/.test(requestedDate||'')){
+      focusDate=requestedDate;
+      year=Number(requestedDate.slice(0,4));
+      month=Number(requestedDate.slice(5,7));
+    }
+    const requestedChannel=params.get('channel');
+    if(requestedChannel&&requestedChannel!=='all') channelFilter=requestedChannel;
+    const requestedStatus=params.get('status');
+    if(requestedStatus&&requestedStatus!=='all') statusFilter=requestedStatus;
+  }catch(e){}
 
   const noticeEl=document.getElementById('moduleNotice');
   const mount=document.getElementById('calendarMount');
@@ -326,6 +345,23 @@
     return lines.join('\n');
   }
 
+  function applyFocusFromUrl(){
+    if(focusApplied)return;
+    const focus=String(new URLSearchParams(location.search).get('focus')||'').toLowerCase();
+    if(!focus)return;
+    focusApplied=true;
+    if(focus==='conflicts'){
+      const el=document.getElementById('conflictBanner');
+      if(el&&!el.classList.contains('hidden'))el.scrollIntoView({block:'start'});
+      else showNotice('No overlapping nights in this view. The conflict filter could not be applied.');
+    }else if(focus==='agenda'){
+      document.getElementById('upcomingList')?.closest('.card')?.scrollIntoView({block:'start'});
+    }else if(focus==='connections'||focus==='sync'){
+      const details=document.querySelector('.cal-connections');
+      if(details){details.open=true;details.scrollIntoView({block:'start'});}
+    }
+  }
+
   function weekFocusDate(){
     if(focusDate) return focusDate;
     const today=snapshot?.range?.today;
@@ -360,6 +396,7 @@
       if(view==='week'&&!focusDate) focusDate=data.range.weekStart;
       applySettings(data.settings);
       render();
+      applyFocusFromUrl();
     }catch(e){
       if(e.message==='unauthorized')return;
       showNotice(e.message||'Could not load calendar');

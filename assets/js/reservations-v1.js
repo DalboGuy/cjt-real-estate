@@ -50,7 +50,12 @@ function renderSummary(){
 function renderFilters(){
   const vals=[['all','All'],['new','New requests'],['active','Active'],['action','Need action'],['confirmed','Confirmed'],['closed','Closed']];
   document.getElementById('reservationFilters').innerHTML=vals.map(([v,l])=>`<button class="filter-btn ${reservationFilter===v?'active':''}" data-filter="${v}">${l}</button>`).join('');
-  document.querySelectorAll('[data-filter]').forEach(b=>b.onclick=()=>{reservationFilter=b.dataset.filter;renderFilters();renderReservations()});
+  document.querySelectorAll('[data-filter]').forEach(b=>b.onclick=()=>{
+    reservationFilter=b.dataset.filter;
+    window.CJTOwnerShell?.writeContext?.({status:reservationFilter==='all'?null:reservationFilter},{push:true});
+    renderFilters();
+    renderReservations();
+  });
 }
 
 function filteredReservations(){
@@ -84,15 +89,34 @@ function actionMarkup(r){
   return `${primary}${adjust}<button class="btn btn-secondary" data-action="maintain_hold">Extend Hold</button><a class="btn btn-secondary" target="_blank" rel="noopener" href="${TEMPLATE}">Open Contract ↗</a><button class="btn btn-secondary" data-action="contract_sent">Contract Sent</button><button class="btn btn-secondary" data-action="contract_signed">Contract Signed</button><button class="btn btn-secondary" data-payment="create">Create Payment Link</button>${r.payment?.verified?'': '<button class="btn btn-primary" data-action="deposit_received">Deposit Received</button>'}${reject}`;
 }
 
+function statusFromUrl(){
+  const ctx=window.CJTOwnerShell?.readContext?.()||{};
+  const status=String(ctx.status||'').toLowerCase();
+  if(status==='pending'||status==='new'||status==='inquiry_hold')return 'new';
+  if(['action','active','confirmed','closed','all'].includes(status))return status;
+  return 'all';
+}
 function bookingFromUrl(){
-  try{return new URLSearchParams(location.search).get('booking')||''}catch(e){return ''}
+  try{
+    const ctx=window.CJTOwnerShell?.readContext?.();
+    return ctx?.booking||ctx?.id||new URLSearchParams(location.search).get('booking')||'';
+  }catch(e){return ''}
+}
+function applyContextToControls(push){
+  const ctx=window.CJTOwnerShell?.readContext?.()||{};
+  reservationFilter=statusFromUrl();
+  const search=document.getElementById('reservationSearch');
+  if(search&&ctx.q!=null)search.value=ctx.q;
+  if(window.CJTOwnerShell?.writeContext){
+    window.CJTOwnerShell.writeContext({status:reservationFilter==='all'?null:reservationFilter,q:search?.value||null,booking:bookingFromUrl()||null},{push:Boolean(push)});
+  }
 }
 
 function renderReservations(){
   const rows=filteredReservations();
   reservationList.innerHTML=rows.length?'':'<div class="empty">No matching direct bookings.</div>';
   rows.forEach(r=>{
-    const hold=r.hold_expires_at?`<span class="badge ${new Date(r.hold_expires_at)-Date.now()<21600000?'warn':''}">Hold expires ${esc(fmt(r.hold_expires_at))}</span>`:'';
+    const hold=r.status==='inquiry_hold'?'<span class="badge warn">Dates blocked until you act</span>':'';
     const card=document.createElement('article');
     card.className='reservation-card';
     card.id=`booking-${r.id}`;
@@ -157,15 +181,24 @@ async function loadReservations(){
     const [d,dashboard]=await Promise.all([ownerApi(),dashboardApi()]);
     reservationRows=d.reservations||[];
     showApp();
+    applyContextToControls(false);
     const focusId=bookingFromUrl();
     const search=document.getElementById('reservationSearch');
     if(focusId&&search&&!search.value)search.value=focusId;
     renderSummary();renderFilters();renderReservations();renderCommunicationsQuick(dashboard);
     if(focusId){
-      const focused=document.getElementById(`booking-${focusId}`);
+      let focused=document.getElementById(`booking-${focusId}`);
+      if(!focused){
+        reservationFilter='all';
+        renderFilters();
+        renderReservations();
+        focused=document.getElementById(`booking-${focusId}`);
+      }
       if(focused){
         focused.scrollIntoView({block:'start'});
         focused.style.outline='2px solid var(--cjt-deep)';
+      }else{
+        notice(window.CJTOwnerShell?.cannotApply?.('the selected booking','Bookings')||'Bookings could not apply the selected booking.');
       }
     }
     document.getElementById('lastChecked').textContent=`Updated ${new Date(dashboard.checkedAt).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})}`;
@@ -176,7 +209,15 @@ async function loadReservations(){
   }
 }
 
-document.getElementById('reservationSearch').addEventListener('input',renderReservations);
+document.getElementById('reservationSearch').addEventListener('input',()=>{
+  window.CJTOwnerShell?.writeContext?.({q:document.getElementById('reservationSearch').value},{push:false});
+  renderReservations();
+});
+window.addEventListener('cjt-context-change',()=>{
+  applyContextToControls(false);
+  renderFilters();
+  renderReservations();
+});
 loginForm.addEventListener('submit',async e=>{
   e.preventDefault();
   loginMsg.textContent='Signing in…';
