@@ -84,6 +84,10 @@ function actionMarkup(r){
   return `${primary}${adjust}<button class="btn btn-secondary" data-action="maintain_hold">Extend Hold</button><a class="btn btn-secondary" target="_blank" rel="noopener" href="${TEMPLATE}">Open Contract ↗</a><button class="btn btn-secondary" data-action="contract_sent">Contract Sent</button><button class="btn btn-secondary" data-action="contract_signed">Contract Signed</button><button class="btn btn-secondary" data-payment="create">Create Payment Link</button>${r.payment?.verified?'': '<button class="btn btn-primary" data-action="deposit_received">Deposit Received</button>'}${reject}`;
 }
 
+function bookingFromUrl(){
+  try{return new URLSearchParams(location.search).get('booking')||''}catch(e){return ''}
+}
+
 function renderReservations(){
   const rows=filteredReservations();
   reservationList.innerHTML=rows.length?'':'<div class="empty">No matching direct bookings.</div>';
@@ -91,6 +95,8 @@ function renderReservations(){
     const hold=r.hold_expires_at?`<span class="badge ${new Date(r.hold_expires_at)-Date.now()<21600000?'warn':''}">Hold expires ${esc(fmt(r.hold_expires_at))}</span>`:'';
     const card=document.createElement('article');
     card.className='reservation-card';
+    card.id=`booking-${r.id}`;
+    card.dataset.booking=r.id;
     card.innerHTML=`<div class="reservation-grid"><div><span class="badge ${statusClass(r.status)}">${esc(statusLabel(r.status))}</span><h3>${esc(r.guest_name)} · ${esc(r.checkin)} → ${esc(r.checkout)}</h3><div class="reservation-meta">${esc(r.id)} · ${esc(r.guests)} guests · ${esc(r.guest_email)}${r.guest_phone?' · '+esc(r.guest_phone):''}</div>${r.notes?`<p class="reservation-meta">${esc(r.notes)}</p>`:''}<div class="reservation-badges">${hold}<span class="badge ${r.contract_sent_at?'good':''}">Contract ${r.contract_sent_at?'sent':'pending'}</span><span class="badge ${r.contract_signed_at?'good':''}">Signed ${r.contract_signed_at?'yes':'pending'}</span><span class="badge ${r.deposit_received_at?'good':''}">Deposit ${r.deposit_received_at?'received':'pending'}</span></div>${quoteMarkup(r)}</div><div><div class="reservation-meta">Created ${esc(fmt(r.created_at))}</div><div class="actions" style="margin-top:14px">${actionMarkup(r)}</div></div></div>`;
     card.querySelectorAll('button[data-action]').forEach(b=>b.onclick=()=>updateReservation(r.id,b.dataset.action));
     card.querySelector('[data-payment="create"]')?.addEventListener('click',()=>createPaymentLink(r));
@@ -151,7 +157,17 @@ async function loadReservations(){
     const [d,dashboard]=await Promise.all([ownerApi(),dashboardApi()]);
     reservationRows=d.reservations||[];
     showApp();
+    const focusId=bookingFromUrl();
+    const search=document.getElementById('reservationSearch');
+    if(focusId&&search&&!search.value)search.value=focusId;
     renderSummary();renderFilters();renderReservations();renderCommunicationsQuick(dashboard);
+    if(focusId){
+      const focused=document.getElementById(`booking-${focusId}`);
+      if(focused){
+        focused.scrollIntoView({block:'start'});
+        focused.style.outline='2px solid var(--cjt-deep)';
+      }
+    }
     document.getElementById('lastChecked').textContent=`Updated ${new Date(dashboard.checkedAt).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})}`;
   }catch(e){
     if(e.message==='unauthorized')return showLogin();

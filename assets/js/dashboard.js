@@ -52,8 +52,13 @@ function renderReservations(data){
 }
 
 function renderFinancials(f){
+  const month=f.mtdMonthLabel?` · ${f.mtdMonthLabel}`:'';
   document.getElementById('mtdGross').textContent=moneyOrDash(f.mtd_gross);
   document.getElementById('mtdPayout').textContent=moneyOrDash(f.mtd_expected_payout);
+  const grossLabel=document.getElementById('mtdGrossLabel');
+  const payoutLabel=document.getElementById('mtdPayoutLabel');
+  if(grossLabel)grossLabel.textContent=`MTD quoted total${month}`;
+  if(payoutLabel)payoutLabel.textContent=`MTD expected payout${month}`;
   document.getElementById('financialRecords').textContent=f.records||0;
   document.getElementById('stripeVerified').textContent=f.stripe_verified||0;
   document.getElementById('stripePending').textContent=f.stripe_pending||0;
