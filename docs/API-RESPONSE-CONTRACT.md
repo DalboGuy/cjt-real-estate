@@ -1,6 +1,6 @@
 # API response contract (UI / UX)
 
-Status: **Draft — documents what the APIs already return** on `reorg/platform-v1` tip `de0ab95` plus this year/day view contract. Merged **#71** atomic inquiry / replay, **#72** fail-closed `sourceHealth`, **#73** quote nightly consistency, **#80** owner `calendar_sync`. Year/day range helpers are additive on owner `calendar_view` / `calendar_sync` only.
+Status: **Draft — documents what the APIs already return** on `reorg/platform-v1` tip `de0ab95` plus this year/day view contract. Merged **#71** atomic inquiry / replay, **#72** fail-closed `sourceHealth`, **#73** quote nightly consistency, **#80** owner `calendar_sync`. Year/day range helpers are additive on owner `calendar_view` / `calendar_sync` only. Guest inquiry also accepts optional `trip_type` / pets / event fields (nullable; omit is unanswered).
 
 This file is the UI/UX source of truth for **error codes, HTTP status, and JSON shapes** on guest booking and owner booking/calendar. It records **real** fields already returned. Where product language differs from the wire (`availability_unknown`, `duplicate_submission`, `fromStatus` / `toStatus`), the alias is called out so UI can map it — do not invent those strings on the server.
 
@@ -262,11 +262,40 @@ Identity: `lower(guest_email)` + exact `checkin` + exact `checkout` + locking st
 
 **UI:** show the hold message + booking reference. A replay is not an error. Only 409 `dates_unavailable` (or validation / 503 occupancy) is a failed submit.
 
+### Optional inquiry request fields (`POST /api/inquiries`)
+
+All five are optional. Omitted, empty, or JSON `null` stores SQL `null`. Do **not** invent a default that implies the guest answered (no implicit `false` / empty string).
+
+| Body field | Accepted | Stored |
+| --- | --- | --- |
+| `trip_type` | Exact `"Leisure"` \| `"Family"` \| `"Business"` \| `"Other"` | That string, or `null` if omitted/blank |
+| `bringing_pet` | JSON boolean, or `"yes"` / `"no"` / `"true"` / `"false"` (any case) | `true` / `false` / `null` |
+| `pet_details` | string, trimmed, max 1000 | Only when `bringing_pet` is true; otherwise ignored and stored `null` |
+| `planning_event` | same as `bringing_pet` | `true` / `false` / `null` |
+| `event_details` | string, trimmed, max 1000 | Only when `planning_event` is true; otherwise ignored and stored `null` |
+
+```json
+{
+  "name": "Ada Guest",
+  "email": "ada@example.com",
+  "checkin": "2026-10-10",
+  "checkout": "2026-10-13",
+  "guests": 4,
+  "trip_type": "Family",
+  "bringing_pet": "yes",
+  "pet_details": "One small dog",
+  "planning_event": false
+}
+```
+
+These fields are **not** on the 201/200 `reservation` object (owner list expose is later). They are persisted on `reservations` and copied into `inquiry_created` booking_events metadata alongside `guests` and `quote`. Duplicate replay returns the existing reservation as today and does **not** invent values on old rows.
+
 Other inquiry errors:
 
 | HTTP | `error` | When |
 | --- | --- | --- |
-| 400 | `invalid_request` | Missing name/email/dates or guests out of range |
+| 400 | `invalid_request` | Missing name/email/dates or guests out of range; or `bringing_pet` / `planning_event` is not a boolean or common yes/no/true/false string |
+| 400 | `invalid_trip_type` | `trip_type` provided and not one of the four exact strings |
 | 400 | `invalid_dates` | Checkout ≤ check-in |
 | 400 | `past_date` | Check-in before today |
 | 405 | `method_not_allowed` | Not POST |
