@@ -176,7 +176,19 @@
     <button class="btn btn-secondary" id="drawerClose" type="button">Close</button>
     <h2 id="drawerTitle">Night detail</h2>
     <p id="drawerMeta" class="metric-label"></p>
+    <div id="drawerNotice" class="notice hidden" role="status" aria-live="polite"></div>
     <div id="drawerActions" class="cal-drawer-actions"></div>
+    <div id="drawerNotesEdit" class="cal-notes-edit hidden">
+      <form id="drawerNotesForm" class="cal-notes-form">
+        <div class="cal-notes-toolbar">
+          <button class="btn btn-primary" id="drawerNotesSave" type="submit">Save</button>
+          <button class="btn btn-secondary" id="drawerNotesCancel" type="button">Cancel</button>
+        </div>
+        <label class="cal-notes-label">Notes
+          <textarea id="drawerNotesField" maxlength="500" rows="4" autocomplete="off" placeholder="Maintenance, family stay…"></textarea>
+        </label>
+      </form>
+    </div>
     <div id="drawerBody"></div>
   </aside>
 
