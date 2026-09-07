@@ -55,7 +55,7 @@ Verified open as of 2026-09-07. Draft PR **#24 is out of scope — do not touch,
 | **#62** | Keep booking requests locked until owner release (removes 24h expiry; structured trip/pet/event fields) | `reorg/platform-v1` | Yes | CLEAN / MERGEABLE | 1 commit behind tip (#63). Unique tip file vs this branch: `assets/data/public-image-manifest.json` (no overlapping booking-workflow files). Overlaps **#47** on the booking-workflow set below. Closed #61 was the prior attempt — use #62. | **reconcile-first** vs #47; prefer #62 lock semantics; conflict-check vs tip then merge as the lock baseline |
 | **#47** | Guest UX redesign (Dates → Reserve → …) plus lifecycle helpers; still references 24h holds in places | `reorg/platform-v1` | Yes | DIRTY / CONFLICTING | Base SHA `778881a8…` (behind tip). Overlaps **#62** and touches owner-shell / calendar / pricing files also used by #56/#57/#65. | **reconcile-first** — rebase onto post-#62 baseline; **must not reintroduce 24h expiry** |
 | **#56** | Owner Calendar: Sync Calendars, day-press actions, fail-closed Direct holds | `reorg/platform-v1` | Yes | DIRTY / CONFLICTING | Shares `api/calendar.js`, `api/inquiries.js`, `api/owner.js`, calendar/pricing/financials JS with #47/#65 | **reconcile-first** — coordinate shared owner-shell / calendar files via Gate Keeper |
-| **#58** | Redesign Owner Financials as a performance dashboard | `reorg/platform-v1` | No | CLEAN | Overlaps Financials HTML/JS with **#57** and **#65**. #58 notes: if #57 merges first, rebase. | **reconcile-first** (shared Financials / shell) |
+| **#58** | Redesign Owner Financials as a performance dashboard. **Owns Financials UI honest-data rules** (see Appendix A). | `reorg/platform-v1` | No | CLEAN | Overlaps Financials HTML/JS with **#57** and **#65**. #58 notes: if #57 merges first, rebase. Gate Keeper sequences shared files; does **not** redefine #58 metrics. | **reconcile-first** (shared Financials / shell); Financial bot owns honest-data rules |
 | **#57** | Owner portal shell/nav consistency across Pricing + Financials | `reorg/platform-v1` | No | CLEAN | Shares `owner-shell.js`, Pricing/Financials chrome with **#58** and **#65** | **reconcile-first** (shared owner-shell) |
 | **#65** | Owner portal nav, Overview KPI destinations, sticky context | `reorg/platform-v1` | Yes | CLEAN | Broad owner-shell + destination pages; overlap notes in PR for Calendar #56 and Financials #58 | **reconcile-first** — coordinate shared owner-shell files via Gate Keeper |
 | **#50** | Remove owner portal passcode on Preview (`ownerAuthOpen` / `requireOwnerAuth`; **auth off by default**) | `reorg/platform-v1` | Yes | DIRTY / CONFLICTING | Companion **#51**. PR body warns Owner Portal becomes publicly readable/writable. | **do-not-merge** as written |
@@ -215,3 +215,16 @@ Every bot that will POST an inquiry, owner action, calendar block, or any other 
 | If tip moved | Re-fetch `origin/reorg/platform-v1` and record the new SHA in your PR; do not assume this file’s SHA is still HEAD |
 
 Before starting feature work: read this file, then the assigned Issue, then `docs/PLATFORM-V1-ARCHITECTURE.md`. Do not merge #50/#51 as written. Do not touch draft PR #24. Do not invent contract, payment, or confirmation sequence.
+
+---
+
+## Appendix A — Financial bot ownership (PR #58)
+
+PR **#58** owns Owner Financials **honest-data rules**. Gate Keeper sequences shared Financials/shell files with #57/#65; it does **not** redefine these metrics. Financial reviews this section.
+
+| Rule | Meaning |
+| --- | --- |
+| No fake fillers | Do not invent `$0`, fees, NOI, or occupancy just to fill a cell. Show `—` / omit when the value cannot be computed from stored data. |
+| Owner Booking Revenue ≠ Net Income | After known channel-related deductions, before operating expenses. Not Net Income / NOI. |
+| America/Chicago MTD | Period math (including month-to-date) uses America/Chicago check-in dates. |
+| OTA rows | Use `booking_financials` for OTA rows. Do not invent reservation records or Stripe wording for OTA stays. |
