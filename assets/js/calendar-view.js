@@ -91,10 +91,10 @@
     return {view,year,month,focusDate};
   }
 
-  // Today: reload calendar_view with the current view params.
-  // Later: swap the action here to calendar_sync when that endpoint exists.
-  async function fetchCalendarSnapshot(params){
-    return ownerApi('calendar_view',params);
+  // Normal nav uses calendar_view. Sync Calendars uses calendar_sync (full_refresh).
+  async function fetchCalendarSnapshot(params, opts={}){
+    const action=opts.reason==='sync'?'calendar_sync':'calendar_view';
+    return ownerApi(action,params);
   }
 
   function deriveSyncOk(sync){
@@ -564,7 +564,7 @@
       if(pill) {pill.dataset.state='loading';pill.textContent='Loading…';}
     }
     try{
-      const data=await fetchCalendarSnapshot(viewParams());
+      const data=await fetchCalendarSnapshot(viewParams(),opts);
       if(gen!==loadGeneration) return data;
       if(!data||!data.range) throw new Error(data?.message||data?.error||'Could not load calendar');
       snapshot=data;
