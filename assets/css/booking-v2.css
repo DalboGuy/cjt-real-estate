@@ -67,31 +67,28 @@
   .review-rows>div{padding:10px 0}
 }
 .booking-selectors{overflow:visible;position:relative;z-index:4}
-.guest-wrap{position:relative;z-index:5}
-.selector.guest-selector{position:relative;z-index:5}
-#guestPopover.guest-popover,#guestPopover{
-  display:none;
-  position:fixed;
-  z-index:2147483000;
-  margin:0;
-  pointer-events:auto;
-  isolation:isolate;
-}
-#guestPopover.show{display:block}
-#guestPopover .stepper button{width:40px;height:40px;flex:0 0 auto;position:relative;z-index:1}
+.guest-select-wrap{display:block;width:100%;border-top:1px solid #aeb8b6;padding:10px 12px 11px;background:#fff;position:relative;z-index:6}
+.guest-select{display:block;width:100%;margin-top:2px;border:0;background:transparent;font-size:.9rem;color:#37484b;cursor:pointer;appearance:auto;-webkit-appearance:menulist}
 #bookNowBtn,#mobileBookBtn{position:relative;z-index:1}
-body.guest-popover-open #bookNowBtn,
-body.guest-popover-open #mobileBookBtn{pointer-events:none}
 .booking-card{scroll-margin-top:96px}
 .booking-card.is-next-step{box-shadow:0 16px 44px rgba(13,43,49,.2);outline:2px solid var(--deep)}
-.booking-step-dismiss{display:none}
+.browse-flyout{display:none;border:1px solid var(--line);background:rgba(255,253,249,.96);color:var(--deep);font-size:.72rem;font-weight:750;letter-spacing:.02em;padding:6px 10px;border-radius:999px;cursor:pointer;box-shadow:0 6px 16px rgba(13,43,49,.1)}
+#requestDoneStep{display:grid;gap:22px}
+#requestDoneStep[hidden]{display:none!important}
+.request-done-lead{margin:0 0 10px;font-size:.95rem;line-height:1.45}
+.done-ref{margin:0 0 14px;color:var(--muted);font-size:.82rem}
+.done-next{margin:0 0 18px;padding-left:18px;display:grid;gap:8px;color:#405154;font-size:.9rem;line-height:1.45}
+.done-next li+li{margin-top:0}
+#doneBrowse{width:100%;min-height:46px}
 @media(max-width:780px){
   .header-check-cta{display:none}
   .mobile-bookbar{z-index:80;align-items:center;gap:10px}
   .mobile-bookbar .btn{min-width:min(228px,54vw);font-size:.82rem;padding:10px 12px}
   body.modal-open .mobile-bookbar{display:none}
   body.has-trip-dates:not(.booking-step-collapsed) .side-column{
-    display:block;
+    display:flex;
+    flex-direction:column;
+    align-items:flex-end;
     position:fixed;
     left:12px;
     right:12px;
@@ -102,7 +99,15 @@ body.guest-popover-open #mobileBookBtn{pointer-events:none}
     margin:0;
   }
   body.has-trip-dates:not(.booking-step-collapsed) .side-column .desktop-source-summaries{display:none!important}
-  body.has-trip-dates:not(.booking-step-collapsed) .booking-step-dismiss{display:inline-block;margin-top:10px}
+  body.has-trip-dates:not(.booking-step-collapsed) .booking-sidebar-stack{width:100%}
+  body.has-trip-dates:not(.booking-step-collapsed) .browse-flyout{
+    display:inline-flex;
+    align-items:center;
+    position:sticky;
+    top:8px;
+    z-index:2;
+    margin:0 4px 10px 0;
+  }
   body.has-trip-dates:not(.booking-step-collapsed) .mobile-bookbar{z-index:86}
 }
 body.modal-open iframe[src*="tawk.to"],
@@ -134,7 +139,12 @@ body.request-review-open iframe[src*="tawk.to"],
 body.request-review-open iframe[src*="va.tawk"],
 body.request-review-open iframe[title*="chat"],
 body.request-review-open [id^="tawk"],
-body.request-review-open [class*="tawk-"]{
+body.request-review-open [class*="tawk-"],
+body.request-done-open iframe[src*="tawk.to"],
+body.request-done-open iframe[src*="va.tawk"],
+body.request-done-open iframe[title*="chat"],
+body.request-done-open [id^="tawk"],
+body.request-done-open [class*="tawk-"]{
   opacity:0!important;
   pointer-events:none!important;
   visibility:hidden!important;

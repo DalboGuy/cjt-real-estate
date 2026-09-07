@@ -178,6 +178,7 @@
       </div>
 
       <aside class="side-column" aria-label="Booking controls">
+        <button type="button" id="dismissBookingStep" class="browse-flyout">Keep browsing</button>
         <div class="booking-sidebar-stack">
           <div id="bookingCard" class="booking-card">
             <div id="bookPrice" class="booking-price"><span class="price-main">Add dates for prices</span></div>
@@ -186,20 +187,13 @@
                 <button class="selector" type="button" data-open-calendar><span class="selector-label">Check-in</span><span class="selector-value" data-checkin-value>Add date</span></button>
                 <button class="selector" type="button" data-open-calendar><span class="selector-label">Checkout</span><span class="selector-value" data-checkout-value>Add date</span></button>
               </div>
-              <div class="guest-wrap">
-                <button class="selector guest-selector" type="button" data-open-guests aria-haspopup="dialog" aria-controls="guestPopover" aria-expanded="false">
-                  <span>
-                    <span class="selector-label">Guests</span>
-                    <span class="selector-value" data-guests-value>1 guest</span>
-                  </span>
-                  <span aria-hidden="true">⌄</span>
-                </button>
-              </div>
+              <label class="guest-select-wrap">
+                <span class="selector-label">Guests</span>
+                <select id="cardGuests" class="guest-select" aria-label="Number of guests"></select>
+              </label>
             </div>
             <button id="bookNowBtn" class="btn btn-primary" type="button">Check availability</button>
             <div class="charge-note">Choose dates to see the all-in price. No payment to check availability.</div>
-            <button type="button" id="changeDatesCard" class="micro-link change-dates-link" hidden>Change dates</button>
-            <button type="button" id="dismissBookingStep" class="micro-link booking-step-dismiss">Keep browsing</button>
             <div id="quoteError" class="quote-error" hidden></div>
             <div id="quoteBreakdown" class="quote-breakdown">
               <div class="quote-row"><span>Lodging</span><strong id="quoteLodging">—</strong></div>
@@ -233,20 +227,6 @@
 
   <div class="mobile-bookbar"><div id="mobilePrice" class="mobile-price"><strong>Add dates</strong><span>See total price</span></div><button id="mobileBookBtn" class="btn btn-primary" type="button">Check availability</button></div>
 
-  <div id="guestPopover" class="guest-popover" role="dialog" aria-label="Choose number of guests">
-    <div class="guest-row">
-      <div>
-        <strong>Guests</strong>
-        <div class="selector-value">1–14 overnight guests</div>
-      </div>
-      <div class="stepper" role="group" aria-label="Number of guests">
-        <button id="guestMinus" type="button" aria-label="Remove guest">−</button>
-        <b id="guestCount">1</b>
-        <button id="guestPlus" type="button" aria-label="Add guest">+</button>
-      </div>
-    </div>
-  </div>
-
   <div id="galleryModal" class="modal" role="dialog" aria-modal="true" aria-label="Sand and Sea Manor photo gallery"><div class="modal-panel wide"><div class="modal-header"><h2>Sand &amp; Sea Manor photos</h2><button id="galleryClose" class="modal-close" type="button" aria-label="Close gallery">×</button></div><div class="modal-body"><div class="gallery-tools"><button class="gallery-filter active" type="button" data-gallery-filter="all">All</button><button class="gallery-filter" type="button" data-gallery-filter="interior">Common areas</button><button class="gallery-filter" type="button" data-gallery-filter="kitchen">Kitchen</button><button class="gallery-filter" type="button" data-gallery-filter="bedrooms">Bedrooms</button><button class="gallery-filter" type="button" data-gallery-filter="amenities">Outdoor amenities</button><button class="gallery-filter" type="button" data-gallery-filter="bath">Bathrooms</button><button class="gallery-filter" type="button" data-gallery-filter="exterior">Exterior</button><button class="gallery-filter" type="button" data-gallery-filter="aerial">Aerial</button><span id="galleryCount" class="selector-value"></span></div><div id="galleryGrid" class="gallery-grid"></div></div></div></div>
   <div id="photoViewer" class="viewer" role="dialog" aria-modal="true" aria-label="Enlarged property photo"><button id="viewerClose" class="viewer-close" type="button" aria-label="Close photo">×</button><button id="viewerPrev" class="viewer-prev" type="button" aria-label="Previous photo">‹</button><img id="viewerImage" alt="Sand and Sea Manor property photo"><div id="viewerMeta" class="viewer-meta"></div><button id="viewerNext" class="viewer-next" type="button" aria-label="Next photo">›</button></div>
 
@@ -254,10 +234,7 @@
 
   <div id="bookingModal" class="modal" role="dialog" aria-modal="true" aria-label="Request to book Sand and Sea Manor"><div class="modal-panel request-panel"><div class="modal-header"><button id="bookingBack" class="modal-back" type="button">Back</button><div><p id="bookingStepKicker" class="step-kicker">Step 1 of 2</p><h2 id="bookingStepTitle">Your details</h2></div><button id="bookingClose" class="modal-close" type="button" aria-label="Close booking request">×</button></div><div class="modal-body"><div id="bookingSummary" class="booking-summary"></div><form id="bookingForm"><div id="guestDetailsStep"><div class="booking-modal-grid"><div class="field"><label for="guestName">Name</label><input id="guestName" name="name" autocomplete="name" required></div><div class="field"><label for="guestEmail">Email</label><input id="guestEmail" name="email" type="email" autocomplete="email" required></div><div class="field"><label for="guestPhone">Phone</label><input id="guestPhone" name="phone" type="tel" autocomplete="tel" required></div><div class="field"><label for="formGuests">Guests</label><select id="formGuests" name="form_guests" required><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option></select><span class="selector-value">1–14 overnight guests</span></div><div class="field"><label for="tripType">Trip type</label><select id="tripType" name="trip_type" required><option value="">Select</option><option>Family trip</option><option>Friends / group getaway</option><option>Celebration</option><option>Work / retreat</option><option>Galveston event</option><option>Other</option></select></div><div class="field"><label for="pets">Bringing a pet?</label><select id="pets" name="pets" required><option value="no">No</option><option value="yes">Yes — please review with us</option></select></div><div class="field"><label for="event">Planning a party or event?</label><select id="event" name="event" required><option value="no">No</option><option value="yes">Yes — please review with us</option></select></div><div class="field full"><label for="guestMessage">Notes for the owners</label><textarea id="guestMessage" name="message" placeholder="Tell us about your trip, pet, party/event, or anything else we should know."></textarea></div></div><div class="field full"><button id="continueToReview" class="btn btn-primary" type="button">Continue to review</button></div></div><div id="reviewStep" hidden>
               <section class="review-section" aria-labelledby="reviewStayTitle">
-                <div class="review-section-head">
-                  <h3 id="reviewStayTitle">Stay</h3>
-                  <button type="button" id="changeDatesReview" class="micro-link change-dates-link">Change dates</button>
-                </div>
+                <h3 id="reviewStayTitle">Stay</h3>
                 <dl class="review-stay-card">
                   <div><dt>Dates</dt><dd id="reviewDates">—</dd></div>
                   <div><dt>Nights</dt><dd id="reviewNights">—</dd></div>
@@ -288,6 +265,39 @@
                 <p class="review-trust">CJT Realty will review your request. You will not be charged now.</p>
                 <button id="bookingSubmit" class="btn btn-primary" type="submit">Send booking request</button>
                 <div id="bookingMessage" class="form-message"></div>
+              </section>
+            </div>
+            <div id="requestDoneStep" hidden>
+              <section class="review-section">
+                <p class="request-done-lead">Your booking request is in. The owners will review it — this is not a confirmed reservation yet, and no payment was collected.</p>
+                <p class="done-ref">Reference <strong id="doneRef">—</strong></p>
+                <dl class="review-stay-card">
+                  <div><dt>Dates</dt><dd id="doneDates">—</dd></div>
+                  <div><dt>Nights</dt><dd id="doneNights">—</dd></div>
+                  <div><dt>Guests</dt><dd id="doneGuests">—</dd></div>
+                  <div class="review-stay-total"><dt>Total</dt><dd id="doneTotal">—</dd></div>
+                </dl>
+              </section>
+              <section class="review-section">
+                <h3>Submitted</h3>
+                <dl class="review-rows">
+                  <div><dt>Name</dt><dd id="doneName">—</dd></div>
+                  <div><dt>Email</dt><dd id="doneEmail">—</dd></div>
+                  <div><dt>Phone</dt><dd id="donePhone">—</dd></div>
+                  <div><dt>Trip type</dt><dd id="doneTripType">—</dd></div>
+                  <div><dt>Pets</dt><dd id="donePets">—</dd></div>
+                  <div><dt>Party or event</dt><dd id="doneEvent">—</dd></div>
+                  <div id="doneMessageRow" hidden><dt>Notes</dt><dd id="doneMessage">—</dd></div>
+                </dl>
+              </section>
+              <section class="review-section">
+                <h3>What to expect next</h3>
+                <ol class="done-next">
+                  <li>CJT Realty will review your dates, guest count, and trip details, including any pet or event request.</li>
+                  <li>You will hear back by email. The stay is not confirmed until the owners approve.</li>
+                  <li>If approved, you will receive a Complete your booking link to review and sign the agreement. No payment is collected now.</li>
+                </ol>
+                <button type="button" id="doneBrowse" class="btn btn-outline">Back to the listing</button>
               </section>
             </div></form></div></div></div>
 

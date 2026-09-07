@@ -93,8 +93,6 @@
     [$('bookNowBtn'),$('mobileBookBtn')].forEach(btn=>{if(!btn)return;btn.textContent=label;btn.classList.toggle('cta-hold',ready)});
     const note=document.querySelector('.charge-note');
     if(note)note.textContent=ready?'All-in quote shown. Request to book sends a booking request — not confirmed until the owners approve. No payment now.':'Choose dates to see the all-in price. No payment to check availability.';
-    const change=$('changeDatesCard');
-    if(change)change.hidden=!ready;
     syncTripDatesClass();
   }
   function syncTripDatesClass(){
@@ -114,10 +112,14 @@
     const cta=$(mobile?'mobileBookBtn':'bookNowBtn');
     if(cta)setTimeout(()=>{try{cta.focus({preventScroll:true})}catch{}},280);
   }
-  function resetQuote(){currentQuote=null;$('quoteBreakdown').classList.remove('show');$('quoteError').hidden=true;$('bookPrice').innerHTML='<span class="price-main">Add dates for prices</span>';$('mobilePrice').innerHTML='<strong>Add dates</strong><span>See total price</span>';$('bookNowBtn').disabled=false;if($('mobileBookBtn'))$('mobileBookBtn').disabled=false;paintPrimaryCtas()}
+  let quoteSeq=0;
+  function resetQuote(){
+    quoteSeq+=1;
+    currentQuote=null;$('quoteBreakdown').classList.remove('show');$('quoteError').hidden=true;$('bookPrice').innerHTML='<span class="price-main">Add dates for prices</span>';$('mobilePrice').innerHTML='<strong>Add dates</strong><span>See total price</span>';$('bookNowBtn').disabled=false;if($('mobileBookBtn'))$('mobileBookBtn').disabled=false;paintPrimaryCtas()
+  }
   function selectDate(date,isBlocked){
     if(!selectedStart||selectedEnd||date<=selectedStart){if(isBlocked)return;selectedStart=date;selectedEnd='';resetQuote()}
-    else{const nights=eachDate(selectedStart,date);if(nights.some(d=>blocked.has(d))){if(!isBlocked){selectedStart=date;selectedEnd='';resetQuote()}return}else{selectedEnd=date;resetQuote()}}
+    else{const nights=eachDate(selectedStart,date);if(nights.some(d=>blocked.has(d))){if(!isBlocked){selectedStart=date;selectedEnd='';resetQuote()}return}else{selectedEnd=date}}
     updateSelectors();renderPicker();
     if(selectedStart&&selectedEnd)completeDatePick();
   }
@@ -139,7 +141,6 @@
     const title=$('calendarTitle');
     if(title)title.textContent=selectedStart&&selectedEnd?'Change your dates':'Choose your dates';
     if(selectedStart){const d=toUtc(selectedStart);pickerCursor=new Date(d.getUTCFullYear(),d.getUTCMonth(),1)}
-    setGuestPopover(false);
     renderPicker();calendarModal.classList.add('show');document.body.classList.add('modal-open');
   }
   function backFromCalendar(){
@@ -199,68 +200,39 @@
   refreshAvailability();
 
   const MAX_GUESTS=14;
-  function syncFormGuests(){const input=$('formGuests');if(input)input.value=String(guests)}
+  function fillGuestSelect(sel){
+    if(!sel||sel.options.length)return;
+    for(let i=1;i<=MAX_GUESTS;i++){
+      const o=document.createElement('option');
+      o.value=String(i);
+      o.textContent=i===1?'1 guest':`${i} guests`;
+      sel.appendChild(o);
+    }
+  }
+  function syncGuestSelects(){
+    [$('cardGuests'),$('formGuests')].forEach(sel=>{
+      if(!sel)return;
+      const next=String(guests);
+      if(sel.value!==next)sel.value=next;
+    });
+  }
   function updateGuests(next){
     guests=Math.max(1,Math.min(MAX_GUESTS,Number(next)||1));
-    if($('guestCount'))$('guestCount').textContent=guests;
-    if($('guestMinus'))$('guestMinus').disabled=guests<=1;
-    if($('guestPlus'))$('guestPlus').disabled=guests>=MAX_GUESTS;
-    syncFormGuests();
+    syncGuestSelects();
     updateSelectors();
     if($('bookingModal')?.classList.contains('show'))paintBookingSummary();
+    if($('reviewStep')&&!$('reviewStep').hidden)paintReview(collectGuestFields());
     resetQuote();
     if(selectedStart&&selectedEnd)loadQuote();
   }
-  const guestPopover=$('guestPopover');
-  const guestTrigger=document.querySelector('[data-open-guests]');
-  function portalGuestPopover(){
-    if(guestPopover&&guestPopover.parentElement!==document.body)document.body.appendChild(guestPopover);
-  }
-  function positionGuestPopover(){
-    if(!guestPopover||!guestTrigger)return;
-    const r=guestTrigger.getBoundingClientRect();
-    const width=Math.max(r.width,Math.min(320,window.innerWidth-24));
-    guestPopover.style.position='fixed';
-    guestPopover.style.zIndex='2147483000';
-    guestPopover.style.width=`${width}px`;
-    guestPopover.style.right='auto';
-    guestPopover.style.margin='0';
-    const popH=guestPopover.offsetHeight||88;
-    let top=r.bottom+8;
-    if(top+popH>window.innerHeight-12)top=Math.max(12,r.top-popH-8);
-    let left=r.left;
-    left=Math.max(12,Math.min(left,window.innerWidth-width-12));
-    guestPopover.style.top=`${Math.round(top)}px`;
-    guestPopover.style.left=`${Math.round(left)}px`;
-  }
-  function setGuestPopover(open){
-    portalGuestPopover();
-    if(!guestPopover)return;
-    guestPopover.classList.toggle('show',!!open);
-    document.body.classList.toggle('guest-popover-open',!!open);
-    if(guestTrigger)guestTrigger.setAttribute('aria-expanded',open?'true':'false');
-    if(open)positionGuestPopover();
-    syncSupportChat();
-  }
-  if(guestTrigger&&guestPopover){
-    portalGuestPopover();
-    guestTrigger.addEventListener('click',e=>{
-      e.preventDefault();
-      e.stopPropagation();
-      setGuestPopover(!guestPopover.classList.contains('show'));
-    });
-    document.addEventListener('click',e=>{
-      if(!guestPopover.classList.contains('show'))return;
-      if(guestPopover.contains(e.target)||e.target.closest('[data-open-guests]'))return;
-      setGuestPopover(false);
-    });
-    document.addEventListener('keydown',e=>{if(e.key==='Escape'&&guestPopover.classList.contains('show'))setGuestPopover(false)});
-    window.addEventListener('resize',()=>{if(guestPopover.classList.contains('show'))positionGuestPopover()});
-    window.addEventListener('scroll',()=>{if(guestPopover.classList.contains('show'))positionGuestPopover()},{capture:true,passive:true});
-  }
-  $('guestMinus')?.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();updateGuests(guests-1)});
-  $('guestPlus')?.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();updateGuests(guests+1)});
-  $('formGuests')?.addEventListener('change',()=>updateGuests($('formGuests').value));
+  fillGuestSelect($('cardGuests'));
+  fillGuestSelect($('formGuests'));
+  $('cardGuests')?.addEventListener('change',e=>{e.target.blur();updateGuests(e.target.value)});
+  $('formGuests')?.addEventListener('change',e=>updateGuests(e.target.value));
+  const cardGuests=$('cardGuests');
+  const sideColumn=document.querySelector('.side-column');
+  cardGuests?.addEventListener('focus',()=>{if(isMobileBooking()&&sideColumn)sideColumn.style.overflow='visible'});
+  cardGuests?.addEventListener('blur',()=>{if(sideColumn)sideColumn.style.overflow=''});
   updateGuests(1);
 
   function renderQuote(q){
@@ -268,41 +240,80 @@
     $('quoteLodging').textContent=money(q.lodgingSubtotal);$('quoteCleaning').textContent=money(q.cleaningFee);$('quoteTax').textContent=money(q.taxes);$('quoteTotal').textContent=total;$('quoteBreakdown').classList.add('show');$('quoteError').hidden=true;
     const p=q.paymentSchedule||{};if(p.mode==='split')$('paymentCopy').innerHTML=`<strong>${money(p.dueAtBooking)} initially (50%)</strong>Remaining ${money(p.remainingBalance)} due ${esc(p.balanceDueDateLabel||'30 days before arrival')}. Payment collection is deferred — you will not be charged now.`;else $('paymentCopy').innerHTML=`<strong>${total} due in full</strong>${p.reason==='within_30_days'?'Arrival is within 30 days, so the documented schedule requires full payment when the booking is completed.':'Full payment is documented for this reservation.'} Payment collection is deferred — you will not be charged now.`;
     paintPrimaryCtas();
-    if($('bookingModal')?.classList.contains('show'))paintBookingSummary();
+    if($('bookingModal')?.classList.contains('show')){
+      paintBookingSummary();
+      if($('reviewStep')&&!$('reviewStep').hidden)paintReview(collectGuestFields());
+    }
   }
   async function loadQuote(){
     if(!selectedStart||!selectedEnd)return resetQuote();
-    $('bookPrice').innerHTML='<span class="price-main">Checking price…</span>';$('bookNowBtn').disabled=true;if($('mobileBookBtn'))$('mobileBookBtn').disabled=true;
-    try{const u=new URL('/api/quote',location.origin);u.searchParams.set('checkin',selectedStart);u.searchParams.set('checkout',selectedEnd);u.searchParams.set('guests',String(guests));const r=await fetch(u,{cache:'no-store'}),d=await r.json();if(!r.ok)throw new Error(d.message||'Price is unavailable for those dates.');renderQuote(d.quote)}catch(e){currentQuote=null;$('quoteBreakdown').classList.remove('show');$('quoteError').hidden=false;$('quoteError').textContent=e.message;$('bookPrice').innerHTML='<span class="price-main">Choose available dates</span>';paintPrimaryCtas()}finally{$('bookNowBtn').disabled=false;if($('mobileBookBtn'))$('mobileBookBtn').disabled=false}}
+    const seq=++quoteSeq;
+    $('bookPrice').innerHTML='<span class="price-main">Checking price…</span>';
+    $('mobilePrice').innerHTML='<strong>Updating price…</strong><span>New dates selected</span>';
+    $('bookNowBtn').disabled=true;if($('mobileBookBtn'))$('mobileBookBtn').disabled=true;
+    $('quoteError').hidden=true;
+    try{
+      const u=new URL('/api/quote',location.origin);
+      u.searchParams.set('checkin',selectedStart);
+      u.searchParams.set('checkout',selectedEnd);
+      u.searchParams.set('guests',String(guests));
+      u.searchParams.set('_',String(Date.now()));
+      const r=await fetch(u,{cache:'no-store'}),d=await r.json();
+      if(seq!==quoteSeq)return;
+      if(!r.ok)throw new Error(d.message||'Price is unavailable for those dates.');
+      renderQuote(d.quote);
+    }catch(e){
+      if(seq!==quoteSeq)return;
+      currentQuote=null;$('quoteBreakdown').classList.remove('show');$('quoteError').hidden=false;$('quoteError').textContent=e.message;$('bookPrice').innerHTML='<span class="price-main">Choose available dates</span>';$('mobilePrice').innerHTML='<strong>Choose dates</strong><span>Price unavailable</span>';paintPrimaryCtas();
+    }finally{
+      if(seq===quoteSeq){$('bookNowBtn').disabled=false;if($('mobileBookBtn'))$('mobileBookBtn').disabled=false}
+    }
+  }
   $('refreshQuote').onclick=loadQuote;
 
   const bookingModal=$('bookingModal'),bookingForm=$('bookingForm');
-  function bindChangeDates(id){
-    const change=$(id);
-    if(change)change.onclick=()=>{bookingModal.classList.remove('show');syncRequestChrome();openCalendar('guest')};
-  }
   function paintBookingSummary(){
     const nights=currentQuote?`${currentQuote.nights} night${currentQuote.nights===1?'':'s'} · ${money(currentQuote.total)} total`:'Dates selected';
     const summary=$('bookingSummary');
-    if(summary)summary.innerHTML=`<strong>${fmt(selectedStart)} – ${fmt(selectedEnd)} · ${guests} guest${guests===1?'':'s'}</strong><span>${nights}</span><button type="button" id="changeDatesModal" class="micro-link change-dates-link">Change dates</button>`;
-    bindChangeDates('changeDatesModal');
-    bindChangeDates('changeDatesReview');
+    if(summary)summary.innerHTML=`<strong>${fmt(selectedStart)} – ${fmt(selectedEnd)} · ${guests} guest${guests===1?'':'s'}</strong><span>${nights}</span><span class="selector-value">Tap check-in or checkout on the listing to change dates.</span>`;
+  }
+  function keepBrowsing(){
+    bookingModal.classList.remove('show');
+    calendarModal.classList.remove('show');
+    document.body.classList.remove('modal-open');
+    document.body.classList.add('booking-step-collapsed');
+    document.body.classList.remove('has-trip-dates');
+    const card=$('bookingCard');
+    if(card)card.classList.remove('is-next-step');
+    if(sideColumn)sideColumn.style.overflow='';
+    syncRequestChrome();
+    const bar=document.querySelector('.mobile-bookbar');
+    if(bar)try{bar.scrollIntoView({behavior:'smooth',block:'end'})}catch{}
   }
   function syncRequestChrome(){
     const open=!!bookingModal?.classList.contains('show');
     document.body.classList.toggle('request-open',open);
     document.body.classList.toggle('request-review-open',open&&requestStep==='review');
+    document.body.classList.toggle('request-done-open',open&&requestStep==='done');
     syncSupportChat();
   }
   function showRequestStep(step){
-    requestStep=step==='review'?'review':'guest';
-    const guestStep=$('guestDetailsStep'),reviewStep=$('reviewStep'),summary=$('bookingSummary');
+    requestStep=step==='done'?'done':step==='review'?'review':'guest';
+    const guestStep=$('guestDetailsStep'),reviewStep=$('reviewStep'),doneStep=$('requestDoneStep'),summary=$('bookingSummary');
     if(guestStep)guestStep.hidden=requestStep!=='guest';
     if(reviewStep)reviewStep.hidden=requestStep!=='review';
-    if(summary)summary.hidden=requestStep==='review';
-    const kicker=$('bookingStepKicker'),title=$('bookingStepTitle');
-    if(kicker)kicker.textContent=requestStep==='review'?'Step 2 of 2':'Step 1 of 2';
-    if(title)title.textContent=requestStep==='review'?'Review and send':'Your details';
+    if(doneStep)doneStep.hidden=requestStep!=='done';
+    if(summary)summary.hidden=requestStep!=='guest';
+    const kicker=$('bookingStepKicker'),title=$('bookingStepTitle'),back=$('bookingBack');
+    if(requestStep==='done'){
+      if(kicker)kicker.textContent='Request sent';
+      if(title)title.textContent='What happens next';
+      if(back)back.hidden=true;
+    }else{
+      if(kicker)kicker.textContent=requestStep==='review'?'Step 2 of 2':'Step 1 of 2';
+      if(title)title.textContent=requestStep==='review'?'Review and send':'Your details';
+      if(back)back.hidden=false;
+    }
     const agree=$('requestAgree');
     if(agree)agree.required=requestStep==='review';
     syncRequestChrome();
@@ -341,22 +352,42 @@
     setText('reviewMessage',note);
     const noteRow=$('reviewMessageRow');
     if(noteRow)noteRow.hidden=!note;
-    bindChangeDates('changeDatesReview');
+  }
+  function paintDone(details,reservation){
+    const pet=details.pets==='yes'?'Yes — please review':'No';
+    const party=details.event==='yes'?'Yes — please review':'No';
+    const nightCount=currentQuote?currentQuote.nights:eachDate(selectedStart,selectedEnd).length;
+    setText('doneRef',(reservation&&reservation.id)||'—');
+    setText('doneDates',`${fmt(selectedStart)} – ${fmt(selectedEnd)}`);
+    setText('doneNights',`${nightCount} night${nightCount===1?'':'s'}`);
+    setText('doneGuests',`${guests} guest${guests===1?'':'s'}`);
+    setText('doneTotal',currentQuote?money(currentQuote.total):'—');
+    setText('doneName',details.name||'—');
+    setText('doneEmail',details.email||'—');
+    setText('donePhone',details.phone||'—');
+    setText('doneTripType',details.trip_type||'—');
+    setText('donePets',pet);
+    setText('doneEvent',party);
+    const note=details.message||'';
+    setText('doneMessage',note);
+    const noteRow=$('doneMessageRow');
+    if(noteRow)noteRow.hidden=!note;
+    showRequestStep('done');
   }
   function openBooking(opts){
     if(!selectedStart||!selectedEnd){openCalendar('listing');return}
     if(!currentQuote){loadQuote();return}
     const step=(opts&&opts.step)||'guest';
-    if($('formGuests'))syncFormGuests();
+    if($('formGuests'))syncGuestSelects();
     paintBookingSummary();
     showRequestStep(step);
-    setGuestPopover(false);
     bookingModal.classList.add('show');
     document.body.classList.add('modal-open');
     syncRequestChrome();
   }
   function closeBooking(){bookingModal.classList.remove('show');document.body.classList.remove('modal-open');syncRequestChrome();if(selectedStart&&selectedEnd)revealBookingStep()}
   function backFromBooking(){
+    if(requestStep==='done'){keepBrowsing();return}
     if(requestStep==='review'){showRequestStep('guest');return}
     bookingModal.classList.remove('show');
     openCalendar('card');
@@ -365,9 +396,9 @@
   $('mobileBookBtn').onclick=()=>openBooking({step:'guest'});
   $('bookingClose').onclick=closeBooking;
   $('bookingBack')?.addEventListener('click',backFromBooking);
-  $('changeDatesCard')?.addEventListener('click',()=>openCalendar('card'));
   bookingModal.addEventListener('click',e=>{if(e.target===bookingModal)closeBooking()});
-  $('dismissBookingStep')?.addEventListener('click',()=>{document.body.classList.add('booking-step-collapsed');document.body.classList.remove('has-trip-dates');const card=$('bookingCard');if(card)card.classList.remove('is-next-step');syncSupportChat();const bar=document.querySelector('.mobile-bookbar');if(bar)try{bar.scrollIntoView({behavior:'smooth',block:'end'})}catch{}});
+  $('dismissBookingStep')?.addEventListener('click',keepBrowsing);
+  $('doneBrowse')?.addEventListener('click',keepBrowsing);
   $('continueToReview')?.addEventListener('click',()=>{
     if(!bookingForm.reportValidity())return;
     const details=collectGuestFields();
@@ -381,7 +412,7 @@
     const btn=$('bookingSubmit'),msg=$('bookingMessage'),details=collectGuestFields();
     btn.disabled=true;btn.textContent='Sending your request…';msg.className='form-message';msg.textContent='';
     const payload={name:details.name,email:details.email,phone:details.phone,checkin:selectedStart,checkout:selectedEnd,guests:String(guests),message:details.message,pets:details.pets,event:details.event,trip_type:details.trip_type};
-    try{const r=await fetch('/api/inquiries',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}),d=await r.json();if(!r.ok)throw new Error(d.message||'We could not send the booking request.');(d.blockedDates||[]).forEach(date=>blocked.add(date));renderPicker();msg.className='form-message show';msg.innerHTML=`<strong>Request received — not yet confirmed.</strong><br>Booking reference: ${esc(d.reservation.id)}<br>CJT Realty will review your request. The stay is not confirmed until the owners approve. No payment was collected.`;btn.style.display='none';const back=$('bookingBack'),cont=$('continueToReview');if(back)back.hidden=true;if(cont)cont.hidden=true;await refreshAvailability()}catch(err){msg.className='form-message error show';msg.textContent=err.message}finally{btn.disabled=false;if(btn.style.display!=='none')btn.textContent=CTA_SUBMIT}});
+    try{const r=await fetch('/api/inquiries',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}),d=await r.json();if(!r.ok)throw new Error(d.message||'We could not send the booking request.');(d.blockedDates||[]).forEach(date=>blocked.add(date));renderPicker();paintDone(details,d.reservation||{});const back=$('bookingBack'),cont=$('continueToReview');if(back)back.hidden=true;if(cont)cont.hidden=true;await refreshAvailability()}catch(err){msg.className='form-message error show';msg.textContent=err.message}finally{btn.disabled=false;if(requestStep!=='done')btn.textContent=CTA_SUBMIT}});
 
   $('amenitiesBtn').onclick=()=>{$('amenitiesModal').classList.add('show');document.body.classList.add('modal-open')};$('amenitiesClose').onclick=()=>{$('amenitiesModal').classList.remove('show');document.body.classList.remove('modal-open')};$('amenitiesModal').addEventListener('click',e=>{if(e.target===$('amenitiesModal'))$('amenitiesClose').click()});
 
@@ -390,7 +421,7 @@
   function syncSupportChat(){
     const api=window.Tawk_API;
     if(!api)return;
-    const hide=document.body.classList.contains('modal-open')||document.body.classList.contains('guest-popover-open')||document.body.classList.contains('has-trip-dates')||document.body.classList.contains('request-open')||document.body.classList.contains('request-review-open');
+    const hide=document.body.classList.contains('modal-open')||document.body.classList.contains('has-trip-dates')||document.body.classList.contains('request-open')||document.body.classList.contains('request-review-open')||document.body.classList.contains('request-done-open');
     try{
       if(hide&&typeof api.hideWidget==='function')api.hideWidget();
       else if(!hide&&typeof api.showWidget==='function')api.showWidget();
