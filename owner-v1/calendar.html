@@ -55,10 +55,6 @@
       <div class="content">
         <div class="section-title cal-section-title"><div><h2>Calendar</h2><p>Direct stays, OTA iCal blocks, owner stays, and manual blackouts on one grid. Outbound push to live Airbnb/VRBO is paused; other sites import the CJT .ics link in Connections.</p></div><span class="status-pill" id="viewStatusPill" data-state="loading">Loading…</span></div>
         <div id="moduleNotice" class="notice hidden"></div>
-        <div id="occupancyStrip" class="summary-grid cal-occupancy"></div>
-        <p class="metric-label cal-occupancy-note">Occupancy counts guest holds, confirmed stays, and OTA blocks. Owner stays and manual blocks close nights but are not booked %.</p>
-        <div id="syncStrip" class="cal-sync" aria-live="polite"></div>
-        <div id="conflictBanner" class="notice cal-conflict hidden"></div>
 
         <div class="cal-toolbar owner-sticky-controls" data-module="calendar">
           <div class="cal-month-nav">
@@ -81,6 +77,11 @@
             <button class="btn btn-secondary" id="copySummary" type="button">Copy month summary</button>
           </div>
         </div>
+
+        <div id="occupancyStrip" class="summary-grid cal-occupancy"></div>
+        <p class="metric-label cal-occupancy-note">Occupancy counts guest holds, confirmed stays, and OTA blocks. Owner stays and manual blocks close nights but are not booked %.</p>
+        <div id="syncStrip" class="cal-sync" aria-live="polite"></div>
+        <div id="conflictBanner" class="notice cal-conflict hidden"></div>
 
         <div class="filter-row" id="channelFilters"></div>
         <div class="filter-row" id="statusFilters" style="margin-top:8px"></div>
