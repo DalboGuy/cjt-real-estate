@@ -31,7 +31,7 @@
         <a href="/owner-v1/communications"><span>Communications</span><span id="communicationsNavCount" class="count">0</span></a>
         <a href="/owner-v1/reservations"><span>Reservations</span></a>
         <button data-coming-soon="Calendar"><span>Calendar</span><span class="count">Soon</span></button>
-        <button data-coming-soon="Pricing"><span>Pricing</span><span class="count">Soon</span></button>
+        <a href="/owner-v1/pricing"><span>Pricing</span><span class="count">Live</span></a>
         <button data-coming-soon="Financials"><span>Financials</span><span class="count">Soon</span></button>
         <div class="nav-section">Property</div>
         <button data-coming-soon="Property"><span>Property</span></button>
@@ -94,11 +94,12 @@
           </article>
 
           <article class="card span-4">
-            <div class="card-head"><div><h3>Pricing</h3><p>Rules and date-level overrides</p></div><button class="card-link" style="border:0;background:none;cursor:pointer" data-coming-soon="Pricing">Module soon</button></div>
+            <div class="card-head"><div><h3>Pricing</h3><p>Published seasonal schedule and quote tester</p></div><a class="card-link" href="/owner-v1/pricing">Open module ↗</a></div>
             <div class="split-metrics" style="grid-template-columns:1fr 1fr">
-              <div class="mini"><b id="pricingState">—</b><span>Pricing rules</span></div>
-              <div class="mini"><b id="pricingOverrides">0</b><span>Future overrides</span></div>
+              <div class="mini"><b id="pricingSeasons">—</b><span>Published seasons</span></div>
+              <div class="mini"><b id="pricingThrough" style="font-size:.9rem">—</b><span>Pricing through</span></div>
             </div>
+            <div class="widget-footer"><a class="btn btn-secondary" href="/owner-v1/pricing">Test a quote</a></div>
           </article>
 
           <article class="card span-4">

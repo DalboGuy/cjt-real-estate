@@ -55,9 +55,9 @@ function renderFinancials(f){
   document.getElementById('mtdPayout').textContent=money(f.mtd_expected_payout);
   document.getElementById('financialRecords').textContent=f.records||0;
 }
-function renderPricing(p){
-  document.getElementById('pricingState').textContent=p.rules_configured?'Configured':'Not configured';
-  document.getElementById('pricingOverrides').textContent=p.future_overrides||0;
+function renderPricing(p,d){
+  document.getElementById('pricingSeasons').textContent=d?.seasons?.length||'—';
+  document.getElementById('pricingThrough').textContent=d?.pricingThrough?date(d.pricingThrough):'—';
 }
 function renderTasks(t){
   document.getElementById('openTasks').textContent=t.open||0;
@@ -71,7 +71,9 @@ async function load(){
     renderCommunications(data.communications||{});
     renderReservations(data.reservations||{});
     renderFinancials(data.financials||{});
-    renderPricing(data.pricing||{});
+    let publishedPricing={};
+    try{const r=await fetch('/api/pricing',{cache:'no-store'});if(r.ok)publishedPricing=await r.json()}catch(e){}
+    renderPricing(data.pricing||{},publishedPricing);
     renderTasks(data.tasks||{});
     document.getElementById('lastChecked').textContent=`Updated ${dateTime(data.checkedAt)}`;
   }catch(e){
