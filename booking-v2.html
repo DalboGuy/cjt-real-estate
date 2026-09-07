@@ -187,13 +187,33 @@
                 <button class="selector" type="button" data-open-calendar><span class="selector-label">Check-in</span><span class="selector-value" data-checkin-value>Add date</span></button>
                 <button class="selector" type="button" data-open-calendar><span class="selector-label">Checkout</span><span class="selector-value" data-checkout-value>Add date</span></button>
               </div>
-              <label class="guest-select-wrap">
-                <span class="selector-label">Guests</span>
-                <select id="cardGuests" class="guest-select" aria-label="Number of guests"></select>
-              </label>
+              <button class="selector guest-selector" type="button" id="guestTrigger" data-open-guests aria-haspopup="dialog" aria-expanded="false" aria-controls="guestPopover">
+                <span><span class="selector-label">Guests</span><span class="selector-value" data-guests-value>1 guest</span></span>
+                <span aria-hidden="true">▾</span>
+              </button>
+            </div>
+            <div id="guestPopover" class="guest-popover" role="dialog" aria-label="Guests" hidden>
+              <div class="guest-step-row">
+                <div><strong>Adults</strong><span>Ages 13+</span></div>
+                <div class="guest-stepper">
+                  <button type="button" id="adultMinus" aria-label="Fewer adults">−</button>
+                  <span id="adultCount">1</span>
+                  <button type="button" id="adultPlus" aria-label="More adults">+</button>
+                </div>
+              </div>
+              <div class="guest-step-row">
+                <div><strong>Children</strong><span>Ages 2–12</span></div>
+                <div class="guest-stepper">
+                  <button type="button" id="childMinus" aria-label="Fewer children">−</button>
+                  <span id="childCount">0</span>
+                  <button type="button" id="childPlus" aria-label="More children">+</button>
+                </div>
+              </div>
+              <p class="guest-max">Maximum 14 overnight guests</p>
+              <button type="button" id="guestDone" class="btn btn-outline guest-done">Done</button>
             </div>
             <button id="bookNowBtn" class="btn btn-primary" type="button">Check availability</button>
-            <div class="charge-note">Choose dates to see the all-in price. No payment to check availability.</div>
+            <div class="charge-note">Add dates to see the total. You won’t be charged to check availability.</div>
             <div id="quoteError" class="quote-error" hidden></div>
             <div id="quoteBreakdown" class="quote-breakdown">
               <div class="quote-row"><span>Lodging</span><strong id="quoteLodging">—</strong></div>
@@ -202,6 +222,15 @@
               <div class="quote-row total"><span>Total</span><strong id="quoteTotal">—</strong></div>
               <div id="paymentCopy" class="payment-box"></div>
               <div style="margin-top:10px"><button id="refreshQuote" class="micro-link" type="button">Refresh price</button></div>
+            </div>
+            <div class="why-direct">
+              <strong>Why book direct</strong>
+              <ul>
+                <li>Book with CJT Realty, the property owners</li>
+                <li>Live availability from connected calendars</li>
+                <li>Clear all-in trip pricing</li>
+                <li>Personal booking support</li>
+              </ul>
             </div>
           </div>
           <div class="desktop-source-summaries" aria-label="Guest rating summaries">
@@ -232,7 +261,7 @@
 
   <div id="calendarModal" class="modal" role="dialog" aria-modal="true" aria-label="Choose booking dates"><div class="modal-panel calendar-panel"><div class="modal-header"><button id="calendarBack" class="modal-back" type="button">Back</button><h2 id="calendarTitle">Choose your dates</h2><button id="calendarClose" class="modal-close" type="button" aria-label="Close calendar">×</button></div><div class="modal-body"><div class="calendar-toolbar"><button id="calPrev" type="button" aria-label="Previous month">‹</button><strong id="calendarSelection">Choose check-in and check-out dates</strong><button id="calNext" type="button" aria-label="Next month">›</button></div><div class="calendar-months"><div id="calendarMonth1" class="month"></div><div id="calendarMonth2" class="month secondary"></div></div><div class="calendar-legend"><span>Available dates are selectable</span><span>One-night stays are available</span><span>Unavailable dates are crossed out</span></div><div id="calendarHealth" class="calendar-status">Checking live availability…</div></div></div></div>
 
-  <div id="bookingModal" class="modal" role="dialog" aria-modal="true" aria-label="Request to book Sand and Sea Manor"><div class="modal-panel request-panel"><div class="modal-header"><button id="bookingBack" class="modal-back" type="button">Back</button><div><p id="bookingStepKicker" class="step-kicker">Step 1 of 2</p><h2 id="bookingStepTitle">Your details</h2></div><button id="bookingClose" class="modal-close" type="button" aria-label="Close booking request">×</button></div><div class="modal-body"><div id="bookingSummary" class="booking-summary"></div><form id="bookingForm"><div id="guestDetailsStep"><div class="booking-modal-grid"><div class="field"><label for="guestName">Name</label><input id="guestName" name="name" autocomplete="name" required></div><div class="field"><label for="guestEmail">Email</label><input id="guestEmail" name="email" type="email" autocomplete="email" required></div><div class="field"><label for="guestPhone">Phone</label><input id="guestPhone" name="phone" type="tel" autocomplete="tel" required></div><div class="field"><label for="formGuests">Guests</label><select id="formGuests" name="form_guests" required><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option></select><span class="selector-value">1–14 overnight guests</span></div><div class="field"><label for="tripType">Trip type</label><select id="tripType" name="trip_type" required><option value="">Select</option><option>Family trip</option><option>Friends / group getaway</option><option>Celebration</option><option>Work / retreat</option><option>Galveston event</option><option>Other</option></select></div><div class="field"><label for="pets">Bringing a pet?</label><select id="pets" name="pets" required><option value="no">No</option><option value="yes">Yes — please review with us</option></select></div><div class="field"><label for="event">Planning a party or event?</label><select id="event" name="event" required><option value="no">No</option><option value="yes">Yes — please review with us</option></select></div><div class="field full"><label for="guestMessage">Notes for the owners</label><textarea id="guestMessage" name="message" placeholder="Tell us about your trip, pet, party/event, or anything else we should know."></textarea></div></div><div class="field full"><button id="continueToReview" class="btn btn-primary" type="button">Continue to review</button></div></div><div id="reviewStep" hidden>
+  <div id="bookingModal" class="modal" role="dialog" aria-modal="true" aria-label="Reserve Sand and Sea Manor"><div class="modal-panel request-panel"><div class="modal-header"><button id="bookingBack" class="modal-back" type="button">Back</button><div><p id="bookingStepKicker" class="step-kicker">Price</p><h2 id="bookingStepTitle">Review the price</h2></div><button id="bookingClose" class="modal-close" type="button" aria-label="Close reservation">×</button></div><div class="modal-body"><ol class="checkout-progress" aria-label="Booking steps"><li data-progress="price">Price</li><li data-progress="info">Your info</li><li data-progress="review">Review</li><li data-progress="done">Reserved</li></ol><div id="checkoutProperty" class="checkout-property"><img id="checkoutPhoto" alt="Sand and Sea Manor"><div><strong>Sand &amp; Sea Manor</strong><span>Galveston, Texas · Entire home</span></div></div><div id="bookingSummary" class="booking-summary"></div><form id="bookingForm"><input type="hidden" id="formGuests" name="form_guests" value="1"><div id="priceStep"><section class="review-section" aria-labelledby="priceStayTitle"><h3 id="priceStayTitle">Stay</h3><dl class="review-stay-card"><div><dt>Dates</dt><dd id="priceDates">—</dd></div><div><dt>Nights</dt><dd id="priceNights">—</dd></div><div><dt>Guests</dt><dd id="priceGuests">—</dd></div><div class="review-stay-total"><dt>Total</dt><dd id="priceTotal">—</dd></div></dl></section><section class="review-section" aria-labelledby="priceBreakTitle"><h3 id="priceBreakTitle">Price details</h3><div class="quote-breakdown show checkout-quote"><div class="quote-row"><span>Lodging</span><strong id="priceLodging">—</strong></div><div class="quote-row"><span>Cleaning</span><strong id="priceCleaning">—</strong></div><div class="quote-row"><span>Taxes</span><strong id="priceTax">—</strong></div><div class="quote-row total"><span>Total</span><strong id="priceGrand">—</strong></div></div><p id="priceSchedule" class="review-trust"></p></section><p class="charge-note checkout-charge">You won’t be charged yet. Your dates are held while we review.</p><div class="field full"><button id="continueToInfo" class="btn btn-primary" type="button">Continue</button></div></div><div id="guestDetailsStep" hidden><div class="booking-modal-grid"><div class="field"><label for="guestName">Name</label><input id="guestName" name="name" autocomplete="name" required></div><div class="field"><label for="guestEmail">Email</label><input id="guestEmail" name="email" type="email" autocomplete="email" required></div><div class="field"><label for="guestPhone">Phone</label><input id="guestPhone" name="phone" type="tel" autocomplete="tel" required></div><div class="field"><label for="tripType">Trip type</label><select id="tripType" name="trip_type"><option value="">Select</option><option>Family trip</option><option>Friends / group getaway</option><option>Celebration</option><option>Work / retreat</option><option>Galveston event</option><option>Other</option></select></div><div class="field"><label for="pets">Bringing a pet?</label><select id="pets" name="pets" required><option value="no">No</option><option value="yes">Yes — please review with us</option></select></div><div class="field"><label for="event">Planning a party or event?</label><select id="event" name="event" required><option value="no">No</option><option value="yes">Yes — please review with us</option></select></div><div class="field full"><label for="guestMessage">Notes for the owners</label><textarea id="guestMessage" name="message" placeholder="Anything we should know about your stay."></textarea></div></div><p class="review-trust">No account needed. We’ll use this to reach you about this stay.</p><div class="field full"><button id="continueToReview" class="btn btn-primary" type="button">Continue</button></div></div><div id="reviewStep" hidden>
               <section class="review-section" aria-labelledby="reviewStayTitle">
                 <h3 id="reviewStayTitle">Stay</h3>
                 <dl class="review-stay-card">
@@ -259,18 +288,28 @@
                   <div id="reviewMessageRow" hidden><dt>Notes</dt><dd id="reviewMessage">—</dd></div>
                 </dl>
               </section>
+              <section class="review-section" aria-labelledby="reviewPolicyTitle">
+                <h3 id="reviewPolicyTitle">Cancellation</h3>
+                <ul class="policy-list">
+                  <li>More than 14 days before arrival: full refund</li>
+                  <li>7–14 days before arrival: 50% refund</li>
+                  <li>Less than 7 days before arrival: non-refundable</li>
+                  <li>The signed booking agreement controls final terms</li>
+                </ul>
+              </section>
               <section class="review-section review-ack" aria-labelledby="reviewAckTitle">
-                <h3 id="reviewAckTitle">Acknowledgment</h3>
-                <label class="agree-row"><input id="requestAgree" type="checkbox"> <span>I understand this is a booking request, not a confirmed reservation. No payment is collected now. The stay is not confirmed until the owners approve.</span></label>
-                <p class="review-trust">CJT Realty will review your request. You will not be charged now.</p>
-                <button id="bookingSubmit" class="btn btn-primary" type="submit">Send booking request</button>
+                <h3 id="reviewAckTitle">Before you reserve</h3>
+                <label class="agree-row"><input id="requestAgree" type="checkbox"> <span>I understand this reserves the dates for review. The stay is not confirmed until the owners approve, and I won’t be charged now.</span></label>
+                <p class="review-trust">After approval you’ll complete the rental agreement. Payment is collected then — not now.</p>
+                <button id="bookingSubmit" class="btn btn-primary" type="submit">Reserve</button>
                 <div id="bookingMessage" class="form-message"></div>
               </section>
             </div>
             <div id="requestDoneStep" hidden>
               <section class="review-section">
-                <p class="request-done-lead">Your booking request is in. The owners will review it — this is not a confirmed reservation yet, and no payment was collected.</p>
-                <p class="done-ref">Reference <strong id="doneRef">—</strong></p>
+                <p class="request-done-lead">Reservation received for Sand &amp; Sea Manor. Your dates are held while CJT Realty reviews this booking. You won’t be charged yet, and the stay is not confirmed until the owners approve.</p>
+                <p class="done-ref">Reservation <strong id="doneRef">—</strong></p>
+                <p class="done-hold" id="doneHoldRow" hidden>Dates held until <strong id="doneHoldUntil">—</strong></p>
                 <dl class="review-stay-card">
                   <div><dt>Dates</dt><dd id="doneDates">—</dd></div>
                   <div><dt>Nights</dt><dd id="doneNights">—</dd></div>
@@ -279,7 +318,7 @@
                 </dl>
               </section>
               <section class="review-section">
-                <h3>Submitted</h3>
+                <h3>Your details</h3>
                 <dl class="review-rows">
                   <div><dt>Name</dt><dd id="doneName">—</dd></div>
                   <div><dt>Email</dt><dd id="doneEmail">—</dd></div>
@@ -291,11 +330,11 @@
                 </dl>
               </section>
               <section class="review-section">
-                <h3>What to expect next</h3>
+                <h3>What’s next</h3>
                 <ol class="done-next">
-                  <li>CJT Realty will review your dates, guest count, and trip details, including any pet or event request.</li>
-                  <li>You will hear back by email. The stay is not confirmed until the owners approve.</li>
-                  <li>If approved, you will receive a Complete your booking link to review and sign the agreement. No payment is collected now.</li>
+                  <li>CJT Realty reviews your dates, guest count, and stay details.</li>
+                  <li>We’ll follow up at the email you provided. We haven’t sent a message yet from this page.</li>
+                  <li>If approved, you’ll get a Complete your booking link to accept the rental agreement. Payment is collected then — not now.</li>
                 </ol>
                 <button type="button" id="doneBrowse" class="btn btn-outline">Back to the listing</button>
               </section>

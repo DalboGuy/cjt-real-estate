@@ -35,7 +35,9 @@ h1{font-family:Georgia,serif;font-weight:500;font-size:clamp(1.8rem,4vw,2.4rem);
 .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
 .notice{padding:12px 14px;border-radius:12px;background:var(--warn);margin:0 0 16px}
 .notice.good{background:var(--good)}
-.notice.error{background:#fff0ed;color:#7a2929}
+.property-strip{display:grid;gap:4px}
+.property-strip strong{font-size:1.05rem}
+.property-strip span{color:var(--muted);font-size:.88rem}
 @media(max-width:640px){
   .page{width:min(100% - 24px,820px);margin:18px auto 48px}
   .card{padding:16px}

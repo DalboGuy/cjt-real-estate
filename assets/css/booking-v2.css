@@ -35,7 +35,7 @@
 .change-dates-link{display:inline-block;margin-top:8px}
 .change-dates-link[hidden]{display:none!important}
 #bookingSummary[hidden]{display:none!important}
-.request-panel{width:min(560px,100%)}
+.request-panel{width:min(640px,100%)}
 .request-panel .modal-body{padding:18px 20px 28px}
 .request-panel .modal-header h2{font-size:1.35rem}
 #reviewStep{display:grid;gap:22px;padding-bottom:12px}
@@ -67,8 +67,34 @@
   .review-rows>div{padding:10px 0}
 }
 .booking-selectors{overflow:visible;position:relative;z-index:4}
-.guest-select-wrap{display:block;width:100%;border-top:1px solid #aeb8b6;padding:10px 12px 11px;background:#fff;position:relative;z-index:6}
-.guest-select{display:block;width:100%;margin-top:2px;border:0;background:transparent;font-size:.9rem;color:#37484b;cursor:pointer;appearance:auto;-webkit-appearance:menulist}
+.guest-popover[hidden]{display:none!important}
+.guest-popover.show{display:block}
+.guest-step-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:8px 0}
+.guest-step-row + .guest-step-row{border-top:1px solid var(--line)}
+.guest-step-row span{display:block;color:var(--muted);font-size:.75rem}
+.guest-stepper{display:flex;align-items:center;gap:10px}
+.guest-stepper button{width:32px;height:32px;border:1px solid #aeb8b6;border-radius:999px;background:#fff;cursor:pointer;font-size:1.1rem;line-height:1}
+.guest-stepper button:disabled{opacity:.35;cursor:not-allowed}
+.guest-stepper span{min-width:1.2rem;text-align:center;font-weight:800;color:var(--ink);font-size:.95rem}
+.guest-max{margin:8px 0 12px;color:var(--muted);font-size:.78rem}
+.guest-done{width:100%;min-height:40px}
+.why-direct{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+.why-direct strong{display:block;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.why-direct ul{margin:0;padding-left:18px;color:#405154;font-size:.82rem;display:grid;gap:4px}
+.checkout-progress{display:flex;gap:0;list-style:none;margin:0 0 16px;padding:0;border-bottom:1px solid var(--line)}
+.checkout-progress li{flex:1;padding:0 0 10px;font-size:.68rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);position:relative}
+.checkout-progress li:after{content:'';position:absolute;left:0;right:8px;bottom:-1px;height:2px;background:transparent}
+.checkout-progress li.is-current,.checkout-progress li.is-done{color:var(--deep)}
+.checkout-progress li.is-current:after,.checkout-progress li.is-done:after{background:var(--deep)}
+.checkout-property{display:flex;gap:12px;align-items:center;margin:0 0 16px;padding:10px 12px;border:1px solid var(--line);border-radius:14px;background:#fff}
+.checkout-property img{width:64px;height:64px;object-fit:cover;border-radius:10px;background:var(--soft)}
+.checkout-property strong{display:block;font-size:.95rem}
+.checkout-property span{display:block;color:var(--muted);font-size:.78rem}
+#priceStep,#guestDetailsStep{display:grid;gap:18px}
+#priceStep[hidden],#guestDetailsStep[hidden]{display:none!important}
+.policy-list{margin:0;padding-left:18px;color:#405154;font-size:.88rem;display:grid;gap:6px}
+.done-hold{margin:0 0 14px;color:var(--deep);font-size:.88rem;font-weight:650}
+.checkout-quote{margin-top:0}
 #bookNowBtn,#mobileBookBtn{position:relative;z-index:1}
 .booking-card{scroll-margin-top:96px}
 .booking-card.is-next-step{box-shadow:0 16px 44px rgba(13,43,49,.2);outline:2px solid var(--deep)}

@@ -55,8 +55,15 @@ module.exports = async function (req, res) {
       throw e;
     }
 
+    const adults = Number(body.adults);
+    const children = Number(body.children);
+    const occupancyNote = Number.isInteger(adults) && Number.isInteger(children) && adults >= 1 && children >= 0
+      ? `Occupancy: ${adults} adult${adults === 1 ? '' : 's'}${children ? `, ${children} ${children === 1 ? 'child' : 'children'}` : ''}.`
+      : '';
+
     const requestNotes = [
       notes,
+      occupancyNote,
       petRequest === 'yes' ? 'Guest is asking for pet approval.' : '',
       eventRequest === 'yes' ? 'Guest is asking about an event/gathering.' : '',
       tripType ? `Trip type: ${tripType}` : ''
@@ -82,6 +89,8 @@ module.exports = async function (req, res) {
     }
     await markRequestReceived(sql, rows[0], {
       guests,
+      adults: Number.isInteger(adults) ? adults : null,
+      children: Number.isInteger(children) ? children : null,
       quote,
       tripType: tripType || null,
       petRequest,
