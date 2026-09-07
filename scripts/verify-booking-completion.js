@@ -146,6 +146,7 @@ const {
 } = require('../lib/calendar-health');
 
 assert.strictEqual(classifyCalendarChannel({ name: 'owner:1', label: 'Airbnb' }).channel, 'airbnb');
+assert.strictEqual(classifyCalendarChannel({ name: 'owner:1', label: 'Air bnb' }).channel, 'airbnb');
 assert.strictEqual(classifyCalendarChannel({ name: 'owner:2', url: 'https://www.vrbo.com/calendar/ical/x.ics' }).channel, 'vrbo');
 assert.strictEqual(classifyCalendarChannel({ name: 'owner:3', url: 'https://admin.booking.com/hotel/hoteladmin/ical.html?t=abc' }).channel, 'booking.com');
 assert.strictEqual(classifyCalendarChannel({ name: 'airbnb' }).channel, 'airbnb');

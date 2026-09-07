@@ -92,8 +92,9 @@
   function sourceChannel(s){
     if(s&&s.channel)return String(s.channel).toLowerCase();
     const hay=`${s&&s.name||''} ${s&&s.label||''} ${s&&s.hostHint||''}`.toLowerCase();
-    if(hay.includes('airbnb'))return 'airbnb';
-    if(hay.includes('vrbo')||hay.includes('homeaway'))return 'vrbo';
+    const compact=hay.replace(/[\s_-]+/g,'');
+    if(hay.includes('airbnb')||compact.includes('airbnb'))return 'airbnb';
+    if(hay.includes('vrbo')||hay.includes('homeaway')||compact.includes('vrbo'))return 'vrbo';
     if(hay.includes('booking'))return 'booking.com';
     return '';
   }
