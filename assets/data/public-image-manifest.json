@@ -6,28 +6,28 @@
   "notes": "Canonical guest-facing image manifest. Runtime must use publicPath only; Drive IDs are editorial provenance, not delivery.",
   "openingPhotos": [
     {
-      "id": "19qVu5W92D3HZ98fmkJtYWkon10RoQb9A",
-      "alt": "Private hot tub at Sand and Sea Manor",
-      "publicPath": "/assets/images/public/opening/19qVu5W92D3HZ98fmkJtYWkon10RoQb9A.jpg",
-      "sourceDriveFileId": "19qVu5W92D3HZ98fmkJtYWkon10RoQb9A"
-    },
-    {
       "id": "1fQ5o4coCkKLHd-T7TVT7IVuJ6s3gWYCu",
       "alt": "Historic front exterior of Sand and Sea Manor at sunset",
       "publicPath": "/assets/images/public/opening/1fQ5o4coCkKLHd-T7TVT7IVuJ6s3gWYCu.jpg",
       "sourceDriveFileId": "1fQ5o4coCkKLHd-T7TVT7IVuJ6s3gWYCu"
     },
     {
-      "id": "1S_cxUhVmopWmuDoEZViX4QDXg94JKb_f",
-      "alt": "Oversized family room at Sand and Sea Manor",
-      "publicPath": "/assets/images/public/opening/1S_cxUhVmopWmuDoEZViX4QDXg94JKb_f.jpg",
-      "sourceDriveFileId": "1S_cxUhVmopWmuDoEZViX4QDXg94JKb_f"
+      "id": "19qVu5W92D3HZ98fmkJtYWkon10RoQb9A",
+      "alt": "Private hot tub at Sand and Sea Manor",
+      "publicPath": "/assets/images/public/opening/19qVu5W92D3HZ98fmkJtYWkon10RoQb9A.jpg",
+      "sourceDriveFileId": "19qVu5W92D3HZ98fmkJtYWkon10RoQb9A"
     },
     {
       "id": "1YCvLJWjz6csiaFDEnlpoi7zGQdEOtuAq",
       "alt": "Fire-pit seating at Sand and Sea Manor",
       "publicPath": "/assets/images/public/opening/1YCvLJWjz6csiaFDEnlpoi7zGQdEOtuAq.jpg",
       "sourceDriveFileId": "1YCvLJWjz6csiaFDEnlpoi7zGQdEOtuAq"
+    },
+    {
+      "id": "1S_cxUhVmopWmuDoEZViX4QDXg94JKb_f",
+      "alt": "Oversized family room at Sand and Sea Manor",
+      "publicPath": "/assets/images/public/opening/1S_cxUhVmopWmuDoEZViX4QDXg94JKb_f.jpg",
+      "sourceDriveFileId": "1S_cxUhVmopWmuDoEZViX4QDXg94JKb_f"
     },
     {
       "id": "1mou-dVzjGrc41Ws9WnSB2k5dvriLoYhV",
@@ -491,29 +491,29 @@
       "sourceFolderId": "1IxJqk17K7skT9ss5LMXQ6_WrFuCbp5W_",
       "photos": [
         {
-          "name": "28.jpg",
-          "sourceDriveFileId": "1PpvUxJlvb1JjWqg7EBZzkbGAtvOUGqTM",
-          "publicPath": "/assets/images/public/rooms/1PpvUxJlvb1JjWqg7EBZzkbGAtvOUGqTM.jpg"
-        },
-        {
-          "name": "27.jpg",
-          "sourceDriveFileId": "1MjehyQ64R8MZTZ6EEuOLs3jLNTYI9FvB",
-          "publicPath": "/assets/images/public/rooms/1MjehyQ64R8MZTZ6EEuOLs3jLNTYI9FvB.jpg"
+          "name": "12.jpg",
+          "sourceDriveFileId": "1G-a091oYqM-KexAS8nRSC6KCM0eQtMY1",
+          "publicPath": "/assets/images/public/rooms/1G-a091oYqM-KexAS8nRSC6KCM0eQtMY1.jpg"
         },
         {
           "name": "9.jpg",
-          "sourceDriveFileId": "1dOEt1mcytUnoQR-JQ_PwS_wnt9cUv98f",
-          "publicPath": "/assets/images/public/rooms/1dOEt1mcytUnoQR-JQ_PwS_wnt9cUv98f.jpg"
+          "sourceDriveFileId": "1KTV7nKFn4C9YC1dB_zKEu2QdqQMHKJLm",
+          "publicPath": "/assets/images/public/rooms/1KTV7nKFn4C9YC1dB_zKEu2QdqQMHKJLm.jpg"
         },
         {
-          "name": "12.jpg",
-          "sourceDriveFileId": "1lf3xMpvuNuXFM8shiyVqz9a1alPF8SdJ",
-          "publicPath": "/assets/images/public/rooms/1lf3xMpvuNuXFM8shiyVqz9a1alPF8SdJ.jpg"
+          "name": "27.jpg",
+          "sourceDriveFileId": "1RUE96rF2Y8dbK_-CS31VE5Vkba6KSOyR",
+          "publicPath": "/assets/images/public/rooms/1RUE96rF2Y8dbK_-CS31VE5Vkba6KSOyR.jpg"
         },
         {
           "name": "52.jpg",
-          "sourceDriveFileId": "1P55Ba4LnbWVTowwiwCjkefB7ZCRxuC2F",
-          "publicPath": "/assets/images/public/rooms/1P55Ba4LnbWVTowwiwCjkefB7ZCRxuC2F.jpg"
+          "sourceDriveFileId": "1ixcf53Yo75CnfJgRZxdM4lTuaTV2BHNm",
+          "publicPath": "/assets/images/public/rooms/1ixcf53Yo75CnfJgRZxdM4lTuaTV2BHNm.jpg"
+        },
+        {
+          "name": "28.jpg",
+          "sourceDriveFileId": "17-FjbJy1wtgDtNdSJKvfYq4_Wtg4dJBk",
+          "publicPath": "/assets/images/public/rooms/17-FjbJy1wtgDtNdSJKvfYq4_Wtg4dJBk.jpg"
         }
       ]
     },
@@ -522,14 +522,14 @@
       "sourceFolderId": "1PHttJna7uy8D_d47gs_9Qz19oIdW7kJh",
       "photos": [
         {
-          "name": "41.jpg",
-          "sourceDriveFileId": "1JlfPna3S8STdFA7sjuA5uhMLDemk0NXe",
-          "publicPath": "/assets/images/public/rooms/1JlfPna3S8STdFA7sjuA5uhMLDemk0NXe.jpg"
+          "name": "42.jpg",
+          "sourceDriveFileId": "1ftx3EpDLreevw_jjMUH4Pa3hj0ZyNcdc",
+          "publicPath": "/assets/images/public/rooms/1ftx3EpDLreevw_jjMUH4Pa3hj0ZyNcdc.jpg"
         },
         {
-          "name": "42.jpg",
-          "sourceDriveFileId": "1Wul5n_SRp9LutOrS-Ptjfc7KKq6-S02r",
-          "publicPath": "/assets/images/public/rooms/1Wul5n_SRp9LutOrS-Ptjfc7KKq6-S02r.jpg"
+          "name": "41.jpg",
+          "sourceDriveFileId": "1p_gSIPgB8li-ZHPcE5jF_mTJVf4DX9H1",
+          "publicPath": "/assets/images/public/rooms/1p_gSIPgB8li-ZHPcE5jF_mTJVf4DX9H1.jpg"
         }
       ]
     },
@@ -539,13 +539,13 @@
       "photos": [
         {
           "name": "43.jpg",
-          "sourceDriveFileId": "1QAuZGsYQLHfmzX8gisj1C9rvS33TTg0I",
-          "publicPath": "/assets/images/public/rooms/1QAuZGsYQLHfmzX8gisj1C9rvS33TTg0I.jpg"
+          "sourceDriveFileId": "1vpI2I7nBKRLcvcEzXS-ePn2-BxFleWoI",
+          "publicPath": "/assets/images/public/rooms/1vpI2I7nBKRLcvcEzXS-ePn2-BxFleWoI.jpg"
         },
         {
           "name": "44.jpg",
-          "sourceDriveFileId": "1hT6T9fbkp-N5iHoiaj5OaH-bjYPOeJAS",
-          "publicPath": "/assets/images/public/rooms/1hT6T9fbkp-N5iHoiaj5OaH-bjYPOeJAS.jpg"
+          "sourceDriveFileId": "1RkZ5GUgqVVLyLbz6pgVBiWYG1b1u5u3g",
+          "publicPath": "/assets/images/public/rooms/1RkZ5GUgqVVLyLbz6pgVBiWYG1b1u5u3g.jpg"
         }
       ]
     },
@@ -554,14 +554,14 @@
       "sourceFolderId": "1o-nrG3bMMqgZ4-Egm2XzNmXZ00MD2YGd",
       "photos": [
         {
-          "name": "39.jpg",
-          "sourceDriveFileId": "1yzwWdsT001Ngn1kZMG27ztplFyvm5yFk",
-          "publicPath": "/assets/images/public/rooms/1yzwWdsT001Ngn1kZMG27ztplFyvm5yFk.jpg"
+          "name": "40.jpg",
+          "sourceDriveFileId": "1fNrIsAjT8OeoEKLh-ffSXTdvKHId561u",
+          "publicPath": "/assets/images/public/rooms/1fNrIsAjT8OeoEKLh-ffSXTdvKHId561u.jpg"
         },
         {
-          "name": "40.jpg",
-          "sourceDriveFileId": "1oHaZh2tPCh5J0bWbY6rnrJQxbqzbMmXu",
-          "publicPath": "/assets/images/public/rooms/1oHaZh2tPCh5J0bWbY6rnrJQxbqzbMmXu.jpg"
+          "name": "39.jpg",
+          "sourceDriveFileId": "1NXXKCKJmY-bZB3t36XKs7HfJwIn2Q25L",
+          "publicPath": "/assets/images/public/rooms/1NXXKCKJmY-bZB3t36XKs7HfJwIn2Q25L.jpg"
         }
       ]
     },
@@ -571,8 +571,8 @@
       "photos": [
         {
           "name": "37.jpg",
-          "sourceDriveFileId": "1V_iLI4_uvax7dlTllW8N2sXBOl7tGZtW",
-          "publicPath": "/assets/images/public/rooms/1V_iLI4_uvax7dlTllW8N2sXBOl7tGZtW.jpg"
+          "sourceDriveFileId": "1Oosyi1X3GMY9eX0EJKCLYPEkFCQ6WdBQ",
+          "publicPath": "/assets/images/public/rooms/1Oosyi1X3GMY9eX0EJKCLYPEkFCQ6WdBQ.jpg"
         }
       ]
     }
