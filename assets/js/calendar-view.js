@@ -9,9 +9,16 @@
     ['prep','Prep / turnover','swatch-prep'],
     ['other','Unknown / Other','swatch-other']
   ];
+  const OCCUPANCY_CHANNELS=new Set(['direct','airbnb','vrbo','booking.com','other']);
   const DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const DOW_SHORT=['S','M','T','W','T','F','S'];
+  const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const VIEWS=['month','week','year','day'];
+  const VIEW_STORAGE_KEY='cjt.owner.calendar.view';
+  const VIEW_BTN={month:'viewMonth',week:'viewWeek',year:'viewYear',day:'viewDay'};
+
   let snapshot=null;
-  let view='month';
+  let view=readStoredView();
   let year=null;
   let month=null;
   let focusDate=null;
@@ -39,12 +46,39 @@
     d.setUTCDate(d.getUTCDate()+n);
     return d.toISOString().slice(0,10);
   }
+  function monthLength(y,m){
+    const nextY=m===12?y+1:y;
+    const nextM=m===12?1:m+1;
+    return Number(addDays(`${nextY}-${pad(nextM)}-01`,-1).slice(8,10));
+  }
+  function clampDay(y,m,day){
+    return Math.max(1,Math.min(Number(day)||1,monthLength(y,m)));
+  }
   function fmt(iso){
     if(!iso)return '—';
     return new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric',timeZone:'UTC'});
   }
+  function fmtShort(iso){
+    if(!iso)return '—';
+    return new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'UTC'});
+  }
   function monthTitle(y,m){
     return new Date(Date.UTC(y,m-1,1)).toLocaleDateString('en-US',{month:'long',year:'numeric',timeZone:'UTC'});
+  }
+  function readStoredView(){
+    try{
+      const stored=localStorage.getItem(VIEW_STORAGE_KEY);
+      if(VIEWS.includes(stored)) return stored;
+    }catch{/* private mode */}
+    return 'month';
+  }
+  function storeView(next){
+    try{localStorage.setItem(VIEW_STORAGE_KEY,next);}catch{/* private mode */}
+  }
+  function setView(next){
+    if(!VIEWS.includes(next)) next='month';
+    view=next;
+    storeView(next);
   }
 
   async function ownerApi(action,payload={}){
@@ -93,41 +127,60 @@
     return map;
   }
 
+  function currentDayNumber(){
+    const iso=focusDate||snapshot?.range?.day||snapshot?.range?.today;
+    return iso?Number(iso.slice(8,10)):1;
+  }
+
+  function isoFromParts(y,m,day){
+    return `${y}-${pad(m)}-${pad(clampDay(y,m,day))}`;
+  }
+
   function renderLegend(){
     const el=document.getElementById('calendarLegend');
     if(!el)return;
     el.innerHTML=CHANNELS.map(([id,label,swatch])=>`<span><i class="cal-swatch ${swatch}"></i>${esc(label)}</span>`).join('')+'<span>CI / CO markers show check-in and check-out days (iCal end dates are exclusive).</span>';
   }
 
+  function fillSelect(el,options,value){
+    if(!el)return;
+    const current=String(value);
+    el.innerHTML=options.map(([id,label])=>`<option value="${esc(String(id))}"${String(id)===current?' selected':''}>${esc(label)}</option>`).join('');
+  }
+
   function renderFilters(){
-    const channelEl=document.getElementById('channelFilters');
-    const statusEl=document.getElementById('statusFilters');
-    const channels=[['all','All channels'],...CHANNELS.map(([id,label])=>[id,label])];
-    const statuses=[['all','All statuses'],['hold','Hold'],['confirmed','Confirmed'],['cancelled','Cancelled']];
-    if(channelEl){
-      channelEl.innerHTML=channels.map(([id,label])=>`<button class="filter-btn ${channelFilter===id?'active':''}" data-channel="${id}" type="button">${esc(label)}</button>`).join('');
-      channelEl.querySelectorAll('[data-channel]').forEach(btn=>btn.onclick=()=>{channelFilter=btn.dataset.channel;render();});
-    }
-    if(statusEl){
-      statusEl.innerHTML=statuses.map(([id,label])=>`<button class="filter-btn ${statusFilter===id?'active':''}" data-status="${id}" type="button">${esc(label)}</button>`).join('');
-      statusEl.querySelectorAll('[data-status]').forEach(btn=>btn.onclick=()=>{statusFilter=btn.dataset.status;render();});
-    }
+    const channelEl=document.getElementById('channelFilter');
+    const statusEl=document.getElementById('statusFilter');
+    fillSelect(channelEl,[['all','All channels'],...CHANNELS.map(([id,label])=>[id,label])],channelFilter);
+    fillSelect(statusEl,[['all','All statuses'],['hold','Hold'],['confirmed','Confirmed'],['cancelled','Cancelled']],statusFilter);
+  }
+
+  function viewedOccupancy(){
+    if(!snapshot)return {pct:0,booked:0,total:0};
+    if(view==='year') return snapshot.occupancy.viewedYear||snapshot.occupancy.viewedMonth;
+    if(view==='week'||view==='day') return snapshot.occupancy.viewedWeek||snapshot.occupancy.viewedMonth;
+    return snapshot.occupancy.viewedMonth;
+  }
+
+  function viewedOccupancyLabel(){
+    if(view==='year') return snapshot&&year===Number(snapshot.range.today.slice(0,4))?'This year':'Viewed year';
+    if(view==='week'||view==='day') return 'This week';
+    const thisMonth=snapshot&&snapshot.range.year===Number(snapshot.range.today.slice(0,4))&&snapshot.range.month===Number(snapshot.range.today.slice(5,7));
+    return thisMonth?'This month':'Viewed month';
   }
 
   function renderOccupancy(){
     const el=document.getElementById('occupancyStrip');
     if(!el||!snapshot)return;
-    const viewed=view==='week'?(snapshot.occupancy.viewedWeek||snapshot.occupancy.viewedMonth):snapshot.occupancy.viewedMonth;
+    const viewed=viewedOccupancy();
     const next30=snapshot.occupancy.next30;
     const next90=snapshot.occupancy.next90;
-    const thisMonth=snapshot.range.year===Number(snapshot.range.today.slice(0,4))&&snapshot.range.month===Number(snapshot.range.today.slice(5,7));
-    const period=view==='week'?'This week':(thisMonth?'This month':'Viewed month');
     const cards=[
-      [period, `${viewed.pct}%`, `${viewed.booked} of ${viewed.total} guest nights`],
+      [viewedOccupancyLabel(), `${viewed.pct}%`, `${viewed.booked} of ${viewed.total} guest nights`],
       ['Next 30 days', `${next30.pct}%`, `${next30.booked} of ${next30.total} guest nights`],
       ['Next 90 days', `${next90.pct}%`, `${next90.booked} of ${next90.total} guest nights`]
     ];
-    el.innerHTML=cards.map(c=>`<div class="summary-card"><span>${esc(c[0])}</span><b>${esc(c[1])}</b><span>${esc(c[2])}</span></div>`).join('');
+    el.innerHTML=cards.map(c=>`<span class="cal-occ-item"><span>${esc(c[0])}</span><b>${esc(c[1])}</b><span class="cal-occ-sub">${esc(c[2])}</span></span>`).join('');
   }
 
   function sourceLabel(s){
@@ -139,11 +192,19 @@
 
   function renderSync(){
     const el=document.getElementById('syncStrip');
+    const summary=document.getElementById('syncSummary');
     const pill=document.getElementById('viewStatusPill');
     if(!el||!snapshot)return;
     const sources=snapshot.sync.sources||[];
     const checked=snapshot.sync.checkedAt?new Date(snapshot.sync.checkedAt).toLocaleString():'—';
-    if(pill) pill.textContent=snapshot.sync.configError?'Feeds missing':`${sources.filter(s=>s.ok!==false).length} sources · ${checked}`;
+    const ok=sources.filter(s=>s.ok!==false&&!s.duplicateOf).length;
+    const fail=sources.filter(s=>s.ok===false).length;
+    if(pill) pill.textContent=snapshot.sync.configError?'Feeds missing':`${ok} source${ok===1?'':'s'}`;
+    if(summary){
+      if(!sources.length) summary.textContent='No calendar sources yet';
+      else if(fail) summary.textContent=`${ok} connected · ${fail} issue${fail===1?'':'s'} · ${checked}`;
+      else summary.textContent=`${ok} source${ok===1?'':'s'} · checked ${checked}`;
+    }
     if(!sources.length){
       el.innerHTML='<span class="cal-sync-chip fail"><i></i>No iCal sources yet. Guest booking stays fail-closed until a feed is connected.</span>';
       return;
@@ -177,15 +238,58 @@
     return [...ids].map(id=>map.get(id)).filter(Boolean).filter(eventVisible);
   }
 
-  function renderGrid(){
-    if(!mount||!snapshot)return;
+  function yearDayKind(date){
+    const night=snapshot?.nights?.[date];
+    const occupying=nightEvents(date).filter(ev=>ev.start<=date&&date<ev.end);
+    if(!occupying.length) return night?.conflict?'conflict':'open';
+    const channels=occupying.map(ev=>ev.channel);
+    const guests=channels.some(c=>OCCUPANCY_CHANNELS.has(c));
+    const conflict=night?.conflict&&(occupying.length>1||occupying.some(ev=>ev.channel==='prep'));
+    if(conflict) return guests?'booked conflict':'conflict';
+    if(guests) return 'booked';
+    if(channels.includes('owner_stay')) return 'owner';
+    if(channels.includes('manual_block')) return 'blocked';
+    if(night?.prep||channels.includes('prep')) return 'prep';
+    return 'open';
+  }
+
+  function renderNav(){
+    const y=year||snapshot?.range?.year;
+    const m=month||snapshot?.range?.month;
+    const todayY=snapshot?Number(snapshot.range.today.slice(0,4)):new Date().getUTCFullYear();
+    const startY=Math.min(todayY-2,y||todayY);
+    const endY=Math.max(todayY+3,y||todayY);
+    const years=[];
+    for(let yy=startY;yy<=endY;yy+=1) years.push([yy,String(yy)]);
+    fillSelect(document.getElementById('calYearSelect'),years,y);
+    fillSelect(document.getElementById('calMonthSelect'),MONTHS.map((name,i)=>[i+1,name]),m);
+    const showDay=view==='week'||view==='day';
+    document.getElementById('calDayField')?.classList.toggle('hidden',!showDay);
+    if(showDay&&y&&m){
+      const dim=monthLength(y,m);
+      const days=[];
+      for(let d=1;d<=dim;d+=1) days.push([d,String(d)]);
+      fillSelect(document.getElementById('calDaySelect'),days,clampDay(y,m,currentDayNumber()));
+    }
+    const title=document.getElementById('calTitle');
+    if(title&&snapshot){
+      if(view==='week') title.textContent=`Week of ${fmtShort(snapshot.range.weekStart)} – ${fmtShort(addDays(snapshot.range.weekEnd,-1))}`;
+      else if(view==='year') title.textContent=String(y);
+      else if(view==='day') title.textContent=fmt(focusDate||snapshot.range.day);
+      else title.textContent=monthTitle(y,m);
+    }
+    VIEWS.forEach(v=>{
+      const btn=document.getElementById(VIEW_BTN[v]);
+      if(!btn)return;
+      btn.classList.toggle('active',view===v);
+      btn.setAttribute('aria-pressed',view===v?'true':'false');
+    });
+  }
+
+  function renderMonthWeekGrid(){
     const y=snapshot.range.year;
     const m=snapshot.range.month;
     const today=snapshot.range.today;
-    document.getElementById('calTitle').textContent=view==='week'?`Week of ${fmt(snapshot.range.weekStart)}`:monthTitle(y,m);
-    document.getElementById('viewMonth')?.classList.toggle('active',view==='month');
-    document.getElementById('viewWeek')?.classList.toggle('active',view==='week');
-
     const start=view==='week'?snapshot.range.weekStart:`${y}-${pad(m)}-01`;
     const leading=view==='week'?0:new Date(`${start}T00:00:00Z`).getUTCDay();
     const gridStart=addDays(start,-leading);
@@ -199,7 +303,7 @@
     const grid=document.createElement('div');
     grid.className=`cal-grid${view==='week'?' cal-week':''}`;
 
-    for(let i=0;i<cells;i++){
+    for(let i=0;i<cells;i+=1){
       const date=addDays(gridStart,i);
       const inMonth=date.startsWith(`${y}-${pad(m)}`);
       const night=snapshot.nights[date]||{channels:[],eventIds:[],checkins:[],checkouts:[],conflict:false,prep:false};
@@ -221,10 +325,99 @@
       btn.addEventListener('click',()=>openDrawer(date));
       grid.appendChild(btn);
     }
-    mount.innerHTML='';
     mount.append(dow,grid);
+    return visibleCount;
+  }
+
+  function renderYearGrid(){
+    const y=snapshot.range.year;
+    const today=snapshot.range.today;
+    const wrap=document.createElement('div');
+    wrap.className='cal-year';
+    let visibleCount=0;
+    const monthsOcc=snapshot.occupancy.months||[];
+    for(let m=1;m<=12;m+=1){
+      const article=document.createElement('article');
+      article.className='cal-year-month';
+      article.id=`calYearMonth-${m}`;
+      if(m===snapshot.range.month) article.classList.add('current');
+      const occ=monthsOcc.find(row=>row.month===m);
+      const first=`${y}-${pad(m)}-01`;
+      const leading=new Date(`${first}T00:00:00Z`).getUTCDay();
+      const dim=monthLength(y,m);
+      const cells=[];
+      for(let i=0;i<leading;i+=1) cells.push('<span class="cal-year-pad"></span>');
+      for(let d=1;d<=dim;d+=1){
+        const date=`${y}-${pad(m)}-${pad(d)}`;
+        const night=snapshot.nights[date];
+        const evs=nightEvents(date);
+        if(evs.length) visibleCount+=1;
+        const kind=yearDayKind(date);
+        const todayCls=date===today?' today':'';
+        cells.push(`<button type="button" class="cal-year-day ${kind}${todayCls}" data-date="${date}" title="${esc(date)}${night?.conflict?' · overlap':''}">${d}</button>`);
+      }
+      article.innerHTML=`<div class="cal-year-head"><button type="button" data-goto-month="${m}">${esc(MONTHS[m-1])}</button><span>${occ?`${occ.pct}%`:''}</span></div>
+        <div class="cal-year-dow">${DOW_SHORT.map(d=>`<span>${d}</span>`).join('')}</div>
+        <div class="cal-year-grid">${cells.join('')}</div>`;
+      wrap.appendChild(article);
+    }
+    mount.append(wrap);
+    mount.querySelectorAll('[data-goto-month]').forEach(btn=>btn.addEventListener('click',()=>{
+      month=Number(btn.getAttribute('data-goto-month'));
+      focusDate=isoFromParts(year,month,1);
+      setView('month');
+      load();
+    }));
+    mount.querySelectorAll('[data-date]').forEach(btn=>btn.addEventListener('click',()=>openDrawer(btn.getAttribute('data-date'))));
+    return visibleCount;
+  }
+
+  function renderDayAgenda(){
+    const date=focusDate||snapshot.range.day;
+    const evs=nightEvents(date);
+    const night=snapshot.nights[date];
+    const wrap=document.createElement('div');
+    wrap.className='cal-agenda';
+    if(!evs.length){
+      wrap.innerHTML=`<div class="empty">Open night — guests can request this date unless an OTA feed is down.</div>
+        <div class="widget-footer"><button class="btn btn-primary" type="button" data-fill="${date}">Block or owner stay</button></div>`;
+    }else{
+      wrap.innerHTML=evs.map(ev=>`<article class="card">
+        <div class="card-head"><div><h3>${esc(ev.label)}</h3><p>${esc(ev.start)} → ${esc(ev.end)} · ${esc(ev.nights)} night${ev.nights===1?'':'s'}</p></div><span class="badge ${ev.statusBucket==='hold'?'warn':ev.statusBucket==='cancelled'?'':'good'}">${esc(ev.statusBucket)}</span></div>
+        <div class="reservation-meta">${esc(drawerGuestLabel(ev))}${ev.guestCount?` · ${esc(ev.guestCount)} guests`:''}${ev.sourceLabel?` · ${esc(ev.sourceLabel)}`:''}</div>
+        ${contactLine(ev)}
+        ${ev.notes?`<p class="reservation-meta">${esc(ev.notes)}</p>`:''}
+        ${ev.occupancy?'':'<div class="metric-label">Excluded from occupancy %.</div>'}
+        <div class="widget-footer">
+          <button class="btn btn-secondary" type="button" data-open="${esc(ev.start)}">Night details</button>
+          ${ev.canDelete?`<button class="btn danger-btn" type="button" data-del="${ev.entryId}">Remove</button>`:''}
+        </div>
+      </article>`).join('')+`<div class="widget-footer"><button class="btn btn-secondary" type="button" data-fill="${date}">Add another block</button></div>`;
+    }
+    if(night?.conflict){
+      const banner=document.createElement('div');
+      banner.className='notice cal-conflict';
+      banner.textContent='Overlap: more than one source claims this night.';
+      wrap.prepend(banner);
+    }
+    mount.append(wrap);
+    wrap.querySelector('[data-fill]')?.addEventListener('click',e=>{
+      fillForm(e.currentTarget.getAttribute('data-fill'));
+    });
+    wrap.querySelectorAll('[data-open]').forEach(btn=>btn.addEventListener('click',()=>openDrawer(btn.getAttribute('data-open'))));
+    wrap.querySelectorAll('[data-del]').forEach(btn=>btn.addEventListener('click',()=>removeEntry(Number(btn.getAttribute('data-del')))));
+    return evs.length;
+  }
+
+  function renderGrid(){
+    if(!mount||!snapshot)return;
+    mount.innerHTML='';
+    let visibleCount=0;
+    if(view==='year') visibleCount=renderYearGrid();
+    else if(view==='day') visibleCount=renderDayAgenda();
+    else visibleCount=renderMonthWeekGrid();
     const empty=document.getElementById('calendarEmpty');
-    if(empty) empty.classList.toggle('hidden', visibleCount>0);
+    if(empty) empty.classList.toggle('hidden', view==='day'||visibleCount>0);
   }
 
   function contactLine(ev){
@@ -236,6 +429,9 @@
 
   function openDrawer(date){
     if(!drawer)return;
+    focusDate=date;
+    year=Number(date.slice(0,4));
+    month=Number(date.slice(5,7));
     const evs=nightEvents(date);
     const night=snapshot?.nights?.[date];
     document.getElementById('drawerTitle').textContent=fmt(date);
@@ -302,6 +498,11 @@
 
   function summaryRange(){
     if(view==='week') return {start:snapshot.range.weekStart,end:snapshot.range.weekEnd,label:`Week of ${fmt(snapshot.range.weekStart)}`};
+    if(view==='year') return {start:snapshot.range.yearStart,end:snapshot.range.yearEnd,label:String(snapshot.range.year)};
+    if(view==='day'){
+      const day=focusDate||snapshot.range.day;
+      return {start:day,end:addDays(day,1),label:fmt(day)};
+    }
     return {start:snapshot.range.start,end:snapshot.range.end,label:monthTitle(snapshot.range.year,snapshot.range.month)};
   }
 
@@ -309,7 +510,7 @@
     if(!snapshot)return '';
     const settings=snapshot.settings||{};
     const range=summaryRange();
-    const occ=view==='week'?(snapshot.occupancy.viewedWeek||snapshot.occupancy.viewedMonth):snapshot.occupancy.viewedMonth;
+    const occ=viewedOccupancy();
     const lines=[
       `${snapshot.property.name} — ${range.label}`,
       `Occupancy (guest holds + confirmed + OTA only): ${occ.pct}% this view · ${snapshot.occupancy.next30.pct}% next 30 · ${snapshot.occupancy.next90.pct}% next 90`,
@@ -317,6 +518,13 @@
       'Outbound Airbnb/VRBO push: paused',
       ''
     ];
+    if(view==='year'&&snapshot.occupancy.months){
+      lines.push('Monthly occupancy:');
+      snapshot.occupancy.months.forEach(row=>{
+        lines.push(`  ${MONTHS[row.month-1]}: ${row.pct}% (${row.booked}/${row.total})`);
+      });
+      lines.push('');
+    }
     const rows=(snapshot.events||[]).filter(ev=>ev.end>range.start&&ev.start<range.end&&ev.statusBucket!=='cancelled').sort((a,b)=>a.start.localeCompare(b.start));
     for(const ev of rows){
       const who=settings.showGuestNames!==false?drawerGuestLabel(ev):'';
@@ -338,10 +546,18 @@
     return (snapshot?.events||[]).filter(ev=>ev.statusBucket!=='cancelled'&&ev.start<endDate&&startDate<ev.end);
   }
 
+  function copyLabel(){
+    if(view==='week') return 'Copy week summary';
+    if(view==='year') return 'Copy year summary';
+    if(view==='day') return 'Copy day summary';
+    return 'Copy month summary';
+  }
+
   function render(){
     if(!snapshot)return;
     const copyBtn=document.getElementById('copySummary');
-    if(copyBtn) copyBtn.textContent=view==='week'?'Copy week summary':'Copy month summary';
+    if(copyBtn) copyBtn.textContent=copyLabel();
+    renderNav();
     renderLegend();
     renderFilters();
     renderOccupancy();
@@ -357,7 +573,8 @@
       snapshot=data;
       year=data.range.year;
       month=data.range.month;
-      if(view==='week'&&!focusDate) focusDate=data.range.weekStart;
+      if((view==='week'||view==='day')&&!focusDate) focusDate=view==='day'?data.range.day:data.range.weekStart;
+      if(view==='day'&&data.range.day) focusDate=data.range.day;
       applySettings(data.settings);
       render();
     }catch(e){
@@ -384,42 +601,83 @@
     finally{savingSettings=false;}
   }
 
-  document.getElementById('calPrev')?.addEventListener('click',()=>{
+  function stepPeriod(direction){
     if(!year||!month)return;
     if(view==='week'){
-      focusDate=addDays(weekFocusDate(),-7);
-      year=Number(focusDate.slice(0,4));
-      month=Number(focusDate.slice(5,7));
+      focusDate=addDays(weekFocusDate(),direction*7);
+    }else if(view==='day'){
+      focusDate=addDays(focusDate||weekFocusDate(),direction);
+    }else if(view==='year'){
+      year+=direction;
+      focusDate=isoFromParts(year,month,1);
+      return load();
+    }else{
+      month+=direction;
+      if(month<1){month=12;year-=1;}
+      if(month>12){month=1;year+=1;}
+      focusDate=isoFromParts(year,month,1);
       return load();
     }
-    month-=1;if(month<1){month=12;year-=1;}load();
-  });
-  document.getElementById('calNext')?.addEventListener('click',()=>{
-    if(!year||!month)return;
-    if(view==='week'){
-      focusDate=addDays(weekFocusDate(),7);
-      year=Number(focusDate.slice(0,4));
-      month=Number(focusDate.slice(5,7));
-      return load();
-    }
-    month+=1;if(month>12){month=1;year+=1;}load();
-  });
+    year=Number(focusDate.slice(0,4));
+    month=Number(focusDate.slice(5,7));
+    load();
+  }
+
+  document.getElementById('calPrev')?.addEventListener('click',()=>stepPeriod(-1));
+  document.getElementById('calNext')?.addEventListener('click',()=>stepPeriod(1));
   document.getElementById('calToday')?.addEventListener('click',()=>{
     year=null;
     month=null;
     focusDate=snapshot?.range?.today||null;
     load();
   });
-  document.getElementById('viewMonth')?.addEventListener('click',()=>{view='month';load();});
-  document.getElementById('viewWeek')?.addEventListener('click',()=>{
-    view='week';
-    focusDate=weekFocusDate();
+  document.getElementById('calMonthSelect')?.addEventListener('change',e=>{
+    const next=Number(e.target.value);
+    if(!next)return;
+    month=next;
+    if(view==='year'){
+      document.getElementById(`calYearMonth-${next}`)?.scrollIntoView({behavior:'smooth',block:'nearest'});
+      document.querySelectorAll('.cal-year-month').forEach(el=>el.classList.toggle('current',el.id===`calYearMonth-${next}`));
+      return;
+    }
+    focusDate=isoFromParts(year||snapshot?.range?.year,month,currentDayNumber());
+    year=Number(focusDate.slice(0,4));
     load();
+  });
+  document.getElementById('calYearSelect')?.addEventListener('change',e=>{
+    const next=Number(e.target.value);
+    if(!next)return;
+    year=next;
+    focusDate=isoFromParts(year,month||1,view==='year'?1:currentDayNumber());
+    load();
+  });
+  document.getElementById('calDaySelect')?.addEventListener('change',e=>{
+    const next=Number(e.target.value);
+    if(!next||!year||!month)return;
+    focusDate=isoFromParts(year,month,next);
+    if(view==='month'||view==='year') setView('day');
+    load();
+  });
+  document.getElementById('channelFilter')?.addEventListener('change',e=>{
+    channelFilter=e.target.value||'all';
+    render();
+  });
+  document.getElementById('statusFilter')?.addEventListener('change',e=>{
+    statusFilter=e.target.value||'all';
+    render();
+  });
+  VIEWS.forEach(v=>{
+    document.getElementById(VIEW_BTN[v])?.addEventListener('click',()=>{
+      setView(v);
+      if(v==='week'||v==='day') focusDate=weekFocusDate();
+      if(v==='year'&&year) focusDate=isoFromParts(year,month||1,1);
+      load();
+    });
   });
   document.getElementById('copySummary')?.addEventListener('click',async()=>{
     try{
       await navigator.clipboard.writeText(monthSummaryText());
-      showNotice(view==='week'?'Week summary copied':'Month summary copied');
+      showNotice(`${copyLabel().replace('Copy ','')} copied`);
     }catch{showNotice('Select and copy the summary from the calendar list');}
   });
   document.getElementById('showGuestNames')?.addEventListener('change',()=>saveSettings(true));

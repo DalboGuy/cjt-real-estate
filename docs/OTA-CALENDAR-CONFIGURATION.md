@@ -6,7 +6,7 @@ Owners manage calendar sync in the Owner Portal:
 
 ## Owner calendar view
 
-The same page is the property calendar (month/week grid) and the iCal connection manager.
+The same page is the property calendar (month / week / year / day) and the iCal connection manager. Year is a compact occupancy heat of all twelve months. Day is an agenda list for the focused date. Prev/next step by the active mode; month and year dropdowns jump without leaving the page.
 
 Nights are assembled from:
 
@@ -32,9 +32,9 @@ These are product defaults unless an owner changes a persisted toggle:
 | Guest phone / email | Off | Yes (`show_guest_contact`) |
 | 1-day prep / turnover after checkout | Off (opt in) | Yes (`prep_buffer_enabled`) |
 | Channel and status filters | All | No (session only) |
-| Grid view | Month | No (session only) |
+| Grid view | Month | Yes (`localStorage` key `cjt.owner.calendar.view`) |
 
-Occupancy strip: guest holds + confirmed direct + OTA blocks. Owner personal stays and manual blocks close nights for guests but do not count as booked. Month view is the default grid; week view shows that week’s guest-night occupancy in the first card.
+Occupancy strip: guest holds + confirmed direct + OTA blocks. Owner personal stays and manual blocks close nights for guests but do not count as booked. Month view is the default grid; week and day views show that week’s guest-night occupancy; year view shows the viewed year’s occupancy plus a per-month heat. Availability rules (min/max nights, advance notice, restricted check-in/out) are not applied in this grid — they stay with Pricing.
 
 Guest phone and email are omitted from the owner calendar API unless `show_guest_contact` is on. Guest names are included only when `show_guest_names` is on, and the UI shows them in the night detail drawer (not on the grid or upcoming list).
 

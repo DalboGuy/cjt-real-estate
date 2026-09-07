@@ -6,7 +6,10 @@ const {
   countsTowardOccupancy,
   reservationStatusBucket,
   monthBounds,
+  yearBounds,
+  daysInMonth,
   weekBounds,
+  normalizeView,
   addDays,
   DEFAULT_SETTINGS,
   settingsFromRow,
@@ -131,6 +134,12 @@ const month = monthBounds(2026, 9);
 assert.strictEqual(month.start, '2026-09-01');
 assert.strictEqual(month.end, '2026-10-01');
 assert.strictEqual(addDays('2026-09-30', 1), '2026-10-01');
+assert.deepStrictEqual(yearBounds(2026), { start: '2026-01-01', end: '2027-01-01' });
+assert.strictEqual(daysInMonth(2026, 2), 28);
+assert.strictEqual(daysInMonth(2024, 2), 29);
+assert.strictEqual(normalizeView('year'), 'year');
+assert.strictEqual(normalizeView('DAY'), 'day');
+assert.strictEqual(normalizeView('nope'), 'month');
 const week = weekBounds('2026-09-10');
 assert.strictEqual(week.start, '2026-09-06');
 assert.strictEqual(week.end, '2026-09-13');
@@ -163,6 +172,13 @@ assert.strictEqual(snap.occupancy.viewedMonth.booked, 9);
 assert.ok(snap.occupancy.viewedWeek);
 assert.strictEqual(snap.occupancy.viewedWeek.total, 7);
 assert.strictEqual(snap.occupancy.viewedWeek.booked, 3, 'Sep 10–12 guest nights in the week of Sep 6');
+assert.strictEqual(snap.occupancy.viewedYear.total, 365);
+assert.strictEqual(snap.occupancy.viewedYear.booked, 9);
+assert.strictEqual(snap.occupancy.months.length, 12);
+assert.strictEqual(snap.occupancy.months[8].month, 9);
+assert.strictEqual(snap.occupancy.months[8].booked, 9);
+assert.strictEqual(snap.occupancy.viewedDay.total, 1);
+assert.strictEqual(snap.range.yearStart, '2026-01-01');
 assert.ok(!snap.upcoming.some((e) => e.guestEmail));
 
 const weekSnap = snapshotFromInputs({
@@ -174,6 +190,39 @@ const weekSnap = snapshotFromInputs({
 assert.strictEqual(weekSnap.view, 'week');
 assert.strictEqual(weekSnap.range.weekStart, '2026-09-06');
 assert.strictEqual(weekSnap.occupancy.viewedWeek.booked, 3);
+
+const yearSnap = snapshotFromInputs({
+  ota: { events: otaEvents, sources: [] },
+  reservations,
+  entries,
+  settings: DEFAULT_SETTINGS
+}, { year: 2026, month: 9, view: 'year', focusDate: '2026-09-10' });
+assert.strictEqual(yearSnap.view, 'year');
+assert.strictEqual(yearSnap.range.yearStart, '2026-01-01');
+assert.strictEqual(yearSnap.range.yearEnd, '2027-01-01');
+assert.ok(yearSnap.nights['2026-09-01'], 'year snapshot keeps September nights');
+assert.ok(yearSnap.nights['2026-09-12'].conflict);
+assert.ok(yearSnap.events.some((e) => e.reservationId === 'DB-1'));
+assert.strictEqual(yearSnap.occupancy.viewedYear.booked, 9);
+assert.strictEqual(yearSnap.conflicts.filter((c) => c.date === '2026-09-12').length, 1);
+
+const daySnap = snapshotFromInputs({
+  ota: { events: otaEvents, sources: [] },
+  reservations,
+  entries,
+  settings: DEFAULT_SETTINGS
+}, { year: 2026, month: 9, view: 'day', focusDate: '2026-09-10' });
+assert.strictEqual(daySnap.view, 'day');
+assert.strictEqual(daySnap.range.day, '2026-09-10');
+assert.ok(daySnap.nights['2026-09-10']);
+assert.strictEqual(daySnap.occupancy.viewedDay.booked, 1);
+
+assert.strictEqual(snapshotFromInputs({
+  ota: { events: otaEvents, sources: [] },
+  reservations,
+  entries,
+  settings: DEFAULT_SETTINGS
+}, { view: 'agenda' }).view, 'month');
 
 expectThrow(() => {
   throw new Error('No calendar feeds configured');

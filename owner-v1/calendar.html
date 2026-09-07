@@ -53,35 +53,73 @@
       </header>
 
       <div class="content">
-        <div class="section-title"><div><h2>Property calendar</h2><p>Direct holds, OTA iCal blocks, owner stays, and manual blackouts on one grid. Outbound push to live Airbnb/VRBO is paused; other sites import the CJT .ics link in Connections.</p></div><span class="status-pill" id="viewStatusPill">Loading…</span></div>
+        <div class="section-title"><div><h2>Property calendar</h2><p>One surface for nights, stays, and blocks. Outbound Airbnb/VRBO push stays paused.</p></div><span class="status-pill" id="viewStatusPill">Loading…</span></div>
         <div id="moduleNotice" class="notice hidden"></div>
-        <div id="occupancyStrip" class="summary-grid cal-occupancy"></div>
-        <p class="metric-label cal-occupancy-note">Occupancy counts guest holds, confirmed stays, and OTA blocks. Owner stays and manual blocks close nights but are not booked %.</p>
-        <div id="syncStrip" class="cal-sync" aria-live="polite"></div>
+        <div id="occupancyStrip" class="cal-occupancy-inline" aria-live="polite"></div>
         <div id="conflictBanner" class="notice cal-conflict hidden"></div>
 
-        <div class="cal-toolbar">
-          <div class="cal-month-nav">
-            <button class="btn btn-secondary" id="calPrev" type="button">‹</button>
-            <h3 id="calTitle">Loading…</h3>
-            <button class="btn btn-secondary" id="calNext" type="button">›</button>
-            <button class="btn btn-secondary" id="calToday" type="button">Today</button>
+        <div class="cal-chrome">
+          <div class="cal-toolbar">
+            <div class="cal-month-nav">
+              <button class="btn btn-secondary cal-step" id="calPrev" type="button" aria-label="Previous period">‹</button>
+              <label class="filter-field cal-nav-field">
+                <span>Month</span>
+                <select id="calMonthSelect" class="filter-select" aria-label="Jump to month"></select>
+              </label>
+              <label class="filter-field cal-nav-field">
+                <span>Year</span>
+                <select id="calYearSelect" class="filter-select" aria-label="Jump to year"></select>
+              </label>
+              <label class="filter-field cal-nav-field hidden" id="calDayField">
+                <span>Day</span>
+                <select id="calDaySelect" class="filter-select" aria-label="Jump to day"></select>
+              </label>
+              <button class="btn btn-secondary cal-step" id="calNext" type="button" aria-label="Next period">›</button>
+              <button class="btn btn-secondary" id="calToday" type="button">Today</button>
+            </div>
+            <div class="cal-view-modes" role="group" aria-label="Calendar view">
+              <button class="filter-btn active" id="viewMonth" type="button">Month</button>
+              <button class="filter-btn" id="viewWeek" type="button">Week</button>
+              <button class="filter-btn" id="viewYear" type="button">Year</button>
+              <button class="filter-btn" id="viewDay" type="button">Day</button>
+            </div>
           </div>
-          <div class="filter-row">
-            <button class="filter-btn active" id="viewMonth" type="button">Month</button>
-            <button class="filter-btn" id="viewWeek" type="button">Week</button>
-            <button class="btn btn-secondary" id="copySummary" type="button">Copy month summary</button>
+          <div class="cal-period-row">
+            <h3 id="calTitle">Loading…</h3>
+            <button class="btn btn-secondary" id="copySummary" type="button">Copy summary</button>
           </div>
         </div>
 
-        <div class="filter-row" id="channelFilters"></div>
-        <div class="filter-row" id="statusFilters" style="margin-top:8px"></div>
-        <div class="cal-privacy">
-          <label><input id="showGuestNames" type="checkbox" checked> Show guest names in night details</label>
-          <label><input id="showGuestContact" type="checkbox"> Show guest phone/email in night details</label>
-          <label><input id="prepBuffer" type="checkbox"> 1-day prep after checkout (off until you opt in)</label>
+        <div class="cal-meta-row">
+          <details class="cal-sync-details" id="syncDetails">
+            <summary id="syncSummary">Calendar sources</summary>
+            <div id="syncStrip" class="cal-sync" aria-live="polite"></div>
+          </details>
         </div>
-        <div id="calendarLegend" class="cal-legend"></div>
+
+        <div class="filter-bar cal-filter-bar" aria-label="Calendar filters">
+          <label class="filter-field">
+            <span>Channel</span>
+            <select id="channelFilter" class="filter-select" aria-label="Channel"></select>
+          </label>
+          <label class="filter-field">
+            <span>Status</span>
+            <select id="statusFilter" class="filter-select" aria-label="Status"></select>
+          </label>
+        </div>
+        <details class="about-disclosure cal-display">
+          <summary>Display, legend, and occupancy</summary>
+          <div class="about-body">
+            <div class="cal-privacy">
+              <label><input id="showGuestNames" type="checkbox" checked> Show guest names in night details</label>
+              <label><input id="showGuestContact" type="checkbox"> Show guest phone/email in night details</label>
+              <label><input id="prepBuffer" type="checkbox"> 1-day prep after checkout (off until you opt in)</label>
+            </div>
+            <div id="calendarLegend" class="cal-legend"></div>
+            <p>Occupancy % counts guest holds, confirmed stays, and OTA blocks. Owner stays and manual blocks close nights but are not booked %.</p>
+            <p>Availability rules (min/max nights, advance notice, restricted check-in/out) stay with Pricing and are not applied in this grid.</p>
+          </div>
+        </details>
         <div id="calendarMount"></div>
         <div id="calendarEmpty" class="empty cal-empty-note hidden">No stays or blocks in this view. Open nights stay bookable on the guest page unless an OTA feed is missing.</div>
 

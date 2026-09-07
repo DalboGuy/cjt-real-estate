@@ -186,7 +186,7 @@ module.exports=async function(req,res){
     }
 
     if(req.method==='POST'&&body.action==='calendar_view'){
-      const view=String(body.view||'month')==='week'?'week':'month';
+      const view=String(body.view||'month');
       const year=Number(body.year)||undefined;
       const month=Number(body.month)||undefined;
       const focusDate=validIsoDate(body.focusDate)?body.focusDate:undefined;
