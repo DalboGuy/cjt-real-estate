@@ -76,14 +76,27 @@
   function paintSave(on){$('saveBtn').dataset.saved=on?'1':'0';$('saveLabel').textContent=on?'Saved':'Save';$('saveHeart').setAttribute('fill',on?'currentColor':'none')}
   paintSave(saved);$('saveBtn').onclick=()=>{const next=$('saveBtn').dataset.saved!=='1';localStorage.setItem('cjt_sand_sea_saved',next?'1':'0');paintSave(next)};
 
-  const Guest=window.CJTGuestBooking||{};
-  const HOLD_MESSAGE=Guest.HOLD_MESSAGE||'Your dates are reserved while CJT reviews your request and remain unavailable until an owner releases them.';
-  const MAX_GUESTS=Guest.MAX_GUESTS||14;
-  const LISTING_CHARGE_NOTE=Guest.LISTING_CHARGE_NOTE||"You won't be charged yet. Requesting these dates reserves them until CJT reviews or an owner releases them.";
+  const HOLD_MESSAGE='Your dates are reserved while CJT reviews your request and remain unavailable until an owner releases them.';
+  const MAX_GUESTS=14;
+  const AVAILABILITY_UNKNOWN='Live availability is temporarily unavailable. Dates cannot be requested until calendars are verified.';
+  const CTA_CHECK='Check dates';
+  const CTA_QUOTE='See quote';
+  const CTA_REQUEST='Request to Book';
+  const LISTING_CHARGE_NOTE="You won't be charged yet. Requesting these dates reserves them until CJT reviews or an owner releases them.";
+  const clampGuests=v=>{const n=Number(v);return Number.isInteger(n)?Math.max(1,Math.min(MAX_GUESTS,n)):1};
+  const guestsLabel=n=>`${clampGuests(n)} guest${clampGuests(n)===1?'':'s'}`;
+  const listingCta=({hasDates,hasQuote,calendarHealthy})=>calendarHealthy===false||!hasDates?CTA_CHECK:(hasQuote?CTA_REQUEST:CTA_QUOTE);
+  const failClosedCopy=(body,fallback)=>{const msg=body&&typeof body.message==='string'?body.message.trim():'';return msg||fallback||AVAILABILITY_UNKNOWN};
+  const inquiryPayload=({name,email,phone,message,checkin,checkout,guests})=>({name:String(name||'').trim(),email:String(email||'').trim(),phone:String(phone||'').trim(),message:String(message||'').trim(),checkin:String(checkin||'').trim(),checkout:String(checkout||'').trim(),guests:String(clampGuests(guests))});
+  const successCopy=({replayed,reservationId,serverMessage})=>{
+    const hold=(serverMessage&&String(serverMessage).trim())||HOLD_MESSAGE,reference=reservationId?String(reservationId):'';
+    return replayed
+      ?{title:'Request already received',hold,reference,next:'CJT Realty already has this request. Your dates remain reserved until an owner releases them. Agreement and payment steps are owner-controlled.',isReplay:true}
+      :{title:'Reservation received',hold,reference,next:'CJT Realty will review your request. Agreement and payment steps are owner-controlled and come next only if they accept.',isReplay:false};
+  };
   let blocked=new Set(),calendarHealthy=false,selectedStart='',selectedEnd='',guests=1,currentQuote=null,quoteSeq=0,requestStep='info';
   let pickerCursor=new Date();pickerCursor=new Date(pickerCursor.getFullYear(),pickerCursor.getMonth(),1);
   const calendarModal=$('calendarModal');
-  const copyApi=Guest;
   function canCheckoutOn(date){return selectedStart&&!selectedEnd&&date>selectedStart&&!eachDate(selectedStart,date).some(d=>blocked.has(d))}
   function renderMonth(target,date,secondary=false){
     target.innerHTML='';const title=document.createElement('h3');title.textContent=date.toLocaleDateString('en-US',{month:'long',year:'numeric'});target.appendChild(title);
@@ -107,7 +120,7 @@
     const inText=selectedStart?fmt(selectedStart).replace(/, \d{4}/,''):'Add date',outText=selectedEnd?fmt(selectedEnd).replace(/, \d{4}/,''):'Add date';
     document.querySelectorAll('[data-checkin-value]').forEach(el=>el.textContent=inText);
     document.querySelectorAll('[data-checkout-value]').forEach(el=>el.textContent=outText);
-    document.querySelectorAll('[data-guests-value]').forEach(el=>el.textContent=copyApi.guestsLabel?copyApi.guestsLabel(guests):`${guests} guest${guests===1?'':'s'}`);
+    document.querySelectorAll('[data-guests-value]').forEach(el=>el.textContent=guestsLabel(guests));
     paintListingSteps();
   }
   function paintListingSteps(){
@@ -121,8 +134,8 @@
     });
   }
   function paintPrimaryCtas(){
-    const label=copyApi.listingCta?copyApi.listingCta({hasDates:!!(selectedStart&&selectedEnd),hasQuote:!!currentQuote,calendarHealthy}):(selectedStart&&selectedEnd&&currentQuote?'Request to Book':'Check dates');
-    [$('bookNowBtn'),$('mobileBookBtn')].forEach(btn=>{if(!btn)return;btn.textContent=label;btn.disabled=!calendarHealthy&&label!==(copyApi.CTA&&copyApi.CTA.checkDates||'Check dates')});
+    const label=listingCta({hasDates:!!(selectedStart&&selectedEnd),hasQuote:!!currentQuote,calendarHealthy});
+    [$('bookNowBtn'),$('mobileBookBtn')].forEach(btn=>{if(!btn)return;btn.textContent=label;btn.disabled=!calendarHealthy&&label!==CTA_CHECK});
     document.querySelectorAll('.charge-note').forEach(note=>{if(!note.classList.contains('checkout-charge'))note.textContent=LISTING_CHARGE_NOTE});
     paintListingSteps();
   }
@@ -162,7 +175,7 @@
   function applyAvailabilityUnknown(body){
     calendarHealthy=false;
     blocked=new Set();
-    const msg=copyApi.failClosedCopy?copyApi.failClosedCopy(body):responseMessage(body,'Live availability is temporarily unavailable. Dates cannot be requested until calendars are verified.');
+    const msg=failClosedCopy(body);
     const health=$('calendarHealth');
     health.textContent=msg;
     health.classList.add('is-fail-closed');
@@ -203,7 +216,7 @@
 
   const guestPopover=$('guestPopover');
   function updateGuests(next){
-    guests=copyApi.clampGuests?copyApi.clampGuests(next):Math.max(1,Math.min(MAX_GUESTS,next));
+    guests=clampGuests(next);
     $('guestCount').textContent=guests;
     $('guestMinus').disabled=guests<=1;
     $('guestPlus').disabled=guests>=MAX_GUESTS;
@@ -235,7 +248,7 @@
     if(!selectedStart||!selectedEnd)return resetQuote();
     if(!calendarHealthy){
       $('quoteError').hidden=false;
-      $('quoteError').textContent=copyApi.AVAILABILITY_UNKNOWN||'Live availability cannot be verified right now.';
+      $('quoteError').textContent=AVAILABILITY_UNKNOWN;
       paintPrimaryCtas();
       return;
     }
@@ -253,7 +266,7 @@
       if(seq!==quoteSeq)return;
       if(isQuoteFailClosed(r.status,d)){
         applyAvailabilityUnknown(d);
-        throw new Error(copyApi.failClosedCopy?copyApi.failClosedCopy(d):responseMessage(d,'Live availability cannot be verified right now.'));
+        throw new Error(failClosedCopy(d));
       }
       if(!r.ok)throw new Error(responseMessage(d,'Price is unavailable for those dates.'));
       renderQuote(d.quote);
@@ -290,14 +303,14 @@
     const summary=$('bookingSummary');
     if(summary){
       summary.hidden=requestStep==='done';
-      summary.innerHTML=`<strong>${fmt(selectedStart)} – ${fmt(selectedEnd)} · ${copyApi.guestsLabel?copyApi.guestsLabel(guests):`${guests} guest${guests===1?'':'s'}`}</strong><span>${nights}</span>`;
+      summary.innerHTML=`<strong>${fmt(selectedStart)} – ${fmt(selectedEnd)} · ${guestsLabel(guests)}</strong><span>${nights}</span>`;
     }
   }
   function paintReview(details){
     const nightCount=currentQuote?currentQuote.nights:eachDate(selectedStart,selectedEnd).length;
     setText('reviewDates',`${fmt(selectedStart)} – ${fmt(selectedEnd)}`);
     setText('reviewNights',`${nightCount} night${nightCount===1?'':'s'}`);
-    setText('reviewGuests',copyApi.guestsLabel?copyApi.guestsLabel(guests):`${guests} guest${guests===1?'':'s'}`);
+    setText('reviewGuests',guestsLabel(guests));
     setText('reviewLodging',currentQuote?money(currentQuote.lodgingSubtotal):'—');
     setText('reviewCleaning',currentQuote?money(currentQuote.cleaningFee):'—');
     setText('reviewTax',currentQuote?money(currentQuote.taxes):'—');
@@ -336,18 +349,18 @@
     paintBookingSummary();
   }
   function paintDone(result){
-    const copy=copyApi.successCopy?copyApi.successCopy({
+    const copy=successCopy({
       replayed:!!result.replayed,
       reservationId:result.reservation&&result.reservation.id,
       serverMessage:result.message||HOLD_MESSAGE
-    }):{title:result.replayed?'Request already received':'Reservation received',hold:result.message||HOLD_MESSAGE,reference:result.reservation&&result.reservation.id||'',next:result.replayed?'CJT Realty already has this request. Your dates remain reserved until an owner releases them. Agreement and payment steps are owner-controlled.':'CJT Realty will review your request. Agreement and payment steps are owner-controlled and come next only if they accept.',isReplay:!!result.replayed};
+    });
     const banner=$('doneReplayBanner');
     if(banner)banner.hidden=!copy.isReplay;
     setText('doneTitle',copy.title);
     setText('doneHold',copy.hold);
     setText('doneRef',copy.reference||'—');
     setText('doneDates',`${fmt(selectedStart)} – ${fmt(selectedEnd)}`);
-    setText('doneGuests',copyApi.guestsLabel?copyApi.guestsLabel(guests):`${guests} guest${guests===1?'':'s'}`);
+    setText('doneGuests',guestsLabel(guests));
     setText('doneTotal',currentQuote?money(currentQuote.total):'—');
     setText('doneNext',copy.next);
     if($('bookingStepTitle'))$('bookingStepTitle').textContent=copy.title;
@@ -408,7 +421,7 @@
     }
     const btn=$('bookingSubmit'),msg=$('bookingMessage'),details=collectGuestFields();
     btn.disabled=true;btn.textContent='Requesting these dates…';msg.className='form-message';msg.textContent='';
-    const payload=copyApi.inquiryPayload?copyApi.inquiryPayload({...details,checkin:selectedStart,checkout:selectedEnd,guests}):{name:details.name,email:details.email,phone:details.phone,message:details.message,checkin:selectedStart,checkout:selectedEnd,guests:String(guests)};
+    const payload=inquiryPayload({...details,checkin:selectedStart,checkout:selectedEnd,guests});
     try{
       const r=await fetch('/api/inquiries',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
       const d=await r.json().catch(()=>({}));
