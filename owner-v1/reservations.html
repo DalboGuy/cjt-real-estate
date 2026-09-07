@@ -47,12 +47,12 @@
 
     <main class="main">
       <header class="topbar">
-        <div style="display:flex;align-items:center;gap:10px"><button id="mobileMenu" class="icon-btn mobile-menu" type="button" aria-label="Open menu">☰</button><div><h1>Direct Booking Dashboard</h1><div class="meta">Requests, quotes, holds, contracts and confirmation</div></div></div>
+        <div style="display:flex;align-items:center;gap:10px"><button id="mobileMenu" class="icon-btn mobile-menu" type="button" aria-label="Open menu">☰</button><div><h1>Direct Booking Dashboard</h1><div class="meta">One request · one owner decision · one Complete your booking link</div></div></div>
         <div class="top-actions"><span id="lastChecked" class="meta">Loading…</span><a class="btn btn-secondary" href="/" target="_blank" rel="noopener">Open Booking Page ↗</a></div>
       </header>
 
       <div class="content">
-        <div class="section-title"><div><h2>Booking Operations</h2><p>Every direct-booking request from the public page appears here with its stored quote. Accept the request, adjust the lodging subtotal, extend the hold, move through contract/deposit milestones, or release the dates.</p></div><span class="status-pill">Booking engine v1</span></div>
+        <div class="section-title"><div><h2>Owner review queue</h2><p>Process, approve, adjust the quote, decline, extend the hold, or release dates. Approval sends one Complete your booking link. Owner approval does not confirm the reservation. Payment collection is deferred.</p></div><span class="status-pill">Request → owner → complete</span></div>
         <div id="moduleNotice" class="notice hidden"></div>
         <div id="reservationSummary" class="summary-grid"></div>
 
@@ -66,13 +66,18 @@
             <div class="card quick-card">
               <div class="card-head"><div><h3>Booking flow</h3><p>Current direct-booking lifecycle</p></div></div>
               <div class="list compact-list">
-                <div class="list-row"><div><strong>1 · Guest quote</strong><span>Dates + seasonal price + cleaning + tax</span></div><span class="badge good">Live</span></div>
-                <div class="list-row"><div><strong>2 · Inquiry hold</strong><span>24-hour inventory protection</span></div><span class="badge good">Live</span></div>
-                <div class="list-row"><div><strong>3 · Owner review</strong><span>Accept, adjust quote, or release</span></div><span class="badge good">Live</span></div>
-                <div class="list-row"><div><strong>4 · Contract / deposit</strong><span>Track milestones to confirmation</span></div><span class="badge good">Live</span></div>
-                <div class="list-row"><div><strong>5 · Online payment</strong><span>Checkout connection is the next booking-engine step</span></div><span class="badge warn">Next</span></div>
+                <div class="list-row"><div><strong>1 · Request to Book</strong><span>Quote stored · 24-hour hold · not confirmed</span></div><span class="badge good">Live</span></div>
+                <div class="list-row"><div><strong>2 · Owner review</strong><span>Process, approve, adjust, decline, extend, release</span></div><span class="badge good">Live</span></div>
+                <div class="list-row"><div><strong>3 · Complete your booking</strong><span>One link · agreement acceptance</span></div><span class="badge good">Live</span></div>
+                <div class="list-row"><div><strong>4 · Payment</strong><span>Documented 50/50 or full schedule only</span></div><span class="badge warn">Deferred</span></div>
+                <div class="list-row"><div><strong>5 · Auto confirm</strong><span>After approval + agreement + verified payment</span></div><span class="badge warn">Deferred</span></div>
               </div>
               <div class="widget-footer"><a class="btn btn-primary" href="/" target="_blank" rel="noopener">Test Guest Booking Page</a></div>
+            </div>
+            <div class="card" style="margin-top:16px">
+              <div class="card-head"><div><h3>Owner queue</h3><p>In-app request notifications · no guest email is sent from preview</p></div></div>
+              <div id="ownerQueue" class="list compact-list"><div class="empty">No unread booking notifications.</div></div>
+              <div class="widget-footer"><button id="markQueueRead" class="btn btn-secondary" type="button">Mark queue read</button></div>
             </div>
             <div class="card" style="margin-top:16px"><div class="card-head"><div><h3>Closed Records</h3><p>Released, expired or cancelled</p></div></div><div class="metric" id="closedCount">0</div><div class="metric-label">Retained for history and booking-event audit.</div></div>
             <div class="card" style="margin-top:16px">

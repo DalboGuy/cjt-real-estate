@@ -4,6 +4,19 @@ const {previewPasswordFreeActive}=require('../lib/preview-access');
 const {ownerAdjustedQuote,normalizeOwnerQuote}=require('../lib/pricing');
 const {paymentSnapshot}=require('../lib/payments');
 const {getOtaBlockedDates, listOwnerConnections, FEED_ENV_BY_SOURCE, MAX_OWNER_CALENDARS, urlHostHint}=require('../lib/availability');
+const {
+  approveRequest,
+  declineRequest,
+  extendHold,
+  releaseDates,
+  markRequestProcessing,
+  recordQuoteUpdate,
+  lifecycleSnapshots,
+  agreementRecordFor,
+  issueCompletionToken,
+  latestQuote,
+  reservationRow
+}=require('../lib/booking-lifecycle');
 
 function parseCookies(header=''){return Object.fromEntries(header.split(';').map(v=>v.trim()).filter(Boolean).map(v=>{const i=v.indexOf('=');return [decodeURIComponent(v.slice(0,i)),decodeURIComponent(v.slice(i+1))];}));}
 function hash(v){return crypto.createHash('sha256').update(v).digest('hex');}
@@ -56,7 +69,14 @@ module.exports=async function(req,res){
         LIMIT 250
       `;
       const reservationsWithPayments=await Promise.all(reservations.map(async reservation=>({...reservation,quote:normalizeOwnerQuote(reservation.quote),payment:await paymentSnapshot(sql,reservation.id)})));
-      return res.status(200).json({reservations:reservationsWithPayments,temporaryPasswordFree:previewPasswordFreeActive(req)});
+      const snapshot=await lifecycleSnapshots(sql,reservationsWithPayments);
+      return res.status(200).json({
+        reservations:snapshot.reservations,
+        notifications:snapshot.notifications,
+        paymentDeferred:true,
+        confirmationDeferred:true,
+        temporaryPasswordFree:previewPasswordFreeActive(req)
+      });
     }
 
     if(req.method==='POST'&&body.action==='logout'){
@@ -87,37 +107,62 @@ module.exports=async function(req,res){
       let quote;
       try{quote=await ownerAdjustedQuote(row.quote||{},body.lodgingSubtotal);}catch(e){return res.status(e.status||400).json({error:e.code||'invalid_quote',message:e.message});}
       await sql`INSERT INTO booking_events(reservation_id,event_type,actor,metadata) VALUES (${id},'quote_updated','owner',${JSON.stringify({quote})}::jsonb)`;
+      await recordQuoteUpdate(sql,id,quote);
       await sql`UPDATE reservations SET updated_at=now() WHERE id=${id}`;
-      return res.status(200).json({ok:true,quote});
+      return res.status(200).json({ok:true,quote,agreementReacceptanceRequired:true,message:'Quote updated. If a completion link or agreement already existed, the guest must accept the revised version.'});
+    }
+
+    if(req.method==='POST'&&(body.action==='process_request'||body.action==='approve_request'||body.action==='issue_completion_link'||body.action==='agreement_record'||body.action==='mark_notifications_read')){
+      try{
+        if(body.action==='mark_notifications_read'){
+          await sql`UPDATE owner_notifications SET read_at=now() WHERE read_at IS NULL`;
+          return res.status(200).json({ok:true});
+        }
+        const id=String(body.id||'').trim();
+        if(!id)return res.status(400).json({error:'missing_id'});
+        if(body.action==='process_request')return res.status(200).json(await markRequestProcessing(sql,id));
+        if(body.action==='approve_request')return res.status(200).json(await approveRequest(sql,req,id));
+        if(body.action==='issue_completion_link'){
+          const reservation=await reservationRow(sql,id);
+          if(!reservation)return res.status(404).json({error:'reservation_not_found'});
+          if(!['hold_verified','contract_sent','contract_signed'].includes(reservation.status)){
+            return res.status(409).json({error:'not_approved',message:'Approve the request before issuing a completion link.'});
+          }
+          const quote=await latestQuote(sql,id);
+          if(!quote)return res.status(409).json({error:'quote_missing',message:'This request does not have a stored quote.'});
+          const issued=await issueCompletionToken(sql,req,reservation,quote);
+          await sql`INSERT INTO booking_events(reservation_id,event_type,actor,metadata) VALUES (${id},'agreement_sent','owner',${JSON.stringify({agreementVersion:issued.document.version,agreementHash:issued.document.contentHash,quoteHash:issued.quoteHash,regenerated:true})}::jsonb)`;
+          return res.status(200).json({ok:true,completionUrl:issued.url,agreementVersion:issued.document.version,message:'Completion link generated. Owner approval still does not confirm the reservation.'});
+        }
+        const record=await agreementRecordFor(sql,id);
+        if(!record)return res.status(404).json({error:'agreement_not_accepted',message:'No accepted agreement is on file for this reservation.'});
+        return res.status(200).json({ok:true,record});
+      }catch(e){
+        return res.status(e.status||500).json({error:e.code||'owner_action_failed',message:e.message||'The owner action could not be completed.'});
+      }
     }
 
     if(req.method==='POST'&&body.action==='update'){
       const id=String(body.id||'').trim(),next=String(body.status||'').trim();
       if(!id)return res.status(400).json({error:'missing_id'});
+      try{
+        if(next==='accept_request'||next==='approve_request')return res.status(200).json(await approveRequest(sql,req,id));
+        if(next==='reject_request')return res.status(200).json(await declineRequest(sql,id));
+        if(next==='maintain_hold')return res.status(200).json(await extendHold(sql,id));
+        if(next==='release_dates')return res.status(200).json(await releaseDates(sql,id));
+        if(next==='process_request')return res.status(200).json(await markRequestProcessing(sql,id));
+      }catch(e){
+        return res.status(e.status||500).json({error:e.code||'owner_action_failed',message:e.message||'The owner action could not be completed.'});
+      }
       let eventType;
-      if(next==='accept_request'){
-        await sql`UPDATE reservations SET status='hold_verified',hold_expires_at=GREATEST(COALESCE(hold_expires_at,now()),now())+interval '24 hours',updated_at=now() WHERE id=${id} AND status='inquiry_hold'`;
-        eventType='request_accepted';
-      }else if(next==='reject_request'){
-        await sql`UPDATE reservations SET status='released',released_at=now(),hold_expires_at=NULL,updated_at=now() WHERE id=${id} AND status NOT IN ('released','cancelled','expired','confirmed')`;
-        eventType='request_rejected';
-      }else if(next==='maintain_hold'){
-        await sql`UPDATE reservations SET status='hold_verified',hold_expires_at=GREATEST(COALESCE(hold_expires_at,now()),now())+interval '24 hours',updated_at=now() WHERE id=${id} AND status IN ('inquiry_hold','hold_verified')`;
-        eventType='hold_maintained';
-      }else if(next==='contract_sent'){
-        await sql`UPDATE reservations SET status='contract_sent',contract_sent_at=COALESCE(contract_sent_at,now()),hold_expires_at=NULL,updated_at=now() WHERE id=${id} AND status NOT IN ('released','cancelled','expired')`;
+      if(next==='contract_sent'){
+        await sql`UPDATE reservations SET status='contract_sent',contract_sent_at=COALESCE(contract_sent_at,now()),updated_at=now() WHERE id=${id} AND status NOT IN ('released','cancelled','expired')`;
         eventType='contract_sent';
       }else if(next==='contract_signed'){
-        await sql`UPDATE reservations SET status='contract_signed',contract_signed_at=COALESCE(contract_signed_at,now()),hold_expires_at=NULL,updated_at=now() WHERE id=${id} AND status NOT IN ('released','cancelled','expired')`;
+        await sql`UPDATE reservations SET status='contract_signed',contract_signed_at=COALESCE(contract_signed_at,now()),updated_at=now() WHERE id=${id} AND status NOT IN ('released','cancelled','expired')`;
         eventType='contract_signed';
       }else if(next==='deposit_received'){
-        const payment=await paymentSnapshot(sql,id);
-        if(!payment.verified)return res.status(409).json({error:'payment_not_verified',message:'A verified Stripe payment is required before confirmation.'});
-        await sql`UPDATE reservations SET status='confirmed',deposit_received_at=COALESCE(deposit_received_at,now()),hold_expires_at=NULL,updated_at=now() WHERE id=${id} AND status NOT IN ('released','cancelled','expired')`;
-        eventType='deposit_received';
-      }else if(next==='release_dates'){
-        await sql`UPDATE reservations SET status='released',released_at=now(),hold_expires_at=NULL,updated_at=now() WHERE id=${id} AND status<>'cancelled'`;
-        eventType='dates_released';
+        return res.status(409).json({error:'payment_deferred',message:'Payment verification and confirmation are deferred. Stripe remains on hold.'});
       }else{
         return res.status(400).json({error:'invalid_status'});
       }
