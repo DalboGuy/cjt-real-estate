@@ -8,12 +8,11 @@
   function showApp(){loginShell?.classList.add('hidden');app?.classList.remove('hidden')}
 
   async function verify(){
+    showApp();
     try{
       const r=await fetch('/api/dashboard',{cache:'no-store'});
       if(r.status===401)return showLogin();
-      if(!r.ok)throw new Error('verify_failed');
-      showApp();
-    }catch(e){showLogin()}
+    }catch(e){/* keep the app visible; only a 401 restores the passcode wall */}
   }
 
   form?.addEventListener('submit',async e=>{

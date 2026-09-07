@@ -116,7 +116,7 @@ async function updateReservation(id,status){
     await ownerApi({method:'POST',body:JSON.stringify({action:'update',id,status})});
     await loadReservations();
   }catch(e){
-    if(e.message==='unauthorized'){notice('Sign in to make changes. Password-free preview access is read-only.');return showLogin();}
+    if(e.message==='unauthorized'){notice('Sign in to make changes.');return showLogin();}
     notice(`That booking update could not be completed: ${e.message}`);
   }
 }
@@ -131,7 +131,7 @@ async function adjustQuote(r){
     await ownerApi({method:'POST',body:JSON.stringify({action:'update_quote',id:r.id,lodgingSubtotal:amount})});
     await loadReservations();
   }catch(e){
-    if(e.message==='unauthorized'){notice('Sign in to adjust a quote. Password-free preview access is read-only.');return showLogin();}
+    if(e.message==='unauthorized'){notice('Sign in to adjust a quote.');return showLogin();}
     notice(`Quote could not be updated: ${e.message}`);
   }
 }
@@ -147,10 +147,10 @@ function renderCommunicationsQuick(data){
 }
 
 async function loadReservations(){
+  showApp();
   try{
     const [d,dashboard]=await Promise.all([ownerApi(),dashboardApi()]);
     reservationRows=d.reservations||[];
-    showApp();
     renderSummary();renderFilters();renderReservations();renderCommunicationsQuick(dashboard);
     document.getElementById('lastChecked').textContent=`Updated ${new Date(dashboard.checkedAt).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})}`;
   }catch(e){

@@ -1,23 +1,10 @@
-const crypto=require('crypto');
 const { db, ensureSchema }=require('../lib/db');
-const {previewPasswordFreeActive}=require('../lib/preview-access');
-
-function parseCookies(header=''){return Object.fromEntries(header.split(';').map(v=>v.trim()).filter(Boolean).map(v=>{const i=v.indexOf('=');return [decodeURIComponent(v.slice(0,i)),decodeURIComponent(v.slice(i+1))];}));}
-function hash(v){return crypto.createHash('sha256').update(v).digest('hex');}
-async function authenticated(req){
-  if(previewPasswordFreeActive(req))return true;
-  await ensureSchema();
-  const token=parseCookies(req.headers.cookie||'').cjt_owner_session;
-  if(!token)return false;
-  const sql=db();
-  const rows=await sql`SELECT token_hash FROM owner_sessions WHERE token_hash=${hash(token)} AND expires_at>now() LIMIT 1`;
-  return rows.length>0;
-}
+const {ownerAuthOpen,requireOwnerAuth}=require('../lib/owner-auth');
 
 module.exports=async function(req,res){
   try{
     await ensureSchema();
-    if(!(await authenticated(req)))return res.status(401).json({error:'unauthorized'});
+    if(!(await requireOwnerAuth(req,res)))return;
     const sql=db();
     const body=typeof req.body==='string'?JSON.parse(req.body||'{}'):(req.body||{});
 
@@ -34,7 +21,7 @@ module.exports=async function(req,res){
         SELECT platform,count(*)::int total,count(*) FILTER (WHERE is_read=false)::int unread
         FROM communications_messages GROUP BY platform
       `;
-      return res.status(200).json({messages:rows,counts,temporaryPasswordFree:previewPasswordFreeActive(req)});
+      return res.status(200).json({messages:rows,counts,ownerAuthOpen:ownerAuthOpen()});
     }
 
     if(req.method==='POST'){

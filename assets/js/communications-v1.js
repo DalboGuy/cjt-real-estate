@@ -108,10 +108,10 @@ function renderReservationQuick(data){
 }
 
 async function loadCommunications(reselectId){
+  showApp();
   try{
     const [d,dashboard]=await Promise.all([commApi(),dashboardApi()]);
     communicationsMessages=d.messages||[];
-    showApp();
     renderSummary(d.counts||[]);
     renderFilters();
     renderList();

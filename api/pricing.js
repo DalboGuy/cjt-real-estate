@@ -1,6 +1,4 @@
-const crypto=require('crypto');
-const {db,ensureSchema}=require('../lib/db');
-const {previewPasswordFreeActive}=require('../lib/preview-access');
+const {requireOwnerAuth}=require('../lib/owner-auth');
 const {
   loadPricingCatalog,
   publicPricingPayload,
@@ -9,23 +7,6 @@ const {
   updatePricingSeason,
   deletePricingSeason
 }=require('../lib/pricing-store');
-
-function parseCookies(header=''){
-  return Object.fromEntries(header.split(';').map(v=>v.trim()).filter(Boolean).map(v=>{
-    const i=v.indexOf('=');
-    return [decodeURIComponent(v.slice(0,i)),decodeURIComponent(v.slice(i+1))];
-  }));
-}
-function hash(v){return crypto.createHash('sha256').update(v).digest('hex')}
-async function authenticated(req){
-  if(previewPasswordFreeActive(req))return true;
-  await ensureSchema();
-  const token=parseCookies(req.headers.cookie||'').cjt_owner_session;
-  if(!token)return false;
-  const sql=db();
-  const rows=await sql`SELECT token_hash FROM owner_sessions WHERE token_hash=${hash(token)} AND expires_at>now() LIMIT 1`;
-  return rows.length>0;
-}
 
 function sendCatalog(res,catalog,extra){
   res.setHeader('Cache-Control','no-store');
@@ -47,13 +28,13 @@ function sendStoreError(res,error){
 module.exports=async function(req,res){
   try{
     if(req.method==='GET'){
-      if(!(await authenticated(req)))return res.status(401).json({error:'unauthorized'});
+      if(!(await requireOwnerAuth(req,res)))return;
       const catalog=await loadPricingCatalog();
       return sendCatalog(res,catalog);
     }
 
     if(req.method!=='POST')return res.status(405).json({error:'method_not_allowed'});
-    if(!(await authenticated(req)))return res.status(401).json({error:'unauthorized'});
+    if(!(await requireOwnerAuth(req,res)))return;
 
     const body=typeof req.body==='string'?JSON.parse(req.body||'{}'):(req.body||{});
     const action=String(body.action||'').trim();

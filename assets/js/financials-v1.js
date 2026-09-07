@@ -106,10 +106,10 @@ function renderBookings(){
 }
 
 async function loadFinancials(){
+  showApp();
   try{
     const data=await financialsApi();
     financialRows=data.bookings||[];
-    showApp();
     renderSummary(data.summary||{});
     renderFilters();
     renderBookings();
