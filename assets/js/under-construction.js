@@ -2,7 +2,6 @@
   const routeMeta={
     '/owner-v1/calendar':{portal:'owner',module:'Calendar',description:'Unified availability, stays, blocks and channel calendar status will live here.'},
     '/owner-v1/pricing':{portal:'owner',module:'Pricing',description:'Seasonal rates, date overrides, events, discounts and minimum-stay controls will live here.'},
-    '/owner-v1/financials':{portal:'owner',module:'Financials',description:'Revenue, channel fees, expected payouts, actual payouts and reconciliation will live here.'},
     '/owner-v1/property':{portal:'owner',module:'Property',description:'Property details, amenities, operating settings and property-specific configuration will live here.'},
     '/owner-v1/maintenance':{portal:'owner',module:'Maintenance',description:'Open work, recurring upkeep, equipment, vendors and service history will live here.'},
     '/owner-v1/analytics':{portal:'owner',module:'Analytics',description:'Occupancy, ADR, RevPAR, channel mix and operating trends will live here.'},

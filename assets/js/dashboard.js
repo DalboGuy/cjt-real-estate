@@ -5,6 +5,7 @@ const loginMsg=document.getElementById('loginMsg');
 
 function esc(v=''){return String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 function money(v){const n=Number(v||0);return n.toLocaleString(undefined,{style:'currency',currency:'USD',maximumFractionDigits:0})}
+function moneyOrDash(v){if(v==null||v==='')return '—';return money(v)}
 function date(v){if(!v)return 'None scheduled';const d=new Date(`${v}T12:00:00`);return d.toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'})}
 function dateTime(v){if(!v)return '';return new Date(v).toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}
 function statusClass(status=''){return ['confirmed','contract_signed'].includes(status)?'good':['inquiry_hold','hold_verified','contract_sent'].includes(status)?'warn':''}
@@ -51,9 +52,11 @@ function renderReservations(data){
 }
 
 function renderFinancials(f){
-  document.getElementById('mtdGross').textContent=money(f.mtd_gross);
-  document.getElementById('mtdPayout').textContent=money(f.mtd_expected_payout);
+  document.getElementById('mtdGross').textContent=moneyOrDash(f.mtd_gross);
+  document.getElementById('mtdPayout').textContent=moneyOrDash(f.mtd_expected_payout);
   document.getElementById('financialRecords').textContent=f.records||0;
+  document.getElementById('stripeVerified').textContent=f.stripe_verified||0;
+  document.getElementById('stripePending').textContent=f.stripe_pending||0;
 }
 function renderPricing(p,d){
   document.getElementById('pricingSeasons').textContent=d?.seasons?.length||'—';
