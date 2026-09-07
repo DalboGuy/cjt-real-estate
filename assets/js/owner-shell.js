@@ -377,11 +377,39 @@
     if(isMobile())setCollapsed(true);
   }
 
+  function mountBoot(){
+    if(!ownerPortal)return;
+    const login=document.getElementById('loginShell');
+    const owner=document.getElementById('ownerApp');
+    if(!login||!owner)return;
+    const bothHidden=()=>login.classList.contains('hidden')&&owner.classList.contains('hidden');
+    function dismiss(){document.getElementById('ownerBoot')?.remove()}
+    function showBoot(){
+      if(!bothHidden()||document.getElementById('ownerBoot'))return;
+      const boot=document.createElement('section');
+      boot.id='ownerBoot';
+      boot.className='login-shell';
+      boot.setAttribute('role','status');
+      boot.innerHTML='<div class="login-card"><h1>Loading</h1><p>Checking owner access…</p></div>';
+      document.body.appendChild(boot);
+    }
+    if(bothHidden())showBoot();
+    const obs=new MutationObserver(()=>{if(!bothHidden())dismiss()});
+    obs.observe(login,{attributes:true,attributeFilter:['class']});
+    obs.observe(owner,{attributes:true,attributeFilter:['class']});
+    setTimeout(()=>{
+      if(!bothHidden())return;
+      dismiss();
+      login.classList.remove('hidden');
+    },8000);
+  }
+
   mountOwnerNav();
   mountBottomNav();
   mountShellBack();
   mountChipHost();
   markSticky();
+  mountBoot();
 
   menu?.addEventListener('click',openNav);
   backdrop?.addEventListener('click',closeNav);
