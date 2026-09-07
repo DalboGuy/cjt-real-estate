@@ -1,9 +1,12 @@
 (function(){
   const notice=document.getElementById('moduleNotice');
   const cards=document.getElementById('feedCards');
+  const envWrap=document.getElementById('envFeeds');
   const pill=document.getElementById('feedStatusPill');
   const liveProbe=document.getElementById('liveProbe');
-  const LABELS={airbnb:'Airbnb',vrbo:'VRBO','booking.com':'Booking.com'};
+  const addForm=document.getElementById('addFeedForm');
+  const addBtn=document.getElementById('addFeedBtn');
+  let maxOwner=10;
 
   function showNotice(text,ms=4000){
     if(!notice)return;
@@ -12,36 +15,30 @@
     setTimeout(()=>notice.classList.add('hidden'),ms);
   }
 
-  function badgeFor(feed,live){
-    if(live?.ok) return '<span class="badge good">Reading</span>';
-    if(feed.configured) return `<span class="badge warn">${live?.error||'Needs check'}</span>`;
-    return feed.required?'<span class="badge warn">Required</span>':'<span class="badge">Optional</span>';
-  }
-
   function render(data){
-    const liveBy=Object.fromEntries((data.liveSources||[]).map(s=>[s.name,s]));
-    const configured=(data.feeds||[]).filter(f=>f.configured).length;
-    if(pill)pill.textContent=`${configured} connected`;
+    maxOwner=data.maxOwnerCalendars||10;
+    const ownerCount=data.ownerCount||(data.feeds||[]).length;
+    if(pill)pill.textContent=`${ownerCount} / ${maxOwner} connected`;
+    if(addBtn)addBtn.disabled=ownerCount>=maxOwner;
+
     if(liveProbe){
-      const rows=(data.liveSources||[]).map(s=>`<div class="list-row"><div><strong>${LABELS[s.name]||s.name}</strong><span>${s.ok?`${s.count||0} blocked nights`:(s.error||'unavailable')}</span></div><span class="badge ${s.ok?'good':'warn'}">${s.ok?'OK':'Issue'}</span></div>`).join('')||'<div class="empty">No live probe yet.</div>';
+      const rows=(data.liveSources||[]).map(s=>`<div class="list-row"><div><strong>${s.name}</strong><span>${s.ok?`${s.count||0} blocked nights`:(s.error||'unavailable')}</span></div><span class="badge ${s.ok?'good':'warn'}">${s.ok?'OK':'Issue'}</span></div>`).join('')||'<div class="empty">No live probe yet.</div>';
       liveProbe.innerHTML=`<div class="list">${rows}</div><div class="meta" style="margin-top:10px">Checked ${data.checkedAt?new Date(data.checkedAt).toLocaleString():'—'}</div>`;
     }
-    if(!cards)return;
-    cards.innerHTML=(data.feeds||[]).map(feed=>{
-      const live=liveBy[feed.source];
-      const label=LABELS[feed.source]||feed.source;
-      return `<article class="card span-4" data-source="${feed.source}">
-        <div class="card-head"><div><h3>${label}</h3><p>${feed.required?'Required for guest availability':'Optional third feed'}</p></div>${badgeFor(feed,live)}</div>
-        <div class="metric-label">${feed.configured?`Connected via ${feed.origin||'saved'} · ${feed.hostHint||'host hidden'}`:'Not connected yet'}</div>
-        <form class="feed-form" style="margin-top:12px;display:grid;gap:10px">
-          <label style="display:grid;gap:6px;font-weight:600"><span>iCal URL</span><input name="feedUrl" type="url" inputmode="url" placeholder="https://…" autocomplete="off" style="width:100%"></label>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn btn-primary" type="submit">Save connection</button>
-            <button class="btn btn-secondary clear-feed" type="button" ${feed.origin==='owner'?'':'disabled'}>Clear saved</button>
-          </div>
-        </form>
-      </article>`;
-    }).join('');
+
+    if(cards){
+      const feeds=data.feeds||[];
+      cards.innerHTML=feeds.length?feeds.map(feed=>`<article class="card span-4" data-id="${feed.id}">
+        <div class="card-head"><div><h3>${feed.label}</h3><p>${feed.hostHint||'saved'} · owner</p></div><span class="badge good">Connected</span></div>
+        <div class="metric-label">Full iCal URL is stored server-side only.</div>
+        <div style="margin-top:12px"><button class="btn btn-secondary remove-feed" type="button">Remove</button></div>
+      </article>`).join(''):`<article class="card span-12"><div class="empty">No owner calendars yet. Add up to ${maxOwner} above.</div></article>`;
+    }
+
+    if(envWrap){
+      const envFeeds=data.envFeeds||[];
+      envWrap.innerHTML=envFeeds.length?`<article class="card span-12"><div class="card-head"><div><h3>Also reading from Vercel env</h3><p>These stay as a fallback / extra sources.</p></div></div><div class="list">${envFeeds.map(f=>`<div class="list-row"><div><strong>${f.name}</strong><span>${f.hostHint||'env'}</span></div><span class="badge">Env</span></div>`).join('')}</div></article>`:'';
+    }
   }
 
   async function load(){
@@ -54,44 +51,36 @@
     }catch(e){showNotice(e.message||'Load failed');}
   }
 
-  cards?.addEventListener('submit',async e=>{
-    const form=e.target.closest('.feed-form');
-    if(!form)return;
+  addForm?.addEventListener('submit',async e=>{
     e.preventDefault();
-    const card=form.closest('[data-source]');
-    const source=card?.getAttribute('data-source');
-    const feedUrl=new FormData(form).get('feedUrl');
-    const btn=form.querySelector('button[type="submit"]');
-    if(btn)btn.disabled=true;
+    const label=document.getElementById('feedLabel')?.value||'';
+    const feedUrl=document.getElementById('feedUrl')?.value||'';
+    if(addBtn)addBtn.disabled=true;
     try{
-      const r=await fetch('/api/owner',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'calendar_feeds_save',source,feedUrl})});
+      const r=await fetch('/api/owner',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'calendar_feeds_save',label,feedUrl})});
       const d=await r.json().catch(()=>({}));
       if(!r.ok)throw new Error(d.message||d.error||'Save failed');
-      showNotice(`${source} connection saved`);
-      form.reset();
+      showNotice('Calendar added');
+      addForm.reset();
       await load();
-    }catch(err){showNotice(err.message||'Save failed');}
-    finally{if(btn)btn.disabled=false;}
+    }catch(err){showNotice(err.message||'Save failed'); if(addBtn)addBtn.disabled=false;}
   });
 
   cards?.addEventListener('click',async e=>{
-    const btn=e.target.closest('.clear-feed');
+    const btn=e.target.closest('.remove-feed');
     if(!btn)return;
-    const card=btn.closest('[data-source]');
-    const source=card?.getAttribute('data-source');
+    const id=Number(btn.closest('[data-id]')?.getAttribute('data-id'));
     btn.disabled=true;
     try{
-      const r=await fetch('/api/owner',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'calendar_feeds_clear',source})});
+      const r=await fetch('/api/owner',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'calendar_feeds_clear',id})});
       const d=await r.json().catch(()=>({}));
-      if(!r.ok)throw new Error(d.message||d.error||'Clear failed');
-      showNotice(d.stillConfigured?`${source} owner URL cleared (env still connected)`:`${source} cleared`);
+      if(!r.ok)throw new Error(d.message||d.error||'Remove failed');
+      showNotice('Calendar removed');
       await load();
-    }catch(err){showNotice(err.message||'Clear failed');}
-    finally{btn.disabled=false;}
+    }catch(err){showNotice(err.message||'Remove failed'); btn.disabled=false;}
   });
 
   document.getElementById('refreshFeeds')?.addEventListener('click',load);
-  // Wait for static-auth to reveal app, then load.
   const boot=()=>{if(!document.getElementById('ownerApp')?.classList.contains('hidden'))load();};
   setTimeout(boot,400);
   setTimeout(boot,1200);

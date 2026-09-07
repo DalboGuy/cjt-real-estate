@@ -1,15 +1,28 @@
 # OTA Calendar Feed Configuration
 
-Owners can manage Airbnb / VRBO / Booking.com iCal connections in the Owner Portal:
+Owners manage calendar sync in the Owner Portal:
 
 - `/owner-v1/calendar`
 
-Saved connections are stored in Neon (`calendar_feeds`) and never returned to the browser as full URLs. Vercel environment variables remain a valid fallback:
+## Owner connections
 
-- `AIRBNB_ICAL_URL` (required unless saved in Owner Calendar)
-- `VRBO_ICAL_URL` (required unless saved in Owner Calendar)
-- `BOOKING_COM_ICAL_URL` (optional)
+- Up to **10** labeled https iCal URLs can be saved.
+- Stored in Neon (`calendar_connections`).
+- Full URLs are never returned to the browser (host hint only).
 
-Resolution order per source: **Vercel env first**, then **Owner Calendar** saved URL.
+## Vercel env fallback (optional extra sources)
 
-If a required feed is missing from both places, `/api/calendar` returns HTTP 503 with a configuration error.
+Still supported and merged into availability:
+
+- `AIRBNB_ICAL_URL`
+- `VRBO_ICAL_URL`
+- `BOOKING_COM_ICAL_URL`
+
+## Resolution
+
+`/api/calendar` blocks dates from **all** configured sources:
+
+1. Any set Vercel env feed URLs
+2. All owner-saved connections (max 10)
+
+If none are configured, `/api/calendar` returns HTTP 503.
