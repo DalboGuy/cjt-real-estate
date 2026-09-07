@@ -42,7 +42,9 @@ module.exports=async function(req,res){
     if(req.method==='GET'){
       await expireHolds();
       const reservations=await sql`
-        SELECT r.id,r.guest_name,r.guest_email,r.guest_phone,r.guests,r.notes,r.checkin::text,r.checkout::text,r.status,
+        SELECT r.id,r.guest_name,r.guest_email,r.guest_phone,r.guests,r.notes,
+               r.trip_type,r.bringing_pet,r.pet_details,r.planning_event,r.event_details,
+               r.checkin::text,r.checkout::text,r.status,
                r.hold_expires_at,r.contract_sent_at,r.contract_signed_at,r.deposit_received_at,r.released_at,r.created_at,r.updated_at,
                q.quote
         FROM reservations r
@@ -96,34 +98,33 @@ module.exports=async function(req,res){
       const id=String(body.id||'').trim(),next=String(body.status||'').trim();
       if(!id)return res.status(400).json({error:'missing_id'});
       let eventType;
+      let changed=[];
       if(next==='accept_request'){
-        await sql`UPDATE reservations SET status='hold_verified',hold_expires_at=GREATEST(COALESCE(hold_expires_at,now()),now())+interval '24 hours',updated_at=now() WHERE id=${id} AND status='inquiry_hold'`;
+        changed=await sql`UPDATE reservations SET status='hold_verified',hold_expires_at=NULL,updated_at=now() WHERE id=${id} AND status='inquiry_hold' RETURNING id,status`;
         eventType='request_accepted';
       }else if(next==='reject_request'){
-        await sql`UPDATE reservations SET status='released',released_at=now(),hold_expires_at=NULL,updated_at=now() WHERE id=${id} AND status NOT IN ('released','cancelled','expired','confirmed')`;
+        changed=await sql`UPDATE reservations SET status='released',released_at=now(),hold_expires_at=NULL,updated_at=now() WHERE id=${id} AND status NOT IN ('released','cancelled','expired','confirmed') RETURNING id,status`;
         eventType='request_rejected';
-      }else if(next==='maintain_hold'){
-        await sql`UPDATE reservations SET status='hold_verified',hold_expires_at=GREATEST(COALESCE(hold_expires_at,now()),now())+interval '24 hours',updated_at=now() WHERE id=${id} AND status IN ('inquiry_hold','hold_verified')`;
-        eventType='hold_maintained';
       }else if(next==='contract_sent'){
-        await sql`UPDATE reservations SET status='contract_sent',contract_sent_at=COALESCE(contract_sent_at,now()),hold_expires_at=NULL,updated_at=now() WHERE id=${id} AND status NOT IN ('released','cancelled','expired')`;
+        changed=await sql`UPDATE reservations SET status='contract_sent',contract_sent_at=COALESCE(contract_sent_at,now()),hold_expires_at=NULL,updated_at=now() WHERE id=${id} AND status NOT IN ('released','cancelled','expired') RETURNING id,status`;
         eventType='contract_sent';
       }else if(next==='contract_signed'){
-        await sql`UPDATE reservations SET status='contract_signed',contract_signed_at=COALESCE(contract_signed_at,now()),hold_expires_at=NULL,updated_at=now() WHERE id=${id} AND status NOT IN ('released','cancelled','expired')`;
+        changed=await sql`UPDATE reservations SET status='contract_signed',contract_signed_at=COALESCE(contract_signed_at,now()),hold_expires_at=NULL,updated_at=now() WHERE id=${id} AND status NOT IN ('released','cancelled','expired') RETURNING id,status`;
         eventType='contract_signed';
       }else if(next==='deposit_received'){
         const payment=await paymentSnapshot(sql,id);
         if(!payment.verified)return res.status(409).json({error:'payment_not_verified',message:'A verified Stripe payment is required before confirmation.'});
-        await sql`UPDATE reservations SET status='confirmed',deposit_received_at=COALESCE(deposit_received_at,now()),hold_expires_at=NULL,updated_at=now() WHERE id=${id} AND status NOT IN ('released','cancelled','expired')`;
+        changed=await sql`UPDATE reservations SET status='confirmed',deposit_received_at=COALESCE(deposit_received_at,now()),hold_expires_at=NULL,updated_at=now() WHERE id=${id} AND status NOT IN ('released','cancelled','expired') RETURNING id,status`;
         eventType='deposit_received';
       }else if(next==='release_dates'){
-        await sql`UPDATE reservations SET status='released',released_at=now(),hold_expires_at=NULL,updated_at=now() WHERE id=${id} AND status<>'cancelled'`;
+        changed=await sql`UPDATE reservations SET status='released',released_at=now(),hold_expires_at=NULL,updated_at=now() WHERE id=${id} AND status<>'cancelled' RETURNING id,status`;
         eventType='dates_released';
       }else{
         return res.status(400).json({error:'invalid_status'});
       }
+      if(!changed.length)return res.status(409).json({error:'status_transition_not_applied',message:'The reservation changed or this action is no longer available. Refresh and try again.'});
       await sql`INSERT INTO booking_events(reservation_id,event_type,actor) VALUES (${id},${eventType},'owner')`;
-      return res.status(200).json({ok:true});
+      return res.status(200).json({ok:true,reservation:changed[0]});
     }
 
 
