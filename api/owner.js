@@ -7,6 +7,7 @@ const {getOtaBlockedDates, listOwnerConnections, FEED_ENV_BY_SOURCE, MAX_OWNER_C
 const {buildOwnerCalendarView, validIsoDate}=require('../lib/calendar-view');
 const {planOwnerTransition,notUpdatedError,conflictBody}=require('../lib/booking-transitions');
 const {assertSendConfigured, createAndSendDocument, parseMetadata}=require('../lib/opensign');
+const {insertOwnerBlockIfClear}=require('../lib/date-conflicts');
 
 function parseCookies(header=''){return Object.fromEntries(header.split(';').map(v=>v.trim()).filter(Boolean).map(v=>{const i=v.indexOf('=');return [decodeURIComponent(v.slice(0,i)),decodeURIComponent(v.slice(i+1))];}));}
 function hash(v){return crypto.createHash('sha256').update(v).digest('hex');}
@@ -261,12 +262,11 @@ module.exports=async function(req,res){
       if(nights<1||nights>180){
         return res.status(400).json({error:'invalid_range',message:'Choose a stay or block between 1 and 180 nights.'});
       }
-      const rows=await sql`
-        INSERT INTO owner_calendar_entries(property_id, kind, start_date, end_date, notes, updated_at, created_by)
-        VALUES ('sand-sea-manor', ${kind}, ${startDate}::date, ${endDate}::date, ${notes}, now(), 'owner')
-        RETURNING id, kind, start_date::text, end_date::text, notes
-      `;
-      return res.status(200).json({ok:true, entry:rows[0]});
+      const saved=await insertOwnerBlockIfClear(sql,{kind,startDate,endDate,notes});
+      if(!saved.ok){
+        return res.status(saved.status||409).json({error:saved.error,message:saved.message,conflict:saved.conflict||undefined});
+      }
+      return res.status(200).json({ok:true, entry:saved.entry});
     }
 
     if(req.method==='POST'&&body.action==='calendar_entry_delete'){
