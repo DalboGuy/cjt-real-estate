@@ -1,4 +1,5 @@
 const {quoteStay,eachDate}=require('../lib/pricing');
+const {withConsistentQuoteMoney}=require('../lib/quote-breakdown');
 const {getGuestBlockedDates}=require('../lib/calendar-view');
 const {buildSourceHealth}=require('../lib/availability');
 
@@ -33,7 +34,7 @@ module.exports=async function(req,res){
     const checkin=String(req.query?.checkin||'').trim();
     const checkout=String(req.query?.checkout||'').trim();
     const guests=Number(req.query?.guests||1);
-    const quote=await quoteStay(checkin,checkout,guests);
+    const quote=withConsistentQuoteMoney(await quoteStay(checkin,checkout,guests));
 
     const blocked=await getGuestBlockedDates();
     const sources=blocked.sources||[];
