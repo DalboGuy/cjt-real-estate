@@ -38,6 +38,9 @@
 .review-details p{margin:0}
 .agree-row{display:flex;gap:9px;align-items:flex-start;font-weight:600}
 .agree-row input{width:auto;margin-top:3px}
+.booking-selectors{overflow:visible}
+.guest-inline{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 12px;border-top:1px solid #aeb8b6;background:#fff}
+.guest-inline .stepper button{width:40px;height:40px;flex:0 0 auto}
 .booking-card{scroll-margin-top:96px}
 .booking-card.is-next-step{box-shadow:0 16px 44px rgba(13,43,49,.2);outline:2px solid var(--deep)}
 .booking-step-dismiss{display:none}

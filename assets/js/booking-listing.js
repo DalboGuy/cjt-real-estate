@@ -197,9 +197,22 @@
   }
   refreshAvailability();
 
-  const guestPopover=$('guestPopover');
-  function updateGuests(next){guests=Math.max(1,Math.min(14,next));$('guestCount').textContent=guests;$('guestMinus').disabled=guests<=1;$('guestPlus').disabled=guests>=14;updateSelectors();resetQuote();if(selectedStart&&selectedEnd)loadQuote()}
-  document.querySelectorAll('[data-open-guests]').forEach(b=>b.onclick=e=>{e.stopPropagation();guestPopover.classList.toggle('show')});$('guestMinus').onclick=e=>{e.stopPropagation();updateGuests(guests-1)};$('guestPlus').onclick=e=>{e.stopPropagation();updateGuests(guests+1)};document.addEventListener('click',e=>{if(!guestPopover.contains(e.target)&&!e.target.closest('[data-open-guests]'))guestPopover.classList.remove('show')});updateGuests(1);
+  const MAX_GUESTS=14;
+  function syncFormGuests(){const input=$('formGuests');if(input)input.value=String(guests)}
+  function updateGuests(next){
+    guests=Math.max(1,Math.min(MAX_GUESTS,Number(next)||1));
+    if($('guestCount'))$('guestCount').textContent=guests;
+    if($('guestMinus'))$('guestMinus').disabled=guests<=1;
+    if($('guestPlus'))$('guestPlus').disabled=guests>=MAX_GUESTS;
+    syncFormGuests();
+    updateSelectors();
+    resetQuote();
+    if(selectedStart&&selectedEnd)loadQuote();
+  }
+  $('guestMinus')?.addEventListener('click',()=>updateGuests(guests-1));
+  $('guestPlus')?.addEventListener('click',()=>updateGuests(guests+1));
+  $('formGuests')?.addEventListener('change',()=>updateGuests($('formGuests').value));
+  updateGuests(1);
 
   function renderQuote(q){
     currentQuote=q;const total=money(q.total),nightLabel=`${q.nights} night${q.nights===1?'':'s'}`;$('bookPrice').innerHTML=`<span class="price-main">${total}</span> <span class="price-note">total · ${nightLabel}</span>`;$('mobilePrice').innerHTML=`<strong>${total}</strong><span>${nightLabel} · total</span>`;
@@ -231,10 +244,9 @@
     const agree=$('requestAgree');
     if(agree)agree.required=requestStep==='review';
   }
-  function syncFormGuests(){const input=$('formGuests');if(input)input.value=String(guests)}
   function collectGuestFields(){
     const f=new FormData(bookingForm);
-    const count=Math.max(1,Math.min(14,Number(f.get('form_guests')||guests)));
+    const count=Math.max(1,Math.min(MAX_GUESTS,Number(f.get('form_guests')||guests)));
     if(count!==guests)updateGuests(count);
     return {
       name:String(f.get('name')||'').trim(),
