@@ -399,15 +399,15 @@
   }
 
   function mountSkipLink(){
-    if(!ownerPortal||document.querySelector('.owner-skip-link'))return;
-    const main=document.querySelector('.main');
+    if(!ownerPortal||!app||document.querySelector('.owner-skip-link'))return;
+    const main=app.querySelector('.main');
     if(main && !main.id)main.id='ownerMain';
     if(!main?.id)return;
     const skip=document.createElement('a');
     skip.className='owner-skip-link';
     skip.href=`#${main.id}`;
     skip.textContent='Skip to content';
-    document.body.prepend(skip);
+    app.prepend(skip);
   }
 
   function mountBoot(){
