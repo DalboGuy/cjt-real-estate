@@ -2,6 +2,7 @@ const crypto=require('crypto');
 const {db,ensureSchema,expireHolds}=require('../lib/db');
 const {previewPasswordFreeActive}=require('../lib/preview-access');
 const {loadOwnerFinancials}=require('../lib/financials');
+const {readReservationWindowParams}=require('../lib/reservation-queries');
 
 function parseCookies(header=''){
   return Object.fromEntries(header.split(';').map(v=>v.trim()).filter(Boolean).map(v=>{
@@ -26,7 +27,7 @@ module.exports=async function(req,res){
     await ensureSchema();
     if(!(await authenticated(req)))return res.status(401).json({error:'unauthorized'});
     await expireHolds();
-    const {summary,bookings}=await loadOwnerFinancials(db());
+    const {summary,bookings}=await loadOwnerFinancials(db(),new Date(),readReservationWindowParams(req));
     res.setHeader('Cache-Control','no-store');
     return res.status(200).json({
       checkedAt:new Date().toISOString(),
@@ -35,6 +36,7 @@ module.exports=async function(req,res){
       bookings
     });
   }catch(e){
+    if(e.code==='invalid_date_range')return res.status(400).json({error:e.code,message:e.message});
     console.error('financials api error',e);
     return res.status(500).json({error:'financials_api_error'});
   }
