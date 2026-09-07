@@ -4,22 +4,27 @@ Direct-booking page for **Sand & Sea Manor** (1720 Avenue M, Galveston) at [cjtb
 
 Stack: static HTML + Vercel serverless functions + Neon Postgres. Airbnb, VRBO, and Booking.com iCal feeds stay in sync with the public calendar.
 
-## How a hold works
+## How booking works
 
-1. A guest picks dates and submits `/api/inquiries`.
-2. If the nights are free on OTA calendars **and** in Neon, the API inserts an `inquiry_hold` for **24 hours**.
-3. That hold is **not** a confirmed reservation. No payment is collected on the site.
-4. Active holds (`inquiry_hold`, `hold_verified`, `contract_sent`, `contract_signed`, `confirmed`) appear immediately as blocked dates on `GET /api/calendar`.
-5. CJT uses the owner portal to maintain the hold, send the agreement, and mark the deposit. Only then is the stay confirmed.
+1. The guest picks dates on the calendar and enters **name, email, phone, guests, optional notes**.
+2. The page shows a total (nightly rate × nights + cleaning fee + tax).
+3. The guest pays **in full** through Stripe Checkout.
+4. Payment **secures the dates** (`payment_received`). The calendar blocks them. This is **not** a completed booking and **not** Airbnb Instant Book.
+5. Owners send the rental contract (`contract_sent`), the guest signs (`contract_signed`), then owners mark **Confirm booking** (`confirmed`). The guest is emailed that the stay is confirmed.
+
+Checkout-pending rows expire after 30 minutes if Stripe is not completed. Paid stays do not expire.
 
 ## APIs
 
 | Path | Purpose |
 | --- | --- |
-| `GET /api/calendar` | Combined blocked dates (OTA iCal + Neon holds). Not CDN-cached. |
-| `POST /api/inquiries` | Place a 24-hour inquiry hold. |
-| `GET /direct-bookings.ics` | iCal feed of direct holds for OTA export. |
-| `/api/owner` | Owner portal session and reservation workflow. |
+| `GET /api/calendar` | Combined blocked dates (OTA iCal + Neon paid/held stays). Not CDN-cached. |
+| `GET /api/quote` | Nightly + cleaning + tax quote for selected dates. |
+| `POST /api/checkout` | Create a pending reservation and Stripe Checkout Session. |
+| `GET /api/checkout?session_id=` | Payment status after Stripe redirect (server-side Stripe lookup). |
+| `POST /api/stripe-webhook` | Stripe webhook. Source of truth for marking `payment_received`. |
+| `GET /direct-bookings.ics` | iCal feed of direct bookings for OTA export. |
+| `/api/owner` | Owner portal: contract sent → signed → confirmed. |
 
 ## Environment variables
 
@@ -27,20 +32,23 @@ Set these in the Vercel project (Production **and** Preview):
 
 | Variable | Required | Purpose |
 | --- | --- | --- |
-| `DATABASE_URL` | Yes | Neon pooled connection string. Used by inquiries, calendar, owner portal, and the direct iCal feed. |
+| `DATABASE_URL` | Yes | Neon pooled connection string. |
+| `STRIPE_SECRET_KEY` | Yes, to take payment | Stripe secret key. If missing, checkout returns **503** with a clear message. |
+| `STRIPE_WEBHOOK_SECRET` | Yes, for webhooks | Signing secret for `POST /api/stripe-webhook`. Endpoint URL: `https://<host>/api/stripe-webhook`. Events: `checkout.session.completed`, `checkout.session.expired`. |
+| `PUBLIC_SITE_URL` | Recommended | Public origin for Stripe success/cancel URLs, e.g. `https://cjtbookingpage.vercel.app`. Falls back to the request host. |
+| `BOOKING_NIGHTLY_RATE` | Optional | Nightly rate in **USD dollars**. Default **450**. |
+| `BOOKING_CLEANING_FEE` | Optional | Cleaning fee in **USD dollars**. Default **200**. |
+| `BOOKING_TAX_PERCENT` | Optional | Tax percent on lodging + cleaning. Default **15**. |
 | `OWNER_PORTAL_PASSCODE` | Owner portal | Shared passcode for `/owner`. |
 | `BOOKING_COM_ICAL_URL` | Recommended | Booking.com iCal URL. Airbnb and VRBO URLs are already in code. |
-| `RESEND_API_KEY` | For guest email | [Resend](https://resend.com) API key. If missing, holds still succeed; email is skipped and logged. |
-| `FROM_EMAIL` | For guest email | Verified Resend from-address, e.g. `Sand & Sea Manor <bookings@yourdomain.com>`. `RESEND_FROM_EMAIL` is also accepted. |
+| `RESEND_API_KEY` | For guest email | [Resend](https://resend.com) API key. Payment still succeeds if email is unset or fails. |
+| `FROM_EMAIL` | For guest email | Verified Resend from-address. `RESEND_FROM_EMAIL` is also accepted. |
 
-### Guest confirmation email
+A publishable / `NEXT_PUBLIC_STRIPE_*` key is **not** required. Checkout redirects to the Stripe-hosted session URL.
 
-After a successful hold, `POST /api/inquiries` attempts a plain-text confirmation via Resend. The hold still returns **201** if send fails or if email is not configured.
+### Stripe webhook
 
-```
-RESEND_API_KEY=re_...
-FROM_EMAIL=Sand & Sea Manor <bookings@yourdomain.com>
-```
+In the Stripe Dashboard, add an endpoint to `/api/stripe-webhook` and paste `STRIPE_WEBHOOK_SECRET` into Vercel. The webhook marks the reservation `payment_received`. The success page also retrieves the session from Stripe server-side so a delayed webhook still confirms payment. The browser is never trusted alone.
 
 ## Local notes
 

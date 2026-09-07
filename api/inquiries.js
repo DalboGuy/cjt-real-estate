@@ -31,7 +31,7 @@ module.exports=async function(req,res){
     const sql=db();
     const overlap=await sql`
       SELECT id FROM reservations
-      WHERE status IN ('inquiry_hold','hold_verified','contract_sent','contract_signed','confirmed')
+      WHERE status IN ('inquiry_hold','hold_verified','checkout_pending','payment_received','contract_sent','contract_signed','confirmed')
         AND daterange(checkin,checkout,'[)') && daterange(${checkin}::date,${checkout}::date,'[)')
       LIMIT 1
     `;

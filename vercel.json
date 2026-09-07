@@ -13,12 +13,21 @@
         { "key": "CDN-Cache-Control", "value": "no-store" },
         { "key": "Vercel-CDN-Cache-Control", "value": "no-store" }
       ]
+    },
+    {
+      "source": "/api/checkout",
+      "headers": [
+        { "key": "Cache-Control", "value": "private, no-store" }
+      ]
     }
   ],
   "functions": {
     "api/calendar.js": { "maxDuration": 10 },
+    "api/checkout.js": { "maxDuration": 15 },
     "api/direct-bookings.js": { "maxDuration": 10 },
     "api/inquiries.js": { "maxDuration": 10 },
-    "api/owner.js": { "maxDuration": 10 }
+    "api/owner.js": { "maxDuration": 15 },
+    "api/quote.js": { "maxDuration": 10 },
+    "api/stripe-webhook.js": { "maxDuration": 15 }
   }
 }

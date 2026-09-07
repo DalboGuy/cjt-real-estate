@@ -6,13 +6,14 @@
   <title>Sand & Sea Manor | Galveston Direct Booking</title>
   <meta name="description" content="Book Sand & Sea Manor at 1720 Avenue M in Galveston. Five bedrooms, sleeps 12, private hot tub, fire-pit area, and synced Airbnb/VRBO availability." />
   <style>
-    :root{--ink:#14343a;--deep:#0d2b31;--cream:#f7f1e7;--paper:#fffdf9;--muted:#6b7d80;--line:#dfe6e4;--good:#1f6b45;--cta-h:76px}
+    :root{--ink:#14343a;--deep:#0d2b31;--cream:#f7f1e7;--paper:#fffdf9;--muted:#6b7d80;--line:#dfe6e4;--cta-h:76px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;color:var(--ink);background:var(--paper);line-height:1.55}img{display:block;width:100%;object-fit:cover}a{color:inherit}
     .wrap{width:min(1180px,calc(100% - 32px));margin:auto}
     .top{background:var(--deep);color:#fff;text-align:center;padding:9px 16px;font-size:.9rem}
     nav{position:sticky;top:0;z-index:20;background:rgba(255,253,249,.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
-    .nav{min-height:70px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0}
+    .nav{min-height:70px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;flex-wrap:wrap}
     .brand{font-weight:800;letter-spacing:.04em}.brand small{display:block;color:var(--muted);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase}
+    .menu-toggle{display:none;border:1px solid var(--line);background:#fff;border-radius:999px;padding:10px 14px;font-weight:800;cursor:pointer}
     .links{display:flex;gap:22px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
     .links a{text-decoration:none;font-size:.92rem}
     .btn{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;padding:13px 19px;text-decoration:none;font-weight:800;border:0;cursor:pointer}
@@ -41,18 +42,18 @@
     .month-title{font-family:Georgia,serif;font-size:clamp(1.2rem,3vw,1.5rem);text-align:center}
     .calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
     .dow{text-align:center;color:var(--muted);font-size:.74rem;font-weight:800;padding:6px}
-    .day{aspect-ratio:1;display:grid;place-items:center;border-radius:10px;font-weight:700;font-size:.9rem;border:0;background:transparent;color:inherit;padding:0;font-family:inherit}
-    .day.empty{visibility:hidden}
-    .day.available{background:#edf7f1;cursor:pointer}
-    .day.blocked{background:#f0f0ef;color:#9b9b96;text-decoration:line-through;cursor:not-allowed}
+    .day{aspect-ratio:1;display:grid;place-items:center;border-radius:10px;font-weight:700;font-size:.9rem;border:1px solid transparent;background:transparent;color:inherit;padding:0;font-family:inherit}
+    .day.empty{visibility:hidden;border:0}
+    .day.available{background:#edf7f1;cursor:pointer;border-color:#cfe8d8}
+    .day.blocked{background:#f0f0ef;color:#6b6b66;text-decoration:line-through;cursor:not-allowed;border-style:dashed;border-color:#d7d7d4}
     .day.past{color:#bbb;cursor:not-allowed}
     .day.available:hover,.day.available:focus-visible{outline:2px solid var(--deep);outline-offset:1px}
-    .day.start,.day.end{background:var(--deep);color:#fff;text-decoration:none}
+    .day.start,.day.end{background:var(--deep);color:#fff;text-decoration:none;border-color:var(--deep)}
     .day.in-range{background:#cfe8d8;color:var(--deep)}
     .day.checkout-ok{cursor:pointer;text-decoration:none}
     .legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:15px;color:var(--muted);font-size:.86rem;align-items:center}
-    .dot{width:11px;height:11px;border-radius:50%;display:inline-block;margin-right:6px}
-    .dot.a{background:#cfe8d8}.dot.b{background:#ddd}.dot.c{background:var(--deep)}
+    .dot{width:11px;height:11px;border-radius:50%;display:inline-block;margin-right:6px;vertical-align:middle}
+    .dot.a{background:#cfe8d8;border:1px solid #b5d8c4}.dot.b{background:#f0f0ef;border:1px dashed #bbb}.dot.c{background:var(--deep)}
     .status{margin-top:14px;font-size:.88rem;color:var(--muted)}
     .cal-hint{margin-top:10px;font-size:.92rem;color:var(--ink);font-weight:700}
     .cal-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
@@ -65,14 +66,23 @@
     .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}
     .field{display:flex;flex-direction:column;gap:6px}.full{grid-column:1/-1}
     label{font-size:.8rem;font-weight:800}
+    .req{color:#9a3b32;font-weight:800}
+    .field-error{color:#9a3b32;font-size:.75rem;min-height:1em}
+    input.invalid,select.invalid,textarea.invalid{border-color:#c9847c;background:#fff7f5}
     input,select,textarea{border:1px solid var(--line);border-radius:12px;padding:13px;font:inherit;width:100%;min-height:46px}textarea{min-height:95px}
+    .quote{border:1px solid var(--line);border-radius:14px;padding:14px;background:#f7faf8}
+    .quote row,.quote-row{display:flex;justify-content:space-between;gap:12px;font-size:.9rem;margin:4px 0}
+    .quote-total{font-weight:800;font-size:1.05rem;margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}
     .note{font-size:.78rem;color:var(--muted);margin-top:8px}
     .form-message{margin-top:12px;padding:13px;border-radius:12px;background:#eef7f1;color:var(--ink);display:none}
     .form-message.error{background:#fff0ed;color:#7a2929}.form-message.show{display:block}
     footer{padding:34px 0;border-top:1px solid var(--line);color:var(--muted);font-size:.88rem}footer a{margin-left:12px}
     .mobile-cta{display:none}
     @media(max-width:900px){
-      .links a:not(.btn){display:none}
+      .menu-toggle{display:inline-flex}
+      .links{display:none;width:100%;flex-direction:column;align-items:stretch;gap:8px;padding:8px 0 12px}
+      .nav.open .links{display:flex}
+      .links a{padding:10px 4px}
       .gallery{grid-template-columns:1fr 1fr;grid-template-rows:280px 210px 210px}
       .gallery .big{grid-column:1/3;grid-row:auto}.gallery .wide{grid-column:auto}
       .cards{grid-template-columns:1fr 1fr}
@@ -83,7 +93,6 @@
       section{padding:52px 0}
       .hero .content{padding:72px 0 48px}
       .hero h1{font-size:clamp(2.4rem,12vw,3.4rem)}
-      .nav{min-height:62px;align-items:flex-start}
       .brand{font-size:.95rem}
       .btn{padding:11px 15px}
       .gallery{grid-template-columns:1fr;grid-template-rows:260px repeat(4,190px)}
@@ -96,24 +105,54 @@
       .calendar{gap:4px}
       .day{aspect-ratio:auto;min-height:44px;font-size:.82rem;border-radius:8px}
       .dow{font-size:.68rem;padding:4px 0}
-      body{padding-bottom:calc(var(--cta-h) + env(safe-area-inset-bottom))}
+      body{padding-bottom:calc(var(--cta-h) + 72px + env(safe-area-inset-bottom))}
       .mobile-cta{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:30;gap:8px;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:rgba(255,253,249,.96);border-top:1px solid var(--line);box-shadow:0 -8px 24px rgba(13,43,49,.08)}
       .mobile-cta .btn{flex:1;min-height:46px}
     }
   </style>
 </head>
 <body>
-  <div class="top">Book direct with CJT. No payment is collected on this website.</div>
-  <nav><div class="wrap nav"><div class="brand">SAND &amp; SEA MANOR<small>1720 Avenue M · Galveston, Texas</small></div><div class="links"><a href="#home">The Home</a><a href="#availability">Availability</a><a href="#book">Book Direct</a><a class="btn btn-primary" href="#book">Hold Dates</a></div></div></nav>
+  <div class="top">Pay in full to secure your dates. CJT will send the rental contract to complete the booking.</div>
+  <nav>
+    <div class="wrap nav" id="navBar">
+      <div class="brand">SAND &amp; SEA MANOR<small>1720 Avenue M · Galveston, Texas</small></div>
+      <button class="menu-toggle" id="menuToggle" type="button" aria-expanded="false" aria-controls="navLinks">Menu</button>
+      <div class="links" id="navLinks">
+        <a href="#home">The Home</a>
+        <a href="#availability">Availability</a>
+        <a href="#book">Book Direct</a>
+        <a class="btn btn-primary" href="#book">Book &amp; pay</a>
+      </div>
+    </div>
+  </nav>
   <header class="hero" id="top"><div class="wrap content"><div class="eyebrow">Historic Galveston · Built for groups</div><h1>Stay together.<br>Stay somewhere special.</h1><p>Five bedrooms, room for up to 12 guests, a private hot tub, and a separate fire-pit area — all in a historic Galveston home designed for family trips and group weekends.</p><div class="facts"><span class="pill">5 bedrooms</span><span class="pill">2.5 baths</span><span class="pill">Sleeps 12</span><span class="pill">Private hot tub</span><span class="pill">Fire-pit area</span></div><a class="btn btn-light" href="#availability">See Live Availability</a></div></header>
   <main>
     <section class="section" id="home"><div class="wrap"><div class="section-head"><div class="eyebrow" style="color:var(--muted)">Sand &amp; Sea Manor</div><h2>A real Galveston home, shown with real property photography.</h2><p>Large gathering spaces, a full kitchen, comfortable bedrooms, and historic character throughout.</p></div><div class="gallery"><img class="big" src="https://drive.google.com/thumbnail?id=1FYUDJapvuncWuAgi-5GrjBd7yIdT3rgq&sz=w1800" alt="Sand and Sea Manor front exterior"><img src="https://drive.google.com/thumbnail?id=1RJDq9stveaJn6bOXrCThEXZ_PG0AgPwS&sz=w1400" alt="Sand and Sea Manor fire-pit area"><img src="https://drive.google.com/thumbnail?id=1drjbEb5SCm_XXPNrNknsqrIvOBG7vqCS&sz=w1400" alt="Sand and Sea Manor hot tub"><img class="wide" src="https://drive.google.com/thumbnail?id=1qULKBwPz44P3iomZSxd9USXTG25RcHxg&sz=w1600" alt="Sand and Sea Manor living room"></div></div></section>
     <section class="features"><div class="wrap"><div class="cards"><div class="card"><b>Private hot tub</b><span>A dedicated outdoor place to unwind after a day on the island.</span></div><div class="card"><b>Separate fire-pit area</b><span>Outdoor space designed for slower evenings and group conversation.</span></div><div class="card"><b>Historic character</b><span>Original personality and scale you do not get from a standard rental.</span></div><div class="card"><b>Group-ready</b><span>Five bedrooms and gathering spaces for families and friend groups.</span></div></div></div></section>
-    <section class="section" id="availability"><div class="wrap"><div class="section-head"><div class="eyebrow" style="color:var(--muted)">Synced availability</div><h2>Tap the calendar to choose your dates.</h2><p>Unavailable nights are consolidated from Airbnb, VRBO, Booking.com, and active direct-booking holds. Click an available check-in day, then a check-out day — the form fills in for you.</p></div><div class="calendar-shell"><div class="calendar-top"><button id="prev" type="button" aria-label="Previous month">←</button><div class="month-title" id="monthTitle">Loading…</div><button id="next" type="button" aria-label="Next month">→</button></div><div class="calendar" id="calendar"></div><div class="legend"><span><i class="dot a"></i>Available</span><span><i class="dot b"></i>Unavailable / on hold</span><span><i class="dot c"></i>Selected stay</span></div><div class="cal-hint" id="calHint">Click an available day to set check-in.</div><div class="cal-actions"><button id="clearDates" class="btn btn-ghost" type="button">Clear dates</button><a class="btn btn-primary" href="#book">Continue to hold form</a></div><div class="status" id="calStatus">Connecting to synced availability…</div></div></div></section>
-    <section class="booking" id="book"><div class="wrap booking-grid"><div><div class="eyebrow">Direct booking</div><h2>Place a 24-hour hold — not an instant booking.</h2><p>This page does not charge a card and does not confirm your stay. If the nights are still open, we place a <strong>temporary 24-hour inquiry hold</strong> so no one else can take those dates while CJT reviews your request.</p><p>A hold is <strong>not</strong> a confirmed reservation. Your booking is confirmed only after CJT sends the rental agreement, you sign it, and the deposit is paid with CJT — off this website.</p><ol class="steps"><li>Select dates on the calendar (or enter them here).</li><li>Submit the form. If the dates are open, they are held for 24 hours and we email you a confirmation.</li><li>CJT follows up with the direct rate and agreement. After you sign and pay the deposit, the stay is confirmed.</li></ol><p><strong>cjtrealestateholdings@gmail.com</strong></p></div><form id="bookingForm"><div class="form-grid"><div class="field"><label for="name">Name</label><input id="name" name="name" autocomplete="name" required></div><div class="field"><label for="email">Email</label><input id="email" name="email" type="email" autocomplete="email" required></div><div class="field"><label for="checkin">Check-in</label><input id="checkin" name="checkin" type="date" required></div><div class="field"><label for="checkout">Check-out</label><input id="checkout" name="checkout" type="date" required></div><div class="field"><label for="guests">Guests</label><select id="guests" name="guests" required><option value="">Select</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option></select></div><div class="field"><label for="phone">Phone</label><input id="phone" name="phone" type="tel" autocomplete="tel" placeholder="Optional"></div><div class="field full"><label for="message">Notes</label><textarea id="message" name="message" placeholder="Tell us about your trip."></textarea></div><div class="field full"><button id="submitBtn" class="btn btn-primary" type="submit">Hold these dates for 24 hours</button><div class="note">Submitting places a temporary 24-hour hold if the dates are still available. No payment is collected here. The hold is released automatically if it is not converted to a confirmed reservation.</div><div id="formMessage" class="form-message"></div></div></div></form></div></section>
+    <section class="section" id="availability"><div class="wrap"><div class="section-head"><div class="eyebrow" style="color:var(--muted)">Synced availability</div><h2>Tap the calendar to choose your dates.</h2><p>Unavailable nights include Airbnb, VRBO, Booking.com, and paid direct bookings. Click an available check-in day, then a check-out day — the form fills in for you.</p></div><div class="calendar-shell"><div class="calendar-top"><button id="prev" type="button" aria-label="Show previous month">← <span class="sr">Previous month</span></button><div class="month-title" id="monthTitle">Loading…</div><button id="next" type="button" aria-label="Show next month"><span class="sr">Next month</span> →</button></div><div class="calendar" id="calendar" role="grid" aria-label="Availability calendar"></div><div class="legend"><span><i class="dot a"></i>Available (solid)</span><span><i class="dot b"></i>Unavailable (dashed / struck through)</span><span><i class="dot c"></i>Selected stay</span></div><div class="cal-hint" id="calHint">Click an available day to set check-in.</div><div class="cal-actions"><button id="clearDates" class="btn btn-ghost" type="button">Clear dates</button><a class="btn btn-primary" href="#book">Continue to booking</a></div><div class="status" id="calStatus">Connecting to synced availability…</div></div></div></section>
+    <section class="booking" id="book"><div class="wrap booking-grid"><div><div class="eyebrow">Direct booking</div><h2>Pay in full to secure your dates.</h2><p>Choose your stay, enter a few details, and pay the full amount on this site. <strong>Payment secures the dates</strong> so they are blocked on the calendar. That is not the same as a finished booking.</p><p>After payment, CJT sends the rental contract. You sign it, then the reservation is confirmed. This is not Airbnb Instant Book.</p><ol class="steps"><li>Select check-in and check-out on the calendar.</li><li>Enter name, email, phone, guests, and optional notes.</li><li>Review the total (nights, cleaning, tax) and pay in full with Stripe.</li><li>CJT emails the contract. After you sign, the booking is confirmed.</li></ol><p><strong>cjtrealestateholdings@gmail.com</strong></p></div>
+      <form id="bookingForm" novalidate>
+        <div class="form-grid">
+          <div class="field"><label for="name">Name <span class="req">*</span></label><input id="name" name="name" autocomplete="name" required><div class="field-error" data-for="name"></div></div>
+          <div class="field"><label for="email">Email <span class="req">*</span></label><input id="email" name="email" type="email" autocomplete="email" required><div class="field-error" data-for="email"></div></div>
+          <div class="field"><label for="checkin">Check-in <span class="req">*</span></label><input id="checkin" name="checkin" type="date" required><div class="field-error" data-for="checkin"></div></div>
+          <div class="field"><label for="checkout">Check-out <span class="req">*</span></label><input id="checkout" name="checkout" type="date" required><div class="field-error" data-for="checkout"></div></div>
+          <div class="field"><label for="guests">Guests <span class="req">*</span></label><select id="guests" name="guests" required><option value="">Select</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option></select><div class="field-error" data-for="guests"></div></div>
+          <div class="field"><label for="phone">Phone <span class="req">*</span></label><input id="phone" name="phone" type="tel" autocomplete="tel" required><div class="field-error" data-for="phone"></div></div>
+          <div class="field full"><label for="message">Notes <span style="font-weight:600;color:var(--muted)">(optional)</span></label><textarea id="message" name="message" placeholder="Anything we should know about your trip."></textarea></div>
+          <div class="field full">
+            <div class="quote" id="quoteBox">Select dates to see the total.</div>
+            <button id="submitBtn" class="btn btn-primary" type="submit">Pay in full to secure dates</button>
+            <div class="note">Payment holds the nights on the calendar. Owners then send the rental contract. The stay is confirmed after you sign — not at the moment of payment.</div>
+            <div id="formMessage" class="form-message"></div>
+          </div>
+        </div>
+      </form>
+    </div></section>
   </main>
   <footer><div class="wrap">© 2026 CJT Real Estate Holdings LLC · Sand &amp; Sea Manor · 1720 Avenue M, Galveston, TX 77550 <a href="/owner">Owner Portal</a></div></footer>
-  <div class="mobile-cta"><a class="btn btn-ghost" href="#availability">Calendar</a><a id="mobileHold" class="btn btn-primary" href="#book">Hold dates</a></div>
+  <div class="mobile-cta"><a class="btn btn-ghost" href="#availability">Calendar</a><a id="mobileHold" class="btn btn-primary" href="#book">Book &amp; pay</a></div>
+  <style>.sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}</style>
   <script>
     const cal=document.getElementById('calendar');
     const title=document.getElementById('monthTitle');
@@ -122,9 +161,13 @@
     const checkinEl=document.getElementById('checkin');
     const checkoutEl=document.getElementById('checkout');
     const mobileHold=document.getElementById('mobileHold');
+    const quoteBox=document.getElementById('quoteBox');
+    const navBar=document.getElementById('navBar');
+    const menuToggle=document.getElementById('menuToggle');
     let blocked=new Set();
     let selStart=null;
     let selEnd=null;
+    let quoteTimer=null;
     let cursor=new Date();
     cursor=new Date(cursor.getFullYear(),cursor.getMonth(),1);
     const today=()=>{const t=new Date();t.setHours(0,0,0,0);return t;};
@@ -152,19 +195,33 @@
       if(k>selStart && k<selEnd) return 'in-range';
       return '';
     }
+    async function refreshQuote(){
+      if(!selStart||!selEnd){ quoteBox.textContent='Select dates to see the total.'; return; }
+      try{
+        const r=await fetch('/api/quote?checkin='+selStart+'&checkout='+selEnd,{cache:'no-store'});
+        const d=await r.json();
+        if(!d.quote||!d.display){ quoteBox.textContent='Select dates to see the total.'; return; }
+        const pay=d.stripeConfigured?'':' Online payment is not configured yet — CJT still needs Stripe keys in Vercel.';
+        quoteBox.innerHTML=`<div class="quote-row"><span>${d.display.nights} night${d.display.nights===1?'':'s'} × ${d.display.nightly}</span><span>${d.display.lodging}</span></div><div class="quote-row"><span>Cleaning fee</span><span>${d.display.cleaning}</span></div><div class="quote-row"><span>Tax</span><span>${d.display.tax}</span></div><div class="quote-row quote-total"><span>Total due today</span><span>${d.display.total}</span></div><div class="note">Payment secures these dates. The rental contract comes next.${pay}</div>`;
+      }catch{
+        quoteBox.textContent='Total is temporarily unavailable. You can still continue and we will confirm the amount at checkout.';
+      }
+    }
     function syncForm(){
       checkinEl.value=selStart||'';
       checkoutEl.value=selEnd||'';
       if(selStart&&selEnd){
         hintEl.textContent=`Selected stay: ${fmtRange(selStart,selEnd)}. Check-out is your departure morning.`;
-        mobileHold.textContent='Hold '+fmtRange(selStart,selEnd);
+        mobileHold.textContent='Pay '+fmtRange(selStart,selEnd);
       }else if(selStart){
         hintEl.textContent=`Check-in ${fmtRange(selStart)}. Now click your check-out day.`;
         mobileHold.textContent='Choose check-out';
       }else{
         hintEl.textContent='Click an available day to set check-in.';
-        mobileHold.textContent='Hold dates';
+        mobileHold.textContent='Book & pay';
       }
+      clearTimeout(quoteTimer);
+      quoteTimer=setTimeout(refreshQuote,120);
     }
     function render(){
       cal.innerHTML='';
@@ -186,7 +243,9 @@
         e.className='day '+(isPast?'past':isBlocked?'blocked':'available')+(sel?' '+sel:'')+(checkoutCandidate&&isBlocked?' checkout-ok':'');
         if(isPast) e.disabled=true;
         else if(isBlocked && !checkoutCandidate) e.disabled=true;
-        e.setAttribute('aria-label', k+(isBlocked?' unavailable':' available'));
+        const state=isPast?'past date':isBlocked?'unavailable':'available';
+        e.title=k+' · '+state;
+        e.setAttribute('aria-label', `${k}, ${state}`);
         e.addEventListener('click',()=>selectDay(k));
         cal.appendChild(e);
       }
@@ -219,6 +278,11 @@
       if(a){ const dt=parseDay(a); cursor=new Date(dt.getFullYear(),dt.getMonth(),1); }
       syncForm(); render();
     }
+    menuToggle.addEventListener('click',()=>{
+      const open=navBar.classList.toggle('open');
+      menuToggle.setAttribute('aria-expanded', open?'true':'false');
+    });
+    document.getElementById('navLinks').addEventListener('click',()=>{navBar.classList.remove('open');menuToggle.setAttribute('aria-expanded','false');});
     document.getElementById('prev').onclick=()=>{cursor=new Date(cursor.getFullYear(),cursor.getMonth()-1,1);render()};
     document.getElementById('next').onclick=()=>{cursor=new Date(cursor.getFullYear(),cursor.getMonth()+1,1);render()};
     document.getElementById('clearDates').onclick=clearDates;
@@ -231,7 +295,7 @@
         const d=await r.json();
         blocked=new Set(d.blockedDates||[]);
         const direct=(d.sources||[]).find(s=>s.name==='direct');
-        const holdNote=direct&&direct.ok?` · ${direct.count||0} direct hold${direct.count===1?'':'s'}`:'';
+        const holdNote=direct&&direct.ok?` · ${direct.count||0} direct booking${direct.count===1?'':'s'}`:'';
         statusEl.textContent=`Availability synced${holdNote} · last checked ${new Date(d.checkedAt).toLocaleString()}`;
         const min=new Date().toISOString().slice(0,10);
         checkinEl.min=min; checkoutEl.min=min;
@@ -243,29 +307,54 @@
       }
     }
     refreshCalendar();
+    function setError(name, message){
+      const input=document.getElementById(name);
+      const err=document.querySelector('[data-for="'+name+'"]');
+      if(input) input.classList.toggle('invalid', !!message);
+      if(err) err.textContent=message||'';
+    }
+    function validate(){
+      const name=document.getElementById('name').value.trim();
+      const email=document.getElementById('email').value.trim();
+      const phone=document.getElementById('phone').value.trim();
+      const guests=document.getElementById('guests').value;
+      let ok=true;
+      setError('name', name?'':'Name is required.');
+      setError('email', email.includes('@')?'':'A valid email is required.');
+      setError('phone', phone?'':'Phone is required.');
+      setError('checkin', checkinEl.value?'':'Check-in is required.');
+      setError('checkout', checkoutEl.value && checkoutEl.value>checkinEl.value?'':'Check-out must be after check-in.');
+      setError('guests', guests?'':'Select the number of guests.');
+      if(!name||!email.includes('@')||!phone||!checkinEl.value||!checkoutEl.value||checkoutEl.value<=checkinEl.value||!guests) ok=false;
+      return ok;
+    }
+    ['name','email','phone','checkin','checkout','guests'].forEach(id=>{
+      document.getElementById(id).addEventListener('input',()=>setError(id,''));
+    });
     document.getElementById('bookingForm').addEventListener('submit',async e=>{
       e.preventDefault();
-      const form=e.currentTarget, btn=document.getElementById('submitBtn'), msg=document.getElementById('formMessage'), f=new FormData(form);
+      const form=e.currentTarget, btn=document.getElementById('submitBtn'), msg=document.getElementById('formMessage');
       msg.className='form-message'; msg.textContent='';
-      btn.disabled=true; btn.textContent='Placing hold…';
+      if(!validate()){ msg.className='form-message error show'; msg.textContent='Please fix the highlighted fields.'; return; }
+      btn.disabled=true; btn.textContent='Starting checkout…';
       try{
-        const r=await fetch('/api/inquiries',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.fromEntries(f.entries()))});
+        const r=await fetch('/api/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.fromEntries(new FormData(form).entries()))});
         const d=await r.json();
-        if(!r.ok) throw new Error(d.message||'We could not place the hold.');
-        msg.className='form-message show';
-        msg.innerHTML=`<strong>Your dates are on a temporary 24-hour hold — not a confirmed reservation.</strong><br>Reference: ${d.reservation.id}<br>Hold expires: ${new Date(d.reservation.hold_expires_at).toLocaleString()}<br>No payment was collected. Check your email for a confirmation, then wait for CJT to follow up with the direct rate and rental agreement.`;
-        form.reset(); clearDates(); await refreshCalendar();
+        if(!r.ok) throw new Error(d.message||'We could not start checkout.');
+        if(d.url){ location.href=d.url; return; }
+        throw new Error('Checkout URL missing.');
       }catch(err){
         msg.className='form-message error show';
         msg.textContent=err.message;
       }finally{
-        btn.disabled=false; btn.textContent='Hold these dates for 24 hours';
+        btn.disabled=false; btn.textContent='Pay in full to secure dates';
       }
     });
   </script>
   <!--Start of Tawk.to Script-->
   <script type="text/javascript">
   var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+  Tawk_API.customStyle={visibility:{desktop:{position:'br',xOffset:'16px',yOffset:'16px'},mobile:{position:'br',xOffset:'8px',yOffset:'92px'}}};
   (function(){
     var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
     s1.async=true;
