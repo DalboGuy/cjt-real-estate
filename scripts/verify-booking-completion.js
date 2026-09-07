@@ -185,5 +185,16 @@ assert.match(icsSrc, /Hold - Direct Booking Request/);
 assert.doesNotMatch(listingSrc, /disabled=!calendarHealthy/);
 assert.doesNotMatch(listingSrc, /Booking requests are temporarily paused/);
 assert.match(listingSrc, /b\.disabled=past\|\|\(isBlocked&&!checkoutOption\)/);
+assert.match(listingSrc, /Check availability/);
+assert.match(listingSrc, /Request 24-hour hold \(no payment\)/);
+assert.match(listingSrc, /Send hold request — not a confirmed booking/);
+assert.doesNotMatch(listingSrc, /Book Now/);
+
+const guestHtml = fs.readFileSync(path.join(__dirname, '../booking-v2.html'), 'utf8');
+assert.match(guestHtml, />Check availability</);
+assert.match(guestHtml, /Send hold request — not a confirmed booking/);
+assert.doesNotMatch(guestHtml, /Book Now/);
+assert.doesNotMatch(guestHtml, />Check dates</);
+assert.doesNotMatch(guestHtml, />Request to Book</);
 
 console.log('verify-booking-completion: ok');

@@ -31,4 +31,4 @@ If none are configured, `/api/calendar` returns HTTP 503.
 
 ## Guest calendar health
 
-The guest date picker does **not** disable every day when a feed is missing or failing. Only past dates and dates in `blockedDates` are disabled. A status message appears when feeds are degraded or unavailable. Request to Book still rechecks live availability on submit. Calendar responses stay `Cache-Control: no-store`.
+The guest date picker does **not** disable every day when a feed is missing or failing. Only past dates and dates in `blockedDates` are disabled. A status message appears when feeds are degraded or unavailable. A hold request still rechecks live availability on submit. Calendar responses stay `Cache-Control: no-store`.

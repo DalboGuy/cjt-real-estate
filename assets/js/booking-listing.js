@@ -62,6 +62,9 @@
   function paintSave(on){$('saveBtn').dataset.saved=on?'1':'0';$('saveLabel').textContent=on?'Saved':'Save';$('saveHeart').setAttribute('fill',on?'currentColor':'none')}
   paintSave(saved);$('saveBtn').onclick=()=>{const next=$('saveBtn').dataset.saved!=='1';localStorage.setItem('cjt_sand_sea_saved',next?'1':'0');paintSave(next)};
 
+  const CTA_CHECK='Check availability';
+  const CTA_HOLD='Request 24-hour hold (no payment)';
+  const CTA_SUBMIT='Send hold request — not a confirmed booking';
   let blocked=new Set(),calendarHealthy=false,selectedStart='',selectedEnd='',guests=1,currentQuote=null;
   let pickerCursor=new Date();pickerCursor=new Date(pickerCursor.getFullYear(),pickerCursor.getMonth(),1);
   const calendarModal=$('calendarModal');
@@ -80,7 +83,14 @@
   }
   function renderPicker(){renderMonth($('calendarMonth1'),pickerCursor,false);renderMonth($('calendarMonth2'),new Date(pickerCursor.getFullYear(),pickerCursor.getMonth()+1,1),true);$('calendarSelection').textContent=selectedStart?(selectedEnd?`${fmt(selectedStart)} – ${fmt(selectedEnd)}`:`${fmt(selectedStart)} — choose checkout`):'Choose check-in and check-out dates'}
   function updateSelectors(){const inText=selectedStart?fmt(selectedStart).replace(/, \d{4}/,''):'Add date',outText=selectedEnd?fmt(selectedEnd).replace(/, \d{4}/,''):'Add date';document.querySelectorAll('[data-checkin-value]').forEach(el=>el.textContent=inText);document.querySelectorAll('[data-checkout-value]').forEach(el=>el.textContent=outText);document.querySelectorAll('[data-guests-value]').forEach(el=>el.textContent=`${guests} guest${guests===1?'':'s'}`)}
-  function resetQuote(){currentQuote=null;$('quoteBreakdown').classList.remove('show');$('quoteError').hidden=true;$('bookPrice').innerHTML='<span class="price-main">Add dates for prices</span>';$('mobilePrice').innerHTML='<strong>Add dates</strong><span>See total price</span>';$('bookNowBtn').disabled=false}
+  function paintPrimaryCtas(){
+    const ready=!!(selectedStart&&selectedEnd&&currentQuote);
+    const label=ready?CTA_HOLD:CTA_CHECK;
+    [$('bookNowBtn'),$('mobileBookBtn')].forEach(btn=>{if(!btn)return;btn.textContent=label;btn.classList.toggle('cta-hold',ready)});
+    const note=document.querySelector('.charge-note');
+    if(note)note.textContent=ready?'All-in quote shown. This requests a 24-hour hold for CJT review. No payment now. Not a confirmed booking.':'Choose dates to see the all-in price. No payment to check availability.';
+  }
+  function resetQuote(){currentQuote=null;$('quoteBreakdown').classList.remove('show');$('quoteError').hidden=true;$('bookPrice').innerHTML='<span class="price-main">Add dates for prices</span>';$('mobilePrice').innerHTML='<strong>Add dates</strong><span>See total price</span>';$('bookNowBtn').disabled=false;if($('mobileBookBtn'))$('mobileBookBtn').disabled=false;paintPrimaryCtas()}
   function selectDate(date,isBlocked){
     if(!selectedStart||selectedEnd||date<=selectedStart){if(isBlocked)return;selectedStart=date;selectedEnd='';resetQuote()}
     else{const nights=eachDate(selectedStart,date);if(nights.some(d=>blocked.has(d))){if(!isBlocked){selectedStart=date;selectedEnd='';resetQuote()}return}else{selectedEnd=date;resetQuote()}}
@@ -111,8 +121,8 @@
     const el=$('calendarHealth');
     calendarHealthy=!!(health&&health.ok)&&!fetchFailed;
     el.classList.toggle('is-degraded',!calendarHealthy);
-    if(fetchFailed){el.textContent='Live calendar feeds could not be refreshed. Open nights stay selectable; only past dates and known blocked nights are disabled. Request to Book still rechecks availability.';return}
-    if(health&&health.degraded&&health.degraded.length){el.textContent=`Calendar feeds are degraded (${health.degraded.join(', ')}). Open nights stay selectable; blocked nights stay blocked. Request to Book still rechecks live availability.`;return}
+    if(fetchFailed){el.textContent='Live calendar feeds could not be refreshed. Open nights stay selectable; only past dates and known blocked nights are disabled. A hold request still rechecks availability.';return}
+    if(health&&health.degraded&&health.degraded.length){el.textContent=`Calendar feeds are degraded (${health.degraded.join(', ')}). Open nights stay selectable; blocked nights stay blocked. A hold request still rechecks live availability.`;return}
     el.textContent=(health&&health.message)||'Availability synced from connected calendars.';
   }
   async function refreshAvailability(){
@@ -140,11 +150,12 @@
     currentQuote=q;const total=money(q.total),nightLabel=`${q.nights} night${q.nights===1?'':'s'}`;$('bookPrice').innerHTML=`<span class="price-main">${total}</span> <span class="price-note">total · ${nightLabel}</span>`;$('mobilePrice').innerHTML=`<strong>${total}</strong><span>${nightLabel} · total</span>`;
     $('quoteLodging').textContent=money(q.lodgingSubtotal);$('quoteCleaning').textContent=money(q.cleaningFee);$('quoteTax').textContent=money(q.taxes);$('quoteTotal').textContent=total;$('quoteBreakdown').classList.add('show');$('quoteError').hidden=true;
     const p=q.paymentSchedule||{};if(p.mode==='split')$('paymentCopy').innerHTML=`<strong>${money(p.dueAtBooking)} initially (50%)</strong>Remaining ${money(p.remainingBalance)} due ${esc(p.balanceDueDateLabel||'30 days before arrival')}. Payment collection is deferred — you will not be charged now.`;else $('paymentCopy').innerHTML=`<strong>${total} due in full</strong>${p.reason==='within_30_days'?'Arrival is within 30 days, so the documented schedule requires full payment when the booking is completed.':'Full payment is documented for this reservation.'} Payment collection is deferred — you will not be charged now.`;
+    paintPrimaryCtas();
   }
   async function loadQuote(){
     if(!selectedStart||!selectedEnd)return resetQuote();
-    $('bookPrice').innerHTML='<span class="price-main">Checking price…</span>';$('bookNowBtn').disabled=true;
-    try{const u=new URL('/api/quote',location.origin);u.searchParams.set('checkin',selectedStart);u.searchParams.set('checkout',selectedEnd);u.searchParams.set('guests',String(guests));const r=await fetch(u,{cache:'no-store'}),d=await r.json();if(!r.ok)throw new Error(d.message||'Price is unavailable for those dates.');renderQuote(d.quote)}catch(e){currentQuote=null;$('quoteBreakdown').classList.remove('show');$('quoteError').hidden=false;$('quoteError').textContent=e.message;$('bookPrice').innerHTML='<span class="price-main">Dates need review</span>'}finally{$('bookNowBtn').disabled=false}}
+    $('bookPrice').innerHTML='<span class="price-main">Checking price…</span>';$('bookNowBtn').disabled=true;if($('mobileBookBtn'))$('mobileBookBtn').disabled=true;
+    try{const u=new URL('/api/quote',location.origin);u.searchParams.set('checkin',selectedStart);u.searchParams.set('checkout',selectedEnd);u.searchParams.set('guests',String(guests));const r=await fetch(u,{cache:'no-store'}),d=await r.json();if(!r.ok)throw new Error(d.message||'Price is unavailable for those dates.');renderQuote(d.quote)}catch(e){currentQuote=null;$('quoteBreakdown').classList.remove('show');$('quoteError').hidden=false;$('quoteError').textContent=e.message;$('bookPrice').innerHTML='<span class="price-main">Dates need review</span>';paintPrimaryCtas()}finally{$('bookNowBtn').disabled=false;if($('mobileBookBtn'))$('mobileBookBtn').disabled=false}}
   $('refreshQuote').onclick=loadQuote;
 
   const bookingModal=$('bookingModal'),bookingForm=$('bookingForm');
@@ -154,11 +165,24 @@
   bookingForm.addEventListener('submit',async e=>{
     e.preventDefault();if(!currentQuote||!selectedStart||!selectedEnd)return;const btn=$('bookingSubmit'),msg=$('bookingMessage'),f=new FormData(bookingForm);btn.disabled=true;btn.textContent='Sending your request…';msg.className='form-message';msg.textContent='';
     const payload={name:f.get('name'),email:f.get('email'),phone:f.get('phone'),checkin:selectedStart,checkout:selectedEnd,guests:String(guests),message:String(f.get('message')||'').trim(),pets:f.get('pets'),event:f.get('event'),trip_type:f.get('trip_type')};
-    try{const r=await fetch('/api/inquiries',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}),d=await r.json();if(!r.ok)throw new Error(d.message||'We could not send the booking request.');(d.blockedDates||[]).forEach(date=>blocked.add(date));renderPicker();msg.className='form-message show';msg.innerHTML=`<strong>Request received — not yet confirmed.</strong><br>Booking reference: ${esc(d.reservation.id)}<br>Those dates are blocked on the public calendar for 24 hours while CJT Realty reviews the request. No payment was collected.`;btn.style.display='none';await refreshAvailability()}catch(err){msg.className='form-message error show';msg.textContent=err.message}finally{btn.disabled=false;btn.textContent='Request to Book'}});
+    try{const r=await fetch('/api/inquiries',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}),d=await r.json();if(!r.ok)throw new Error(d.message||'We could not send the hold request.');(d.blockedDates||[]).forEach(date=>blocked.add(date));renderPicker();msg.className='form-message show';msg.innerHTML=`<strong>Request received — not yet confirmed.</strong><br>Booking reference: ${esc(d.reservation.id)}<br>Those dates are blocked on the public calendar for 24 hours while CJT Realty reviews the request. No payment was collected.`;btn.style.display='none';await refreshAvailability()}catch(err){msg.className='form-message error show';msg.textContent=err.message}finally{btn.disabled=false;btn.textContent=CTA_SUBMIT}});
 
   $('amenitiesBtn').onclick=()=>{$('amenitiesModal').classList.add('show');document.body.classList.add('modal-open')};$('amenitiesClose').onclick=()=>{$('amenitiesModal').classList.remove('show');document.body.classList.remove('modal-open')};$('amenitiesModal').addEventListener('click',e=>{if(e.target===$('amenitiesModal'))$('amenitiesClose').click()});
 
   window.addEventListener('message',e=>{if(e.origin!==location.origin||e.data?.type!=='cjt-reviews-height')return;const frame=$('houfyReviews');if(frame&&Number(e.data.height)>200)frame.style.height=`${Math.min(2200,Number(e.data.height)+12)}px`});
   document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(calendarModal.classList.contains('show'))closeCalendar();if(bookingModal.classList.contains('show'))closeBooking();if($('amenitiesModal').classList.contains('show'))$('amenitiesClose').click()});
+  function syncSupportChat(){
+    const api=window.Tawk_API;
+    if(!api)return;
+    const open=document.body.classList.contains('modal-open');
+    try{
+      if(open&&typeof api.hideWidget==='function')api.hideWidget();
+      else if(!open&&typeof api.showWidget==='function')api.showWidget();
+    }catch{}
+  }
+  new MutationObserver(syncSupportChat).observe(document.body,{attributes:true,attributeFilter:['class']});
+  window.Tawk_API=window.Tawk_API||{};
+  const prevTawkLoad=window.Tawk_API.onLoad;
+  window.Tawk_API.onLoad=function(){if(typeof prevTawkLoad==='function')prevTawkLoad();syncSupportChat()};
   hydrateMobileSourceSummaries();hydrateAmenitiesModal();updateSelectors();resetQuote();renderGallery();loadAssetManifest();
 })();
