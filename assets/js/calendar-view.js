@@ -356,7 +356,7 @@
         const todayCls=date===today?' today':'';
         cells.push(`<button type="button" class="cal-year-day ${kind}${todayCls}" data-date="${date}" title="${esc(date)}${night?.conflict?' · overlap':''}">${d}</button>`);
       }
-      article.innerHTML=`<div class="cal-year-head"><button type="button" data-goto-month="${m}">${esc(MONTHS[m-1])}</button><span>${occ?`${occ.pct}%`:''}</span></div>
+      article.innerHTML=`<button type="button" class="cal-year-head" data-goto-month="${m}" aria-label="Open ${esc(MONTHS[m-1])} ${y}"><span>${esc(MONTHS[m-1])}</span><span>${occ?`${occ.pct}%`:''}</span></button>
         <div class="cal-year-dow">${DOW_SHORT.map(d=>`<span>${d}</span>`).join('')}</div>
         <div class="cal-year-grid">${cells.join('')}</div>`;
       wrap.appendChild(article);
@@ -635,13 +635,13 @@
     const next=Number(e.target.value);
     if(!next)return;
     month=next;
+    focusDate=isoFromParts(year||snapshot?.range?.year,month,view==='year'?1:currentDayNumber());
+    year=Number(focusDate.slice(0,4));
     if(view==='year'){
       document.getElementById(`calYearMonth-${next}`)?.scrollIntoView({behavior:'smooth',block:'nearest'});
       document.querySelectorAll('.cal-year-month').forEach(el=>el.classList.toggle('current',el.id===`calYearMonth-${next}`));
       return;
     }
-    focusDate=isoFromParts(year||snapshot?.range?.year,month,currentDayNumber());
-    year=Number(focusDate.slice(0,4));
     load();
   });
   document.getElementById('calYearSelect')?.addEventListener('change',e=>{
@@ -669,8 +669,10 @@
   VIEWS.forEach(v=>{
     document.getElementById(VIEW_BTN[v])?.addEventListener('click',()=>{
       setView(v);
-      if(v==='week'||v==='day') focusDate=weekFocusDate();
-      if(v==='year'&&year) focusDate=isoFromParts(year,month||1,1);
+      const y=year||snapshot?.range?.year;
+      const m=month||snapshot?.range?.month||1;
+      if(v==='week'||v==='day') focusDate=isoFromParts(y,m,currentDayNumber());
+      if(v==='year'&&y) focusDate=isoFromParts(y,m,1);
       load();
     });
   });

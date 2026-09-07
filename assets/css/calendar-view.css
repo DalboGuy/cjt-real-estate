@@ -63,10 +63,10 @@
 .cal-year{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
 .cal-year-month{background:#fff;border:1px solid var(--cjt-line);border-radius:12px;padding:10px}
 .cal-year-month.current{box-shadow:inset 0 0 0 2px var(--cjt-deep)}
-.cal-year-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:6px}
-.cal-year-head button{border:0;background:none;padding:0;font:inherit;font-weight:800;cursor:pointer;color:var(--cjt-ink)}
-.cal-year-head button:hover,.cal-year-head button:focus-visible{color:var(--cjt-deep);text-decoration:underline}
-.cal-year-head span{font-size:.7rem;font-weight:800;color:var(--cjt-muted);font-variant-numeric:tabular-nums}
+.cal-year-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:6px;width:100%;border:0;background:none;padding:0;font:inherit;font-weight:800;cursor:pointer;color:var(--cjt-ink);text-align:left}
+.cal-year-head:hover,.cal-year-head:focus-visible{color:var(--cjt-deep)}
+.cal-year-head:hover span:first-child,.cal-year-head:focus-visible span:first-child{text-decoration:underline}
+.cal-year-head span:last-child{font-size:.7rem;font-weight:800;color:var(--cjt-muted);font-variant-numeric:tabular-nums}
 .cal-year-dow,.cal-year-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px}
 .cal-year-dow span{text-align:center;font-size:.58rem;font-weight:900;color:var(--cjt-muted)}
 .cal-year-pad{aspect-ratio:1}
@@ -121,9 +121,13 @@
   .cal-day{min-height:68px}
   .cal-pills{gap:2px}
   .cal-drawer{padding:16px}
-  .cal-occ-item{min-width:100%}
+  .cal-occupancy-inline{gap:8px;padding:8px 10px}
+  .cal-occ-item{min-width:0;flex:1 1 0}
+  .cal-occ-item b{font-size:.95rem}
   .cal-year{grid-template-columns:1fr 1fr;gap:8px}
-  .cal-nav-field{flex:1 1 calc(50% - 8px)}
+  .cal-month-nav{display:flex;flex-wrap:wrap;align-items:end;width:100%}
+  .cal-nav-field{flex:1 1 6.5rem;min-width:0}
+  #calDayField{flex:1 1 100%}
   #calMonthSelect,#calYearSelect,#calDaySelect{width:100%;min-width:0}
   .cal-step{flex:0 0 38px}
 }
