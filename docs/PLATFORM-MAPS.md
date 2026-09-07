@@ -16,9 +16,9 @@ The primary function of this project is the **working direct-booking system** fo
 
 Current core loop:
 
-`Guest explores listing → chooses dates/guests → live availability check → seasonal all-in quote → Book Now / 24-hour hold → Direct Booking Dashboard → owner accepts / adjusts / releases → agreement / payment milestones → confirmed reservation`
+`Guest explores listing → chooses dates/guests → live availability check (fail-closed / sourceHealth) → seasonal all-in quote → Request to Book (dates lock until owner release) → Owner Portal review → owner accepts / adjusts / releases → agreement / payment milestones → confirmed reservation`
 
-Online Stripe collection and final automated confirmation remain the next transactional step.
+Date lock is **indefinite until owner release** (no automatic 24-hour expiry). Online Stripe collection and final automated confirmation remain deferred product decisions (Stripe on hold).
 
 ## Canonical guest-facing property facts
 
