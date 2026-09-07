@@ -34,10 +34,38 @@
 .request-panel .modal-header{align-items:flex-start}
 .change-dates-link{display:inline-block;margin-top:8px}
 .change-dates-link[hidden]{display:none!important}
-.review-details{display:grid;gap:10px;padding:14px;border-radius:12px;background:var(--soft);margin-bottom:16px}
-.review-details p{margin:0}
-.agree-row{display:flex;gap:9px;align-items:flex-start;font-weight:600}
-.agree-row input{width:auto;margin-top:3px}
+#bookingSummary[hidden]{display:none!important}
+.request-panel{width:min(560px,100%)}
+.request-panel .modal-body{padding:18px 20px 28px}
+.request-panel .modal-header h2{font-size:1.35rem}
+#reviewStep{display:grid;gap:22px;padding-bottom:12px}
+#reviewStep[hidden]{display:none!important}
+.review-section{margin:0}
+.review-section h3,.review-section-head h3{margin:0 0 10px;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;font-weight:850;color:var(--muted)}
+.review-section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+.review-section-head h3{margin:0}
+.review-section-head .change-dates-link{margin-top:0;font-size:.82rem}
+.review-stay-card,.review-rows{margin:0;display:grid;gap:0}
+.review-stay-card{border:1px solid var(--line);border-radius:16px;background:#fff;overflow:hidden;box-shadow:0 8px 24px rgba(13,43,49,.06)}
+.review-stay-card>div,.review-rows>div{display:grid;grid-template-columns:110px minmax(0,1fr);gap:12px;align-items:baseline;padding:12px 16px;border-top:1px solid var(--line)}
+.review-stay-card>div:first-child,.review-rows>div:first-child{border-top:0}
+.review-stay-card dt,.review-rows dt{margin:0;font-size:.72rem;letter-spacing:.04em;text-transform:uppercase;font-weight:800;color:var(--muted)}
+.review-stay-card dd,.review-rows dd{margin:0;font-size:.95rem;font-weight:650;color:var(--ink);overflow-wrap:anywhere}
+.review-stay-total{background:var(--soft)}
+.review-stay-total dt,.review-stay-total dd{font-weight:850;color:var(--deep)}
+.review-stay-total dd{font:600 1.2rem/1.2 Georgia,serif}
+.review-rows>div{padding:10px 0}
+#reviewMessageRow[hidden]{display:none!important}
+.review-ack{padding-top:4px}
+.review-trust{margin:8px 0 14px;color:var(--muted);font-size:.82rem}
+.review-ack .btn-primary{width:100%;min-height:50px}
+.agree-row{display:flex;gap:10px;align-items:flex-start;font-weight:600;font-size:.88rem;line-height:1.45;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:#fff}
+.agree-row input{width:auto;margin-top:3px;flex:0 0 auto}
+@media(max-width:520px){
+  .request-panel .modal-body{padding:16px 16px 88px}
+  .review-stay-card>div,.review-rows>div{grid-template-columns:92px minmax(0,1fr);padding:11px 14px}
+  .review-rows>div{padding:10px 0}
+}
 .booking-selectors{overflow:visible;position:relative;z-index:4}
 .guest-wrap{position:relative;z-index:5}
 .selector.guest-selector{position:relative;z-index:5}
@@ -95,7 +123,18 @@ body.guest-popover-open iframe[title*="chat"],
 body.guest-popover-open iframe[title*="tawk" i],
 body.guest-popover-open .tawk-min-container,
 body.guest-popover-open #tawkchat-container,
-body.guest-popover-open #tawkchat-minified-container{
+body.guest-popover-open #tawkchat-minified-container,
+body.request-open iframe[src*="tawk.to"],
+body.request-open iframe[src*="va.tawk"],
+body.request-open iframe[title*="chat"],
+body.request-open iframe[title*="tawk" i],
+body.request-open [id^="tawk"],
+body.request-open [class*="tawk-"],
+body.request-review-open iframe[src*="tawk.to"],
+body.request-review-open iframe[src*="va.tawk"],
+body.request-review-open iframe[title*="chat"],
+body.request-review-open [id^="tawk"],
+body.request-review-open [class*="tawk-"]{
   opacity:0!important;
   pointer-events:none!important;
   visibility:hidden!important;

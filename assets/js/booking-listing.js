@@ -277,22 +277,35 @@
   $('refreshQuote').onclick=loadQuote;
 
   const bookingModal=$('bookingModal'),bookingForm=$('bookingForm');
+  function bindChangeDates(id){
+    const change=$(id);
+    if(change)change.onclick=()=>{bookingModal.classList.remove('show');syncRequestChrome();openCalendar('guest')};
+  }
   function paintBookingSummary(){
     const nights=currentQuote?`${currentQuote.nights} night${currentQuote.nights===1?'':'s'} · ${money(currentQuote.total)} total`:'Dates selected';
-    $('bookingSummary').innerHTML=`<strong>${fmt(selectedStart)} – ${fmt(selectedEnd)} · ${guests} guest${guests===1?'':'s'}</strong><span>${nights}</span><button type="button" id="changeDatesModal" class="micro-link change-dates-link">Change dates</button>`;
-    const change=$('changeDatesModal');
-    if(change)change.onclick=()=>{bookingModal.classList.remove('show');openCalendar('guest')};
+    const summary=$('bookingSummary');
+    if(summary)summary.innerHTML=`<strong>${fmt(selectedStart)} – ${fmt(selectedEnd)} · ${guests} guest${guests===1?'':'s'}</strong><span>${nights}</span><button type="button" id="changeDatesModal" class="micro-link change-dates-link">Change dates</button>`;
+    bindChangeDates('changeDatesModal');
+    bindChangeDates('changeDatesReview');
+  }
+  function syncRequestChrome(){
+    const open=!!bookingModal?.classList.contains('show');
+    document.body.classList.toggle('request-open',open);
+    document.body.classList.toggle('request-review-open',open&&requestStep==='review');
+    syncSupportChat();
   }
   function showRequestStep(step){
     requestStep=step==='review'?'review':'guest';
-    const guestStep=$('guestDetailsStep'),reviewStep=$('reviewStep');
+    const guestStep=$('guestDetailsStep'),reviewStep=$('reviewStep'),summary=$('bookingSummary');
     if(guestStep)guestStep.hidden=requestStep!=='guest';
     if(reviewStep)reviewStep.hidden=requestStep!=='review';
+    if(summary)summary.hidden=requestStep==='review';
     const kicker=$('bookingStepKicker'),title=$('bookingStepTitle');
     if(kicker)kicker.textContent=requestStep==='review'?'Step 2 of 2':'Step 1 of 2';
     if(title)title.textContent=requestStep==='review'?'Review and send':'Your details';
     const agree=$('requestAgree');
     if(agree)agree.required=requestStep==='review';
+    syncRequestChrome();
   }
   function collectGuestFields(){
     const f=new FormData(bookingForm);
@@ -309,10 +322,26 @@
       guests
     };
   }
+  function setText(id,value){const el=$(id);if(el)el.textContent=value}
   function paintReview(details){
     const pet=details.pets==='yes'?'Yes — please review':'No';
     const party=details.event==='yes'?'Yes — please review':'No';
-    $('reviewDetails').innerHTML=`<p><strong>${esc(details.name)}</strong><br>${esc(details.email)}${details.phone?`<br>${esc(details.phone)}`:''}</p><p>${guests} guest${guests===1?'':'s'} · ${esc(details.trip_type||'Trip')}</p><p>Pets: ${pet}<br>Party or event: ${party}</p>${details.message?`<p>${esc(details.message)}</p>`:''}<p>This is a booking request. It is not confirmed until the owners approve. No payment now.</p>`;
+    const nightCount=currentQuote?currentQuote.nights:eachDate(selectedStart,selectedEnd).length;
+    setText('reviewDates',`${fmt(selectedStart)} – ${fmt(selectedEnd)}`);
+    setText('reviewNights',`${nightCount} night${nightCount===1?'':'s'}`);
+    setText('reviewGuests',`${guests} guest${guests===1?'':'s'}`);
+    setText('reviewTotal',currentQuote?money(currentQuote.total):'—');
+    setText('reviewName',details.name||'—');
+    setText('reviewEmail',details.email||'—');
+    setText('reviewPhone',details.phone||'—');
+    setText('reviewTripType',details.trip_type||'—');
+    setText('reviewPets',pet);
+    setText('reviewEvent',party);
+    const note=details.message||'';
+    setText('reviewMessage',note);
+    const noteRow=$('reviewMessageRow');
+    if(noteRow)noteRow.hidden=!note;
+    bindChangeDates('changeDatesReview');
   }
   function openBooking(opts){
     if(!selectedStart||!selectedEnd){openCalendar('listing');return}
@@ -324,8 +353,9 @@
     setGuestPopover(false);
     bookingModal.classList.add('show');
     document.body.classList.add('modal-open');
+    syncRequestChrome();
   }
-  function closeBooking(){bookingModal.classList.remove('show');document.body.classList.remove('modal-open');if(selectedStart&&selectedEnd)revealBookingStep()}
+  function closeBooking(){bookingModal.classList.remove('show');document.body.classList.remove('modal-open');syncRequestChrome();if(selectedStart&&selectedEnd)revealBookingStep()}
   function backFromBooking(){
     if(requestStep==='review'){showRequestStep('guest');return}
     bookingModal.classList.remove('show');
@@ -360,7 +390,7 @@
   function syncSupportChat(){
     const api=window.Tawk_API;
     if(!api)return;
-    const hide=document.body.classList.contains('modal-open')||document.body.classList.contains('guest-popover-open')||document.body.classList.contains('has-trip-dates');
+    const hide=document.body.classList.contains('modal-open')||document.body.classList.contains('guest-popover-open')||document.body.classList.contains('has-trip-dates')||document.body.classList.contains('request-open')||document.body.classList.contains('request-review-open');
     try{
       if(hide&&typeof api.hideWidget==='function')api.hideWidget();
       else if(!hide&&typeof api.showWidget==='function')api.showWidget();
