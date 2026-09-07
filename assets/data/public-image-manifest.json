@@ -592,6 +592,126 @@
       ]
     }
   ],
+  "visitGalvestonPhotos": [
+    {
+      "id": "1KwEz7QBVBFx1JP8oaQNrJDY6a5jlpYM1",
+      "filename": "pleasure-pier-night.jpg",
+      "label": "Pleasure Pier",
+      "alt": "Galveston Island Historic Pleasure Pier over the Gulf",
+      "featured": "hero",
+      "publicPath": "/assets/images/public/galveston/pleasure-pier-night.jpg",
+      "sourceDriveFileId": "1KwEz7QBVBFx1JP8oaQNrJDY6a5jlpYM1"
+    },
+    {
+      "id": "1ufqRbWe3t6YAr7Zo1y9v4UFWdgSLM1l7",
+      "filename": "seawall-pleasure-pier.jpg",
+      "label": "Pleasure Pier from the Seawall",
+      "alt": "Pleasure Pier seen from the Galveston Seawall boardwalk",
+      "featured": true,
+      "publicPath": "/assets/images/public/galveston/seawall-pleasure-pier.jpg",
+      "sourceDriveFileId": "1ufqRbWe3t6YAr7Zo1y9v4UFWdgSLM1l7"
+    },
+    {
+      "id": "1s8Hojx1kCIrY7yXJVtqCgiYADJzBwazA",
+      "filename": "strand.jpg",
+      "label": "The Strand",
+      "alt": "Historic Strand District buildings in downtown Galveston",
+      "featured": true,
+      "publicPath": "/assets/images/public/galveston/strand.jpg",
+      "sourceDriveFileId": "1s8Hojx1kCIrY7yXJVtqCgiYADJzBwazA"
+    },
+    {
+      "id": "1mlYpeY_XNXj0wabXmja3ndUUMPTX6r7Q",
+      "filename": "seawall.jpg",
+      "label": "Seawall and beach",
+      "alt": "Galveston Seawall, dunes, and Gulf beach",
+      "featured": true,
+      "publicPath": "/assets/images/public/galveston/seawall.jpg",
+      "sourceDriveFileId": "1mlYpeY_XNXj0wabXmja3ndUUMPTX6r7Q"
+    },
+    {
+      "id": "1vCeMnF56pr-9FSPGEIdv6AAaO6lI6t7o",
+      "filename": "elissa-seaport.jpg",
+      "label": "Tall ship Elissa",
+      "alt": "Tall ship Elissa docked at the Galveston seaport",
+      "featured": true,
+      "publicPath": "/assets/images/public/galveston/elissa-seaport.jpg",
+      "sourceDriveFileId": "1vCeMnF56pr-9FSPGEIdv6AAaO6lI6t7o"
+    },
+    {
+      "id": "1kDwChIL1oyNb39_JyrSeBAQgMwgMOhpg",
+      "filename": "gulf-sunset.jpg",
+      "label": "Seawall sunset",
+      "alt": "Sunset along the Galveston Seawall and Gulf",
+      "featured": "banner",
+      "publicPath": "/assets/images/public/galveston/gulf-sunset.jpg",
+      "sourceDriveFileId": "1kDwChIL1oyNb39_JyrSeBAQgMwgMOhpg"
+    },
+    {
+      "id": "1W73RKmd5yhNcQawyl9787nbIN7LvOE50",
+      "filename": "strand-saengerfest-architecture.jpg",
+      "label": "Saengerfest Park",
+      "alt": "Saengerfest Park plaza near the Strand in Galveston",
+      "publicPath": "/assets/images/public/galveston/strand-saengerfest-architecture.jpg",
+      "sourceDriveFileId": "1W73RKmd5yhNcQawyl9787nbIN7LvOE50"
+    },
+    {
+      "id": "1OEbqM_GKmnuSLz3lmjbS5EipTQcE_x4b",
+      "filename": "strand-architecture-02.jpg",
+      "label": "Strand architecture",
+      "alt": "Historic architecture in Galveston's Strand District",
+      "publicPath": "/assets/images/public/galveston/strand-architecture-02.jpg",
+      "sourceDriveFileId": "1OEbqM_GKmnuSLz3lmjbS5EipTQcE_x4b"
+    },
+    {
+      "id": "1QTfLplvk4y8TwCeVUBJaCJekOPfZ-qu7",
+      "filename": "strand-old.jpg",
+      "label": "Historic Strand",
+      "alt": "Historic street view in Galveston's Strand District",
+      "publicPath": "/assets/images/public/galveston/strand-old.jpg",
+      "sourceDriveFileId": "1QTfLplvk4y8TwCeVUBJaCJekOPfZ-qu7"
+    },
+    {
+      "id": "1KS_7ABdYcMiOV0X5bAk8iORYL1kBvCgh",
+      "filename": "strand2.jpg",
+      "label": "Strand street",
+      "alt": "Street scene in Galveston's Strand District",
+      "publicPath": "/assets/images/public/galveston/strand2.jpg",
+      "sourceDriveFileId": "1KS_7ABdYcMiOV0X5bAk8iORYL1kBvCgh"
+    },
+    {
+      "id": "1lM8Yf3C4krd0bvBMQEkGx5T3Kd62Dm55",
+      "filename": "elissa.jpg",
+      "label": "Elissa",
+      "alt": "Tall ship Elissa in Galveston",
+      "publicPath": "/assets/images/public/galveston/elissa.jpg",
+      "sourceDriveFileId": "1lM8Yf3C4krd0bvBMQEkGx5T3Kd62Dm55"
+    },
+    {
+      "id": "1ZoCnBeA_fX_5qZcI5kf-HqpZYeyIcxIx",
+      "filename": "sunset.jpg",
+      "label": "Gulf sunset",
+      "alt": "Sunset over the Gulf of Mexico in Galveston",
+      "publicPath": "/assets/images/public/galveston/sunset.jpg",
+      "sourceDriveFileId": "1ZoCnBeA_fX_5qZcI5kf-HqpZYeyIcxIx"
+    },
+    {
+      "id": "1icWO5m2X5sxV4PANiAYZBdBnqzvNrFbz",
+      "filename": "mardi-gras-parade.jpg",
+      "label": "Mardi Gras",
+      "alt": "Mardi Gras parade float and crowd in Galveston",
+      "publicPath": "/assets/images/public/galveston/mardi-gras-parade.jpg",
+      "sourceDriveFileId": "1icWO5m2X5sxV4PANiAYZBdBnqzvNrFbz"
+    },
+    {
+      "id": "1RLt-7ktuLaJyNC3tks2unrm1GHObGfU0",
+      "filename": "mardi-gras-dance.jpg",
+      "label": "Mardi Gras night",
+      "alt": "Mardi Gras night parade float in Galveston",
+      "publicPath": "/assets/images/public/galveston/mardi-gras-dance.jpg",
+      "sourceDriveFileId": "1RLt-7ktuLaJyNC3tks2unrm1GHObGfU0"
+    }
+  ],
   "aerialPhotos": [
     {
       "sourceDriveFileId": "1s78bXdJorG0Ob9gjmDFT1FXnFcA2vi-l",
