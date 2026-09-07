@@ -87,7 +87,34 @@
   const guestsLabel=n=>`${clampGuests(n)} guest${clampGuests(n)===1?'':'s'}`;
   const listingCta=({hasDates,hasQuote,calendarHealthy})=>calendarHealthy===false||!hasDates?CTA_CHECK:(hasQuote?CTA_REQUEST:CTA_QUOTE);
   const failClosedCopy=(body,fallback)=>{const msg=body&&typeof body.message==='string'?body.message.trim():'';return msg||fallback||AVAILABILITY_UNKNOWN};
-  const inquiryPayload=({name,email,phone,message,checkin,checkout,guests})=>({name:String(name||'').trim(),email:String(email||'').trim(),phone:String(phone||'').trim(),message:String(message||'').trim(),checkin:String(checkin||'').trim(),checkout:String(checkout||'').trim(),guests:String(clampGuests(guests))});
+  const TRIP_TYPES=['Leisure','Family','Business','Other'];
+  const DETAILS_MAX=1000;
+  const optionalYesNo=value=>{
+    const key=String(value==null?'':value).trim().toLowerCase();
+    if(key==='yes'||key==='true')return true;
+    if(key==='no'||key==='false')return false;
+    return null;
+  };
+  const inquiryPayload=({name,email,phone,message,checkin,checkout,guests,trip_type,bringing_pet,pet_details,planning_event,event_details})=>{
+    const payload={name:String(name||'').trim(),email:String(email||'').trim(),phone:String(phone||'').trim(),message:String(message||'').trim(),checkin:String(checkin||'').trim(),checkout:String(checkout||'').trim(),guests:String(clampGuests(guests))};
+    const trip=String(trip_type||'').trim();
+    if(TRIP_TYPES.includes(trip))payload.trip_type=trip;
+    if(bringing_pet===true||bringing_pet===false){
+      payload.bringing_pet=bringing_pet;
+      if(bringing_pet===true){
+        const details=String(pet_details||'').trim().slice(0,DETAILS_MAX);
+        if(details)payload.pet_details=details;
+      }
+    }
+    if(planning_event===true||planning_event===false){
+      payload.planning_event=planning_event;
+      if(planning_event===true){
+        const details=String(event_details||'').trim().slice(0,DETAILS_MAX);
+        if(details)payload.event_details=details;
+      }
+    }
+    return payload;
+  };
   const successCopy=({replayed,reservationId,serverMessage})=>{
     const hold=(serverMessage&&String(serverMessage).trim())||HOLD_MESSAGE,reference=reservationId?String(reservationId):'';
     return replayed
@@ -293,12 +320,52 @@
   function setText(id,value){const el=$(id);if(el)el.textContent=value}
   function collectGuestFields(){
     const f=new FormData(bookingForm);
+    const bringing_pet=optionalYesNo(f.get('bringing_pet'));
+    const planning_event=optionalYesNo(f.get('planning_event'));
+    const trip=String(f.get('trip_type')||'').trim();
     return {
       name:String(f.get('name')||'').trim(),
       email:String(f.get('email')||'').trim(),
       phone:String(f.get('phone')||'').trim(),
-      message:String(f.get('message')||'').trim()
+      message:String(f.get('message')||'').trim(),
+      trip_type:TRIP_TYPES.includes(trip)?trip:'',
+      bringing_pet,
+      pet_details:bringing_pet===true?String(f.get('pet_details')||'').trim().slice(0,DETAILS_MAX):'',
+      planning_event,
+      event_details:planning_event===true?String(f.get('event_details')||'').trim().slice(0,DETAILS_MAX):''
     };
+  }
+  function choiceInputId(name){return name==='bringing_pet'?'bringingPetValue':'planningEventValue'}
+  function detailsWrapId(name){return name==='bringing_pet'?'petDetailsWrap':'eventDetailsWrap'}
+  function detailsFieldId(name){return name==='bringing_pet'?'petDetails':'eventDetails'}
+  function syncOptionalDetails(name){
+    const yes=optionalYesNo($(choiceInputId(name))?.value)===true;
+    const wrap=$(detailsWrapId(name));
+    const field=$(detailsFieldId(name));
+    if(wrap)wrap.hidden=!yes;
+    if(field){
+      if(!yes){field.value='';field.required=false}
+      else field.required=requestStep==='info';
+    }
+  }
+  function setChoiceValue(name,value){
+    const input=$(choiceInputId(name));
+    if(input)input.value=value||'';
+    document.querySelectorAll(`[data-choice="${name}"]`).forEach(btn=>{
+      const on=!!value&&btn.dataset.value===value;
+      btn.classList.toggle('is-selected',on);
+      btn.setAttribute('aria-pressed',on?'true':'false');
+    });
+    syncOptionalDetails(name);
+  }
+  function bindChoicePills(){
+    document.querySelectorAll('[data-choice]').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        const name=btn.dataset.choice;
+        const next=btn.getAttribute('aria-pressed')==='true'?'':btn.dataset.value;
+        setChoiceValue(name,next);
+      });
+    });
   }
   function paintBookingSummary(){
     const nights=currentQuote?`${currentQuote.nights} night${currentQuote.nights===1?'':'s'} · ${money(currentQuote.total)} total`:(selectedStart&&selectedEnd?'Dates selected':'Add dates');
@@ -323,6 +390,23 @@
     setText('reviewMessage',details.message||'');
     const noteRow=$('reviewMessageRow');
     if(noteRow)noteRow.hidden=!details.message;
+    const tripRow=$('reviewTripTypeRow');
+    if(tripRow){
+      tripRow.hidden=!details.trip_type;
+      setText('reviewTripType',details.trip_type||'—');
+    }
+    const petRow=$('reviewPetRow');
+    if(petRow){
+      petRow.hidden=details.bringing_pet==null;
+      setText('reviewPet',details.bringing_pet===true?(details.pet_details?`Yes — ${details.pet_details}`:'Yes'):details.bringing_pet===false?'No':'—');
+    }
+    const eventRow=$('reviewEventRow');
+    if(eventRow){
+      eventRow.hidden=details.planning_event==null;
+      setText('reviewEvent',details.planning_event===true?(details.event_details?`Yes — ${details.event_details}`:'Yes'):details.planning_event===false?'No':'—');
+    }
+    const tripBlock=$('reviewTripBlock');
+    if(tripBlock)tripBlock.hidden=!(details.trip_type||details.bringing_pet!=null||details.planning_event!=null);
     const pay=$('reviewPaymentCopy');
     if(pay)pay.innerHTML=`<p class="quote-hold-note">${esc(LISTING_CHARGE_NOTE)}</p>`;
   }
@@ -348,6 +432,12 @@
     const name=$('guestName'),email=$('guestEmail'),phone=$('guestPhone'),agree=$('requestAgree');
     [name,email,phone].forEach(el=>{if(el)el.required=requestStep==='info'});
     if(agree)agree.required=requestStep==='review';
+    if(requestStep==='info'){
+      syncOptionalDetails('bringing_pet');
+      syncOptionalDetails('planning_event');
+    }else{
+      ['petDetails','eventDetails'].forEach(id=>{const el=$(id);if(el)el.required=false});
+    }
     paintBookingSummary();
   }
   function paintDone(result){
@@ -390,9 +480,23 @@
     closeBooking();
   }
   function guestFieldsValid(){
+    syncOptionalDetails('bringing_pet');
+    syncOptionalDetails('planning_event');
     const details=collectGuestFields();
     if(!details.name||!details.email.includes('@')||!details.phone){
       if(typeof bookingForm.reportValidity==='function')bookingForm.reportValidity();
+      return false;
+    }
+    if(details.bringing_pet===true&&!details.pet_details){
+      const field=$('petDetails');
+      if(field){field.required=true;if(typeof field.reportValidity==='function')field.reportValidity()}
+      else if(typeof bookingForm.reportValidity==='function')bookingForm.reportValidity();
+      return false;
+    }
+    if(details.planning_event===true&&!details.event_details){
+      const field=$('eventDetails');
+      if(field){field.required=true;if(typeof field.reportValidity==='function')field.reportValidity()}
+      else if(typeof bookingForm.reportValidity==='function')bookingForm.reportValidity();
       return false;
     }
     return true;
@@ -497,5 +601,6 @@
 
   window.addEventListener('message',e=>{if(e.origin!==location.origin||e.data?.type!=='cjt-reviews-height')return;const frame=$('houfyReviews');if(frame&&Number(e.data.height)>200)frame.style.height=`${Math.min(2200,Number(e.data.height)+12)}px`});
   document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(calendarModal.classList.contains('show'))closeCalendar();else if(bookingModal.classList.contains('show'))backFromBooking();else if(amenitiesModal.classList.contains('show'))closeAmenities(false)});
+  bindChoicePills();
   hydrateMobileSourceSummaries();hydrateAmenitiesModal();updateSelectors();resetQuote();paintPrimaryCtas();renderGallery();loadAssetManifest();
 })();
