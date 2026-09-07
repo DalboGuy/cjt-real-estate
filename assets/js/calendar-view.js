@@ -389,7 +389,7 @@
         ${ev.notes?`<p class="reservation-meta">${esc(ev.notes)}</p>`:''}
         ${ev.occupancy?'':'<div class="metric-label">Excluded from occupancy %.</div>'}
         <div class="widget-footer">
-          <button class="btn btn-secondary" type="button" data-open="${esc(ev.start)}">Night details</button>
+          <button class="btn btn-secondary" type="button" data-open="${esc(date)}">Night details</button>
           ${ev.canDelete?`<button class="btn danger-btn" type="button" data-del="${ev.entryId}">Remove</button>`:''}
         </div>
       </article>`).join('')+`<div class="widget-footer"><button class="btn btn-secondary" type="button" data-fill="${date}">Add another block</button></div>`;

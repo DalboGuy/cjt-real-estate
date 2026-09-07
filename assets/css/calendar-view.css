@@ -25,7 +25,7 @@
 #calDaySelect{min-width:72px}
 .cal-step{width:38px;padding:9px 0}
 .cal-view-modes{display:flex;flex-wrap:wrap;gap:6px}
-.cal-view-modes .filter-btn{padding:7px 11px}
+.cal-view-modes .filter-btn{padding:7px 12px;min-width:4.25rem}
 .cal-period-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:8px;min-width:0}
 .cal-period-row h3{margin:0;font-size:1.05rem;min-width:0}
 .cal-filter-bar{margin-bottom:8px;padding:10px 12px}
