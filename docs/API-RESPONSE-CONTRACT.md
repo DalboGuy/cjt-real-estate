@@ -336,8 +336,9 @@ Closed (`released` / `expired` / `cancelled`) → `invalid_transition` for those
 | Quote 503 feed health | **Required** | **Required** |
 | Quote 400 / 422 pricing | omitted | **omitted** — do not treat as fail-closed |
 | Inquiry 201 / 200 / 409 | omitted | omitted |
-| Owner `calendar_view` | `sync.sources` (OTA probe). **No** `sourceHealth` object today | Use `sync.configError` if the owner probe threw |
-| Owner `calendar_feeds_status` | `liveSources` (same probe objects). **No** `sourceHealth` | 200 even when a feed is down — owner diagnostic, not guest fail-closed |
+| Owner `calendar_view` | `sync.sources` (Direct/db + inbound iCal). **No** `sourceHealth` | `sync.mode` is `"view"`. Use `sync.ok` + `sync.configError` — not guest fail-closed |
+| Owner `calendar_sync` | Same `sync.sources` as `calendar_view`. **No** `sourceHealth` | Same snapshot as `calendar_view` for `view` / `year` / `month` / `focusDate`, plus `sync.mode: "full_refresh"` |
+| Owner `calendar_feeds_status` | `liveSources` (same objects as `sync.sources`). **No** `sourceHealth` | `sync.mode` is `"probe"`. 200 even when a feed is down — **not** the Sync Calendars success signal |
 
 ### `sourceHealth` (canonical)
 
@@ -421,7 +422,56 @@ Calendar 200 also sets `Cache-Control: s-maxage=60, stale-while-revalidate=180`.
 
 ### Already present — owner calendar snapshot
 
-`POST /api/owner` `{ "action": "calendar_view" }` returns **200** (even if OTA probe failed — then `sync.configError` is set and `sync.sources` may be `[{ name: "ota", ok: false, … }]`).
+`POST /api/owner` `{ "action": "calendar_view" }` or `{ "action": "calendar_sync" }` returns **200** (even if the OTA probe failed — then `sync.ok` is `false`, `sync.configError` is set, and `sync.sources` keep per-source `ok`/`error` when the throw carried `error.sources`; otherwise `[{ name: "ota", ok: false, … }]`).
+
+### Owner `sync` payload (`calendar_view` / `calendar_sync` / `calendar_feeds_status`)
+
+`sourceHealth` is **guest-only** (`GET /api/calendar`, `GET /api/quote`). Owner calendar responses do **not** include it.
+
+```json
+{
+  "checkedAt": "2026-09-07T12:00:00.000Z",
+  "mode": "full_refresh",
+  "ok": true,
+  "configError": null,
+  "sources": [
+    {
+      "name": "direct",
+      "label": "Direct",
+      "channel": "direct",
+      "duplicateOf": null,
+      "hostHint": null,
+      "origin": "db",
+      "ok": true,
+      "error": null,
+      "count": 2
+    },
+    {
+      "kind": "ical",
+      "name": "airbnb",
+      "label": "airbnb",
+      "channel": "airbnb",
+      "duplicateOf": null,
+      "hostHint": "example.test",
+      "origin": "env",
+      "ok": true,
+      "error": null,
+      "count": 3,
+      "lastSuccessfulAt": "2026-09-07T12:00:00.000Z"
+    }
+  ]
+}
+```
+
+| Field | Wire |
+| --- | --- |
+| `sync.mode` | `"full_refresh"` (`calendar_sync`), `"view"` (`calendar_view`), `"probe"` (`calendar_feeds_status`) |
+| `sync.ok` | `true` only when every inbound live iCal source is `ok` and feeds are configured. `false` if any inbound live source failed **or** config is missing (`sync.configError` set) |
+| `sync.configError` | `{ code, message }` when `getOtaBlockedDates` threw (missing feeds or unhealthy). `null` on a healthy fetch. Tip behavior: owner snapshot still returns HTTP 200 |
+| `sync.sources[]` | Preserves `name`, `label`, `channel`, `duplicateOf`, `hostHint`, `origin`, `ok`, `error`, `count`. `lastSuccessfulAt` is set **only** when this fetch succeeded; **omit** on failure. Direct/`db` may omit `lastSuccessfulAt` (this implementation omits it — do not invent a persisted iCal timestamp) |
+| Direct vs owner blocks | Direct is `origin: "db"` in `sync.sources`. Owner stays / manual blocks stay separate events in the merged snapshot (`nights` / `events` / `conflicts`); they are not folded into Direct |
+
+`calendar_sync` is the one-round-trip grid refresh (same `view` / `year` / `month` / `focusDate` snapshot as `calendar_view`). `calendar_feeds_status` remains a connection probe (`sync.mode: "probe"`) and must not be treated as Sync Calendars success.
 
 A night is a **conflict** when more than one **claiming** channel (anything except `prep`) occupies it, **or** a prep night overlaps occupancy.
 
@@ -483,7 +533,7 @@ Until that slice lands, guest UI has a single unavailable state; owner UI alread
 - Guest calendar still decides `calendarHealthy` by filtering `sources[]` for names `airbnb` and `vrbo`. After #72 it should prefer **`sourceHealth.ok`** and treat any non-200 as fail-closed.
 - Guest inquiry success ignores `replayed` (safe: `r.ok` + `reservation.id` still work).
 - Owner reservations collapse all 409s into one toast; they already show `message`, including `from`/`to` if the client later wants a richer invalid-transition banner.
-- Owner `calendar_view` can be 200 with a failed OTA probe (`sync.configError`). That is **not** the guest fail-closed contract.
+- Owner `calendar_view` / `calendar_sync` can be 200 with a failed OTA probe (`sync.ok === false`, `sync.configError` set). That is **not** the guest fail-closed contract. `calendar_feeds_status` (`sync.mode: "probe"`) is not the Sync Calendars success signal.
 
 ---
 

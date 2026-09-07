@@ -11,7 +11,10 @@ const {
   DEFAULT_SETTINGS,
   settingsFromRow,
   snapshotFromInputs,
-  publicEvent
+  publicEvent,
+  buildSyncSources,
+  buildOwnerSyncPayload,
+  syncOkFromInputs
 } = require('../lib/calendar-view');
 const {
   parseIcalEvents,
@@ -178,5 +181,89 @@ assert.strictEqual(weekSnap.occupancy.viewedWeek.booked, 3);
 expectThrow(() => {
   throw new Error('No calendar feeds configured');
 }, 'No calendar feeds configured');
+
+const at = '2026-09-07T12:00:00.000Z';
+const syncSources = buildSyncSources({
+  reservations,
+  ota: {
+    sources: [
+      { kind: 'ical', name: 'airbnb', label: 'airbnb', channel: 'airbnb', ok: true, count: 3, origin: 'env', hostHint: 'example.test', duplicateOf: null, error: null },
+      { kind: 'ical', name: 'vrbo', label: 'vrbo', channel: 'vrbo', ok: false, count: 0, origin: 'env', hostHint: 'ical.vrbo.test', duplicateOf: null, error: 'http_500' }
+    ]
+  }
+}, at);
+const direct = syncSources.find((s) => s.name === 'direct');
+assert.strictEqual(direct.origin, 'db');
+assert.strictEqual(direct.ok, true);
+assert.strictEqual(direct.count, 2, 'cancelled direct stays are not live');
+assert.ok(!('lastSuccessfulAt' in direct), 'Direct/db omits lastSuccessfulAt');
+const airbnb = syncSources.find((s) => s.name === 'airbnb');
+assert.strictEqual(airbnb.lastSuccessfulAt, at);
+assert.strictEqual(airbnb.label, 'airbnb');
+assert.strictEqual(airbnb.channel, 'airbnb');
+assert.strictEqual(airbnb.hostHint, 'example.test');
+assert.strictEqual(airbnb.origin, 'env');
+assert.strictEqual(airbnb.ok, true);
+assert.strictEqual(airbnb.count, 3);
+const vrbo = syncSources.find((s) => s.name === 'vrbo');
+assert.ok(!('lastSuccessfulAt' in vrbo), 'failed feeds do not invent lastSuccessfulAt');
+assert.strictEqual(vrbo.error, 'http_500');
+assert.strictEqual(vrbo.ok, false);
+
+assert.strictEqual(syncOkFromInputs({
+  ota: { sources: [{ kind: 'ical', name: 'airbnb', origin: 'env', ok: true }] }
+}), true);
+assert.strictEqual(syncOkFromInputs({
+  ota: { sources: [{ kind: 'ical', name: 'airbnb', origin: 'env', ok: false, error: 'http_500' }] }
+}), false);
+assert.strictEqual(syncOkFromInputs({
+  otaConfigError: { code: 'OTA_FEED_CONFIG_MISSING', message: 'No calendar feeds configured' },
+  ota: { sources: [] }
+}), false);
+
+const viewSnap = snapshotFromInputs({
+  ota: { events: otaEvents, sources: [{ kind: 'ical', name: 'airbnb', label: 'airbnb', channel: 'airbnb', ok: true, count: 2, origin: 'env', hostHint: 'example.test', duplicateOf: null, error: null }] },
+  reservations,
+  entries,
+  settings: DEFAULT_SETTINGS
+}, { year: 2026, month: 9, view: 'month', focusDate: '2026-09-10', syncMode: 'view', checkedAt: at });
+const refreshSnap = snapshotFromInputs({
+  ota: { events: otaEvents, sources: [{ kind: 'ical', name: 'airbnb', label: 'airbnb', channel: 'airbnb', ok: true, count: 2, origin: 'env', hostHint: 'example.test', duplicateOf: null, error: null }] },
+  reservations,
+  entries,
+  settings: DEFAULT_SETTINGS
+}, { year: 2026, month: 9, view: 'month', focusDate: '2026-09-10', syncMode: 'full_refresh', checkedAt: at });
+assert.strictEqual(viewSnap.sync.mode, 'view');
+assert.strictEqual(refreshSnap.sync.mode, 'full_refresh');
+assert.strictEqual(viewSnap.sync.ok, true);
+assert.strictEqual(refreshSnap.sync.ok, true);
+assert.strictEqual(viewSnap.sourceHealth, undefined);
+assert.strictEqual(refreshSnap.sourceHealth, undefined);
+assert.ok(viewSnap.nights['2026-09-12'].conflict, 'owner-block/direct+OTA conflicts stay on both modes');
+assert.deepStrictEqual(
+  { ...viewSnap, sync: { ...viewSnap.sync, mode: null } },
+  { ...refreshSnap, sync: { ...refreshSnap.sync, mode: null } },
+  'calendar_sync payload matches calendar_view except sync.mode'
+);
+assert.ok(viewSnap.events.some((e) => e.channel === 'owner_stay'));
+assert.ok(viewSnap.events.some((e) => e.channel === 'manual_block'));
+assert.ok(!viewSnap.sync.sources.some((s) => s.channel === 'owner_stay' || s.channel === 'manual_block'));
+
+const missing = buildOwnerSyncPayload({
+  reservations,
+  ota: { sources: [{ name: 'ota', ok: false, error: 'No calendar feeds configured', code: 'OTA_FEED_CONFIG_MISSING' }] },
+  otaConfigError: { code: 'OTA_FEED_CONFIG_MISSING', message: 'No calendar feeds configured' }
+}, { mode: 'full_refresh', checkedAt: at });
+assert.strictEqual(missing.ok, false);
+assert.strictEqual(missing.mode, 'full_refresh');
+assert.strictEqual(missing.configError.code, 'OTA_FEED_CONFIG_MISSING');
+assert.ok(!('lastSuccessfulAt' in missing.sources.find((s) => s.name === 'ota')));
+
+const probe = buildOwnerSyncPayload({
+  ota: { sources: [{ kind: 'ical', name: 'airbnb', origin: 'env', ok: true, count: 0 }] }
+}, { mode: 'probe', checkedAt: at });
+assert.strictEqual(probe.mode, 'probe');
+assert.ok(!probe.sources.some((s) => s.name === 'direct'), 'probe does not invent a Direct refresh');
+assert.strictEqual(probe.ok, true);
 
 console.log('verify-calendar-view: ok');

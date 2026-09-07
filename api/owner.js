@@ -4,7 +4,7 @@ const {previewPasswordFreeActive}=require('../lib/preview-access');
 const {ownerAdjustedQuote,normalizeOwnerQuote}=require('../lib/pricing');
 const {paymentSnapshot}=require('../lib/payments');
 const {getOtaBlockedDates, listOwnerConnections, FEED_ENV_BY_SOURCE, MAX_OWNER_CALENDARS, urlHostHint, eachDate}=require('../lib/availability');
-const {buildOwnerCalendarView, validIsoDate}=require('../lib/calendar-view');
+const {buildOwnerCalendarView, validIsoDate, buildOwnerSyncPayload, otaFromCaughtError}=require('../lib/calendar-view');
 const {planOwnerTransition,notUpdatedError,conflictBody}=require('../lib/booking-transitions');
 const {assertSendConfigured, createAndSendDocument, parseMetadata}=require('../lib/opensign');
 const {insertOwnerBlockIfClear}=require('../lib/date-conflicts');
@@ -190,20 +190,25 @@ module.exports=async function(req,res){
         if(!url) continue;
         envFeeds.push({ name, configured:true, origin:'env', hostHint:urlHostHint(url) });
       }
+      const checkedAt=new Date().toISOString();
       let liveSources=[];
+      let otaConfigError=null;
       try{
         const live=await getOtaBlockedDates();
         liveSources=live.sources||[];
       }catch(e){
-        liveSources=[{name:'ota',ok:false,error:e.message,missingEnv:e.missingEnv}];
+        otaConfigError=e;
+        liveSources=otaFromCaughtError(e).sources;
       }
+      const sync=buildOwnerSyncPayload({ota:{sources:liveSources},otaConfigError},{mode:'probe',checkedAt});
       return res.status(200).json({
         feeds,
         envFeeds,
         maxOwnerCalendars:MAX_OWNER_CALENDARS,
         ownerCount:feeds.length,
-        liveSources,
-        checkedAt:new Date().toISOString()
+        liveSources:sync.sources,
+        checkedAt,
+        sync
       });
     }
 
@@ -231,12 +236,13 @@ module.exports=async function(req,res){
       return res.status(200).json({ok:true, id});
     }
 
-    if(req.method==='POST'&&body.action==='calendar_view'){
+    if(req.method==='POST'&&(body.action==='calendar_view'||body.action==='calendar_sync')){
       const view=String(body.view||'month')==='week'?'week':'month';
       const year=Number(body.year)||undefined;
       const month=Number(body.month)||undefined;
       const focusDate=validIsoDate(body.focusDate)?body.focusDate:undefined;
-      const snapshot=await buildOwnerCalendarView({view,year,month,focusDate});
+      const syncMode=body.action==='calendar_sync'?'full_refresh':'view';
+      const snapshot=await buildOwnerCalendarView({view,year,month,focusDate,syncMode});
       return res.status(200).json(snapshot);
     }
 
