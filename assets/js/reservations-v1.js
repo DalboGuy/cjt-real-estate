@@ -11,7 +11,7 @@ const reservationList=document.getElementById('reservationList');
 function esc(v=''){return String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 function fmt(v){return v?new Date(v).toLocaleString():'—'}
 function money(v){return Number(v||0).toLocaleString(undefined,{style:'currency',currency:'USD'});}
-function statusLabel(v=''){return ({inquiry_hold:'New request',hold_verified:'Accepted / hold',contract_sent:'Contract sent',contract_signed:'Contract signed',confirmed:'Confirmed',released:'Released',expired:'Expired',cancelled:'Cancelled'})[v]||String(v).replaceAll('_',' ')}
+function statusLabel(v=''){return ({inquiry_hold:'Pending owner review',hold_verified:'Accepted',contract_sent:'Contract sent',contract_signed:'Contract signed',confirmed:'Confirmed',released:'Released',expired:'Expired',cancelled:'Cancelled'})[v]||String(v).replaceAll('_',' ')}
 function isActive(r){return !['released','expired','cancelled'].includes(r.status)}
 function needsAction(r){return ['inquiry_hold','hold_verified','contract_sent','contract_signed'].includes(r.status)}
 function statusClass(status=''){return ['confirmed','contract_signed'].includes(status)?'good':['inquiry_hold','hold_verified','contract_sent'].includes(status)?'warn':''}
@@ -81,7 +81,7 @@ function actionMarkup(r){
   const primary=r.status==='inquiry_hold'?'<button class="btn btn-primary" data-action="accept_request">Accept Request</button>':'';
   const adjust=r.quote?'<button class="btn btn-secondary" data-quote="adjust">Adjust Quote</button>':'';
   const reject=!['confirmed'].includes(r.status)?'<button class="btn danger-btn" data-action="reject_request">Reject / Release</button>':'';
-  return `${primary}${adjust}<button class="btn btn-secondary" data-action="maintain_hold">Extend Hold</button><a class="btn btn-secondary" target="_blank" rel="noopener" href="${TEMPLATE}">Open Contract ↗</a><button class="btn btn-secondary" data-action="contract_sent">Contract Sent</button><button class="btn btn-secondary" data-action="contract_signed">Contract Signed</button><button class="btn btn-secondary" data-payment="create">Create Payment Link</button>${r.payment?.verified?'': '<button class="btn btn-primary" data-action="deposit_received">Deposit Received</button>'}${reject}`;
+  return `${primary}${adjust}<a class="btn btn-secondary" target="_blank" rel="noopener" href="${TEMPLATE}">Open Contract ↗</a><button class="btn btn-secondary" data-action="contract_sent">Contract Sent</button><button class="btn btn-secondary" data-action="contract_signed">Contract Signed</button><button class="btn btn-secondary" data-payment="create">Create Payment Link</button>${r.payment?.verified?'': '<button class="btn btn-primary" data-action="deposit_received">Deposit Received</button>'}${reject}`;
 }
 
 function bookingFromUrl(){
@@ -92,12 +92,12 @@ function renderReservations(){
   const rows=filteredReservations();
   reservationList.innerHTML=rows.length?'':'<div class="empty">No matching direct bookings.</div>';
   rows.forEach(r=>{
-    const hold=r.hold_expires_at?`<span class="badge ${new Date(r.hold_expires_at)-Date.now()<21600000?'warn':''}">Hold expires ${esc(fmt(r.hold_expires_at))}</span>`:'';
+    const hold=isActive(r)?'<span class="badge good">Dates reserved until owner release</span>':'';
     const card=document.createElement('article');
     card.className='reservation-card';
     card.id=`booking-${r.id}`;
     card.dataset.booking=r.id;
-    card.innerHTML=`<div class="reservation-grid"><div><span class="badge ${statusClass(r.status)}">${esc(statusLabel(r.status))}</span><h3>${esc(r.guest_name)} · ${esc(r.checkin)} → ${esc(r.checkout)}</h3><div class="reservation-meta">${esc(r.id)} · ${esc(r.guests)} guests · ${esc(r.guest_email)}${r.guest_phone?' · '+esc(r.guest_phone):''}</div>${r.notes?`<p class="reservation-meta">${esc(r.notes)}</p>`:''}<div class="reservation-badges">${hold}<span class="badge ${r.contract_sent_at?'good':''}">Contract ${r.contract_sent_at?'sent':'pending'}</span><span class="badge ${r.contract_signed_at?'good':''}">Signed ${r.contract_signed_at?'yes':'pending'}</span><span class="badge ${r.deposit_received_at?'good':''}">Deposit ${r.deposit_received_at?'received':'pending'}</span></div>${quoteMarkup(r)}</div><div><div class="reservation-meta">Created ${esc(fmt(r.created_at))}</div><div class="actions" style="margin-top:14px">${actionMarkup(r)}</div></div></div>`;
+    card.innerHTML=`<div class="reservation-grid"><div><span class="badge ${statusClass(r.status)}">${esc(statusLabel(r.status))}</span><h3>${esc(r.guest_name)} · ${esc(r.checkin)} → ${esc(r.checkout)}</h3><div class="reservation-meta">${esc(r.id)} · ${esc(r.guests)} guests · ${esc(r.guest_email)}${r.guest_phone?' · '+esc(r.guest_phone):''}</div><div class="reservation-meta" style="margin-top:8px"><strong>Trip:</strong> ${esc(r.trip_type||'Not provided')} · <strong>Pet:</strong> ${r.bringing_pet?'Yes':'No'} · <strong>Event:</strong> ${r.planning_event?'Yes':'No'}</div>${r.pet_details?`<p class="reservation-meta"><strong>Pet details:</strong> ${esc(r.pet_details)}</p>`:''}${r.event_details?`<p class="reservation-meta"><strong>Event details:</strong> ${esc(r.event_details)}</p>`:''}${r.notes?`<p class="reservation-meta"><strong>Other notes:</strong> ${esc(r.notes)}</p>`:''}<div class="reservation-badges">${hold}<span class="badge ${r.contract_sent_at?'good':''}">Contract ${r.contract_sent_at?'sent':'pending'}</span><span class="badge ${r.contract_signed_at?'good':''}">Signed ${r.contract_signed_at?'yes':'pending'}</span><span class="badge ${r.deposit_received_at?'good':''}">Deposit ${r.deposit_received_at?'received':'pending'}</span></div>${quoteMarkup(r)}</div><div><div class="reservation-meta">Created ${esc(fmt(r.created_at))}</div><div class="actions" style="margin-top:14px">${actionMarkup(r)}</div></div></div>`;
     card.querySelectorAll('button[data-action]').forEach(b=>b.onclick=()=>updateReservation(r.id,b.dataset.action));
     card.querySelector('[data-payment="create"]')?.addEventListener('click',()=>createPaymentLink(r));
     card.querySelector('[data-quote="adjust"]')?.addEventListener('click',()=>adjustQuote(r));
