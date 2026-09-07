@@ -185,7 +185,7 @@
     document.getElementById('seasonEnd').value=season.end||'';
     document.getElementById('seasonWeekday').value=season.weekday||'';
     document.getElementById('seasonWeekend').value=season.weekend||'';
-    document.getElementById('seasonMinNights').value=season.minNights||2;
+    document.getElementById('seasonMinNights').value=season.minNights||1;
     document.getElementById('seasonEditorTitle').textContent=`Edit ${season.name}`;
     document.getElementById('seasonEditorHelp').textContent='Update this season and save. Guest quotes use the new rates immediately.';
     document.getElementById('saveSeasonBtn').textContent='Save changes';

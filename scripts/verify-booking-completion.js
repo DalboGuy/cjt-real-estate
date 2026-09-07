@@ -195,6 +195,8 @@ assert.match(listingSrc, /openCalendar\('card'\)/);
 assert.match(listingSrc, /Change dates/);
 assert.match(listingSrc, /MAX_GUESTS=14/);
 assert.doesNotMatch(listingSrc, /guestPopover/);
+assert.doesNotMatch(listingSrc, /Dates need review/);
+assert.doesNotMatch(listingSrc, /minimum stay of 2/);
 assert.doesNotMatch(listingSrc, /Book Now/);
 assert.doesNotMatch(listingSrc, /Request 24-hour hold/);
 assert.doesNotMatch(listingSrc, /Send hold request/);
@@ -228,6 +230,9 @@ for (const html of [guestHtml, indexHtml]) {
   assert.doesNotMatch(html, /24-hour hold/);
   assert.doesNotMatch(html, /Request 24-hour hold/);
   assert.doesNotMatch(html, /Send hold request/);
+  assert.doesNotMatch(html, /minimum stay of 2/);
+  assert.doesNotMatch(html, /2-night minimum/);
+  assert.match(html, /One-night stays are available/);
   assert.match(html, /id="bookingCard"/);
 }
 assert.match(listingSrc, /ignoreBackdropUntil/);

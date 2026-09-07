@@ -225,7 +225,7 @@
   async function loadQuote(){
     if(!selectedStart||!selectedEnd)return resetQuote();
     $('bookPrice').innerHTML='<span class="price-main">Checking price…</span>';$('bookNowBtn').disabled=true;if($('mobileBookBtn'))$('mobileBookBtn').disabled=true;
-    try{const u=new URL('/api/quote',location.origin);u.searchParams.set('checkin',selectedStart);u.searchParams.set('checkout',selectedEnd);u.searchParams.set('guests',String(guests));const r=await fetch(u,{cache:'no-store'}),d=await r.json();if(!r.ok)throw new Error(d.message||'Price is unavailable for those dates.');renderQuote(d.quote)}catch(e){currentQuote=null;$('quoteBreakdown').classList.remove('show');$('quoteError').hidden=false;$('quoteError').textContent=e.message;$('bookPrice').innerHTML='<span class="price-main">Dates need review</span>';paintPrimaryCtas()}finally{$('bookNowBtn').disabled=false;if($('mobileBookBtn'))$('mobileBookBtn').disabled=false}}
+    try{const u=new URL('/api/quote',location.origin);u.searchParams.set('checkin',selectedStart);u.searchParams.set('checkout',selectedEnd);u.searchParams.set('guests',String(guests));const r=await fetch(u,{cache:'no-store'}),d=await r.json();if(!r.ok)throw new Error(d.message||'Price is unavailable for those dates.');renderQuote(d.quote)}catch(e){currentQuote=null;$('quoteBreakdown').classList.remove('show');$('quoteError').hidden=false;$('quoteError').textContent=e.message;$('bookPrice').innerHTML='<span class="price-main">Choose available dates</span>';paintPrimaryCtas()}finally{$('bookNowBtn').disabled=false;if($('mobileBookBtn'))$('mobileBookBtn').disabled=false}}
   $('refreshQuote').onclick=loadQuote;
 
   const bookingModal=$('bookingModal'),bookingForm=$('bookingForm');

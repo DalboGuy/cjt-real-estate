@@ -40,6 +40,10 @@ expectThrow(() => quoteStayWithCatalog(catalog, '2028-01-01', '2028-01-03', 2), 
 const oneNight = quoteStayWithCatalog(catalog, '2026-09-08', '2026-09-09', 2);
 assert.strictEqual(oneNight.nights, 1);
 assert.strictEqual(oneNight.minimumStay, 1);
+const jbExample = quoteStayWithCatalog(catalog, '2026-09-07', '2026-09-08', 4);
+assert.strictEqual(jbExample.nights, 1);
+assert.strictEqual(jbExample.minimumStay, 1);
+assert.ok(jbExample.total > 0);
 expectThrow(() => quoteStayWithCatalog(catalog, '2026-09-08', '2026-09-10', 15), 'invalid_guests');
 
 const settings = validateSettingsInput({ taxRate: 15, advancePaymentPct: 50, cleaningFee: 240, maxGuests: 14, pricingThrough: '2027-08-15', weekendDays: [5, 6], splitPaymentThresholdDays: 30 });
