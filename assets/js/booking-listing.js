@@ -139,6 +139,7 @@
     const title=$('calendarTitle');
     if(title)title.textContent=selectedStart&&selectedEnd?'Change your dates':'Choose your dates';
     if(selectedStart){const d=toUtc(selectedStart);pickerCursor=new Date(d.getUTCFullYear(),d.getUTCMonth(),1)}
+    setGuestPopover(false);
     renderPicker();calendarModal.classList.add('show');document.body.classList.add('modal-open');
   }
   function backFromCalendar(){
@@ -210,8 +211,55 @@
     resetQuote();
     if(selectedStart&&selectedEnd)loadQuote();
   }
-  $('guestMinus')?.addEventListener('click',()=>updateGuests(guests-1));
-  $('guestPlus')?.addEventListener('click',()=>updateGuests(guests+1));
+  const guestPopover=$('guestPopover');
+  const guestTrigger=document.querySelector('[data-open-guests]');
+  function portalGuestPopover(){
+    if(guestPopover&&guestPopover.parentElement!==document.body)document.body.appendChild(guestPopover);
+  }
+  function positionGuestPopover(){
+    if(!guestPopover||!guestTrigger)return;
+    const r=guestTrigger.getBoundingClientRect();
+    const width=Math.max(r.width,Math.min(320,window.innerWidth-24));
+    guestPopover.style.position='fixed';
+    guestPopover.style.zIndex='2147483000';
+    guestPopover.style.width=`${width}px`;
+    guestPopover.style.right='auto';
+    guestPopover.style.margin='0';
+    const popH=guestPopover.offsetHeight||88;
+    let top=r.bottom+8;
+    if(top+popH>window.innerHeight-12)top=Math.max(12,r.top-popH-8);
+    let left=r.left;
+    left=Math.max(12,Math.min(left,window.innerWidth-width-12));
+    guestPopover.style.top=`${Math.round(top)}px`;
+    guestPopover.style.left=`${Math.round(left)}px`;
+  }
+  function setGuestPopover(open){
+    portalGuestPopover();
+    if(!guestPopover)return;
+    guestPopover.classList.toggle('show',!!open);
+    document.body.classList.toggle('guest-popover-open',!!open);
+    if(guestTrigger)guestTrigger.setAttribute('aria-expanded',open?'true':'false');
+    if(open)positionGuestPopover();
+    syncSupportChat();
+  }
+  if(guestTrigger&&guestPopover){
+    portalGuestPopover();
+    guestTrigger.addEventListener('click',e=>{
+      e.preventDefault();
+      e.stopPropagation();
+      setGuestPopover(!guestPopover.classList.contains('show'));
+    });
+    document.addEventListener('click',e=>{
+      if(!guestPopover.classList.contains('show'))return;
+      if(guestPopover.contains(e.target)||e.target.closest('[data-open-guests]'))return;
+      setGuestPopover(false);
+    });
+    document.addEventListener('keydown',e=>{if(e.key==='Escape'&&guestPopover.classList.contains('show'))setGuestPopover(false)});
+    window.addEventListener('resize',()=>{if(guestPopover.classList.contains('show'))positionGuestPopover()});
+    window.addEventListener('scroll',()=>{if(guestPopover.classList.contains('show'))positionGuestPopover()},{capture:true,passive:true});
+  }
+  $('guestMinus')?.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();updateGuests(guests-1)});
+  $('guestPlus')?.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();updateGuests(guests+1)});
   $('formGuests')?.addEventListener('change',()=>updateGuests($('formGuests').value));
   updateGuests(1);
 
@@ -273,6 +321,7 @@
     if($('formGuests'))syncFormGuests();
     paintBookingSummary();
     showRequestStep(step);
+    setGuestPopover(false);
     bookingModal.classList.add('show');
     document.body.classList.add('modal-open');
   }
@@ -311,7 +360,7 @@
   function syncSupportChat(){
     const api=window.Tawk_API;
     if(!api)return;
-    const hide=document.body.classList.contains('modal-open')||(isMobileBooking()&&!!(selectedStart&&selectedEnd));
+    const hide=document.body.classList.contains('modal-open')||document.body.classList.contains('guest-popover-open')||document.body.classList.contains('has-trip-dates');
     try{
       if(hide&&typeof api.hideWidget==='function')api.hideWidget();
       else if(!hide&&typeof api.showWidget==='function')api.showWidget();

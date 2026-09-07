@@ -38,9 +38,22 @@
 .review-details p{margin:0}
 .agree-row{display:flex;gap:9px;align-items:flex-start;font-weight:600}
 .agree-row input{width:auto;margin-top:3px}
-.booking-selectors{overflow:visible}
-.guest-inline{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 12px;border-top:1px solid #aeb8b6;background:#fff}
-.guest-inline .stepper button{width:40px;height:40px;flex:0 0 auto}
+.booking-selectors{overflow:visible;position:relative;z-index:4}
+.guest-wrap{position:relative;z-index:5}
+.selector.guest-selector{position:relative;z-index:5}
+#guestPopover.guest-popover,#guestPopover{
+  display:none;
+  position:fixed;
+  z-index:2147483000;
+  margin:0;
+  pointer-events:auto;
+  isolation:isolate;
+}
+#guestPopover.show{display:block}
+#guestPopover .stepper button{width:40px;height:40px;flex:0 0 auto;position:relative;z-index:1}
+#bookNowBtn,#mobileBookBtn{position:relative;z-index:1}
+body.guest-popover-open #bookNowBtn,
+body.guest-popover-open #mobileBookBtn{pointer-events:none}
 .booking-card{scroll-margin-top:96px}
 .booking-card.is-next-step{box-shadow:0 16px 44px rgba(13,43,49,.2);outline:2px solid var(--deep)}
 .booking-step-dismiss{display:none}
@@ -66,10 +79,23 @@
 }
 body.modal-open iframe[src*="tawk.to"],
 body.modal-open iframe[title*="chat"],
+body.modal-open iframe[title*="tawk" i],
 body.modal-open .tawk-min-container,
+body.modal-open #tawkchat-container,
+body.modal-open #tawkchat-minified-container,
+body.modal-open .widget-visible,
 body.has-trip-dates iframe[src*="tawk.to"],
 body.has-trip-dates iframe[title*="chat"],
-body.has-trip-dates .tawk-min-container{
+body.has-trip-dates iframe[title*="tawk" i],
+body.has-trip-dates .tawk-min-container,
+body.has-trip-dates #tawkchat-container,
+body.has-trip-dates #tawkchat-minified-container,
+body.guest-popover-open iframe[src*="tawk.to"],
+body.guest-popover-open iframe[title*="chat"],
+body.guest-popover-open iframe[title*="tawk" i],
+body.guest-popover-open .tawk-min-container,
+body.guest-popover-open #tawkchat-container,
+body.guest-popover-open #tawkchat-minified-container{
   opacity:0!important;
   pointer-events:none!important;
   visibility:hidden!important;

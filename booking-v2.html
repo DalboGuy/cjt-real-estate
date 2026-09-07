@@ -186,16 +186,14 @@
                 <button class="selector" type="button" data-open-calendar><span class="selector-label">Check-in</span><span class="selector-value" data-checkin-value>Add date</span></button>
                 <button class="selector" type="button" data-open-calendar><span class="selector-label">Checkout</span><span class="selector-value" data-checkout-value>Add date</span></button>
               </div>
-              <div class="guest-wrap guest-inline">
-                <div>
-                  <span class="selector-label">Guests</span>
-                  <span class="selector-value" data-guests-value>1 guest</span>
-                </div>
-                <div class="stepper" role="group" aria-label="Number of guests">
-                  <button id="guestMinus" type="button" aria-label="Remove guest">−</button>
-                  <b id="guestCount">1</b>
-                  <button id="guestPlus" type="button" aria-label="Add guest">+</button>
-                </div>
+              <div class="guest-wrap">
+                <button class="selector guest-selector" type="button" data-open-guests aria-haspopup="dialog" aria-controls="guestPopover" aria-expanded="false">
+                  <span>
+                    <span class="selector-label">Guests</span>
+                    <span class="selector-value" data-guests-value>1 guest</span>
+                  </span>
+                  <span aria-hidden="true">⌄</span>
+                </button>
               </div>
             </div>
             <button id="bookNowBtn" class="btn btn-primary" type="button">Check availability</button>
@@ -234,6 +232,20 @@
   <footer class="footer"><div class="wrap footer-row"><div><strong>CJT Realty · Sand &amp; Sea Manor</strong><div class="selector-value">1720 Avenue M · Galveston, TX 77550</div></div><div><a href="mailto:cjtrealestateholdings@gmail.com">Contact CJT Realty</a> · <a href="/owner-v1">Owner Portal</a></div></div></footer>
 
   <div class="mobile-bookbar"><div id="mobilePrice" class="mobile-price"><strong>Add dates</strong><span>See total price</span></div><button id="mobileBookBtn" class="btn btn-primary" type="button">Check availability</button></div>
+
+  <div id="guestPopover" class="guest-popover" role="dialog" aria-label="Choose number of guests">
+    <div class="guest-row">
+      <div>
+        <strong>Guests</strong>
+        <div class="selector-value">1–14 overnight guests</div>
+      </div>
+      <div class="stepper" role="group" aria-label="Number of guests">
+        <button id="guestMinus" type="button" aria-label="Remove guest">−</button>
+        <b id="guestCount">1</b>
+        <button id="guestPlus" type="button" aria-label="Add guest">+</button>
+      </div>
+    </div>
+  </div>
 
   <div id="galleryModal" class="modal" role="dialog" aria-modal="true" aria-label="Sand and Sea Manor photo gallery"><div class="modal-panel wide"><div class="modal-header"><h2>Sand &amp; Sea Manor photos</h2><button id="galleryClose" class="modal-close" type="button" aria-label="Close gallery">×</button></div><div class="modal-body"><div class="gallery-tools"><button class="gallery-filter active" type="button" data-gallery-filter="all">All</button><button class="gallery-filter" type="button" data-gallery-filter="interior">Common areas</button><button class="gallery-filter" type="button" data-gallery-filter="kitchen">Kitchen</button><button class="gallery-filter" type="button" data-gallery-filter="bedrooms">Bedrooms</button><button class="gallery-filter" type="button" data-gallery-filter="amenities">Outdoor amenities</button><button class="gallery-filter" type="button" data-gallery-filter="bath">Bathrooms</button><button class="gallery-filter" type="button" data-gallery-filter="exterior">Exterior</button><button class="gallery-filter" type="button" data-gallery-filter="aerial">Aerial</button><span id="galleryCount" class="selector-value"></span></div><div id="galleryGrid" class="gallery-grid"></div></div></div></div>
   <div id="photoViewer" class="viewer" role="dialog" aria-modal="true" aria-label="Enlarged property photo"><button id="viewerClose" class="viewer-close" type="button" aria-label="Close photo">×</button><button id="viewerPrev" class="viewer-prev" type="button" aria-label="Previous photo">‹</button><img id="viewerImage" alt="Sand and Sea Manor property photo"><div id="viewerMeta" class="viewer-meta"></div><button id="viewerNext" class="viewer-next" type="button" aria-label="Next photo">›</button></div>
