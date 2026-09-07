@@ -5,7 +5,7 @@
 **Scope:** Documentation only for this file. Application OpenSign wiring lives in a separate bounded PR; this file does not merge other PRs or close other bots’ work.
 
 **Path for other bots:** `docs/INTEGRATION-RECONCILIATION.md`  
-**Baseline commit:** `b90b5c46b70bb389aa6c7c3056190b8874f11243` (or the current `reorg/platform-v1` tip if it has moved — re-verify before writing).
+**Baseline commit:** `6f5066f5b2f0462db94c03696411c238b48b071c` (or the current `reorg/platform-v1` tip if it has moved — re-verify before writing).
 
 Do not treat `docs/PLATFORM-MAPS.md` as the merge-order or lock-semantics source of truth until it is updated after acceptance. This file is the current integration baseline for bots.
 
@@ -16,8 +16,8 @@ Do not treat `docs/PLATFORM-MAPS.md` as the merge-order or lock-semantics source
 | Surface | Value (verified 2026-09-07) |
 | --- | --- |
 | Integration branch | `reorg/platform-v1` |
-| Integration tip SHA | `b90b5c46b70bb389aa6c7c3056190b8874f11243` |
-| Tip commit | Merge pull request #64 from DalboGuy/cursor/preview-database-docs-9e15 |
+| Integration tip SHA | `6f5066f5b2f0462db94c03696411c238b48b071c` |
+| Tip commit | Merge pull request #68 from DalboGuy/cursor/booking-transitions-e0f7 |
 | Preview alias | https://cjtbookingpage-git-reorg-platform-v1-jibbailey82-7655.vercel.app |
 | Preview deploy | Last fully verified in the prior reconciliation pass (`dpl_GxHRodDs7qHn4FH3hNtatpaEFFGo` on `5c06fa8`). **Re-verify** before Preview writes; this SHA update is git-only. |
 | Production branch | `main` |
@@ -40,7 +40,7 @@ Sibling Neon branch `reorg-platform-v1` (host prefix `ep-long-hall`) is **not** 
 
 Canonical Preview env write-up: `docs/PREVIEW-DATABASE-SETUP.md`. Do not put connection strings, secrets, or signed URLs in Git.
 
-**Landed after the previous baseline (still on this tip):** lock semantics from **#67** — dates lock until owner release; `expireHolds()` is a compatibility no-op. **Stripe remains on hold.** **OpenSign is in progress** (bounded PR: owner `contract_sent` → send; webhook → `contract_signed`). See [docs/OPENSIGN.md](./OPENSIGN.md).
+**Landed after the previous baseline (still on this tip):** lock semantics from **#67** and the owner transition matrix from **#68** (`planOwnerTransition` / `not_updated`). Dates lock until owner release; `expireHolds()` is a compatibility no-op. **Stripe remains on hold.** **OpenSign is in progress** (this PR: owner `contract_sent` → send after the #68 gate; webhook → `contract_signed`). See [docs/OPENSIGN.md](./OPENSIGN.md).
 
 ---
 
@@ -85,7 +85,7 @@ Both open drafts into `reorg/platform-v1`. Shared files include at least:
 
 ### Automatic 24-hour hold expiration — removed on current tip
 
-On the previous baseline (`5c06fa8`) `expireHolds()` still auto-expired holds. **#67 has since merged** into `b90b5c46`: `expireHolds()` is a compatibility no-op; new inquiries do not set a 24h `hold_expires_at`. Guest copy may still mention 24-hour holds in some surfaces; do not reintroduce auto-expiry.
+On the previous baseline (`5c06fa8`) `expireHolds()` still auto-expired holds. **#67 has since merged** into `6f5066f5` (via `b90b5c46`): `expireHolds()` is a compatibility no-op; new inquiries do not set a 24h `hold_expires_at`. Guest copy may still mention 24-hour holds in some surfaces; do not reintroduce auto-expiry. **#68** (on this tip) adds the owner transition matrix; OpenSign send in this PR runs only after that gate.
 
 ---
 
@@ -209,7 +209,7 @@ Every bot that will POST an inquiry, owner action, calendar block, or any other 
 | Repository path | `docs/INTEGRATION-RECONCILIATION.md` |
 | Pointer | `AGENTS.md` item 6 under “Read before changing code” |
 | Integration branch | `reorg/platform-v1` |
-| Baseline SHA | `b90b5c46b70bb389aa6c7c3056190b8874f11243` |
+| Baseline SHA | `6f5066f5b2f0462db94c03696411c238b48b071c` |
 | If tip moved | Re-fetch `origin/reorg/platform-v1` and record the new SHA in your PR; do not assume this file’s SHA is still HEAD |
 
 Before starting feature work: read this file, then the assigned Issue, then `docs/PLATFORM-V1-ARCHITECTURE.md`. Do not merge #50/#51 as written. Do not touch draft PR #24. Do not invent contract, payment, or confirmation sequence.

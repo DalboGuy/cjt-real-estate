@@ -3,7 +3,7 @@
   "private": true,
   "version": "2.0.0",
   "scripts": {
-    "test": "node --test lib/financials.test.js lib/opensign.test.js",
+    "test": "node --test lib/financials.test.js lib/booking-transitions.test.js lib/opensign.test.js",
     "verify:calendar": "node scripts/verify-calendar-view.js"
   },
   "dependencies": {

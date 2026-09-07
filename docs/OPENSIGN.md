@@ -13,10 +13,11 @@ Approval, contract, payment, and availability stay separate facts. Signature com
 ## Flow
 
 1. Owner clicks **Contract Sent**.
-2. Server fails closed unless `OPENSIGN_API_TOKEN` and `OPENSIGN_TEMPLATE_ID` are set. Missing config returns `opensign_not_configured` / `opensign_template_missing` and does **not** flip the reservation to `contract_sent`.
-3. Server loads the reservation plus the latest quote snapshot from `booking_events` and calls OpenSign `POST /createdocument/:template_id` with `x-api-token`, guest name/email, dates, guests, and quoted totals when stored.
-4. OpenSign emails the guest (`send_email: true`). The returned document id is stored on the `contract_sent` `booking_events` row (`metadata.opensignDocumentId`). No new reservations column.
-5. OpenSign POSTs lifecycle events to `POST /api/opensign`. Only `event=completed` with a valid `x-webhook-signature` and a linked document id sets `contract_signed` + `contract_signed_at`.
+2. Server runs the #68 owner transition matrix (`planOwnerTransition`) first. Illegal `from` statuses return `invalid_transition` and do **not** send a document.
+3. Server fails closed unless `OPENSIGN_API_TOKEN` and `OPENSIGN_TEMPLATE_ID` are set. Missing config returns `opensign_not_configured` / `opensign_template_missing` and does **not** flip the reservation to `contract_sent`.
+4. Server loads the reservation plus the latest quote snapshot from `booking_events` and calls OpenSign `POST /createdocument/:template_id` with `x-api-token`, guest name/email, dates, guests, and quoted totals when stored.
+5. OpenSign emails the guest (`send_email: true`). The returned document id is stored on the `contract_sent` `booking_events` row (`metadata.opensignDocumentId`). No new reservations column.
+6. OpenSign POSTs lifecycle events to `POST /api/opensign`. Only `event=completed` with a valid `x-webhook-signature` and a linked document id sets `contract_signed` + `contract_signed_at`.
 
 ## Environment variables (names only)
 
