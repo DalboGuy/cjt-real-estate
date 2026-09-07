@@ -13,9 +13,13 @@
     [...source.children].forEach(card=>target.appendChild(card.cloneNode(true)));
   }
   function hydrateAmenitiesModal(){
-    const source=document.querySelector('.amenity-directory'),target=$('amenitiesModalGrid');
-    if(!source||!target||target.children.length)return;
-    [...source.children].forEach(column=>target.appendChild(column.cloneNode(true)));
+    const target=$('amenitiesModalGrid');
+    if(target&&!target.children.length){
+      const source=document.querySelector('#amenities [data-amenities-source], .amenity-directory:not(#amenitiesModalGrid)');
+      if(source)[...source.children].forEach(column=>target.appendChild(column.cloneNode(true)));
+    }
+    const btn=$('amenitiesBtn'),count=target?target.querySelectorAll('li').length:0;
+    if(btn&&count)btn.textContent=`Show all ${count} amenities`;
   }
 
   let photos=[],assetManifest=null;
