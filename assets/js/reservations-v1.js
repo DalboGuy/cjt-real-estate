@@ -1,6 +1,7 @@
 let reservationRows=[];
 let ownerNotifications=[];
 let reservationFilter='all';
+let filterInitialized=false;
 const completionLinks=new Map();
 
 const loginShell=document.getElementById('loginShell');
@@ -153,6 +154,31 @@ function renderQueue(){
   target.innerHTML=rows.length?rows.map(n=>`<div class="list-row"><div><strong>${esc(n.title)}</strong><span>${esc(n.body||n.kind)} · ${esc(fmt(n.created_at))}</span></div><span class="badge warn">New</span></div>`).join(''):'<div class="empty">No unread booking notifications.</div>';
 }
 
+function renderTakeActionInbox(){
+  const inbox=document.getElementById('takeActionInbox');
+  const list=document.getElementById('takeActionList');
+  const count=document.getElementById('takeActionCount');
+  const nav=document.getElementById('reservationsNavCount');
+  const rows=reservationRows.filter(r=>r.status==='inquiry_hold');
+  if(nav){
+    nav.textContent=rows.length;
+    nav.classList.toggle('take-action-count',rows.length>0);
+  }
+  if(!inbox||!list)return;
+  inbox.classList.toggle('hidden',!rows.length);
+  if(count)count.textContent=rows.length;
+  list.innerHTML='';
+  rows.forEach(r=>{
+    const card=document.createElement('article');
+    card.className='reservation-card';
+    card.id=`request-${r.id}`;
+    card.innerHTML=`<div class="reservation-grid"><div><span class="badge warn">TAKE ACTION</span><h3>${esc(r.guest_name)} · ${esc(r.checkin)} → ${esc(r.checkout)}</h3><div class="reservation-meta">${esc(r.id)} · ${esc(r.guests)} guests · ${esc(r.guest_email)} · dates blocked on public calendar</div>${r.notes?`<p class="reservation-meta">${esc(r.notes)}</p>`:''}<div class="reservation-badges"><span class="badge warn">New request</span><span class="badge">24-hour hold</span><span class="badge">Not confirmed</span><span class="badge warn">Payment deferred</span></div>${quoteMarkup(r)}</div><div><div class="reservation-meta">Created ${esc(fmt(r.created_at))}</div><div class="actions" style="margin-top:14px">${actionMarkup(r)}</div></div></div>`;
+    card.querySelectorAll('[data-owner-action]').forEach(b=>b.onclick=()=>runOwnerAction(r,b.dataset.ownerAction));
+    card.querySelector('[data-quote="adjust"]')?.addEventListener('click',()=>adjustQuote(r));
+    list.appendChild(card);
+  });
+}
+
 function renderReservations(){
   const rows=filteredReservations();
   reservationList.innerHTML=rows.length?'':'<div class="empty">No matching direct bookings.</div>';
@@ -161,6 +187,7 @@ function renderReservations(){
     const hold=r.hold_expires_at?`<span class="badge ${new Date(r.hold_expires_at)-Date.now()<21600000?'warn':''}">Hold expires ${esc(fmt(r.hold_expires_at))}</span>`:'';
     const card=document.createElement('article');
     card.className='reservation-card';
+    card.id=`request-${r.id}`;
     card.innerHTML=`<div class="reservation-grid"><div><span class="badge ${statusClass(r)}">${esc(statusLabel(r))}</span><h3>${esc(r.guest_name)} · ${esc(r.checkin)} → ${esc(r.checkout)}</h3><div class="reservation-meta">${esc(r.id)} · ${esc(r.guests)} guests · ${esc(r.guest_email)}${r.guest_phone?' · '+esc(r.guest_phone):''}</div>${r.notes?`<p class="reservation-meta">${esc(r.notes)}</p>`:''}<div class="reservation-badges">${hold}<span class="badge ${life.ownerApproved?'good':''}">Owner ${life.ownerApproved?'approved':'review'}</span><span class="badge ${life.agreementAccepted?'good':life.agreementStale?'warn':''}">${esc(life.agreementLabel||'Agreement pending')}</span><span class="badge warn">Payment deferred</span><span class="badge">Not confirmed</span></div>${quoteMarkup(r)}${completionMarkup(r)}${timelineMarkup(r)}</div><div><div class="reservation-meta">Created ${esc(fmt(r.created_at))}</div><div class="actions" style="margin-top:14px">${actionMarkup(r)}</div></div></div>`;
     card.querySelectorAll('[data-owner-action]').forEach(b=>b.onclick=()=>runOwnerAction(r,b.dataset.ownerAction));
     card.querySelector('[data-quote="adjust"]')?.addEventListener('click',()=>adjustQuote(r));
@@ -232,8 +259,15 @@ async function loadReservations(){
     const [d,dashboard]=await Promise.all([ownerApi(),dashboardApi()]);
     reservationRows=d.reservations||[];
     ownerNotifications=d.notifications||[];
+    if(!filterInitialized){
+      if(reservationRows.some(r=>r.status==='inquiry_hold'))reservationFilter='new';
+      else if(reservationRows.some(needsAction))reservationFilter='action';
+      filterInitialized=true;
+    }
     showApp();
-    renderSummary();renderFilters();renderReservations();renderQueue();renderCommunicationsQuick(dashboard);
+    renderSummary();renderFilters();renderTakeActionInbox();renderReservations();renderQueue();renderCommunicationsQuick(dashboard);
+    const focus=location.hash.replace('#','');
+    if(focus)document.getElementById(focus)?.scrollIntoView({block:'start',behavior:'smooth'});
     document.getElementById('lastChecked').textContent=`Updated ${new Date(dashboard.checkedAt).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})}`;
   }catch(e){
     if(e.message==='unauthorized')return showLogin();

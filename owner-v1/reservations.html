@@ -27,7 +27,7 @@
       <nav class="nav" aria-label="Owner Portal">
         <a href="/owner-v1"><span>Dashboard</span></a>
         <a href="/owner-v1/communications"><span>Communications</span><span id="communicationsNavCount" class="count">0</span></a>
-        <a class="active" href="/owner-v1/reservations"><span>Direct Bookings</span><span class="count">Live</span></a>
+        <a class="active" href="/owner-v1/reservations"><span>Direct Bookings</span><span id="reservationsNavCount" class="count">0</span></a>
         <a href="/owner-v1/calendar"><span>Calendar</span><span class="count">Live</span></a>
         <a href="/owner-v1/pricing"><span>Pricing</span><span class="count">Live</span></a>
         <button data-coming-soon="Financials"><span>Financials</span><span class="count">Soon</span></button>
@@ -54,6 +54,10 @@
       <div class="content">
         <div class="section-title"><div><h2>Owner review queue</h2><p>Process, approve, adjust the quote, decline, extend the hold, or release dates. Approval sends one Complete your booking link. Owner approval does not confirm the reservation. Payment collection is deferred.</p></div><span class="status-pill">Request → owner → complete</span></div>
         <div id="moduleNotice" class="notice hidden"></div>
+        <section id="takeActionInbox" class="card take-action-card hidden" style="margin-bottom:16px">
+          <div class="card-head"><div><h3>TAKE ACTION</h3><p>New request needs review — approve, adjust quote, decline, extend, or release. Dates are already blocked on the public calendar. No payment. Not confirmed.</p></div><span class="badge warn" id="takeActionCount">0</span></div>
+          <div id="takeActionList" class="reservation-list"></div>
+        </section>
         <div id="reservationSummary" class="summary-grid"></div>
 
         <div class="module-grid">

@@ -27,11 +27,12 @@ module.exports=async function(req,res){
     await expireHolds();
     const sql=db();
 
-    const [reservationSummary,recentReservations,communicationSummary,recentMessages,financialSummary,taskSummary,pricingSummary]=await Promise.all([
+    const [reservationSummary,recentReservations,takeActionReservations,communicationSummary,recentMessages,financialSummary,taskSummary,pricingSummary]=await Promise.all([
       sql`
         SELECT
           count(*) FILTER (WHERE status NOT IN ('released','expired','cancelled') AND checkout>=current_date)::int AS upcoming,
           count(*) FILTER (WHERE status IN ('inquiry_hold','hold_verified','contract_sent','contract_signed'))::int AS action_needed,
+          count(*) FILTER (WHERE status='inquiry_hold')::int AS new_requests,
           min(checkin) FILTER (WHERE status NOT IN ('released','expired','cancelled') AND checkin>=current_date)::text AS next_checkin,
           count(*)::int AS total
         FROM reservations
@@ -42,6 +43,20 @@ module.exports=async function(req,res){
         WHERE status NOT IN ('released','expired','cancelled') AND checkout>=current_date
         ORDER BY checkin ASC
         LIMIT 3
+      `,
+      sql`
+        SELECT r.id,r.guest_name,r.checkin::text,r.checkout::text,r.status,r.guests,r.created_at,r.hold_expires_at,q.quote
+        FROM reservations r
+        LEFT JOIN LATERAL (
+          SELECT e.metadata->'quote' AS quote
+          FROM booking_events e
+          WHERE e.reservation_id=r.id AND e.metadata ? 'quote'
+          ORDER BY e.created_at DESC,e.id DESC
+          LIMIT 1
+        ) q ON true
+        WHERE r.status='inquiry_hold'
+        ORDER BY r.created_at DESC
+        LIMIT 20
       `,
       sql`
         SELECT
@@ -89,7 +104,7 @@ module.exports=async function(req,res){
     return res.status(200).json({
       checkedAt:new Date().toISOString(),
       temporaryPasswordFree:previewPasswordFreeActive(req),
-      reservations:{summary:reservationSummary[0]||{},recent:recentReservations},
+      reservations:{summary:reservationSummary[0]||{},recent:recentReservations,takeAction:takeActionReservations},
       communications:{summary:communicationSummary[0]||{},recent:recentMessages},
       financials:financialSummary[0]||{},
       tasks:taskSummary[0]||{},

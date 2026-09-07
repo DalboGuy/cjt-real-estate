@@ -12,12 +12,16 @@ module.exports=async function(req,res){
     }
     for(const b of bookings){
       const uid=`${esc(b.id)}@cjtbookingpage.vercel.app`;
-      lines.push('BEGIN:VEVENT',`UID:${uid}`,`DTSTAMP:${stamp()}`,`DTSTART;VALUE=DATE:${ymd(b.checkin)}`,`DTEND;VALUE=DATE:${ymd(b.checkout)}`,'SUMMARY:Reserved - Direct Booking','STATUS:CONFIRMED','TRANSP:OPAQUE','END:VEVENT');
+      const hold=['inquiry_hold','hold_verified'].includes(b.status);
+      const summary=hold?'Hold - Direct Booking Request':'Reserved - Direct Booking';
+      lines.push('BEGIN:VEVENT',`UID:${uid}`,`DTSTAMP:${stamp()}`,`DTSTART;VALUE=DATE:${ymd(b.checkin)}`,`DTEND;VALUE=DATE:${ymd(b.checkout)}`,`SUMMARY:${summary}`,'STATUS:CONFIRMED','TRANSP:OPAQUE','END:VEVENT');
     }
     lines.push('END:VCALENDAR');
     res.setHeader('Content-Type','text/calendar; charset=utf-8');
     res.setHeader('Content-Disposition','inline; filename="direct-bookings.ics"');
-    res.setHeader('Cache-Control','s-maxage=60, stale-while-revalidate=180');
+    res.setHeader('Cache-Control','no-store, no-cache, must-revalidate, max-age=0');
+    res.setHeader('CDN-Cache-Control','no-store');
+    res.setHeader('Vercel-CDN-Cache-Control','no-store');
     res.status(200).send(lines.join('\r\n')+'\r\n');
   }catch(e){
     console.error('direct calendar error',e);

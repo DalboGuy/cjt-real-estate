@@ -1,6 +1,6 @@
 const crypto = require('crypto');
 const { db, ensureSchema, expireHolds } = require('../lib/db');
-const { quoteStay } = require('../lib/pricing');
+const { quoteStay, eachDate } = require('../lib/pricing');
 const { loadPricingCatalog } = require('../lib/pricing-store');
 const { markRequestReceived, datesAvailable } = require('../lib/booking-lifecycle');
 
@@ -94,9 +94,12 @@ module.exports = async function (req, res) {
     return res.status(201).json({
       reservation: rows[0],
       quote,
+      blockedDates: eachDate(checkin, checkout),
+      holdHours: 24,
+      calendarBlocked: true,
       confirmed: false,
       paymentCollected: false,
-      message: 'Your request is not yet confirmed. The quoted dates are held for 24 hours while CJT Realty reviews the request. No payment is collected now.'
+      message: 'Your request is not yet confirmed. Those dates are blocked on the public calendar for 24 hours while CJT Realty reviews the request. No payment is collected now.'
     });
   } catch (e) {
     console.error('inquiry error', e);

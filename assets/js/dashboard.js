@@ -42,6 +42,24 @@ function renderReservations(data){
   document.getElementById('resUpcoming').textContent=s.upcoming||0;
   document.getElementById('resAction').textContent=s.action_needed||0;
   document.getElementById('nextArrival').textContent=date(s.next_checkin);
+  const takeAction=data.takeAction||[];
+  const nav=document.getElementById('reservationsNavCount');
+  if(nav){
+    nav.textContent=s.new_requests||takeAction.length||0;
+    nav.classList.toggle('take-action-count',(s.new_requests||takeAction.length)>0);
+  }
+  const card=document.getElementById('takeActionCard');
+  const list=document.getElementById('takeActionList');
+  if(card&&list){
+    card.classList.toggle('hidden',!takeAction.length);
+    list.innerHTML=takeAction.map(r=>{
+      const total=r.quote?.total!=null?money(r.quote.total):'Quoted total stored';
+      return `<div class="list-row">
+        <div><strong>${esc(r.guest_name)} · ${esc(r.checkin)} → ${esc(r.checkout)}</strong><span>${esc(r.id)} · ${esc(r.guests)} guests · ${esc(total)} · 24-hour hold · not confirmed</span></div>
+        <a class="btn btn-primary" href="/owner-v1/reservations#request-${encodeURIComponent(r.id)}">Review now</a>
+      </div>`;
+    }).join('');
+  }
   const rows=data.recent||[];
   document.getElementById('resRecent').innerHTML=rows.length?rows.map(r=>`
     <div class="list-row">

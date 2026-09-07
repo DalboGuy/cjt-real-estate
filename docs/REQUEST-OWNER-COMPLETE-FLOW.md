@@ -16,7 +16,7 @@ Owner approval alone does **not** confirm the reservation.
 
 ## What this slice does
 
-1. **Request to Book** — guest selects dates and guest count, reviews the all-in quote, and submits contact info plus optional pet/event/trip details. The server rechecks availability, stores the quote, creates a 24-hour hold, and writes an in-app owner-queue notification. No payment is collected. Copy states the request is not confirmed.
+1. **Request to Book** — guest selects dates and guest count, reviews the all-in quote, and submits contact info plus optional pet/event/trip details. The server rechecks availability, stores the quote, creates a 24-hour hold, **blocks those nights immediately** on `/api/calendar` and the OTA-facing `.ics` export (`Cache-Control: no-store`, no CDN stale window), and writes a **TAKE ACTION** inbox item on the owner dashboard and Direct Bookings queue. No payment is collected. Copy states the request is not confirmed.
 2. **Owner review** — one Direct Booking screen can process, approve, adjust the quote, decline, extend the hold, or release dates. Approval issues one completion link. Preview does not send guest email.
 3. **Agreement acceptance** — the completion page shows the final price, documented payment schedule, and rental agreement. Acceptance requires an unchecked “I agree” checkbox and a typed full name. The server records reservation ID, agreement version/content, typed name, and a server timestamp. The label is **Agreement accepted**, not signature/identity verified.
 4. **Revised terms** — a material quote or agreement change revokes unused completion tokens and requires acceptance of the new version.

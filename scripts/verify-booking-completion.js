@@ -15,6 +15,9 @@ const {
   acceptanceRecord
 } = require('../lib/agreement');
 const { lifecycleFromEvents } = require('../lib/booking-lifecycle');
+const { eachDate } = require('../lib/pricing');
+const fs = require('fs');
+const path = require('path');
 
 function expectThrow(fn, code) {
   try {
@@ -132,5 +135,15 @@ assert.strictEqual(stale.agreementStale, true);
 const processing = lifecycleFromEvents(events.slice(0, 2), reservation, splitQuote);
 assert.strictEqual(processing.processing, true);
 assert.strictEqual(processing.ownerApproved, false);
+
+const holdNights = eachDate('2026-12-10', '2026-12-13');
+assert.deepStrictEqual(holdNights, ['2026-12-10', '2026-12-11', '2026-12-12']);
+const calendarSrc = fs.readFileSync(path.join(__dirname, '../api/calendar.js'), 'utf8');
+const icsSrc = fs.readFileSync(path.join(__dirname, '../api/direct-bookings.js'), 'utf8');
+assert.match(calendarSrc, /no-store/);
+assert.doesNotMatch(calendarSrc, /s-maxage=60/);
+assert.match(icsSrc, /no-store/);
+assert.doesNotMatch(icsSrc, /s-maxage=60/);
+assert.match(icsSrc, /Hold - Direct Booking Request/);
 
 console.log('verify-booking-completion: ok');
