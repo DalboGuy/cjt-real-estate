@@ -8,6 +8,7 @@ const {buildOwnerCalendarView, validIsoDate, buildOwnerSyncPayload, otaFromCaugh
 const {planOwnerTransition,notUpdatedError,conflictBody}=require('../lib/booking-transitions');
 const {assertSendConfigured, createAndSendDocument, parseMetadata}=require('../lib/opensign');
 const {insertOwnerBlockIfClear}=require('../lib/date-conflicts');
+const {updateOwnerEntryNotes}=require('../lib/owner-calendar-entries');
 const {listReservations,readReservationWindowParams,resolveReservationWindow}=require('../lib/reservation-queries');
 
 function parseCookies(header=''){return Object.fromEntries(header.split(';').map(v=>v.trim()).filter(Boolean).map(v=>{const i=v.indexOf('=');return [decodeURIComponent(v.slice(0,i)),decodeURIComponent(v.slice(i+1))];}));}
@@ -266,6 +267,16 @@ module.exports=async function(req,res){
         return res.status(saved.status||409).json({error:saved.error,message:saved.message,conflict:saved.conflict||undefined});
       }
       return res.status(200).json({ok:true, entry:saved.entry});
+    }
+
+    if(req.method==='POST'&&body.action==='calendar_entry_update'){
+      const id=Number(body.id);
+      if(!Number.isInteger(id)||id<1) return res.status(400).json({error:'invalid_id'});
+      const updated=await updateOwnerEntryNotes(sql,{id,notes:body.notes});
+      if(!updated.ok){
+        return res.status(updated.status||404).json({error:updated.error,message:updated.message});
+      }
+      return res.status(200).json({ok:true, entry:updated.entry});
     }
 
     if(req.method==='POST'&&body.action==='calendar_entry_delete'){
