@@ -198,7 +198,7 @@
     pricing=d;
     const split=`${Math.round(Number(d.advancePaymentPct)*100)}% at booking · balance ${d.splitPaymentThresholdDays} days before arrival`;
     const weekendLabel=joinDays(d.weekendDays);
-    summary.innerHTML=[['Cleaning fee',money(d.cleaningFee)],['Tax rate',`${Number(d.taxRate)*100}%`],['Pricing through',date(d.pricingThrough)],['Max guests',d.maxGuests],['Weekend days',(d.weekendDays||[]).map(v=>v.slice(0,3)).join(' / ')||'None'],['Payment terms',split]].map(([label,value])=>`<div class="summary-card"><span>${esc(label)}</span><b>${esc(value)}</b></div>`).join('');
+    summary.innerHTML=[['Cleaning fee',money(d.cleaningFee)],['Tax rate',`${Math.round(Number(d.taxRate||0)*10000)/100}%`],['Pricing through',date(d.pricingThrough)],['Max guests',d.maxGuests],['Weekend days',(d.weekendDays||[]).map(v=>v.slice(0,3)).join(' / ')||'None'],['Payment terms',split]].map(([label,value])=>`<div class="summary-card"><span>${esc(label)}</span><b>${esc(value)}</b></div>`).join('');
     document.getElementById('seasonCount').textContent=`${(d.seasons||[]).length} seasons`;
     document.getElementById('weekendNote').textContent=`Weekend rates apply ${weekendLabel}. Dates outside the published window are not available for online direct-booking quotes.`;
     const guestsInput=document.getElementById('quoteGuests');
