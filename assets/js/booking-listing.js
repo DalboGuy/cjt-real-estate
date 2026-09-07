@@ -76,9 +76,14 @@
   function paintSave(on){$('saveBtn').dataset.saved=on?'1':'0';$('saveLabel').textContent=on?'Saved':'Save';$('saveHeart').setAttribute('fill',on?'currentColor':'none')}
   paintSave(saved);$('saveBtn').onclick=()=>{const next=$('saveBtn').dataset.saved!=='1';localStorage.setItem('cjt_sand_sea_saved',next?'1':'0');paintSave(next)};
 
-  let blocked=new Set(),calendarHealthy=false,selectedStart='',selectedEnd='',guests=1,currentQuote=null;
+  const Guest=window.CJTGuestBooking||{};
+  const HOLD_MESSAGE=Guest.HOLD_MESSAGE||'Your dates are reserved while CJT reviews your request and remain unavailable until an owner releases them.';
+  const MAX_GUESTS=Guest.MAX_GUESTS||14;
+  const LISTING_CHARGE_NOTE=Guest.LISTING_CHARGE_NOTE||"You won't be charged yet. Requesting these dates reserves them until CJT reviews or an owner releases them.";
+  let blocked=new Set(),calendarHealthy=false,selectedStart='',selectedEnd='',guests=1,currentQuote=null,quoteSeq=0,requestStep='info';
   let pickerCursor=new Date();pickerCursor=new Date(pickerCursor.getFullYear(),pickerCursor.getMonth(),1);
   const calendarModal=$('calendarModal');
+  const copyApi=Guest;
   function canCheckoutOn(date){return selectedStart&&!selectedEnd&&date>selectedStart&&!eachDate(selectedStart,date).some(d=>blocked.has(d))}
   function renderMonth(target,date,secondary=false){
     target.innerHTML='';const title=document.createElement('h3');title.textContent=date.toLocaleDateString('en-US',{month:'long',year:'numeric'});target.appendChild(title);
@@ -92,9 +97,52 @@
     }
     target.appendChild(grid);target.classList.toggle('secondary',secondary);
   }
-  function renderPicker(){renderMonth($('calendarMonth1'),pickerCursor,false);renderMonth($('calendarMonth2'),new Date(pickerCursor.getFullYear(),pickerCursor.getMonth()+1,1),true);$('calendarSelection').textContent=selectedStart?(selectedEnd?`${fmt(selectedStart)} – ${fmt(selectedEnd)}`:`${fmt(selectedStart)} — choose checkout`):'Choose check-in and check-out dates'}
-  function updateSelectors(){const inText=selectedStart?fmt(selectedStart).replace(/, \d{4}/,''):'Add date',outText=selectedEnd?fmt(selectedEnd).replace(/, \d{4}/,''):'Add date';document.querySelectorAll('[data-checkin-value]').forEach(el=>el.textContent=inText);document.querySelectorAll('[data-checkout-value]').forEach(el=>el.textContent=outText);document.querySelectorAll('[data-guests-value]').forEach(el=>el.textContent=`${guests} guest${guests===1?'':'s'}`)}
-  function resetQuote(){currentQuote=null;$('quoteBreakdown').classList.remove('show');$('quoteError').hidden=true;$('bookPrice').innerHTML='<span class="price-main">Add dates for prices</span>';$('mobilePrice').innerHTML='<strong>Add dates</strong><span>See total price</span>';if($('paymentCopy'))$('paymentCopy').innerHTML='';$('bookNowBtn').disabled=false}
+  function renderPicker(){
+    renderMonth($('calendarMonth1'),pickerCursor,false);
+    renderMonth($('calendarMonth2'),new Date(pickerCursor.getFullYear(),pickerCursor.getMonth()+1,1),true);
+    const nights=eachDate(selectedStart,selectedEnd).length;
+    $('calendarSelection').textContent=selectedStart?(selectedEnd?`${fmt(selectedStart)} – ${fmt(selectedEnd)} · ${nights} night${nights===1?'':'s'}`:`${fmt(selectedStart)} — choose checkout`):'Choose check-in and check-out dates';
+  }
+  function updateSelectors(){
+    const inText=selectedStart?fmt(selectedStart).replace(/, \d{4}/,''):'Add date',outText=selectedEnd?fmt(selectedEnd).replace(/, \d{4}/,''):'Add date';
+    document.querySelectorAll('[data-checkin-value]').forEach(el=>el.textContent=inText);
+    document.querySelectorAll('[data-checkout-value]').forEach(el=>el.textContent=outText);
+    document.querySelectorAll('[data-guests-value]').forEach(el=>el.textContent=copyApi.guestsLabel?copyApi.guestsLabel(guests):`${guests} guest${guests===1?'':'s'}`);
+    paintListingSteps();
+  }
+  function paintListingSteps(){
+    const hasDates=!!(selectedStart&&selectedEnd);
+    const hasQuote=!!currentQuote;
+    const map={dates:hasDates,guests:true,quote:hasQuote,request:false};
+    document.querySelectorAll('[data-listing-step]').forEach(el=>{
+      const key=el.dataset.listingStep;
+      el.classList.toggle('is-done',!!map[key]);
+      el.classList.toggle('is-current',(key==='dates'&&!hasDates)||(key==='quote'&&hasDates&&!hasQuote)||(key==='request'&&hasDates&&hasQuote));
+    });
+  }
+  function paintPrimaryCtas(){
+    const label=copyApi.listingCta?copyApi.listingCta({hasDates:!!(selectedStart&&selectedEnd),hasQuote:!!currentQuote,calendarHealthy}):(selectedStart&&selectedEnd&&currentQuote?'Request to Book':'Check dates');
+    [$('bookNowBtn'),$('mobileBookBtn')].forEach(btn=>{if(!btn)return;btn.textContent=label;btn.disabled=!calendarHealthy&&label!==(copyApi.CTA&&copyApi.CTA.checkDates||'Check dates')});
+    document.querySelectorAll('.charge-note').forEach(note=>{if(!note.classList.contains('checkout-charge'))note.textContent=LISTING_CHARGE_NOTE});
+    paintListingSteps();
+  }
+  function setListingHealth(message,failClosed){
+    const el=$('listingHealth');
+    if(!el)return;
+    if(!message){el.hidden=true;el.textContent='';el.classList.remove('is-fail-closed');return}
+    el.hidden=false;el.textContent=message;el.classList.toggle('is-fail-closed',!!failClosed);
+  }
+  function resetQuote(){
+    quoteSeq+=1;
+    currentQuote=null;
+    $('quoteBreakdown').classList.remove('show');
+    $('quoteError').hidden=true;
+    $('bookPrice').innerHTML='<span class="price-main">Add dates for prices</span>';
+    $('mobilePrice').innerHTML='<strong>Add dates</strong><span>See total price</span>';
+    $('bookNowBtn').disabled=false;
+    if($('mobileBookBtn'))$('mobileBookBtn').disabled=false;
+    paintPrimaryCtas();
+  }
   function selectDate(date,isBlocked){
     if(!selectedStart||selectedEnd||date<=selectedStart){if(isBlocked)return;selectedStart=date;selectedEnd='';resetQuote()}
     else{const nights=eachDate(selectedStart,date);if(nights.some(d=>blocked.has(d))){if(!isBlocked){selectedStart=date;selectedEnd='';resetQuote()}return}else{selectedEnd=date;resetQuote()}}
@@ -114,7 +162,14 @@
   function applyAvailabilityUnknown(body){
     calendarHealthy=false;
     blocked=new Set();
-    $('calendarHealth').textContent=responseMessage(body,'Live availability is temporarily unavailable. Please contact CJT.');
+    const msg=copyApi.failClosedCopy?copyApi.failClosedCopy(body):responseMessage(body,'Live availability is temporarily unavailable. Dates cannot be requested until calendars are verified.');
+    const health=$('calendarHealth');
+    health.textContent=msg;
+    health.classList.add('is-fail-closed');
+    setListingHealth(msg,true);
+    currentQuote=null;
+    $('quoteBreakdown').classList.remove('show');
+    paintPrimaryCtas();
     renderPicker();
   }
   function isQuoteFailClosed(httpStatus, body){
@@ -125,7 +180,7 @@
     return false;
   }
   async function refreshAvailability(){
-    $('calendarHealth').textContent='Checking live availability…';calendarHealthy=false;
+    $('calendarHealth').textContent='Checking live availability…';calendarHealthy=false;$('calendarHealth').classList.remove('is-fail-closed');
     try{
       const r=await fetch('/api/calendar',{cache:'no-store'});
       const d=await r.json().catch(()=>({}));
@@ -136,7 +191,10 @@
       blocked=new Set(d.blockedDates||[]);
       calendarHealthy=true;
       $('calendarHealth').textContent='Availability synced from connected calendars.';
+      $('calendarHealth').classList.remove('is-fail-closed');
+      setListingHealth('',false);
       renderPicker();
+      paintPrimaryCtas();
     }catch{
       applyAvailabilityUnknown(null);
     }
@@ -144,47 +202,231 @@
   refreshAvailability();
 
   const guestPopover=$('guestPopover');
-  function updateGuests(next){guests=Math.max(1,Math.min(14,next));$('guestCount').textContent=guests;$('guestMinus').disabled=guests<=1;$('guestPlus').disabled=guests>=14;updateSelectors();resetQuote();if(selectedStart&&selectedEnd)loadQuote()}
-  document.querySelectorAll('[data-open-guests]').forEach(b=>b.onclick=e=>{e.stopPropagation();guestPopover.classList.toggle('show')});$('guestMinus').onclick=e=>{e.stopPropagation();updateGuests(guests-1)};$('guestPlus').onclick=e=>{e.stopPropagation();updateGuests(guests+1)};document.addEventListener('click',e=>{if(!guestPopover.contains(e.target)&&!e.target.closest('[data-open-guests]'))guestPopover.classList.remove('show')});updateGuests(1);
+  function updateGuests(next){
+    guests=copyApi.clampGuests?copyApi.clampGuests(next):Math.max(1,Math.min(MAX_GUESTS,next));
+    $('guestCount').textContent=guests;
+    $('guestMinus').disabled=guests<=1;
+    $('guestPlus').disabled=guests>=MAX_GUESTS;
+    updateSelectors();
+    resetQuote();
+    if(selectedStart&&selectedEnd)loadQuote();
+  }
+  document.querySelectorAll('[data-open-guests]').forEach(b=>b.onclick=e=>{e.stopPropagation();const open=!guestPopover.classList.contains('show');guestPopover.classList.toggle('show',open);b.setAttribute('aria-expanded',open?'true':'false')});
+  $('guestMinus').onclick=e=>{e.stopPropagation();updateGuests(guests-1)};
+  $('guestPlus').onclick=e=>{e.stopPropagation();updateGuests(guests+1)};
+  document.addEventListener('click',e=>{if(!guestPopover.contains(e.target)&&!e.target.closest('[data-open-guests]')){guestPopover.classList.remove('show');document.querySelectorAll('[data-open-guests]').forEach(b=>b.setAttribute('aria-expanded','false'))}});
+  updateGuests(1);
 
   function renderQuote(q){
-    currentQuote=q;const total=money(q.total),nightLabel=`${q.nights} night${q.nights===1?'':'s'}`;
-    const trust=(window.CJTQuoteTrust&&window.CJTQuoteTrust.guestPaymentTrust)?window.CJTQuoteTrust.guestPaymentTrust(q):null;
+    currentQuote=q;
+    const total=money(q.total),nightLabel=`${q.nights} night${q.nights===1?'':'s'}`;
     $('bookPrice').innerHTML=`<span class="price-main">${total}</span> <span class="price-note">total · ${nightLabel}</span>`;
-    $('mobilePrice').innerHTML=`<strong>${total}</strong><span>${trust?`${esc(trust.mobileNote)} · ${nightLabel}`:`${nightLabel} · total`}</span>`;
-    $('quoteLodging').textContent=money(q.lodgingSubtotal);$('quoteCleaning').textContent=money(q.cleaningFee);$('quoteTax').textContent=money(q.taxes);$('quoteTotal').textContent=total;$('quoteBreakdown').classList.add('show');$('quoteError').hidden=true;
-    if($('paymentCopy')){
-      if(window.CJTQuoteTrust&&window.CJTQuoteTrust.guestPaymentTrustMarkup)$('paymentCopy').innerHTML=window.CJTQuoteTrust.guestPaymentTrustMarkup(q,money);
-      else{
-        const p=q.paymentSchedule||{};
-        if(p.mode==='split')$('paymentCopy').innerHTML=`<strong>${money(p.dueAtBooking)} due when accepted</strong>Remaining ${money(p.remainingBalance)} due ${esc(p.balanceDueDateLabel||'30 days before check-in')}.`;
-        else $('paymentCopy').innerHTML=`<strong>${total} due when accepted</strong>${p.reason==='within_30_days'?'This stay begins within 30 days, so the full balance is due at booking.':'Full payment is due for this reservation.'}`;
-      }
-    }
+    $('mobilePrice').innerHTML=`<strong>${total}</strong><span>${nightLabel} · total</span>`;
+    $('quoteLodging').textContent=money(q.lodgingSubtotal);
+    $('quoteCleaning').textContent=money(q.cleaningFee);
+    $('quoteTax').textContent=money(q.taxes);
+    $('quoteTotal').textContent=total;
+    $('quoteBreakdown').classList.add('show');
+    $('quoteError').hidden=true;
+    paintPrimaryCtas();
+    if($('bookingModal')?.classList.contains('show')&&requestStep==='review')paintReview(collectGuestFields());
   }
   async function loadQuote(){
-    if(!selectedStart||!selectedEnd)return resetQuote();if(!calendarHealthy){$('quoteError').hidden=false;$('quoteError').textContent='Live availability cannot be verified right now.';return}
-    $('bookPrice').innerHTML='<span class="price-main">Checking price…</span>';$('bookNowBtn').disabled=true;
+    if(!selectedStart||!selectedEnd)return resetQuote();
+    if(!calendarHealthy){
+      $('quoteError').hidden=false;
+      $('quoteError').textContent=copyApi.AVAILABILITY_UNKNOWN||'Live availability cannot be verified right now.';
+      paintPrimaryCtas();
+      return;
+    }
+    const seq=++quoteSeq;
+    $('bookPrice').innerHTML='<span class="price-main">Checking price…</span>';
+    $('mobilePrice').innerHTML='<strong>Updating price…</strong><span>New dates or guests</span>';
+    $('bookNowBtn').disabled=true;
+    if($('mobileBookBtn'))$('mobileBookBtn').disabled=true;
     try{
-      const u=new URL('/api/quote',location.origin);u.searchParams.set('checkin',selectedStart);u.searchParams.set('checkout',selectedEnd);u.searchParams.set('guests',String(guests));
+      const u=new URL('/api/quote',location.origin);
+      u.searchParams.set('checkin',selectedStart);
+      u.searchParams.set('checkout',selectedEnd);
+      u.searchParams.set('guests',String(guests));
       const r=await fetch(u,{cache:'no-store'}),d=await r.json().catch(()=>({}));
+      if(seq!==quoteSeq)return;
       if(isQuoteFailClosed(r.status,d)){
         applyAvailabilityUnknown(d);
-        throw new Error(responseMessage(d,'Live availability cannot be verified right now.'));
+        throw new Error(copyApi.failClosedCopy?copyApi.failClosedCopy(d):responseMessage(d,'Live availability cannot be verified right now.'));
       }
       if(!r.ok)throw new Error(responseMessage(d,'Price is unavailable for those dates.'));
       renderQuote(d.quote);
-    }catch(e){currentQuote=null;$('quoteBreakdown').classList.remove('show');$('quoteError').hidden=false;$('quoteError').textContent=e.message;$('bookPrice').innerHTML='<span class="price-main">Dates need review</span>'}finally{$('bookNowBtn').disabled=false}}
+    }catch(e){
+      if(seq!==quoteSeq)return;
+      currentQuote=null;
+      $('quoteBreakdown').classList.remove('show');
+      $('quoteError').hidden=false;
+      $('quoteError').textContent=e.message;
+      $('bookPrice').innerHTML='<span class="price-main">Dates need review</span>';
+      paintPrimaryCtas();
+    }finally{
+      if(seq===quoteSeq){
+        $('bookNowBtn').disabled=false;
+        if($('mobileBookBtn'))$('mobileBookBtn').disabled=false;
+      }
+    }
+  }
   $('refreshQuote').onclick=loadQuote;
 
   const bookingModal=$('bookingModal'),bookingForm=$('bookingForm');
-  function openBooking(){if(!selectedStart||!selectedEnd){openCalendar();return}if(!currentQuote){loadQuote();return}const trust=(window.CJTQuoteTrust&&window.CJTQuoteTrust.guestPaymentTrust)?window.CJTQuoteTrust.guestPaymentTrust(currentQuote):null;$('bookingSummary').innerHTML=`<strong>${fmt(selectedStart)} – ${fmt(selectedEnd)} · ${guests} guest${guests===1?'':'s'}</strong><span>${currentQuote.nights} nights · ${money(currentQuote.total)} total</span>${trust?`<span>${esc(trust.depositLabel)} · ${money(trust.depositAmount)}</span>`:''}`;bookingModal.classList.add('show');document.body.classList.add('modal-open')}
-  function closeBooking(){bookingModal.classList.remove('show');document.body.classList.remove('modal-open')}
-  $('bookNowBtn').onclick=openBooking;$('mobileBookBtn').onclick=openBooking;$('bookingClose').onclick=closeBooking;bookingModal.addEventListener('click',e=>{if(e.target===bookingModal)closeBooking()});
+  function setText(id,value){const el=$(id);if(el)el.textContent=value}
+  function collectGuestFields(){
+    const f=new FormData(bookingForm);
+    return {
+      name:String(f.get('name')||'').trim(),
+      email:String(f.get('email')||'').trim(),
+      phone:String(f.get('phone')||'').trim(),
+      message:String(f.get('message')||'').trim()
+    };
+  }
+  function paintBookingSummary(){
+    const nights=currentQuote?`${currentQuote.nights} night${currentQuote.nights===1?'':'s'} · ${money(currentQuote.total)} total`:(selectedStart&&selectedEnd?'Dates selected':'Add dates');
+    const summary=$('bookingSummary');
+    if(summary){
+      summary.hidden=requestStep==='done';
+      summary.innerHTML=`<strong>${fmt(selectedStart)} – ${fmt(selectedEnd)} · ${copyApi.guestsLabel?copyApi.guestsLabel(guests):`${guests} guest${guests===1?'':'s'}`}</strong><span>${nights}</span>`;
+    }
+  }
+  function paintReview(details){
+    const nightCount=currentQuote?currentQuote.nights:eachDate(selectedStart,selectedEnd).length;
+    setText('reviewDates',`${fmt(selectedStart)} – ${fmt(selectedEnd)}`);
+    setText('reviewNights',`${nightCount} night${nightCount===1?'':'s'}`);
+    setText('reviewGuests',copyApi.guestsLabel?copyApi.guestsLabel(guests):`${guests} guest${guests===1?'':'s'}`);
+    setText('reviewLodging',currentQuote?money(currentQuote.lodgingSubtotal):'—');
+    setText('reviewCleaning',currentQuote?money(currentQuote.cleaningFee):'—');
+    setText('reviewTax',currentQuote?money(currentQuote.taxes):'—');
+    setText('reviewTotal',currentQuote?money(currentQuote.total):'—');
+    setText('reviewName',details.name||'—');
+    setText('reviewEmail',details.email||'—');
+    setText('reviewPhone',details.phone||'—');
+    setText('reviewMessage',details.message||'');
+    const noteRow=$('reviewMessageRow');
+    if(noteRow)noteRow.hidden=!details.message;
+    const pay=$('reviewPaymentCopy');
+    if(pay){
+      if(window.CJTQuoteTrust&&window.CJTQuoteTrust.guestPaymentTrustMarkup)pay.innerHTML=window.CJTQuoteTrust.guestPaymentTrustMarkup(currentQuote,money);
+      else pay.innerHTML='';
+    }
+  }
+  function showRequestStep(step){
+    requestStep=['info','review','done'].includes(step)?step:'info';
+    const info=$('guestDetailsStep'),review=$('reviewStep'),done=$('requestDoneStep');
+    if(info)info.hidden=requestStep!=='info';
+    if(review)review.hidden=requestStep!=='review';
+    if(done)done.hidden=requestStep!=='done';
+    const order=['dates','guests','quote','info','review','done'];
+    document.querySelectorAll('.booking-progress [data-progress]').forEach(el=>{
+      el.classList.toggle('is-current',el.dataset.progress===requestStep);
+      el.classList.toggle('is-done',order.indexOf(el.dataset.progress)<order.indexOf(requestStep)||['dates','guests','quote'].includes(el.dataset.progress));
+    });
+    const copy={
+      info:{kicker:'Your info',title:'Guest information'},
+      review:{kicker:'Review',title:'Review your request'},
+      done:{kicker:'Received',title:'Reservation received'}
+    }[requestStep];
+    if($('bookingStepKicker'))$('bookingStepKicker').textContent=copy.kicker;
+    if($('bookingStepTitle'))$('bookingStepTitle').textContent=copy.title;
+    if($('bookingBack'))$('bookingBack').hidden=requestStep==='done';
+    const name=$('guestName'),email=$('guestEmail'),phone=$('guestPhone'),agree=$('requestAgree');
+    [name,email,phone].forEach(el=>{if(el)el.required=requestStep==='info'});
+    if(agree)agree.required=requestStep==='review';
+    paintBookingSummary();
+  }
+  function paintDone(result){
+    const copy=copyApi.successCopy?copyApi.successCopy({
+      replayed:!!result.replayed,
+      reservationId:result.reservation&&result.reservation.id,
+      serverMessage:result.message||HOLD_MESSAGE
+    }):{title:result.replayed?'Request already received':'Reservation received',hold:result.message||HOLD_MESSAGE,reference:result.reservation&&result.reservation.id||'',next:result.replayed?'CJT Realty already has this request. Your dates remain reserved until an owner releases them. Agreement and payment steps are owner-controlled.':'CJT Realty will review your request. Agreement and payment steps are owner-controlled and come next only if they accept.',isReplay:!!result.replayed};
+    const banner=$('doneReplayBanner');
+    if(banner)banner.hidden=!copy.isReplay;
+    setText('doneTitle',copy.title);
+    setText('doneHold',copy.hold);
+    setText('doneRef',copy.reference||'—');
+    setText('doneDates',`${fmt(selectedStart)} – ${fmt(selectedEnd)}`);
+    setText('doneGuests',copyApi.guestsLabel?copyApi.guestsLabel(guests):`${guests} guest${guests===1?'':'s'}`);
+    setText('doneTotal',currentQuote?money(currentQuote.total):'—');
+    setText('doneNext',copy.next);
+    if($('bookingStepTitle'))$('bookingStepTitle').textContent=copy.title;
+    showRequestStep('done');
+  }
+  function openBooking(){
+    if(!calendarHealthy){openCalendar();return}
+    if(!selectedStart||!selectedEnd){openCalendar();return}
+    if(!currentQuote){loadQuote();return}
+    showRequestStep('info');
+    bookingModal.classList.add('show');
+    document.body.classList.add('modal-open');
+    applyTawkHidden(true);
+  }
+  function closeBooking(){
+    bookingModal.classList.remove('show');
+    if(!$('amenitiesModal')?.classList.contains('show')){
+      document.body.classList.remove('modal-open');
+      applyTawkHidden(false);
+    }
+  }
+  function backFromBooking(){
+    if(requestStep==='done'){closeBooking();return}
+    if(requestStep==='review'){showRequestStep('info');return}
+    closeBooking();
+  }
+  function guestFieldsValid(){
+    const details=collectGuestFields();
+    if(!details.name||!details.email.includes('@')||!details.phone){
+      if(typeof bookingForm.reportValidity==='function')bookingForm.reportValidity();
+      return false;
+    }
+    return true;
+  }
+  $('bookNowBtn').onclick=openBooking;
+  $('mobileBookBtn').onclick=openBooking;
+  $('bookingClose').onclick=closeBooking;
+  $('bookingBack')?.addEventListener('click',backFromBooking);
+  $('doneBrowse')?.addEventListener('click',closeBooking);
+  bookingModal.addEventListener('click',e=>{if(e.target===bookingModal&&requestStep!=='done')closeBooking()});
+  $('continueToReview')?.addEventListener('click',()=>{
+    if(!guestFieldsValid())return;
+    paintReview(collectGuestFields());
+    showRequestStep('review');
+  });
   bookingForm.addEventListener('submit',async e=>{
-    e.preventDefault();if(!currentQuote||!selectedStart||!selectedEnd)return;const btn=$('bookingSubmit'),msg=$('bookingMessage'),f=new FormData(bookingForm);btn.disabled=true;btn.textContent='Holding your dates…';msg.className='form-message';msg.textContent='';const details=[];if(f.get('pets')==='yes')details.push('Guest is asking for pet approval.');if(f.get('event')==='yes')details.push('Guest is asking about an event/gathering.');if(f.get('message'))details.push(String(f.get('message')).trim());
-    const payload={name:f.get('name'),email:f.get('email'),phone:f.get('phone'),checkin:selectedStart,checkout:selectedEnd,guests:String(guests),message:details.join('\n')};
-    try{const r=await fetch('/api/inquiries',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}),d=await r.json();if(!r.ok)throw new Error(d.message||'We could not reserve those dates.');msg.className='form-message show';msg.innerHTML=`<strong>${esc(d.message||'Your dates are reserved while CJT reviews your request and remain unavailable until an owner releases them.')}</strong><br>Booking reference: ${esc(d.reservation.id)}<br>CJT Realty will review the request and continue the agreement/payment process.`;btn.style.display='none';await refreshAvailability()}catch(err){msg.className='form-message error show';msg.textContent=err.message}finally{btn.disabled=false;btn.textContent='Book Now — Reserve These Dates'}});
+    e.preventDefault();
+    if(!currentQuote||!selectedStart||!selectedEnd)return;
+    if(requestStep!=='review'){
+      if(guestFieldsValid()){paintReview(collectGuestFields());showRequestStep('review')}
+      return;
+    }
+    const agree=$('requestAgree');
+    if(agree&&!agree.checked){
+      agree.required=true;
+      if(typeof bookingForm.reportValidity==='function')bookingForm.reportValidity();
+      return;
+    }
+    const btn=$('bookingSubmit'),msg=$('bookingMessage'),details=collectGuestFields();
+    btn.disabled=true;btn.textContent='Requesting these dates…';msg.className='form-message';msg.textContent='';
+    const payload=copyApi.inquiryPayload?copyApi.inquiryPayload({...details,checkin:selectedStart,checkout:selectedEnd,guests}):{name:details.name,email:details.email,phone:details.phone,message:details.message,checkin:selectedStart,checkout:selectedEnd,guests:String(guests)};
+    try{
+      const r=await fetch('/api/inquiries',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      const d=await r.json().catch(()=>({}));
+      if(!r.ok)throw new Error(d.message||'We could not reserve those dates.');
+      if(!d.reservation||!d.reservation.id)throw new Error('We could not confirm a booking reference. Please contact CJT Realty.');
+      paintDone({replayed:!!d.replayed,reservation:d.reservation,message:d.message||HOLD_MESSAGE});
+      await refreshAvailability();
+    }catch(err){
+      msg.className='form-message error show';
+      msg.textContent=err.message;
+    }finally{
+      btn.disabled=false;
+      btn.textContent='Request to Book';
+    }
+  });
 
   const amenitiesModal=$('amenitiesModal');
   let amenitiesHistoryOpen=false;
@@ -242,6 +484,6 @@
   window.addEventListener('popstate',()=>{if(amenitiesModal.classList.contains('show'))closeAmenities(true)});
 
   window.addEventListener('message',e=>{if(e.origin!==location.origin||e.data?.type!=='cjt-reviews-height')return;const frame=$('houfyReviews');if(frame&&Number(e.data.height)>200)frame.style.height=`${Math.min(2200,Number(e.data.height)+12)}px`});
-  document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(calendarModal.classList.contains('show'))closeCalendar();if(bookingModal.classList.contains('show'))closeBooking();if(amenitiesModal.classList.contains('show'))closeAmenities(false)});
-  hydrateMobileSourceSummaries();hydrateAmenitiesModal();updateSelectors();resetQuote();renderGallery();loadAssetManifest();
+  document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(calendarModal.classList.contains('show'))closeCalendar();else if(bookingModal.classList.contains('show'))backFromBooking();else if(amenitiesModal.classList.contains('show'))closeAmenities(false)});
+  hydrateMobileSourceSummaries();hydrateAmenitiesModal();updateSelectors();resetQuote();paintPrimaryCtas();renderGallery();loadAssetManifest();
 })();
