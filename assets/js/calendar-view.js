@@ -50,6 +50,7 @@
     noticeEl.textContent=text;
     noticeEl.classList.remove('hidden','ok');
     noticeEl.classList.add('err');
+    noticeEl.scrollIntoView({behavior:'smooth',block:'nearest'});
   }
   function clearLoadError(){
     if(!noticeEl)return;
