@@ -13,7 +13,7 @@
     <div class="login-card">
       <div class="brand" style="color:var(--cjt-ink)">CJT REALTY<small style="color:var(--cjt-muted)">Owner Operations</small></div>
       <h1>Calendar Connections</h1>
-      <p>Sign in to connect up to 10 calendar feeds.</p>
+      <p>Sign in to set up two-way calendar sync.</p>
       <form id="loginForm"><input id="passcode" type="password" placeholder="Owner passcode" autocomplete="current-password" required><button class="btn btn-primary" type="submit">Sign in</button></form>
       <div id="loginMsg" class="login-msg"></div>
     </div>
@@ -47,39 +47,51 @@
 
     <main class="main">
       <header class="topbar">
-        <div style="display:flex;align-items:center;gap:10px"><button id="mobileMenu" class="icon-btn mobile-menu" type="button" aria-label="Open menu">☰</button><div><h1>Calendar</h1><div class="meta">Connect up to 10 iCal feeds for live availability</div></div></div>
-        <div class="top-actions"><button id="refreshFeeds" class="btn btn-secondary" type="button">Refresh all links</button><a class="btn btn-secondary" href="/#availability" target="_blank" rel="noopener">Guest calendar ↗</a></div>
+        <div style="display:flex;align-items:center;gap:10px"><button id="mobileMenu" class="icon-btn mobile-menu" type="button" aria-label="Open menu">☰</button><div><h1>Calendar</h1><div class="meta">Two-way sync with Airbnb, VRBO, Booking.com, and more</div></div></div>
+        <div class="top-actions"><a class="btn btn-secondary" href="/#availability" target="_blank" rel="noopener">Guest calendar ↗</a></div>
       </header>
 
       <div class="content">
-        <div class="section-title"><div><h2>Calendar connections</h2><p>Add any channel’s export iCal URL (Airbnb, VRBO, Booking.com, Google Calendar, etc.). Limit: 10. Full URLs stay server-side.</p></div><span class="status-pill" id="feedStatusPill">Loading…</span></div>
+        <div class="section-title"><div><h2>Connect to another website</h2><p>This two-way connection updates availability when a night is booked here or on the other site. Up to 10 inbound calendars.</p></div><span class="status-pill" id="feedStatusPill">Loading…</span></div>
         <div id="moduleNotice" class="notice hidden"></div>
 
         <section class="grid">
-          <article class="card span-8">
-            <div class="card-head"><div><h3>Add a calendar</h3><p>Name it anything useful, then paste the https iCal link.</p></div></div>
+          <article class="card span-12">
+            <div class="card-head"><div><h3>Step 1</h3><p>Add this link on the other website (Airbnb / VRBO / Booking.com calendar import).</p></div><span class="badge good">Export</span></div>
+            <label style="display:grid;gap:8px;font-weight:600;margin-top:8px">
+              <span>CJT direct-booking calendar link</span>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+                <input id="exportCalendarLink" type="text" readonly style="flex:1;min-width:220px">
+                <button id="copyExportLink" class="btn btn-primary" type="button">Copy</button>
+              </div>
+            </label>
+            <div class="metric-label" style="margin-top:10px">Publishes confirmed/held direct bookings so other sites block those nights.</div>
+            <div class="meta" style="margin-top:8px">Booking.com variant: <button id="useBookingComExport" class="card-link" type="button" style="border:0;background:none;cursor:pointer;padding:0;color:inherit;text-decoration:underline">use bookingcom.ics</button> · <button id="useStandardExport" class="card-link" type="button" style="border:0;background:none;cursor:pointer;padding:0;color:inherit;text-decoration:underline">use standard .ics</button></div>
+          </article>
+
+          <article class="card span-12">
+            <div class="card-head"><div><h3>Step 2</h3><p>Get a link ending in .ics from the other website and add it below.</p></div><span class="badge">Import</span></div>
             <form id="addFeedForm" style="display:grid;gap:12px;margin-top:8px">
-              <label style="display:grid;gap:6px;font-weight:600"><span>Name</span><input id="feedLabel" name="label" maxlength="80" placeholder="e.g. Airbnb main" required></label>
-              <label style="display:grid;gap:6px;font-weight:600"><span>iCal URL</span><input id="feedUrl" name="feedUrl" type="url" inputmode="url" placeholder="https://…" autocomplete="off" required></label>
+              <label style="display:grid;gap:6px;font-weight:600"><span>Other website link</span><input id="feedUrl" name="feedUrl" type="url" inputmode="url" placeholder="https://… .ics" autocomplete="off" required></label>
+              <label style="display:grid;gap:6px;font-weight:600"><span>Calendar name</span><input id="feedLabel" name="label" maxlength="80" placeholder="e.g. Airbnb" required></label>
               <div><button id="addFeedBtn" class="btn btn-primary" type="submit">Add calendar</button></div>
             </form>
           </article>
-          <article class="card span-4">
+
+          <article class="card span-12" id="refreshAllWidget">
+            <div class="card-head"><div><h3>Refresh all links</h3><p>Re-check every saved calendar and env feed.</p></div><span class="badge" id="refreshAllBadge">Ready</span></div>
+            <div class="metric-label" id="refreshAllMeta">Last refresh: not run yet on this page.</div>
+            <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+              <button id="refreshAllLinks" class="btn btn-secondary" type="button">Refresh all links</button>
+              <button id="refreshFeeds" class="btn btn-secondary" type="button" hidden>Refresh</button>
+              <span class="meta" id="refreshAllHint">Does not change saved URLs — only re-tests them.</span>
+            </div>
+          </article>
+
+          <article class="card span-12">
             <div class="card-head"><div><h3>Live check</h3><p>Last availability probe</p></div></div>
             <div id="liveProbe" class="empty">Checking…</div>
             <div class="widget-footer"><a class="btn btn-secondary" href="/api/calendar" target="_blank" rel="noopener">Open /api/calendar ↗</a></div>
-          </article>
-        </section>
-
-
-        <section class="grid" style="margin-top:16px">
-          <article class="card span-12" id="refreshAllWidget">
-            <div class="card-head"><div><h3>Refresh all links</h3><p>Re-check every saved calendar and env feed, then update status below.</p></div><span class="badge" id="refreshAllBadge">Ready</span></div>
-            <div class="metric-label" id="refreshAllMeta">Last refresh: not run yet on this page.</div>
-            <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-              <button id="refreshAllLinks" class="btn btn-primary" type="button">Refresh all links</button>
-              <span class="meta" id="refreshAllHint">This does not change saved URLs — it only re-tests them.</span>
-            </div>
           </article>
         </section>
 
