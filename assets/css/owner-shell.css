@@ -43,4 +43,9 @@ a.summary-card{text-decoration:none;color:inherit;display:block}
   .channel-cards,.cal-preview{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media(max-width:420px){.cal-preview{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.owner-skip-link{position:absolute;left:12px;top:-48px;z-index:80;background:var(--cjt-deep);color:#fff;padding:8px 12px;border-radius:10px;font-weight:800;text-decoration:none}
+.owner-skip-link:focus{top:12px}
+.nav a:focus-visible,.nav button:focus-visible,.owner-bottom-item:focus-visible,.sidebar-close:focus-visible,.sidebar-flyout-toggle:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.mini.kpi-card:focus-visible,.icon-btn:focus-visible,.btn:focus-visible,.context-chip:focus-visible,.shell-back:focus-visible,.login-card input:focus-visible,.login-card .btn:focus-visible,.cal-preview a:focus-visible,.list-row a:focus-visible{outline:2px solid var(--cjt-deep);outline-offset:2px}
+.login-card label{display:block;font-weight:800;font-size:.82rem}
 

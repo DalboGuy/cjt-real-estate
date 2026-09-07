@@ -277,13 +277,18 @@
       btn.className='owner-bottom-item';
       if(id==='more'){
         btn.type='button';
-        btn.innerHTML='<b>⋯</b><span>More</span>';
+        btn.setAttribute('aria-expanded','false');
+        btn.setAttribute('aria-controls','ownerSidebar');
+        btn.innerHTML='<b aria-hidden="true">⋯</b><span>More</span>';
         btn.addEventListener('click',()=>{moreOpen?closeNav():openNav();});
       }else{
         const item=PRIMARY.find(row=>row.id===id);
         btn.href=item.href;
-        btn.innerHTML=`<b>${id==='overview'?'⌂':id==='calendar'?'▦':id==='bookings'?'☰':'$ '}</b><span>${item.label}</span>`;
-        if(current===id)btn.classList.add('active');
+        btn.innerHTML=`<b aria-hidden="true">${id==='overview'?'⌂':id==='calendar'?'▦':id==='bookings'?'☰':'$'}</b><span>${item.label}</span>`;
+        if(current===id){
+          btn.classList.add('active');
+          btn.setAttribute('aria-current','page');
+        }
         btn.addEventListener('click',e=>{if(!confirmLeave())e.preventDefault();});
       }
       bar.appendChild(btn);
@@ -349,6 +354,7 @@
       backdrop?.classList.add('hidden');
     }
     if(!collapsed)requestAnimationFrame(revealActive);
+    document.querySelector('#ownerBottomNav button.owner-bottom-item')?.setAttribute('aria-expanded', String(isMobile()&&!collapsed));
   }
   function openNav(){setCollapsed(false)}
   function closeNav(){setCollapsed(true);moreOpen=false}
@@ -375,6 +381,33 @@
     app.appendChild(flyout);
 
     if(isMobile())setCollapsed(true);
+  }
+
+  function enhanceLoginA11y(){
+    const input=document.getElementById('passcode');
+    if(input && !input.getAttribute('aria-label') && !document.querySelector('label[for="passcode"]')){
+      const label=document.createElement('label');
+      label.htmlFor='passcode';
+      label.textContent='Owner passcode';
+      input.before(label);
+    }
+    const msg=document.getElementById('loginMsg');
+    if(msg){
+      msg.setAttribute('role','status');
+      msg.setAttribute('aria-live','polite');
+    }
+  }
+
+  function mountSkipLink(){
+    if(!ownerPortal||document.querySelector('.owner-skip-link'))return;
+    const main=document.querySelector('.main');
+    if(main && !main.id)main.id='ownerMain';
+    if(!main?.id)return;
+    const skip=document.createElement('a');
+    skip.className='owner-skip-link';
+    skip.href=`#${main.id}`;
+    skip.textContent='Skip to content';
+    document.body.prepend(skip);
   }
 
   function mountBoot(){
@@ -409,6 +442,8 @@
   mountShellBack();
   mountChipHost();
   markSticky();
+  enhanceLoginA11y();
+  mountSkipLink();
   mountBoot();
 
   menu?.addEventListener('click',openNav);
