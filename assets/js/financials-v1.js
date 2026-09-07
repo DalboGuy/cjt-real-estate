@@ -157,6 +157,13 @@ function stayAdr(row){
   if(row.quote?.missing||row.quote?.total==null||!row.nights)return null;
   return row.quote.total/row.nights;
 }
+function priorDeltaLabel(range){
+  if(range.preset==='month')return 'vs last month';
+  if(range.preset==='ytd')return 'vs last YTD';
+  if(range.preset==='last12')return 'vs prior 12 months';
+  if(range.preset==='2025')return 'vs 2024';
+  return 'vs prior period';
+}
 function percentChange(current,previous){
   if(current==null||previous==null||previous===0)return null;
   return (current-previous)/previous;
@@ -189,6 +196,7 @@ function scopedRows(){
   return financialRows.filter(row=>matchesChannel(row)&&matchesAdvanced(row));
 }
 function periodRows(range=activeRange()){
+  if(range.preset==='custom'&&(!range.from||!range.to))return [];
   return scopedRows().filter(row=>inRange(row.checkin,range));
 }
 function tableRows(){
@@ -337,11 +345,11 @@ function pacing(now=new Date()){
   });
 }
 
-function deltaChip(change){
-  if(change==null)return '';
+function deltaChip(change,label){
+  if(change==null||change===0)return '';
   const up=change>=0;
-  const label=`${up?'+':''}${Math.round(change*1000)/10}% vs prior`;
-  return `<span class="fp-delta ${up?'up':'down'}">${esc(label)}</span>`;
+  const text=`${up?'+':''}${Math.round(change*1000)/10}% ${label||'vs prior'}`;
+  return `<span class="fp-delta ${up?'up':'down'}">${esc(text)}</span>`;
 }
 
 async function financialsApi(){
@@ -393,22 +401,29 @@ function syncChannelOptions(){
 }
 
 function renderKpis(period,range,prior,upcoming,occ){
-  const grossDelta=deltaChip(percentChange(period.total,prior.total));
-  const ownerDelta=deltaChip(percentChange(period.expectedPayout,prior.expectedPayout));
-  const occHint=occ.occupancy==null?'Occupancy needs a bounded period':`${pct(occ.occupancy)} occupancy · ${countOrDash(occ.booked)} of ${countOrDash(occ.available)} nights`;
   const host=document.getElementById('financialKpis');
   host.classList.remove('is-loading');
+  const incompleteCustom=range.preset==='custom'&&(!range.from||!range.to);
+  const deltaLabel=priorDeltaLabel(range);
+  const grossDelta=incompleteCustom?'':deltaChip(percentChange(period.total,prior.total),deltaLabel);
+  const ownerDelta=incompleteCustom?'':deltaChip(percentChange(period.expectedPayout,prior.expectedPayout),deltaLabel);
+  const occHint=incompleteCustom?'Choose a start and end date':(occ.occupancy==null?'Occupancy needs a bounded period':`${pct(occ.occupancy)} occupancy · ${countOrDash(occ.booked)} of ${countOrDash(occ.available)} nights`);
   host.innerHTML=`
-    <article class="fp-kpi"><span class="label">Gross Revenue</span><b class="value">${esc(moneyFull(period.total))}</b>${grossDelta}<span class="hint">Quoted + imported stays · ${esc(rangeLabel(range))}</span></article>
-    <article class="fp-kpi owner"><span class="label">Owner Revenue</span><b class="value">${esc(moneyFull(period.expectedPayout))}</b>${ownerDelta}<span class="hint">After known channel fees and guest taxes</span></article>
-    <article class="fp-kpi"><span class="label">Booked Nights</span><b class="value">${esc(countOrDash(period.nights))}</b><span class="hint">${esc(occHint)}</span></article>
-    <article class="fp-kpi"><span class="label">ADR</span><b class="value">${esc(money(period.adr))}</b><span class="hint">Average daily rate from gross ÷ nights</span></article>
+    <article class="fp-kpi"><span class="label">Gross Revenue</span><b class="value">${esc(incompleteCustom?'—':moneyFull(period.total))}</b>${grossDelta}<span class="hint">${esc(incompleteCustom?'Choose a custom check-in range':`Quoted + imported stays · ${rangeLabel(range)}`)}</span></article>
+    <article class="fp-kpi owner"><span class="label">Owner Revenue</span><b class="value">${esc(incompleteCustom?'—':moneyFull(period.expectedPayout))}</b>${ownerDelta}<span class="hint">After known channel fees and guest taxes</span></article>
+    <article class="fp-kpi"><span class="label">Booked Nights</span><b class="value">${esc(incompleteCustom?'—':countOrDash(period.nights))}</b><span class="hint">${esc(occHint)}</span></article>
+    <article class="fp-kpi"><span class="label">ADR</span><b class="value">${esc(incompleteCustom?'—':money(period.adr))}</b><span class="hint">Average daily rate from gross ÷ nights</span></article>
     <article class="fp-kpi"><span class="label">Upcoming Revenue</span><b class="value">${esc(moneyFull(upcoming.revenue))}</b><span class="hint">${esc(countOrDash(upcoming.nights))} nights already booked in the next 90 days</span></article>`;
 }
 
 function renderChart(rows,range){
   const host=document.getElementById('financialChart');
   const hint=document.getElementById('chartHint');
+  if(range.preset==='custom'&&(!range.from||!range.to)){
+    if(hint)hint.textContent='Choose a start and end date';
+    host.innerHTML='<div class="fp-chart-empty">Pick a custom check-in range to plot monthly performance. Empty months stay blank — not $0.</div>';
+    return;
+  }
   const series=chartSeries(rows,range);
   const metric=chartMetric;
   if(hint)hint.textContent=`${rangeLabel(range)} · months with stored stays`;
