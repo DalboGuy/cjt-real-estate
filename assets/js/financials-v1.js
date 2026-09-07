@@ -467,6 +467,18 @@ function syncChannelOptions(){
 function overlayOpen(){
   return !stayDrawer.classList.contains('hidden')||!methodModal.classList.contains('hidden')||!filterPopover.classList.contains('hidden')||!periodSheet.classList.contains('hidden')||!channelSheet.classList.contains('hidden');
 }
+function updateStickyBar(){
+  const slot=document.getElementById('fpStickySlot');
+  const bar=document.getElementById('fpStickyBar');
+  if(!slot||!bar)return;
+  if(!isMobileFilters()){
+    bar.classList.remove('is-stuck');
+    return;
+  }
+  const top=slot.getBoundingClientRect().top;
+  const safe=Number.parseFloat(getComputedStyle(document.documentElement).paddingTop)||0;
+  bar.classList.toggle('is-stuck',top<=safe+1);
+}
 function closeOverlays(){
   stayDrawer.classList.add('hidden');
   methodModal.classList.add('hidden');
@@ -765,6 +777,7 @@ function renderAll(){
   renderTable(tableRows());
   syncRangeButtons();
   syncFilterBadge();
+  updateStickyBar();
 }
 function renderAllPreservingScroll(){
   withPreservedScroll(renderAll);
@@ -955,6 +968,8 @@ document.getElementById('openMethod')?.addEventListener('click',()=>{
 document.getElementById('closeMethod')?.addEventListener('click',closeOverlays);
 fpScrim.addEventListener('click',closeOverlays);
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeOverlays()});
+window.addEventListener('scroll',updateStickyBar,{passive:true});
+window.addEventListener('resize',updateStickyBar);
 loginForm.addEventListener('submit',async e=>{
   e.preventDefault();
   loginMsg.textContent='Signing in…';
