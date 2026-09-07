@@ -210,6 +210,49 @@
     document.getElementById('lastChecked').textContent=d.source==='fallback'?'Using built-in defaults until the first save':'Schedule saved in Neon';
     if(d.source==='fallback')showNotice('The published schedule is still using built-in defaults. Save settings or add a season to write it into Neon. After that, this page is the only write path.','err');
     else if(notice.classList.contains('err')&&/built-in defaults/i.test(notice.textContent))showNotice('');
+    applyCalendarDate(d);
+  }
+
+  function addDaysIso(iso,n){
+    const d=new Date(`${iso}T00:00:00Z`);
+    d.setUTCDate(d.getUTCDate()+n);
+    return d.toISOString().slice(0,10);
+  }
+  function dateFromUrl(){
+    try{
+      const v=new URLSearchParams(location.search).get('date')||'';
+      return /^\d{4}-\d{2}-\d{2}$/.test(v)?v:'';
+    }catch{return '';}
+  }
+  function applyCalendarDate(catalog){
+    const selected=dateFromUrl();
+    const banner=document.getElementById('calendarDateBanner');
+    if(!selected){
+      if(banner){banner.classList.add('hidden');banner.textContent='';}
+      return;
+    }
+    const checkout=addDaysIso(selected,1);
+    const checkinEl=document.getElementById('quoteCheckin');
+    const checkoutEl=document.getElementById('quoteCheckout');
+    if(checkinEl) checkinEl.value=selected;
+    if(checkoutEl) checkoutEl.value=checkout;
+    const season=(catalog?.seasons||[]).find(s=>selected>=s.start&&selected<=s.end);
+    if(banner){
+      banner.classList.remove('hidden');
+      banner.textContent=season
+        ? `Selected from Calendar: ${date(selected)}. This night uses the “${season.name}” season (${money(season.weekday)} weekday / ${money(season.weekend)} weekend). Edit that season below — there is no per-night rate override.`
+        : `Selected from Calendar: ${date(selected)}. No published season covers this night. Add or extend a season below — there is no per-night rate override.`;
+    }
+    if(season){
+      const key=monthKey(season.start);
+      const label=monthLabel(key);
+      document.querySelectorAll('.season-group').forEach(el=>{
+        const heading=el.querySelector('.season-group-heading strong');
+        if(heading&&heading.textContent===label) el.open=true;
+      });
+      const row=document.querySelector(`[data-season-id="${season.id}"]`);
+      if(row) row.classList.add('editing');
+    }
   }
 
   function quoteError(payload){

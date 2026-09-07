@@ -60,6 +60,8 @@ Occupancy strip for the viewed period: Guest occupancy, Guest nights, Arrivals, 
 
 The owner calendar is not the final booking authority. Direct hold creation always re-checks availability on the server.
 
+Pressing a calendar day opens a night drawer with an action list at the top: Block dates / Close night, Owner stay, Adjust pricing (deep-link to `/owner-v1/pricing?date=YYYY-MM-DD`), plus View Reservation / Financials / Guest Messages when a Direct reservation ID exists, and Edit notes / Remove when that night already has a manual block or owner stay. Adjust pricing does **not** write a per-night rate — Owner Pricing remains season-based.
+
 Guest phone and email are omitted from the owner calendar API unless `show_guest_contact` is on. Guest names are included only when `show_guest_names` is on, and the UI shows them in the night detail drawer (not on the grid or upcoming list).
 
 ## Owner connections

@@ -219,6 +219,33 @@ module.exports=async function(req,res){
       return res.status(200).json({ok:true, entry:rows[0]});
     }
 
+    if(req.method==='POST'&&body.action==='calendar_entry_update'){
+      const id=Number(body.id);
+      const kind=String(body.kind||'').trim();
+      const startDate=String(body.startDate||'').trim();
+      const endDate=String(body.endDate||'').trim();
+      const notes=String(body.notes||'').trim().slice(0,500)||null;
+      if(!Number.isInteger(id)||id<1) return res.status(400).json({error:'invalid_id'});
+      if(!['manual_block','owner_stay'].includes(kind)){
+        return res.status(400).json({error:'invalid_kind',message:'Choose a manual block or an owner stay.'});
+      }
+      if(!validIsoDate(startDate)||!validIsoDate(endDate)||endDate<=startDate){
+        return res.status(400).json({error:'invalid_dates',message:'End date must be after the start date. End date is the morning the home is available again.'});
+      }
+      const nights=eachDate(startDate,endDate).length;
+      if(nights<1||nights>180){
+        return res.status(400).json({error:'invalid_range',message:'Choose a stay or block between 1 and 180 nights.'});
+      }
+      const rows=await sql`
+        UPDATE owner_calendar_entries
+        SET kind=${kind}, start_date=${startDate}::date, end_date=${endDate}::date, notes=${notes}, updated_at=now()
+        WHERE id=${id}
+        RETURNING id, kind, start_date::text, end_date::text, notes
+      `;
+      if(!rows.length) return res.status(404).json({error:'not_found',message:'That block or stay was already removed.'});
+      return res.status(200).json({ok:true, entry:rows[0]});
+    }
+
     if(req.method==='POST'&&body.action==='calendar_entry_delete'){
       const id=Number(body.id);
       if(!Number.isInteger(id)||id<1) return res.status(400).json({error:'invalid_id'});

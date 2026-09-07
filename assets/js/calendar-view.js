@@ -345,6 +345,59 @@
     return '';
   }
 
+  function occupyingEntries(date,evs){
+    return (evs||[]).filter(ev=>ev.canDelete&&ev.entryId&&ev.start<=date&&date<ev.end);
+  }
+
+  function nightActionsHtml(date,evs){
+    const entries=occupyingEntries(date,evs);
+    const reservations=(evs||[]).filter(ev=>ev.reservationId);
+    const otaOnly=(evs||[]).some(ev=>!ev.reservationId&&(ev.kind==='ota'||ev.origin==='ota'||ev.origin==='env'));
+    const pricingHref=`/owner-v1/pricing?date=${encodeURIComponent(date)}`;
+    const reservationBtns=reservations.map(ev=>{
+      const id=encodeURIComponent(ev.reservationId);
+      return `<a class="btn btn-secondary" href="/owner-v1/reservations?booking=${id}">View Reservation</a>
+        <a class="btn btn-secondary" href="/owner-v1/financials?booking=${id}">View Financials</a>
+        <a class="btn btn-secondary" href="/owner-v1/communications?reservation=${id}">View Guest Messages</a>`;
+    }).join('');
+    const entryBtns=entries.map(ev=>{
+      const label=ev.channel==='owner_stay'?'owner stay':'block';
+      return `<button class="btn btn-secondary" type="button" data-cal-action="edit" data-entry-id="${ev.entryId}">Edit notes</button>
+        <button class="btn danger-btn" type="button" data-cal-action="remove" data-entry-id="${ev.entryId}">Remove ${esc(label)}</button>`;
+    }).join('');
+    const otaNote=otaOnly&&!reservations.length
+      ? '<p class="cal-feed-note">Detailed reservation record is not available from this calendar feed.</p>'
+      : '';
+    return `<div class="cal-night-actions" role="group" aria-label="Actions for this night">
+      <p class="cal-night-actions-label">Actions for this night</p>
+      <button class="btn btn-primary" type="button" data-cal-action="block" data-date="${esc(date)}">Block dates / Close night</button>
+      <button class="btn btn-secondary" type="button" data-cal-action="owner-stay" data-date="${esc(date)}">Owner stay</button>
+      <a class="btn btn-secondary" href="${esc(pricingHref)}">Adjust pricing</a>
+      ${reservationBtns}
+      ${entryBtns}
+      <p class="cal-action-note">Adjust pricing opens Owner Pricing for ${esc(fmtShort(date))}. Rates are by season — there is no per-night override.</p>
+      ${otaNote}
+    </div>`;
+  }
+
+  function bindNightActions(root){
+    if(!root)return;
+    root.querySelectorAll('[data-cal-action]').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        const action=btn.getAttribute('data-cal-action');
+        const date=btn.getAttribute('data-date')||focusDate;
+        const entryId=Number(btn.getAttribute('data-entry-id'));
+        if(action==='block') fillForm(date,{kind:'manual_block'});
+        else if(action==='owner-stay') fillForm(date,{kind:'owner_stay'});
+        else if(action==='edit'){
+          const ev=(snapshot?.events||[]).find(item=>Number(item.entryId)===entryId);
+          if(!ev)return;
+          fillForm(ev.start,{kind:ev.channel==='owner_stay'?'owner_stay':'manual_block',entry:ev});
+        }else if(action==='remove') removeEntry(entryId);
+      });
+    });
+  }
+
   function turnBadges(date,ev){
     const bits=[];
     if(ev.start===date) bits.push('<span class="cal-turn cal-turn-in">Check-in</span>');
@@ -516,35 +569,23 @@
     const night=snapshot.nights[date];
     const wrap=document.createElement('div');
     wrap.className='cal-agenda';
+    wrap.innerHTML=nightActionsHtml(date,evs)+(night?.conflict?`<div class="notice cal-conflict">Overlap: more than one source claims this night.</div>`:'');
     if(!evs.length){
-      wrap.innerHTML=`<div class="empty">Open night — guests can request this date unless an OTA feed is down.</div>
-        <div class="widget-footer"><button class="btn btn-primary" type="button" data-fill="${date}">Block or owner stay</button></div>`;
+      const empty=document.createElement('div');
+      empty.className='empty';
+      empty.textContent='Open night — guests can request this date unless an OTA feed is down.';
+      wrap.appendChild(empty);
     }else{
-      wrap.innerHTML=evs.map(ev=>`<article class="card">
+      wrap.insertAdjacentHTML('beforeend', evs.map(ev=>`<article class="card">
         <div class="card-head"><div><h3>${esc(ev.label)} ${turnBadges(date,ev)}</h3><p>${esc(ev.start)} → ${esc(ev.end)} · ${esc(ev.nights)} night${ev.nights===1?'':'s'}</p></div><span class="badge ${ev.statusBucket==='hold'?'warn':ev.statusBucket==='cancelled'?'':'good'}">${esc(ev.statusBucket)}</span></div>
         <div class="reservation-meta">${esc(drawerGuestLabel(ev))}${ev.guestCount?` · ${esc(ev.guestCount)} guests`:''}${ev.sourceLabel?` · ${esc(ev.sourceLabel)}`:''}</div>
         ${contactLine(ev)}
         ${ev.notes?`<p class="reservation-meta">${esc(ev.notes)}</p>`:''}
         ${ev.occupancy?'':'<div class="metric-label">Excluded from occupancy %.</div>'}
-        ${moduleLinksHtml(ev)}
-        <div class="widget-footer">
-          <button class="btn btn-secondary" type="button" data-open="${esc(date)}">Night details</button>
-          ${ev.canDelete?`<button class="btn danger-btn" type="button" data-del="${ev.entryId}">Remove</button>`:''}
-        </div>
-      </article>`).join('')+`<div class="widget-footer"><button class="btn btn-secondary" type="button" data-fill="${date}">Add another block</button></div>`;
-    }
-    if(night?.conflict){
-      const banner=document.createElement('div');
-      banner.className='notice cal-conflict';
-      banner.textContent='Overlap: more than one source claims this night.';
-      wrap.prepend(banner);
+      </article>`).join(''));
     }
     mount.append(wrap);
-    wrap.querySelector('[data-fill]')?.addEventListener('click',e=>{
-      fillForm(e.currentTarget.getAttribute('data-fill'));
-    });
-    wrap.querySelectorAll('[data-open]').forEach(btn=>btn.addEventListener('click',()=>openDrawer(btn.getAttribute('data-open'))));
-    wrap.querySelectorAll('[data-del]').forEach(btn=>btn.addEventListener('click',()=>removeEntry(Number(btn.getAttribute('data-del')))));
+    bindNightActions(wrap);
     return evs.length;
   }
 
@@ -575,29 +616,21 @@
     const night=snapshot?.nights?.[date];
     document.getElementById('drawerTitle').textContent=fmt(date);
     document.getElementById('drawerMeta').textContent=night?.conflict?'Overlap: more than one source claims this night.':'Check-in 4:00 PM · checkout 10:00 AM';
-    if(!evs.length){
-      drawerBody.innerHTML=`<div class="empty">Open night — guests can request this date unless an OTA feed is down.</div>
-        <div class="widget-footer"><button class="btn btn-primary" type="button" data-fill="${date}">Block or owner stay</button></div>`;
-    }else{
-      drawerBody.innerHTML=evs.map(ev=>`<article class="card" style="margin-top:12px;padding:14px">
+    const details=!evs.length
+      ? `<div class="empty">Open night — guests can request this date unless an OTA feed is down.</div>`
+      : evs.map(ev=>`<article class="card" style="margin-top:12px;padding:14px">
         <div class="card-head"><div><h3>${esc(ev.label)} ${turnBadges(date,ev)}</h3><p>${esc(ev.start)} → ${esc(ev.end)} · ${esc(ev.nights)} night${ev.nights===1?'':'s'}</p></div><span class="badge ${ev.statusBucket==='hold'?'warn':ev.statusBucket==='cancelled'?'':'good'}">${esc(ev.statusBucket)}</span></div>
         <div class="reservation-meta">${esc(drawerGuestLabel(ev))}${ev.guestCount?` · ${esc(ev.guestCount)} guests`:''}${ev.sourceLabel?` · ${esc(ev.sourceLabel)}`:''}</div>
         ${contactLine(ev)}
         ${ev.notes?`<p class="reservation-meta">${esc(ev.notes)}</p>`:''}
         ${ev.occupancy?'':'<div class="metric-label">Excluded from occupancy %.</div>'}
-        ${moduleLinksHtml(ev)}
-        ${ev.canDelete?`<div class="widget-footer"><button class="btn danger-btn" type="button" data-del="${ev.entryId}">Remove</button></div>`:''}
-      </article>`).join('')+`<div class="widget-footer"><button class="btn btn-secondary" type="button" data-fill="${date}">Add another block</button></div>`;
-    }
+      </article>`).join('');
+    drawerBody.innerHTML=nightActionsHtml(date,evs)+details;
     drawer.classList.remove('hidden');
     drawerBackdrop?.classList.remove('hidden');
     drawer.setAttribute('aria-hidden','false');
-    document.getElementById('drawerClose')?.focus();
-    drawerBody.querySelector('[data-fill]')?.addEventListener('click',e=>{
-      fillForm(e.currentTarget.getAttribute('data-fill'));
-      closeDrawer();
-    });
-    drawerBody.querySelectorAll('[data-del]').forEach(btn=>btn.addEventListener('click',()=>removeEntry(Number(btn.getAttribute('data-del')))));
+    bindNightActions(drawerBody);
+    drawerBody.querySelector('[data-cal-action]')?.focus();
   }
 
   function closeDrawer(){
@@ -619,11 +652,25 @@
     blockDrawer?.setAttribute('aria-hidden','true');
   }
 
-  function fillForm(date){
+  function fillForm(date,opts={}){
+    const kind=opts.kind||'manual_block';
+    const entry=opts.entry||null;
+    const kindEl=document.getElementById('blockKind');
     const start=document.getElementById('blockStart');
     const end=document.getElementById('blockEnd');
-    if(start) start.value=date||'';
-    if(end) end.value=date?addDays(date,1):'';
+    const notes=document.getElementById('blockNotes');
+    const idEl=document.getElementById('blockEntryId');
+    const title=document.getElementById('blockDrawerTitle');
+    if(kindEl) kindEl.value=kind;
+    if(start) start.value=entry?.start||date||'';
+    if(end) end.value=entry?.end||(date?addDays(date,1):'');
+    if(notes) notes.value=entry?.notes||'';
+    if(idEl) idEl.value=entry?.entryId||'';
+    if(title){
+      if(entry) title.textContent=kind==='owner_stay'?'Edit owner stay':'Edit block';
+      else title.textContent=kind==='owner_stay'?'Owner stay':'Block dates';
+    }
+    closeDrawer();
     openBlockDrawer();
   }
 
@@ -884,7 +931,9 @@
   drawerBackdrop?.addEventListener('click',closeDrawer);
   document.getElementById('blockDrawerClose')?.addEventListener('click',closeBlockDrawer);
   blockDrawerBackdrop?.addEventListener('click',closeBlockDrawer);
-  document.getElementById('blockDatesBtn')?.addEventListener('click',()=>openBlockDrawer());
+  document.getElementById('blockDatesBtn')?.addEventListener('click',()=>{
+    fillForm('',{kind:'manual_block'});
+  });
   document.getElementById('syncCalendarsBtn')?.addEventListener('click',()=>syncCalendars());
   document.getElementById('syncStatusBtn')?.addEventListener('click',()=>{
     const details=document.getElementById('syncDetails');
@@ -905,11 +954,14 @@
     const startDate=document.getElementById('blockStart')?.value;
     const endDate=document.getElementById('blockEnd')?.value;
     const notes=document.getElementById('blockNotes')?.value||'';
+    const entryId=Number(document.getElementById('blockEntryId')?.value);
     try{
-      const overlap=overlappingEvents(startDate,endDate).filter(ev=>ev.occupancy);
-      await ownerApi('calendar_entry_save',{kind,startDate,endDate,notes});
+      const overlap=overlappingEvents(startDate,endDate).filter(ev=>ev.occupancy&&Number(ev.entryId)!==entryId);
+      if(entryId) await ownerApi('calendar_entry_update',{id:entryId,kind,startDate,endDate,notes});
+      else await ownerApi('calendar_entry_save',{kind,startDate,endDate,notes});
       e.target.reset();
-      const saved=kind==='owner_stay'?'Owner stay saved':'Manual block saved';
+      if(document.getElementById('blockEntryId')) document.getElementById('blockEntryId').value='';
+      const saved=entryId?(kind==='owner_stay'?'Owner stay updated':'Block updated'):(kind==='owner_stay'?'Owner stay saved':'Manual block saved');
       showNotice(overlap.length?`${saved}. Overlaps an existing guest stay or OTA block.`:saved, overlap.length?7000:4500);
       closeBlockDrawer();
       await load();
