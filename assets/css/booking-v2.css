@@ -17,7 +17,7 @@
 .amenities-v3 .amenity-item{font-size:.95rem;color:var(--ink)}
 .amenities-v3 .amenity-item svg{stroke:var(--deep)}
 .amenities-v3 .section-action{margin-top:18px}
-.amenities-v3 .section-action .btn{min-width:12.5rem}
+.amenities-v3 .section-action .btn{min-width:14.5rem}
 .amenity-directory,.amenities-modal-directory{display:grid;grid-template-columns:1fr 1fr;gap:28px 40px;margin-top:16px}
 .amenity-column{display:flex;flex-direction:column;gap:22px;min-width:0}
 .amenity-category h3{display:flex;align-items:center;gap:9px;font-size:.98rem;margin:0 0 8px}

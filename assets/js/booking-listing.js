@@ -14,10 +14,12 @@
   }
   function hydrateAmenitiesModal(){
     const target=$('amenitiesModalGrid');
-    if(!target||target.children.length)return;
-    const source=document.querySelector('#amenities [data-amenities-source], .amenity-directory:not(#amenitiesModalGrid)');
-    if(!source)return;
-    [...source.children].forEach(column=>target.appendChild(column.cloneNode(true)));
+    if(target&&!target.children.length){
+      const source=document.querySelector('#amenities [data-amenities-source], .amenity-directory:not(#amenitiesModalGrid)');
+      if(source)[...source.children].forEach(column=>target.appendChild(column.cloneNode(true)));
+    }
+    const btn=$('amenitiesBtn'),count=target?target.querySelectorAll('li').length:0;
+    if(btn&&count)btn.textContent=`Show all ${count} amenities`;
   }
 
   let photos=[],assetManifest=null;
