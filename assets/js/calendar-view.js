@@ -79,6 +79,38 @@
   function isAppVisible(){
     return !document.getElementById('ownerApp')?.classList.contains('hidden');
   }
+  function showLogin(){
+    document.getElementById('ownerApp')?.classList.add('hidden');
+    document.getElementById('loginShell')?.classList.remove('hidden');
+  }
+
+  function clearConnectionsLoading(text,force){
+    const pill=document.getElementById('feedStatusPill');
+    if(pill && (force || /loading/i.test(pill.textContent||''))){
+      pill.textContent=text;
+      pill.dataset.state='failed';
+    }
+    const probe=document.getElementById('liveProbe');
+    if(probe && (force || /checking/i.test((probe.textContent||'').trim()))){
+      probe.innerHTML=`<div class="empty">${esc(text)}</div>`;
+    }
+  }
+
+  function clearFailedChrome(message,opts={}){
+    const unauthorized=opts.unauthorized===true;
+    if(unauthorized) snapshot=null;
+    setLoadChrome('failed',message,unauthorized?'Sign in':'Could not load');
+    clearConnectionsLoading(unauthorized?'Sign in':'Unavailable',unauthorized);
+    const title=document.getElementById('calTitle');
+    if(title) title.textContent='Calendar';
+    if(!snapshot && mount){
+      mount.innerHTML='';
+      mount.dataset.state='failed';
+      mount.setAttribute('aria-busy','false');
+    }
+    document.getElementById('calendarEmpty')?.classList.add('hidden');
+    if(unauthorized) showLogin();
+  }
 
   async function ownerApi(action,payload={}){
     const r=await fetch('/api/owner',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,...payload})});
@@ -143,7 +175,7 @@
     return map;
   }
 
-  function setLoadChrome(state,message){
+  function setLoadChrome(state,message,pillText){
     loadState=state;
     loadError=message||'';
     const pill=document.getElementById('viewStatusPill');
@@ -155,9 +187,10 @@
     if(pill){
       pill.dataset.state=state;
       if(state==='loading') pill.textContent='Loading…';
-      else if(state==='failed') pill.textContent='Could not load';
+      else if(state==='failed') pill.textContent=pillText||'Could not load';
       else if(state==='empty') pill.textContent=syncStatusPhrase();
       else if(snapshot) pill.textContent=syncStatusPhrase();
+      else pill.textContent=pillText||'Calendar';
     }
     if(failed){
       const showFail=state==='failed'&&!snapshot;
@@ -487,7 +520,10 @@
       showNotice('Removed from calendar');
       closeDrawer();
       await load();
-    }catch(e){showNotice(e.message||'Could not remove');}
+    }catch(e){
+      if(e.message==='unauthorized'){clearFailedChrome('Sign in to view Calendar.',{unauthorized:true});return;}
+      showNotice(e.message||'Could not remove');
+    }
   }
 
   function renderUpcoming(){
@@ -579,16 +615,13 @@
       render();
       return data;
     }catch(e){
-      if(e.message==='unauthorized')return null;
-      if(gen!==loadGeneration) return null;
-      setLoadChrome('failed',e.message||'Could not load calendar');
-      showLoadError(e.message||'Could not load calendar');
-      if(hadSnapshot) render();
-      else{
-        if(mount) mount.innerHTML='';
-        const title=document.getElementById('calTitle');
-        if(title) title.textContent='Calendar';
-      }
+      if(gen!==loadGeneration && e.message!=='unauthorized') return null;
+      const unauthorized=e.message==='unauthorized';
+      const message=unauthorized?'Sign in to view Calendar.':(e.message||'Could not load calendar');
+      clearFailedChrome(message,{unauthorized});
+      if(unauthorized) return null;
+      if(!unauthorized) showLoadError(message);
+      if(hadSnapshot && snapshot) render();
       throw e;
     }
   }
@@ -625,7 +658,10 @@
       if(snapshot) snapshot.settings=settings;
       if(reload) await load().catch(()=>{});
       else render();
-    }catch(e){showNotice(e.message||'Could not save calendar setting');}
+    }catch(e){
+      if(e.message==='unauthorized'){clearFailedChrome('Sign in to view Calendar.',{unauthorized:true});return;}
+      showNotice(e.message||'Could not save calendar setting');
+    }
     finally{savingSettings=false;}
   }
 
@@ -690,25 +726,28 @@
       const saved=kind==='owner_stay'?'Owner stay saved':'Manual block saved';
       showNotice(overlap.length?`${saved}. Overlaps an existing guest stay or OTA block.`:saved, overlap.length?7000:4500);
       await load().catch(()=>{});
-    }catch(err){showNotice(err.message||'Could not save');}
+    }catch(err){
+      if(err.message==='unauthorized'){clearFailedChrome('Sign in to view Calendar.',{unauthorized:true});return;}
+      showNotice(err.message||'Could not save');
+    }
   });
 
   window.addEventListener('cjt-calendar-feeds-updated',()=>requestLoad());
 
   function bootWhenVisible(){
-    if(isAppVisible()){
+    const app=document.getElementById('ownerApp');
+    let wasHidden=!isAppVisible();
+    const tryLoad=()=>{
+      if(!isAppVisible())return;
       if(!snapshot && loadState==='loading') renderSkeleton();
       requestLoad();
-      return;
-    }
-    const app=document.getElementById('ownerApp');
+    };
+    if(isAppVisible()) tryLoad();
     if(!app)return;
     const obs=new MutationObserver(()=>{
-      if(isAppVisible()){
-        obs.disconnect();
-        if(!snapshot && loadState==='loading') renderSkeleton();
-        requestLoad();
-      }
+      const visible=isAppVisible();
+      if(visible && wasHidden) tryLoad();
+      wasHidden=!visible;
     });
     obs.observe(app,{attributes:true,attributeFilter:['class']});
   }
