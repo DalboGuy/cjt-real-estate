@@ -74,7 +74,7 @@
     for(let day=1;day<=days;day++){
       const k=`${y}-${String(m+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`,past=k<today,isBlocked=blocked.has(k),checkoutOption=isBlocked&&canCheckoutOn(k),b=document.createElement('button');
       b.type='button';b.className='day';b.textContent=day;if(selectedStart===k||selectedEnd===k)b.classList.add('selected');else if(selectedStart&&selectedEnd&&k>selectedStart&&k<selectedEnd)b.classList.add('range');
-      b.disabled=!calendarHealthy||past||(isBlocked&&!checkoutOption);b.title=isBlocked&&!checkoutOption?'Unavailable':'';if(!b.disabled)b.onclick=()=>selectDate(k,isBlocked);grid.appendChild(b)
+      b.disabled=past||(isBlocked&&!checkoutOption);b.title=isBlocked&&!checkoutOption?'Unavailable':'';if(!b.disabled)b.onclick=()=>selectDate(k,isBlocked);grid.appendChild(b)
     }
     target.appendChild(grid);target.classList.toggle('secondary',secondary);
   }
@@ -89,9 +89,46 @@
   function openCalendar(){if(selectedStart){const d=toUtc(selectedStart);pickerCursor=new Date(d.getUTCFullYear(),d.getUTCMonth(),1)}renderPicker();calendarModal.classList.add('show');document.body.classList.add('modal-open')}
   function closeCalendar(){calendarModal.classList.remove('show');document.body.classList.remove('modal-open')}
   document.querySelectorAll('[data-open-calendar]').forEach(b=>b.onclick=openCalendar);$('calendarClose').onclick=closeCalendar;$('calPrev').onclick=()=>{pickerCursor=new Date(pickerCursor.getFullYear(),pickerCursor.getMonth()-1,1);renderPicker()};$('calNext').onclick=()=>{pickerCursor=new Date(pickerCursor.getFullYear(),pickerCursor.getMonth()+1,1);renderPicker()};calendarModal.addEventListener('click',e=>{if(e.target===calendarModal)closeCalendar()});
+  function sourceChannel(s){
+    if(s&&s.channel)return String(s.channel).toLowerCase();
+    const hay=`${s&&s.name||''} ${s&&s.label||''} ${s&&s.hostHint||''}`.toLowerCase();
+    if(hay.includes('airbnb'))return 'airbnb';
+    if(hay.includes('vrbo')||hay.includes('homeaway'))return 'vrbo';
+    if(hay.includes('booking'))return 'booking.com';
+    return '';
+  }
+  function summarizeHealth(sources){
+    const degraded=[],satisfied=[];
+    for(const ch of ['airbnb','vrbo','booking.com']){
+      const matches=(sources||[]).filter(s=>sourceChannel(s)===ch);
+      if(!matches.length)continue;
+      if(matches.some(s=>s.ok!==false))satisfied.push(ch);else degraded.push(ch);
+    }
+    return {ok:!degraded.length,degraded,satisfied};
+  }
+  function applyCalendarStatus(health, fetchFailed){
+    const el=$('calendarHealth');
+    calendarHealthy=!!(health&&health.ok)&&!fetchFailed;
+    el.classList.toggle('is-degraded',!calendarHealthy);
+    if(fetchFailed){el.textContent='Live calendar feeds could not be refreshed. Open nights stay selectable; only past dates and known blocked nights are disabled. Request to Book still rechecks availability.';return}
+    if(health&&health.degraded&&health.degraded.length){el.textContent=`Calendar feeds are degraded (${health.degraded.join(', ')}). Open nights stay selectable; blocked nights stay blocked. Request to Book still rechecks live availability.`;return}
+    el.textContent=(health&&health.message)||'Availability synced from connected calendars.';
+  }
   async function refreshAvailability(){
-    $('calendarHealth').textContent='Checking live availability…';calendarHealthy=false;
-    try{const u=new URL('/api/calendar',location.origin);u.searchParams.set('_',String(Date.now()));const r=await fetch(u,{cache:'no-store'});if(!r.ok)throw new Error('availability_unavailable');const d=await r.json();blocked=new Set(d.blockedDates||[]);const required=(d.sources||[]).filter(s=>['airbnb','vrbo'].includes(String(s.name).toLowerCase()));calendarHealthy=required.length?required.every(s=>s.ok!==false):true;$('calendarHealth').textContent=calendarHealthy?'Availability synced from connected calendars.':'One or more required calendars could not be verified. Booking requests are temporarily paused.';renderPicker()}catch{$('calendarHealth').textContent='Live availability is temporarily unavailable. Please contact CJT.';calendarHealthy=false;renderPicker()}}
+    $('calendarHealth').textContent='Checking live availability…';calendarHealthy=false;$('calendarHealth').classList.remove('is-degraded');
+    try{
+      const u=new URL('/api/calendar',location.origin);u.searchParams.set('_',String(Date.now()));
+      const r=await fetch(u,{cache:'no-store'});
+      const d=await r.json().catch(()=>({}));
+      if(Array.isArray(d.blockedDates))blocked=new Set(d.blockedDates);
+      const health=d.health&&Array.isArray(d.health.degraded)?d.health:summarizeHealth(d.sources||[]);
+      applyCalendarStatus(health,!r.ok);
+      renderPicker();
+    }catch{
+      applyCalendarStatus({ok:false,degraded:[]},true);
+      renderPicker();
+    }
+  }
   refreshAvailability();
 
   const guestPopover=$('guestPopover');
@@ -104,7 +141,7 @@
     const p=q.paymentSchedule||{};if(p.mode==='split')$('paymentCopy').innerHTML=`<strong>${money(p.dueAtBooking)} initially (50%)</strong>Remaining ${money(p.remainingBalance)} due ${esc(p.balanceDueDateLabel||'30 days before arrival')}. Payment collection is deferred — you will not be charged now.`;else $('paymentCopy').innerHTML=`<strong>${total} due in full</strong>${p.reason==='within_30_days'?'Arrival is within 30 days, so the documented schedule requires full payment when the booking is completed.':'Full payment is documented for this reservation.'} Payment collection is deferred — you will not be charged now.`;
   }
   async function loadQuote(){
-    if(!selectedStart||!selectedEnd)return resetQuote();if(!calendarHealthy){$('quoteError').hidden=false;$('quoteError').textContent='Live availability cannot be verified right now.';return}
+    if(!selectedStart||!selectedEnd)return resetQuote();
     $('bookPrice').innerHTML='<span class="price-main">Checking price…</span>';$('bookNowBtn').disabled=true;
     try{const u=new URL('/api/quote',location.origin);u.searchParams.set('checkin',selectedStart);u.searchParams.set('checkout',selectedEnd);u.searchParams.set('guests',String(guests));const r=await fetch(u,{cache:'no-store'}),d=await r.json();if(!r.ok)throw new Error(d.message||'Price is unavailable for those dates.');renderQuote(d.quote)}catch(e){currentQuote=null;$('quoteBreakdown').classList.remove('show');$('quoteError').hidden=false;$('quoteError').textContent=e.message;$('bookPrice').innerHTML='<span class="price-main">Dates need review</span>'}finally{$('bookNowBtn').disabled=false}}
   $('refreshQuote').onclick=loadQuote;

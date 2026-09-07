@@ -138,12 +138,51 @@ assert.strictEqual(processing.ownerApproved, false);
 
 const holdNights = eachDate('2026-12-10', '2026-12-13');
 assert.deepStrictEqual(holdNights, ['2026-12-10', '2026-12-11', '2026-12-12']);
+const {
+  classifyCalendarChannel,
+  summarizeCalendarHealth,
+  calendarHealthCopy,
+  guestDayDisabled
+} = require('../lib/calendar-health');
+
+assert.strictEqual(classifyCalendarChannel({ name: 'owner:1', label: 'Airbnb' }).channel, 'airbnb');
+assert.strictEqual(classifyCalendarChannel({ name: 'owner:2', url: 'https://www.vrbo.com/calendar/ical/x.ics' }).channel, 'vrbo');
+assert.strictEqual(classifyCalendarChannel({ name: 'owner:3', url: 'https://admin.booking.com/hotel/hoteladmin/ical.html?t=abc' }).channel, 'booking.com');
+assert.strictEqual(classifyCalendarChannel({ name: 'airbnb' }).channel, 'airbnb');
+
+const ownerCoversAirbnb = summarizeCalendarHealth([
+  { name: 'airbnb', ok: false },
+  { name: 'owner:1', ok: true, label: 'Airbnb' },
+  { name: 'vrbo', ok: true }
+]);
+assert.strictEqual(ownerCoversAirbnb.ok, true);
+assert.deepStrictEqual(ownerCoversAirbnb.satisfied, ['airbnb', 'vrbo']);
+assert.deepStrictEqual(ownerCoversAirbnb.degraded, []);
+
+const envAirbnbDown = summarizeCalendarHealth([
+  { name: 'airbnb', ok: false },
+  { name: 'vrbo', ok: true },
+  { name: 'owner:1', ok: true, label: 'House calendar' }
+]);
+assert.strictEqual(envAirbnbDown.ok, false);
+assert.deepStrictEqual(envAirbnbDown.degraded, ['airbnb']);
+assert.match(calendarHealthCopy(envAirbnbDown), /degraded \(airbnb\)/);
+assert.strictEqual(guestDayDisabled({ past: false, isBlocked: false }), false);
+assert.strictEqual(guestDayDisabled({ past: true, isBlocked: false }), true);
+assert.strictEqual(guestDayDisabled({ past: false, isBlocked: true, checkoutOption: false }), true);
+assert.strictEqual(guestDayDisabled({ past: false, isBlocked: true, checkoutOption: true }), false);
+
 const calendarSrc = fs.readFileSync(path.join(__dirname, '../api/calendar.js'), 'utf8');
 const icsSrc = fs.readFileSync(path.join(__dirname, '../api/direct-bookings.js'), 'utf8');
+const listingSrc = fs.readFileSync(path.join(__dirname, '../assets/js/booking-listing.js'), 'utf8');
 assert.match(calendarSrc, /no-store/);
 assert.doesNotMatch(calendarSrc, /s-maxage=60/);
+assert.match(calendarSrc, /summarizeCalendarHealth/);
 assert.match(icsSrc, /no-store/);
 assert.doesNotMatch(icsSrc, /s-maxage=60/);
 assert.match(icsSrc, /Hold - Direct Booking Request/);
+assert.doesNotMatch(listingSrc, /disabled=!calendarHealthy/);
+assert.doesNotMatch(listingSrc, /Booking requests are temporarily paused/);
+assert.match(listingSrc, /b\.disabled=past\|\|\(isBlocked&&!checkoutOption\)/);
 
 console.log('verify-booking-completion: ok');

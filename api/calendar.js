@@ -1,4 +1,5 @@
 const { getOtaBlockedDates, eachDate } = require('../lib/availability');
+const { summarizeCalendarHealth } = require('../lib/calendar-health');
 const { getActiveReservations } = require('../lib/db');
 
 function noStore(res){
@@ -28,14 +29,16 @@ module.exports=async function(req,res){
     sources.push({name:'direct',ok:true,count:reservations.length,holds});
   }catch(e){sources.push({name:'direct',ok:false,error:e.message});}
   noStore(res);
+  const health=summarizeCalendarHealth(sources);
   if(otaConfigError){
     return res.status(503).json({
       blockedDates:[],
       sources,
+      health,
       error:'ota_calendar_configuration_missing',
       missingEnv:otaConfigError.missingEnv,
       checkedAt:new Date().toISOString()
     });
   }
-  res.status(200).json({blockedDates:[...all].sort(),sources,holds,checkedAt:new Date().toISOString()});
+  res.status(200).json({blockedDates:[...all].sort(),sources,health,holds,checkedAt:new Date().toISOString()});
 };
