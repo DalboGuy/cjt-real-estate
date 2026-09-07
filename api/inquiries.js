@@ -12,6 +12,11 @@ const {
   quoteSnapshotFor,
   resolveDatesConflict
 } = require('../lib/inquiry-create');
+const {
+  REQUEST_VS_OWNER,
+  findOverlappingLocks,
+  findOverlappingOwnerBlocks
+} = require('../lib/date-conflicts');
 
 function clean(v, max = 500) {
   return String(v || '').trim().slice(0, max);
@@ -77,18 +82,15 @@ module.exports = async function (req, res) {
 
     const { dates: blockedDates } = await getGuestBlockedDates();
     const requested = eachDate(checkin, checkout);
-    if (requested.some((d) => blockedDates.has(d))) {
-      const conflict = await resolveDatesConflict(sql, payload, DATES_UNAVAILABLE.message);
+    const ownerBlocks = await findOverlappingOwnerBlocks(sql, checkin, checkout);
+    if (ownerBlocks.length || requested.some((d) => blockedDates.has(d))) {
+      const message = ownerBlocks.length ? REQUEST_VS_OWNER.message : DATES_UNAVAILABLE.message;
+      const conflict = await resolveDatesConflict(sql, payload, message);
       if (conflict.ok) return sendInquiryResult(res, conflict);
       return res.status(409).json({ error: conflict.error, message: conflict.message });
     }
 
-    const overlap = await sql`
-      SELECT id FROM reservations
-      WHERE status IN ('inquiry_hold','hold_verified','contract_sent','contract_signed','confirmed')
-        AND daterange(checkin,checkout,'[)') && daterange(${checkin}::date,${checkout}::date,'[)')
-      LIMIT 1
-    `;
+    const overlap = await findOverlappingLocks(sql, checkin, checkout);
     if (overlap.length) {
       const conflict = await resolveDatesConflict(sql, payload, DATES_UNAVAILABLE.message);
       if (conflict.ok) return sendInquiryResult(res, conflict);
