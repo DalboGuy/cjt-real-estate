@@ -2,6 +2,10 @@
   "name": "cjt-direct-booking",
   "private": true,
   "version": "2.0.0",
+  "scripts": {
+    "verify:pricing": "node scripts/verify-pricing-catalog.js",
+    "verify:booking-completion": "node scripts/verify-booking-completion.js"
+  },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2"
   }

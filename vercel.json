@@ -11,6 +11,10 @@
       "destination": "/booking-v2.html"
     },
     {
+      "source": "/complete-booking",
+      "destination": "/complete-booking.html"
+    },
+    {
       "source": "/owner-v1/calendar",
       "destination": "/owner-v1/calendar.html"
     },
@@ -79,6 +83,9 @@
       "maxDuration": 10
     },
     "api/inquiries.js": {
+      "maxDuration": 10
+    },
+    "api/complete-booking.js": {
       "maxDuration": 10
     },
     "api/owner.js": {

@@ -1,0 +1,42 @@
+:root{
+  --ink:#1f2d30;
+  --deep:#12383e;
+  --muted:#69787b;
+  --line:#dde4e2;
+  --soft:#f4f7f6;
+  --paper:#fffdf9;
+  --good:#e8f5ec;
+  --warn:#fff5dc;
+  --shadow:0 14px 36px rgba(13,43,49,.12);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:Inter,system-ui,-apple-system,sans-serif;line-height:1.5}
+.page{width:min(820px,calc(100% - 32px));margin:32px auto 64px}
+.eyebrow{letter-spacing:.08em;text-transform:uppercase;font-size:.72rem;font-weight:850;color:var(--muted);margin:0 0 8px}
+h1{font-family:Georgia,serif;font-weight:500;font-size:clamp(1.8rem,4vw,2.4rem);margin:0 0 10px}
+.lede,.meta{color:var(--muted);margin:0 0 18px}
+.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:var(--shadow);margin:0 0 16px}
+.card h2{font-size:1.15rem;margin:0 0 12px}
+.quote-row,.list-row{display:flex;justify-content:space-between;gap:16px;padding:7px 0;border-bottom:1px solid var(--line)}
+.quote-row:last-child,.list-row:last-child{border-bottom:0}
+.quote-row.total{font-weight:850}
+.badge{display:inline-flex;align-items:center;border-radius:999px;padding:5px 9px;background:var(--warn);font-size:.75rem;font-weight:850}
+.badge.good{background:var(--good)}
+.agreement{white-space:pre-wrap;background:var(--soft);border-radius:14px;padding:16px;font-size:.92rem;max-height:420px;overflow:auto}
+.field{display:grid;gap:6px;margin:14px 0}
+.field label{font-size:.82rem;font-weight:800}
+.field input[type="text"]{width:100%;border:1px solid #bdc6c4;border-radius:10px;padding:12px}
+.check{display:flex;gap:10px;align-items:flex-start;font-weight:650}
+.check input{margin-top:4px}
+.btn{border:0;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;padding:12px 18px;font-weight:800;cursor:pointer;text-decoration:none}
+.btn-primary{background:var(--deep);color:#fff}
+.btn-secondary{background:#fff;color:var(--ink);border:1px solid var(--line)}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.notice{padding:12px 14px;border-radius:12px;background:var(--warn);margin:0 0 16px}
+.notice.good{background:var(--good)}
+.notice.error{background:#fff0ed;color:#7a2929}
+@media(max-width:640px){
+  .page{width:min(100% - 24px,820px);margin:18px auto 48px}
+  .card{padding:16px}
+}

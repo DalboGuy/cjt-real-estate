@@ -60,6 +60,16 @@ Every PR must state:
 If any acceptance criterion is unverified, mark the feature `Partial` or `Needs review`, not `Built`.
 
 
+## Issue handoff — Request / owner / complete-booking flow
+
+- **Branch/PR status:** Partial / Needs review. Preview-ready for request, owner approval, completion link, and agreement acceptance. Do not mark Built until Joel walks the preview path.
+- **What changed:** Guest Request to Book creates a 24-hour hold and in-app owner-queue notification. One owner review screen can process, approve, adjust the quote, decline, extend the hold, or release dates. Approval issues one `Complete your booking` link. Guests accept the rental agreement with an unchecked checkbox plus typed full name. Acceptance is labeled **Agreement accepted**, not signature/identity verified. Stripe charges and auto-confirm stay deferred.
+- **Files changed:** `lib/agreement.js`, `lib/booking-lifecycle.js`, `lib/db.js`, `api/inquiries.js`, `api/owner.js`, `api/complete-booking.js`, `complete-booking.html`, `assets/js/complete-booking.js`, `assets/css/complete-booking.css`, `assets/js/booking-listing.js`, `assets/js/reservations-v1.js`, `booking-v2.html`, `owner-v1/reservations.html`, `vercel.json`, `scripts/verify-booking-completion.js`, `docs/REQUEST-OWNER-COMPLETE-FLOW.md`.
+- **Environment names:** existing Preview database guards only (`DATABASE_URL` / `CJT_DATABASE_URL`, `CJT_DB_TARGET`, `CJT_ALLOW_PROD_DB`). Optional `PUBLIC_SITE_URL` for stable completion-link origin. `OWNER_PORTAL_PASSCODE` remains required for owner writes. Stripe names are unused by this slice.
+- **Data/schema impact:** Additive Preview tables `booking_completion_tokens` and `owner_notifications`. Append-only `booking_events` types added. No production migration.
+- **Known limitations:** No guest email is sent from Preview. Payment collection, payment-verified events that confirm a stay, and auto-confirm remain deferred. Paid e-sign is intentionally not used.
+- **Production impact:** No production database or `main` branch changes.
+
 ## Issue #21 handoff — Stripe payment and confirmation loop
 
 - **Branch/PR status:** Partial / Needs review; do not mark Built until Joel runs Stripe test-mode checkout and webhook acceptance on a preview database.

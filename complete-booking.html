@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Complete your booking · CJT Realty</title>
+  <link rel="stylesheet" href="/assets/css/complete-booking.css">
+</head>
+<body>
+  <main class="page">
+    <p class="eyebrow">CJT Realty · Sand &amp; Sea Manor</p>
+    <h1>Complete your booking</h1>
+    <p class="lede">Review the final price and rental agreement. Owner approval alone does not confirm this reservation. Payment collection is deferred.</p>
+    <div id="status" class="notice">Opening your secure completion link…</div>
+    <section id="summaryCard" class="card" hidden>
+      <h2>Stay and final price</h2>
+      <div id="staySummary"></div>
+      <div id="quoteRows"></div>
+      <div id="scheduleBox" class="notice" style="margin-top:14px"></div>
+    </section>
+    <section id="agreementCard" class="card" hidden>
+      <h2>Rental agreement</h2>
+      <p class="meta" id="agreementMeta"></p>
+      <pre id="agreementText" class="agreement"></pre>
+    </section>
+    <section id="acceptCard" class="card" hidden>
+      <h2>Accept the agreement</h2>
+      <form id="acceptForm">
+        <label class="check"><input id="agreeBox" type="checkbox"> <span>I agree to this rental agreement for this reservation.</span></label>
+        <div class="field">
+          <label for="acceptedName">Type your full name</label>
+          <input id="acceptedName" name="acceptedName" autocomplete="name" required>
+        </div>
+        <p class="meta">This records agreement acceptance. It is not a signature or identity verification.</p>
+        <div class="actions">
+          <button id="acceptBtn" class="btn btn-primary" type="submit">Accept agreement</button>
+        </div>
+      </form>
+    </section>
+    <section id="recordCard" class="card" hidden>
+      <h2>Acceptance record</h2>
+      <div id="recordRows"></div>
+      <div class="actions">
+        <a id="downloadLink" class="btn btn-secondary" href="#">Download agreement</a>
+      </div>
+    </section>
+  </main>
+  <script src="/assets/js/complete-booking.js"></script>
+</body>
+</html>
