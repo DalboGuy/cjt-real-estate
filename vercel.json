@@ -16,7 +16,7 @@
     },
     {
       "source": "/owner-v1/financials",
-      "destination": "/under-construction.html"
+      "destination": "/owner-v1/financials.html"
     },
     {
       "source": "/owner-v1/property",
@@ -83,6 +83,9 @@
     },
     "api/owner.js": {
       "maxDuration": 15
+    },
+    "api/financials.js": {
+      "maxDuration": 10
     },
     "api/pricing.js": {
       "maxDuration": 10
