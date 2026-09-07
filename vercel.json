@@ -15,10 +15,6 @@
       "destination": "/owner-v1/calendar.html"
     },
     {
-      "source": "/owner-v1/pricing",
-      "destination": "/under-construction.html"
-    },
-    {
       "source": "/owner-v1/financials",
       "destination": "/under-construction.html"
     },
@@ -86,6 +82,9 @@
       "maxDuration": 10
     },
     "api/owner.js": {
+      "maxDuration": 10
+    },
+    "api/pricing.js": {
       "maxDuration": 10
     }
   }

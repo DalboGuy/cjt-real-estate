@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>CJT Owner Portal · Pricing</title>
+  <link rel="stylesheet" href="/assets/css/tokens.css">
+  <link rel="stylesheet" href="/assets/css/owner-shell.css">
+  <link rel="stylesheet" href="/assets/css/modules.css">
+  <style>
+    .pricing-table-wrap{overflow:auto;border:1px solid var(--cjt-line);border-radius:12px;background:#fff}.pricing-table{width:100%;border-collapse:collapse;min-width:680px}.pricing-table th,.pricing-table td{padding:11px 12px;border-bottom:1px solid var(--cjt-line);text-align:left;white-space:nowrap}.pricing-table th{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--cjt-muted);background:#fafbf9}.pricing-table tr:last-child td{border-bottom:0}.pricing-table td:first-child{font-weight:800}.pricing-table .money{text-align:right}.pricing-form{display:grid;gap:12px}.pricing-form label{display:grid;gap:5px;color:var(--cjt-muted);font-size:.78rem;font-weight:800}.pricing-form input{width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid var(--cjt-line);border-radius:10px;background:#fff;color:var(--cjt-ink);font:inherit}.quote-result{margin-top:16px;border-top:1px solid var(--cjt-line);padding-top:14px}.quote-grid{display:grid;grid-template-columns:1fr auto;gap:8px;margin:0}.quote-grid dt{color:var(--cjt-muted)}.quote-grid dd{margin:0;font-weight:800;text-align:right}.quote-total{font-size:1.15rem;padding-top:9px;border-top:1px solid var(--cjt-line);margin-top:5px}.quote-error{color:#8b2f2f;background:#fff5f3;border:1px solid #e7b7ad;border-radius:10px;padding:10px 12px;font-size:.84rem}.pricing-note{color:var(--cjt-muted);font-size:.82rem;line-height:1.5}.schedule{margin-top:14px;padding:12px;border-radius:10px;background:#f4f8f5;border:1px solid var(--cjt-line);font-size:.83rem}.schedule strong{display:block;margin-bottom:3px}.disabled-card{opacity:.78}
+  </style>
+</head>
+<body>
+  <section id="loginShell" class="login-shell hidden">
+    <div class="login-card">
+      <div class="brand" style="color:var(--cjt-ink)">CJT REALTY<small style="color:var(--cjt-muted)">Owner Operations</small></div>
+      <h1>Pricing</h1>
+      <p>Use the existing Owner Portal passcode for this preview.</p>
+      <form id="loginForm"><input id="passcode" type="password" placeholder="Owner passcode" autocomplete="current-password" required><button class="btn btn-primary" type="submit">Sign in</button></form>
+      <div id="loginMsg" class="login-msg"></div>
+    </div>
+  </section>
+
+  <div id="ownerBackdrop" class="backdrop hidden"></div>
+  <div id="ownerApp" class="owner-app hidden">
+    <aside id="ownerSidebar" class="sidebar">
+      <div class="brand">CJT REALTY<small>Owner Operations</small></div>
+      <div class="property-chip"><strong>Sand & Sea Manor</strong><span>1720 Avenue M · Galveston, TX</span></div>
+      <nav class="nav" aria-label="Owner Portal">
+        <a href="/owner-v1"><span>Dashboard</span></a>
+        <a href="/owner-v1/communications"><span>Communications</span></a>
+        <a href="/owner-v1/reservations"><span>Reservations</span></a>
+        <button data-coming-soon="Calendar"><span>Calendar</span><span class="count">Soon</span></button>
+        <a class="active" href="/owner-v1/pricing"><span>Pricing</span><span class="count">Live</span></a>
+        <button data-coming-soon="Financials"><span>Financials</span><span class="count">Soon</span></button>
+        <div class="nav-section">Property</div>
+        <button data-coming-soon="Property"><span>Property</span></button>
+        <button data-coming-soon="Maintenance"><span>Maintenance</span></button>
+        <a href="/owner-v1/documents"><span>Documents</span><span class="count">Plan</span></a>
+        <div class="nav-section">Reporting</div>
+        <button data-coming-soon="Analytics"><span>Analytics</span></button>
+        <div class="nav-section">System</div>
+        <a href="/account-v1"><span>My Account</span></a>
+        <a href="/admin-v1"><span>Admin</span><span class="count">Preview</span></a>
+        <button data-coming-soon="Settings"><span>Settings</span></button>
+      </nav>
+      <div class="sidebar-footer"><a href="/" target="_blank" rel="noopener">Guest site ↗</a><button id="logout" type="button">Sign out</button></div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div style="display:flex;align-items:center;gap:10px"><button id="mobileMenu" class="icon-btn mobile-menu" type="button" aria-label="Open menu">☰</button><div><h1>Pricing</h1><div class="meta">Published seasonal schedule and quote tester</div></div></div>
+        <div class="top-actions"><span id="lastChecked" class="meta">Loading…</span><a class="btn btn-secondary" href="/" target="_blank" rel="noopener">Open Booking Page ↗</a></div>
+      </header>
+
+      <div class="content">
+        <div class="section-title"><div><h2>Pricing &amp; payments</h2><p>Read-only view of the published direct-booking schedule used by guest quotes.</p></div><span class="status-pill">Published schedule</span></div>
+        <div id="moduleNotice" class="notice hidden"></div>
+        <div id="pricingSummary" class="summary-grid"></div>
+
+        <div class="module-grid">
+          <section class="module-main">
+            <div class="card">
+              <div class="card-head"><div><h3>Season schedule</h3><p>Rates and minimum stays are loaded from the booking engine.</p></div><span id="seasonCount" class="badge good">Loading…</span></div>
+              <div id="seasonTable" class="pricing-table-wrap"><div class="empty">Loading published seasons…</div></div>
+              <p id="weekendNote" class="pricing-note" style="margin-bottom:0">Weekend rates and the published window load with the schedule.</p>
+            </div>
+            <div class="card disabled-card" style="margin-top:16px"><div class="card-head"><div><h3>Season overrides</h3><p>Date-level changes will be managed here in a future owner workflow.</p></div><span class="badge">Planned</span></div><button class="btn btn-secondary" type="button" disabled>Overrides coming soon</button></div>
+          </section>
+
+          <aside class="module-side">
+            <div class="card quick-card">
+              <div class="card-head"><div><h3>Quote tester</h3><p>Run the same availability-backed quote as the guest site.</p></div></div>
+              <form id="quoteForm" class="pricing-form">
+                <label>Check-in<input id="quoteCheckin" type="date" required></label>
+                <label>Check-out<input id="quoteCheckout" type="date" required></label>
+                <label>Guests<input id="quoteGuests" type="number" min="1" max="14" value="2" required></label>
+                <button class="btn btn-primary" type="submit">Calculate quote</button>
+              </form>
+              <div id="quoteResult" class="quote-result hidden"></div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/assets/js/owner-shell.js"></script>
+  <script>
+    const loginShell=document.getElementById('loginShell'),ownerApp=document.getElementById('ownerApp'),loginForm=document.getElementById('loginForm'),loginMsg=document.getElementById('loginMsg');
+    const notice=document.getElementById('moduleNotice'),summary=document.getElementById('pricingSummary'),seasonTable=document.getElementById('seasonTable'),quoteResult=document.getElementById('quoteResult');
+    function esc(v=''){return String(v).replace(/[&<>\"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[m]))}
+    function money(v){return Number(v||0).toLocaleString(undefined,{style:'currency',currency:'USD',maximumFractionDigits:0})}
+    function date(v){if(!v)return '—';return new Date(`${v}T12:00:00Z`).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric',timeZone:'UTC'})}
+    function showLogin(){ownerApp.classList.add('hidden');loginShell.classList.remove('hidden')}
+    function showApp(){loginShell.classList.add('hidden');ownerApp.classList.remove('hidden')}
+    function showNotice(message){notice.textContent=message;notice.classList.remove('hidden')}
+    async function getPricing(){
+      const r=await fetch('/api/pricing',{cache:'no-store'}),d=await r.json().catch(()=>({}));
+      if(r.status===401)throw new Error('unauthorized');
+      if(!r.ok)throw new Error(d.message||'Pricing data could not be loaded.');
+      return d;
+    }
+    function joinDays(days){
+      const list=(days||[]).filter(Boolean);
+      if(!list.length)return 'the configured weekend days';
+      if(list.length===1)return list[0];
+      if(list.length===2)return `${list[0]} and ${list[1]}`;
+      return `${list.slice(0,-1).join(', ')}, and ${list[list.length-1]}`;
+    }
+    function renderPricing(d){
+      const split=`${Math.round(Number(d.advancePaymentPct)*100)}% at booking · balance ${d.splitPaymentThresholdDays} days before arrival`;
+      const weekendLabel=joinDays(d.weekendDays);
+      summary.innerHTML=[['Cleaning fee',money(d.cleaningFee)],['Tax rate',`${Number(d.taxRate)*100}%`],['Pricing through',date(d.pricingThrough)],['Max guests',d.maxGuests],['Weekend days',(d.weekendDays||[]).map(v=>v.slice(0,3)).join(' / ')],['Payment terms',split]].map(([label,value])=>`<div class="summary-card"><span>${esc(label)}</span><b>${esc(value)}</b></div>`).join('');
+      document.getElementById('seasonCount').textContent=`${d.seasons.length} seasons`;
+      document.getElementById('weekendNote').textContent=`Weekend rates apply ${weekendLabel}. Dates outside the published window are not available for online direct-booking quotes.`;
+      const guestsInput=document.getElementById('quoteGuests');
+      const maxGuests=Number(d.maxGuests)||14;
+      guestsInput.max=String(maxGuests);
+      if(Number(guestsInput.value)>maxGuests)guestsInput.value=String(maxGuests);
+      seasonTable.innerHTML=`<table class="pricing-table"><thead><tr><th>Season</th><th>Start</th><th>End</th><th class="money">Weekday</th><th class="money">Weekend</th><th>Min nights</th></tr></thead><tbody>${d.seasons.map(s=>`<tr><td>${esc(s.name)}</td><td>${esc(date(s.start))}</td><td>${esc(date(s.end))}</td><td class="money">${money(s.weekday)}</td><td class="money">${money(s.weekend)}</td><td>${esc(s.minNights)}</td></tr>`).join('')}</tbody></table>`;
+      document.getElementById('lastChecked').textContent='Schedule loaded';
+    }
+    function quoteError(payload){
+      const code=payload&&payload.code;
+      const msg=payload&&payload.message;
+      let title='Quote could not be calculated';
+      let detail=msg||'Try again with different dates or guests.';
+      if(code==='OTA_FEED_CONFIG_MISSING'||/Missing required OTA calendar feed/i.test(msg||'')){
+        title='Calendar feeds are not configured';
+        detail='Preview is missing AIRBNB_ICAL_URL and/or VRBO_ICAL_URL, so availability-backed quotes fail closed. The season schedule above is still valid; fix calendar env, then retry the tester.';
+      }else if(code==='dates_unavailable'){
+        title='Those nights are unavailable';
+        detail=msg||'One or more requested nights are blocked on the live calendar.';
+      }else if(code==='pricing_not_published'){
+        title='Outside the published pricing window';
+        detail=msg;
+      }else if(code==='minimum_stay'||code==='invalid_dates'||code==='invalid_guests'){
+        title='Quote rules blocked this stay';
+        detail=msg;
+      }else if(code==='quote_unavailable'){
+        title='Quote service unavailable';
+        detail=msg||'The booking engine could not calculate this quote right now.';
+      }
+      return `<div class="quote-error"><strong style="display:block;margin-bottom:4px">${esc(title)}</strong>${esc(detail)}</div>`;
+    }
+    function renderQuote(q){
+      const s=q.paymentSchedule||{};
+      const schedule=s.mode==='split'?`<strong>Split payment</strong>${money(s.dueAtBooking)} due at booking · ${money(s.remainingBalance)} due ${esc(s.balanceDueDateLabel||'before arrival')}.`:`<strong>Full payment</strong>${money(s.dueAtBooking||q.total)} due at booking.`;
+      quoteResult.innerHTML=`<div class="meta">${esc(q.nights)} nights · ${esc(q.guests)} guests</div><dl class="quote-grid"><dt>Lodging</dt><dd>${money(q.lodgingSubtotal)}</dd><dt>Cleaning fee</dt><dd>${money(q.cleaningFee)}</dd><dt>Tax</dt><dd>${money(q.taxes)}</dd><dt class="quote-total">Total</dt><dd class="quote-total">${money(q.total)}</dd></dl><div class="schedule">${schedule}</div>`;
+      quoteResult.classList.remove('hidden');
+    }
+    document.getElementById('quoteForm').addEventListener('submit',async e=>{
+      e.preventDefault();quoteResult.classList.remove('hidden');quoteResult.innerHTML='<div class="meta">Calculating…</div>';
+      const params=new URLSearchParams({checkin:document.getElementById('quoteCheckin').value,checkout:document.getElementById('quoteCheckout').value,guests:document.getElementById('quoteGuests').value});
+      try{const r=await fetch(`/api/quote?${params}`,{cache:'no-store'}),d=await r.json().catch(()=>({}));if(!r.ok){quoteResult.innerHTML=quoteError({code:d.error||d.code,message:d.message||'The quote could not be calculated.'});return}renderQuote(d.quote)}catch(error){quoteResult.innerHTML=quoteError({code:'quote_unavailable',message:error.message})}
+    });
+    loginForm.addEventListener('submit',async e=>{
+      e.preventDefault();loginMsg.textContent='Signing in…';
+      try{const r=await fetch('/api/owner',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'login',passcode:document.getElementById('passcode').value})}),d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'invalid_passcode');document.getElementById('passcode').value='';loginMsg.textContent='';showApp();renderPricing(await getPricing())}catch(error){loginMsg.textContent=error.message==='owner_login_not_configured'?'Owner login is not configured for this environment.':'Invalid passcode.'}
+    });
+    (async()=>{try{const data=await getPricing();showApp();renderPricing(data)}catch(error){if(error.message==='unauthorized')showLogin();else{showApp();showNotice(error.message)}}})();
+  </script>
+</body>
+</html>
