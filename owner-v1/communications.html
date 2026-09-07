@@ -26,7 +26,7 @@
       <div class="property-chip"><strong>Sand & Sea Manor</strong><span>1720 Avenue M · Galveston, TX</span></div>
       <nav class="nav" aria-label="Owner Portal">
         <a href="/owner-v1"><span>Dashboard</span></a>
-        <a class="active" href="/owner-v1/communications"><span>Communications</span><span id="communicationsNavCount" class="count">0</span></a>
+        <a class="active" href="/owner-v1/communications"><span>Messages</span><span id="communicationsNavCount" class="count">0</span></a>
         <a href="/owner-v1/reservations"><span>Reservations</span></a>
         <a href="/owner-v1/calendar"><span>Calendar</span><span class="count">Live</span></a>
         <a href="/owner-v1/pricing"><span>Pricing</span><span class="count">Live</span></a>
@@ -42,12 +42,12 @@
         <a href="/admin-v1"><span>Admin</span><span class="count">Preview</span></a>
         <button data-coming-soon="Settings"><span>Settings</span></button>
       </nav>
-      <div class="sidebar-footer"><a href="/" target="_blank" rel="noopener">Guest site ↗</a><button id="logout" type="button">Sign out</button></div>
+      <div class="sidebar-footer"><a href="/" target="_blank" rel="noopener">View Booking Page ↗</a><button id="logout" type="button">Sign out</button></div>
     </aside>
 
     <main class="main">
       <header class="topbar">
-        <div style="display:flex;align-items:center;gap:10px"><button id="mobileMenu" class="icon-btn mobile-menu" type="button" aria-label="Open menu">☰</button><div><h1>Communications</h1><div class="meta">Unified guest-message workspace</div></div></div>
+        <div style="display:flex;align-items:center;gap:10px"><button id="mobileMenu" class="icon-btn mobile-menu" type="button" aria-label="Open menu">☰</button><div><h1>Messages</h1><div class="meta">Unified guest-message workspace</div></div></div>
         <div class="top-actions"><span id="lastChecked" class="meta">Loading…</span><a class="btn btn-secondary" href="/communications">Legacy hub ↗</a></div>
       </header>
 
@@ -58,7 +58,7 @@
 
         <div class="module-grid">
           <section class="module-main">
-            <div class="toolbar-row"><div id="communicationFilters" class="filter-row"></div><input id="communicationSearch" class="search-box" placeholder="Search guest, subject, reservation or message…"></div>
+            <div class="toolbar-row owner-sticky-controls" data-module="messages"><div id="communicationFilters" class="filter-row"></div><input id="communicationSearch" class="search-box" placeholder="Search guest, subject, reservation or message…"></div>
             <div class="card hub"><div id="messageList" class="message-list"></div><div id="messageDetail" class="detail-pane"><div class="empty">Select a conversation.</div></div></div>
           </section>
 

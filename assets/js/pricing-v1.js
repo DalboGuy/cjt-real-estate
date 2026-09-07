@@ -210,6 +210,37 @@
     document.getElementById('lastChecked').textContent=d.source==='fallback'?'Using built-in defaults until the first save':'Schedule saved in Neon';
     if(d.source==='fallback')showNotice('The published schedule is still using built-in defaults. Save settings or add a season to write it into Neon. After that, this page is the only write path.','err');
     else if(notice.classList.contains('err')&&/built-in defaults/i.test(notice.textContent))showNotice('');
+    applyPricingContext(d);
+  }
+
+  function addIsoDays(iso,days){
+    const d=new Date(`${iso}T12:00:00`);
+    d.setDate(d.getDate()+days);
+    return d.toISOString().slice(0,10);
+  }
+
+  function setPricingDirty(on){
+    window.CJTOwnerShell?.markDirty?.(on);
+    document.getElementById('pricingDirty')?.classList.toggle('hidden',!on);
+  }
+
+  function applyPricingContext(d){
+    const ctx=window.CJTOwnerShell?.readContext?.()||{};
+    const dateValue=ctx.date;
+    if(dateValue&&/^\d{4}-\d{2}-\d{2}$/.test(dateValue)){
+      const checkin=document.getElementById('quoteCheckin');
+      const checkout=document.getElementById('quoteCheckout');
+      if(checkin&&!checkin.value)checkin.value=dateValue;
+      if(checkout&&!checkout.value)checkout.value=addIsoDays(dateValue,2);
+      showNotice(`Quote tester pre-filled for ${dateValue}. This does not save a one-night rate.`,'ok');
+    }
+    const seasonKey=ctx.season;
+    if(seasonKey){
+      const seasons=d?.seasons||[];
+      const match=seasons.find(s=>String(s.id)===String(seasonKey)||String(s.name).toLowerCase()===String(seasonKey).toLowerCase());
+      if(match)fillSeasonForm(match);
+      else showNotice(window.CJTOwnerShell?.cannotApply?.('the selected season','Pricing')||'Pricing could not apply the selected season.','err');
+    }
   }
 
   function quoteError(payload){
@@ -260,6 +291,7 @@
       renderPricing(data);
       setStatus(document.getElementById('settingsStatus'),'Settings saved. Guest quotes now use these values.','ok');
       showNotice('Pricing settings saved. The quote tester and guest booking page use the new values.','ok');
+      setPricingDirty(false);
     }catch(error){
       if(error.message==='unauthorized')return showLogin();
       showFieldErrors(settingsForm,error.fields);
@@ -298,6 +330,7 @@
       }
       setStatus(document.getElementById('seasonStatus'),keepId?'Season updated.':'Season added.','ok');
       showNotice(keepId?'Season updated. Reload or rerun the quote tester to confirm guest totals.':'Season added to the published schedule.','ok');
+      setPricingDirty(false);
     }catch(error){
       if(error.message==='unauthorized')return showLogin();
       showFieldErrors(seasonForm,error.fields);
@@ -349,19 +382,33 @@
     }
   });
 
+  settingsForm.addEventListener('input',()=>setPricingDirty(true));
+  seasonForm.addEventListener('input',()=>setPricingDirty(true));
+  document.getElementById('savePricingSticky')?.addEventListener('click',()=>{
+    if(editingSeasonId||document.getElementById('seasonName')?.value)document.getElementById('saveSeasonBtn')?.click();
+    else document.getElementById('saveSettingsBtn')?.click();
+  });
+
   loginForm.addEventListener('submit',async e=>{
-    e.preventDefault();loginMsg.textContent='Signing in…';
+    e.preventDefault();
+    const btn=loginForm.querySelector('button[type="submit"]');
+    if(btn?.disabled)return;
+    if(btn)btn.disabled=true;
+    loginMsg.textContent='Signing in…';
     try{
       const r=await fetch('/api/owner',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'login',passcode:document.getElementById('passcode').value})});
       const d=await r.json().catch(()=>({}));
       if(!r.ok)throw new Error(d.error||'invalid_passcode');
       document.getElementById('passcode').value='';
       loginMsg.textContent='';
+      if(window.CJTOwnerShell?.afterLogin?.())return;
       showApp();
       resetSeasonForm();
       renderPricing(await getPricing());
     }catch(error){
       loginMsg.textContent=error.message==='owner_login_not_configured'?'Owner login is not configured for this environment.':'Invalid passcode.';
+    }finally{
+      if(btn)btn.disabled=false;
     }
   });
 

@@ -19,6 +19,14 @@
       "destination": "/owner-v1/financials.html"
     },
     {
+      "source": "/owner-v1/tasks",
+      "destination": "/owner-v1/tasks.html"
+    },
+    {
+      "source": "/owner-v1/team",
+      "destination": "/under-construction.html"
+    },
+    {
       "source": "/owner-v1/property",
       "destination": "/under-construction.html"
     },
@@ -85,6 +93,9 @@
       "maxDuration": 20
     },
     "api/opensign.js": {
+      "maxDuration": 10
+    },
+    "api/owner-tasks.js": {
       "maxDuration": 10
     },
     "api/financials.js": {

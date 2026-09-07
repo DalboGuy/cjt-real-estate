@@ -4,6 +4,7 @@
   "version": "2.0.0",
   "scripts": {
     "test": "node --test lib/financials.test.js lib/booking-transitions.test.js lib/opensign.test.js",
+    "verify:owner-nav": "node --test lib/owner-nav.test.js lib/owner-context.test.js lib/owner-tasks.test.js lib/owner-status.test.js",
     "verify:calendar": "node scripts/verify-calendar-view.js"
   },
   "dependencies": {

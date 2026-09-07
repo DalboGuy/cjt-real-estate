@@ -3,6 +3,7 @@
     '/owner-v1/calendar':{portal:'owner',module:'Calendar',description:'Unified availability, stays, blocks and channel calendar status will live here.'},
     '/owner-v1/pricing':{portal:'owner',module:'Pricing',description:'Seasonal rates, date overrides, events, discounts and minimum-stay controls will live here.'},
     '/owner-v1/property':{portal:'owner',module:'Property',description:'Property details, amenities, operating settings and property-specific configuration will live here.'},
+    '/owner-v1/team':{portal:'owner',module:'Team',description:'People, roles, and property access for Sand & Sea Manor will live here.'},
     '/owner-v1/maintenance':{portal:'owner',module:'Maintenance',description:'Open work, recurring upkeep, equipment, vendors and service history will live here.'},
     '/owner-v1/analytics':{portal:'owner',module:'Analytics',description:'Occupancy, ADR, RevPAR, channel mix and operating trends will live here.'},
     '/owner-v1/settings':{portal:'owner',module:'Settings',description:'Owner-level preferences and property operating settings will live here.'},
@@ -18,9 +19,8 @@
   const path=location.pathname.replace(/\/$/,'')||'/';
   const meta=routeMeta[path]||{portal:'owner',module:'Module',description:'This CJT module is reserved and under construction.'};
   const ownerItems=[
-    ['Dashboard','/owner-v1'],['Communications','/owner-v1/communications'],['Reservations','/owner-v1/reservations'],['Calendar','/owner-v1/calendar'],['Pricing','/owner-v1/pricing'],['Financials','/owner-v1/financials'],
-    ['#','Property'],['Property','/owner-v1/property'],['Maintenance','/owner-v1/maintenance'],['Documents','/owner-v1/documents'],
-    ['#','Reporting'],['Analytics','/owner-v1/analytics'],['#','System'],['My Account','/account-v1'],['Admin','/admin-v1'],['Settings','/owner-v1/settings']
+    ['Overview','/owner-v1'],['Calendar','/owner-v1/calendar'],['Bookings','/owner-v1/reservations'],['Messages','/owner-v1/communications'],['Pricing','/owner-v1/pricing'],['Financials','/owner-v1/financials'],['Tasks','/owner-v1/tasks'],
+    ['#','More'],['Documents','/owner-v1/documents'],['Property','/owner-v1/property'],['Team','/owner-v1/team'],['Settings','/owner-v1/settings'],['Admin','/admin-v1']
   ];
   const adminItems=[
     ['Admin Dashboard','/admin-v1'],['Users & Access','/admin-v1/users'],['Properties','/admin-v1/properties'],['Roles & Permissions','/admin-v1/roles'],

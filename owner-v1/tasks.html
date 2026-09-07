@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>CJT Owner Portal · Tasks</title>
+  <link rel="stylesheet" href="/assets/css/tokens.css">
+  <link rel="stylesheet" href="/assets/css/owner-shell.css">
+  <link rel="stylesheet" href="/assets/css/modules.css">
+</head>
+<body>
+  <section id="loginShell" class="login-shell hidden">
+    <div class="login-card">
+      <div class="brand" style="color:var(--cjt-ink)">CJT REALTY<small style="color:var(--cjt-muted)">Owner Operations</small></div>
+      <h1>Tasks</h1>
+      <p>Sign in to review property operations tasks.</p>
+      <form id="loginForm"><input id="passcode" type="password" placeholder="Owner passcode" autocomplete="current-password" required><button class="btn btn-primary" type="submit">Sign in</button></form>
+      <div id="loginMsg" class="login-msg"></div>
+    </div>
+  </section>
+
+  <div id="ownerBackdrop" class="backdrop hidden"></div>
+  <div id="ownerApp" class="owner-app hidden">
+    <aside id="ownerSidebar" class="sidebar">
+      <div class="brand">CJT REALTY<small>Owner Operations</small></div>
+      <div class="property-chip"><strong>Sand &amp; Sea Manor</strong><span>1720 Avenue M · Galveston, TX</span></div>
+      <nav class="nav" aria-label="Owner Portal"></nav>
+      <div class="sidebar-footer"></div>
+    </aside>
+    <main class="main">
+      <header class="topbar">
+        <div style="display:flex;align-items:center;gap:10px"><button id="mobileMenu" class="icon-btn mobile-menu" type="button" aria-label="Open menu">☰</button><div><h1>Tasks</h1><div class="meta">Assignee, due date, and status for property operations</div></div></div>
+        <div class="top-actions"><span id="lastChecked" class="meta">Loading…</span></div>
+      </header>
+      <div class="content">
+        <div id="moduleNotice" class="notice hidden"></div>
+        <div class="toolbar-row owner-sticky-controls" data-module="tasks">
+          <div id="taskFilters" class="filter-row"></div>
+          <input id="taskAssignee" class="search-box" placeholder="Assignee">
+          <input id="taskTitle" class="search-box" placeholder="New task title" aria-label="New task title">
+          <button id="addTask" class="btn btn-primary" type="button">Add</button>
+        </div>
+        <div id="taskSummary" class="summary-grid"></div>
+        <div id="taskList" class="reservation-list"></div>
+      </div>
+    </main>
+  </div>
+  <script src="/assets/js/owner-shell.js"></script>
+  <script src="/assets/js/tasks-v1.js"></script>
+</body>
+</html>

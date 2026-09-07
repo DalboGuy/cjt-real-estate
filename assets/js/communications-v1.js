@@ -37,20 +37,25 @@ function renderSummary(counts){
   const total=counts.reduce((a,x)=>a+Number(x.total||0),0);
   const unread=counts.reduce((a,x)=>a+Number(x.unread||0),0);
   const cards=[
-    ['All',total,unread],
-    ['Airbnb',map.airbnb?.total||0,map.airbnb?.unread||0],
-    ['Vrbo',map.vrbo?.total||0,map.vrbo?.unread||0],
-    ['Booking.com',(map.booking?.total||0)+(map['booking.com']?.total||0),(map.booking?.unread||0)+(map['booking.com']?.unread||0)],
-    ['Houfy',map.houfy?.total||0,map.houfy?.unread||0]
+    ['All',total,unread,'/owner-v1/communications?property=sand-sea-manor'],
+    ['Airbnb',map.airbnb?.total||0,map.airbnb?.unread||0,'/owner-v1/communications?channel=airbnb&property=sand-sea-manor'],
+    ['Vrbo',map.vrbo?.total||0,map.vrbo?.unread||0,'/owner-v1/communications?channel=vrbo&property=sand-sea-manor'],
+    ['Booking.com',(map.booking?.total||0)+(map['booking.com']?.total||0),(map.booking?.unread||0)+(map['booking.com']?.unread||0),'/owner-v1/communications?channel=booking&property=sand-sea-manor'],
+    ['Houfy',map.houfy?.total||0,map.houfy?.unread||0,'/owner-v1/communications?channel=houfy&property=sand-sea-manor']
   ];
   document.getElementById('communicationsNavCount').textContent=unread;
-  document.getElementById('summaryGrid').innerHTML=cards.map(c=>`<div class="summary-card"><span>${c[0]}</span><b>${c[1]}</b><span>${c[2]} unread</span></div>`).join('');
+  document.getElementById('summaryGrid').innerHTML=cards.map(c=>`<a class="summary-card kpi-card" href="${esc(c[3])}"><span>${c[0]}</span><b>${c[1]}</b><span>${c[2]} unread</span></a>`).join('');
 }
 
 function renderFilters(){
-  const vals=[['all','All'],['airbnb','Airbnb'],['vrbo','Vrbo'],['booking','Booking.com'],['houfy','Houfy'],['open','Open'],['archived','Archived']];
+  const vals=[['all','All'],['unread','Unread'],['airbnb','Airbnb'],['vrbo','Vrbo'],['booking','Booking.com'],['houfy','Houfy'],['open','Open'],['archived','Archived']];
   document.getElementById('communicationFilters').innerHTML=vals.map(([v,l])=>`<button class="filter-btn ${currentCommunicationFilter===v?'active':''}" data-filter="${v}">${l}</button>`).join('');
-  document.querySelectorAll('[data-filter]').forEach(b=>b.onclick=()=>{currentCommunicationFilter=b.dataset.filter;renderFilters();renderList()});
+  document.querySelectorAll('[data-filter]').forEach(b=>b.onclick=()=>{
+    currentCommunicationFilter=b.dataset.filter;
+    window.CJTOwnerShell?.writeContext?.({unread:currentCommunicationFilter==='unread'?'1':null,status:['open','archived'].includes(currentCommunicationFilter)?currentCommunicationFilter:null,channel:['airbnb','vrbo','booking','houfy'].includes(currentCommunicationFilter)?currentCommunicationFilter:null},{push:true});
+    renderFilters();
+    renderList();
+  });
 }
 
 function filteredMessages(){
@@ -58,7 +63,7 @@ function filteredMessages(){
   return communicationsMessages.filter(m=>{
     const p=String(m.platform||'').toLowerCase();
     const platformMatch=currentCommunicationFilter==='booking'?(p==='booking'||p==='booking.com'):p===currentCommunicationFilter;
-    const ok=currentCommunicationFilter==='all'||platformMatch||(currentCommunicationFilter==='open'&&m.status==='open')||(currentCommunicationFilter==='archived'&&m.status==='archived');
+    const ok=currentCommunicationFilter==='all'||platformMatch||(currentCommunicationFilter==='unread'&&!m.is_read)||(currentCommunicationFilter==='open'&&m.status==='open')||(currentCommunicationFilter==='archived'&&m.status==='archived');
     if(!ok)return false;
     if(!q)return true;
     return [m.guest_name,m.subject,m.snippet,m.body,m.reservation_ref,m.platform].join(' ').toLowerCase().includes(q);
@@ -72,7 +77,7 @@ function renderList(){
     const el=document.createElement('div');
     el.className=`message-item ${m.is_read?'':'unread'} ${selectedCommunicationId===m.id?'active':''}`;
     el.innerHTML=`<div class="message-row"><span class="platform ${platformClass(m.platform)}">${esc(m.platform)}</span><span class="meta">${esc(new Date(m.received_at).toLocaleDateString())}</span></div><strong>${esc(m.guest_name||m.subject||'Guest')}</strong><div>${esc(m.subject||'')}</div><div class="snippet">${esc(m.snippet||m.body||'')}</div>`;
-    el.onclick=()=>selectMessage(m);
+    el.onclick=()=>selectMessage(m,{push:true});
     messageList.appendChild(el);
   });
 }
@@ -84,8 +89,12 @@ async function refreshCountsOnly(){
   renderList();
 }
 
-async function selectMessage(m){
+async function selectMessage(m,opts={}){
   selectedCommunicationId=m.id;
+  const bookingId=m.reservation_ref||m.reservation_id||'';
+  if(opts.updateUrl!==false){
+    window.CJTOwnerShell?.writeContext?.({message:m.id,booking:bookingId||null},{push:Boolean(opts.push)});
+  }
   if(!m.is_read){
     m.is_read=true;
     commApi({method:'POST',body:JSON.stringify({action:'mark_read',id:m.id})}).then(refreshCountsOnly).catch(()=>{});
@@ -93,9 +102,30 @@ async function selectMessage(m){
   renderList();
   const stay=(m.stay_checkin||m.stay_checkout)?`<span class="badge">Stay ${esc(m.stay_checkin||'?')} → ${esc(m.stay_checkout||'?')}</span>`:'';
   const ref=m.reservation_ref?`<span class="badge">${esc(m.reservation_ref)}</span>`:'';
-  messageDetail.innerHTML=`<div class="platform ${platformClass(m.platform)}">${esc(m.platform)}</div><h2>${esc(m.guest_name||'Guest')}</h2><div class="meta">${esc(m.subject||'')} · ${esc(fmt(m.received_at))}</div><div class="reservation-badges" style="margin-top:10px">${stay}${ref}<span class="badge">${esc(m.message_type||'message')}</span></div><div class="message-body">${esc(m.body||m.snippet||'No message body available.')}</div><div class="actions">${m.platform_url?`<a class="btn btn-primary" target="_blank" rel="noopener" href="${esc(m.platform_url)}">Open ${esc(m.platform)} thread ↗</a>`:''}${m.gmail_url?`<a class="btn btn-secondary" target="_blank" rel="noopener" href="${esc(m.gmail_url)}">Open Gmail ↗</a>`:''}<button id="toggleRead" class="btn btn-secondary">Mark ${m.is_read?'unread':'read'}</button><button id="toggleArchive" class="btn btn-secondary">${m.status==='archived'?'Reopen':'Archive'}</button></div>`;
-  document.getElementById('toggleRead').onclick=async()=>{await commApi({method:'POST',body:JSON.stringify({action:m.is_read?'mark_unread':'mark_read',id:m.id})});m.is_read=!m.is_read;await loadCommunications(m.id)};
-  document.getElementById('toggleArchive').onclick=async()=>{await commApi({method:'POST',body:JSON.stringify({action:m.status==='archived'?'reopen':'archive',id:m.id})});m.status=m.status==='archived'?'open':'archived';await loadCommunications(m.id)};
+  const bookingHref=bookingId?`/owner-v1/reservations?booking=${encodeURIComponent(bookingId)}&message=${encodeURIComponent(m.id)}&property=sand-sea-manor`:'';
+  messageDetail.innerHTML=`<div class="platform ${platformClass(m.platform)}">${esc(m.platform)}</div><h2>${esc(m.guest_name||'Guest')}</h2><div class="meta">${esc(m.subject||'')} · ${esc(fmt(m.received_at))}</div><div class="reservation-badges" style="margin-top:10px">${stay}${ref}<span class="badge">${esc(m.message_type||'message')}</span></div><div class="message-body">${esc(m.body||m.snippet||'No message body available.')}</div><div class="actions">${m.platform_url?`<a class="btn btn-primary" target="_blank" rel="noopener" href="${esc(m.platform_url)}">Open ${esc(m.platform)} thread ↗</a>`:''}${m.gmail_url?`<a class="btn btn-secondary" target="_blank" rel="noopener" href="${esc(m.gmail_url)}">Open Gmail ↗</a>`:''}${bookingHref?`<a class="btn btn-secondary" href="${esc(bookingHref)}">Open booking</a>`:''}<button id="toggleRead" class="btn btn-secondary">Mark ${m.is_read?'unread':'read'}</button><button id="toggleArchive" class="btn btn-secondary">${m.status==='archived'?'Reopen':'Archive'}</button></div>`;
+  const runAction=async(btn,fn)=>{
+    if(btn.disabled)return;
+    btn.disabled=true;
+    try{await fn();}finally{btn.disabled=false;}
+  };
+  document.getElementById('toggleRead').onclick=()=>runAction(document.getElementById('toggleRead'),async()=>{
+    await commApi({method:'POST',body:JSON.stringify({action:m.is_read?'mark_unread':'mark_read',id:m.id})});
+    m.is_read=!m.is_read;
+    await loadCommunications(m.id);
+  });
+  document.getElementById('toggleArchive').onclick=()=>runAction(document.getElementById('toggleArchive'),async()=>{
+    await commApi({method:'POST',body:JSON.stringify({action:m.status==='archived'?'reopen':'archive',id:m.id})});
+    m.status=m.status==='archived'?'open':'archived';
+    await loadCommunications(m.id);
+  });
+}
+
+function bookingHref(id){
+  const params=new URLSearchParams({booking:id||'',property:'sand-sea-manor'});
+  const message=selectedCommunicationId||messageFromUrl();
+  if(message)params.set('message',message);
+  return `/owner-v1/reservations?${params}`;
 }
 
 function renderReservationQuick(data){
@@ -104,7 +134,20 @@ function renderReservationQuick(data){
   document.getElementById('quickAction').textContent=s.action_needed||0;
   document.getElementById('quickArrival').textContent=s.next_checkin||'None scheduled';
   const rows=data.reservations?.recent||[];
-  document.getElementById('quickReservations').innerHTML=rows.length?rows.map(r=>`<div class="list-row"><div><strong>${esc(r.guest_name)}</strong><span>${esc(r.checkin)} → ${esc(r.checkout)}</span></div><span class="badge">${esc(String(r.status||'').replaceAll('_',' '))}</span></div>`).join(''):'<div class="empty">No active direct-booking stays.</div>';
+  document.getElementById('quickReservations').innerHTML=rows.length?rows.map(r=>`<div class="list-row"><div><a href="${esc(bookingHref(r.id))}"><strong>${esc(r.guest_name)}</strong><span>${esc(r.checkin)} → ${esc(r.checkout)}</span></a></div><span class="badge">${esc(window.CJTOwnerShell?.statusLabel?.(r.status)||String(r.status||'').replaceAll('_',' '))}</span></div>`).join(''):'<div class="empty">No active direct-booking stays.</div>';
+}
+
+function messageFromUrl(){
+  const ctx=window.CJTOwnerShell?.readContext?.()||{};
+  return ctx.message||ctx.id||new URLSearchParams(location.search).get('message')||'';
+}
+function applyMessageContext(){
+  const ctx=window.CJTOwnerShell?.readContext?.()||{};
+  if(ctx.unread==='1'||ctx.unread==='true')currentCommunicationFilter='unread';
+  else if(ctx.channel)currentCommunicationFilter=ctx.channel;
+  else if(ctx.status==='open'||ctx.status==='archived')currentCommunicationFilter=ctx.status;
+  const search=document.getElementById('communicationSearch');
+  if(search&&ctx.q!=null)search.value=ctx.q;
 }
 
 async function loadCommunications(reselectId){
@@ -112,14 +155,19 @@ async function loadCommunications(reselectId){
     const [d,dashboard]=await Promise.all([commApi(),dashboardApi()]);
     communicationsMessages=d.messages||[];
     showApp();
+    applyMessageContext();
     renderSummary(d.counts||[]);
     renderFilters();
     renderList();
     renderReservationQuick(dashboard);
     document.getElementById('lastChecked').textContent=`Updated ${new Date(dashboard.checkedAt).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})}`;
-    const target=communicationsMessages.find(x=>x.id===(reselectId||selectedCommunicationId));
-    if(target)selectMessage(target);
-    else if(!communicationsMessages.length)messageDetail.innerHTML='<div class="empty">No communications have been ingested into production yet.</div>';
+    const wanted=reselectId||selectedCommunicationId||messageFromUrl();
+    const target=communicationsMessages.find(x=>String(x.id)===String(wanted));
+    if(target)selectMessage(target,{push:false});
+    else if(wanted){
+      document.getElementById('moduleNotice').textContent=window.CJTOwnerShell?.cannotApply?.('the selected message','Messages')||'Messages could not apply the selected message.';
+      document.getElementById('moduleNotice').classList.remove('hidden');
+    }else if(!communicationsMessages.length)messageDetail.innerHTML='<div class="empty">No communications have been ingested into production yet.</div>';
   }catch(e){
     if(e.message==='unauthorized')return showLogin();
     showApp();
@@ -128,14 +176,33 @@ async function loadCommunications(reselectId){
   }
 }
 
-document.getElementById('communicationSearch').addEventListener('input',renderList);
+document.getElementById('communicationSearch').addEventListener('input',()=>{
+  window.CJTOwnerShell?.writeContext?.({q:document.getElementById('communicationSearch').value},{push:false});
+  renderList();
+});
+window.addEventListener('cjt-context-change',()=>{
+  applyMessageContext();
+  renderFilters();
+  renderList();
+});
 loginForm.addEventListener('submit',async e=>{
   e.preventDefault();
+  const btn=loginForm.querySelector('button[type="submit"]');
+  if(btn?.disabled)return;
+  if(btn)btn.disabled=true;
   loginMsg.textContent='Signing in…';
-  const r=await fetch('/api/owner',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'login',passcode:document.getElementById('passcode').value})});
-  const d=await r.json().catch(()=>({}));
-  if(!r.ok){loginMsg.textContent=d.error==='owner_login_not_configured'?'Owner login is not configured for this environment.':'Invalid passcode.';return}
-  document.getElementById('passcode').value='';loginMsg.textContent='';loadCommunications();
+  try{
+    const r=await fetch('/api/owner',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'login',passcode:document.getElementById('passcode').value})});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok){loginMsg.textContent=d.error==='owner_login_not_configured'?'Owner login is not configured for this environment.':'Invalid passcode.';return}
+    document.getElementById('passcode').value='';loginMsg.textContent='';
+    if(window.CJTOwnerShell?.afterLogin?.())return;
+    loadCommunications();
+  }catch(err){
+    loginMsg.textContent='Sign-in could not be completed. Try again.';
+  }finally{
+    if(btn)btn.disabled=false;
+  }
 });
 
 loadCommunications();
