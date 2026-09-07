@@ -54,8 +54,8 @@ Verified open as of 2026-09-07. Draft PR **#24 is out of scope — do not touch,
 | **#66** | Integration reconciliation baseline (this document) | `reorg/platform-v1` | Yes | CLEAN (docs-only) | Docs-only; `AGENTS.md` one-line pointer | **docs-only** |
 | **#62** | Keep booking requests locked until owner release (removes 24h expiry; structured trip/pet/event fields) | `reorg/platform-v1` | Yes | CLEAN / MERGEABLE | 1 commit behind tip (#63). Unique tip file vs this branch: `assets/data/public-image-manifest.json` (no overlapping booking-workflow files). Overlaps **#47** on the booking-workflow set below. Closed #61 was the prior attempt — use #62. | **reconcile-first** vs #47; prefer #62 lock semantics; conflict-check vs tip then merge as the lock baseline |
 | **#47** | Guest UX redesign (Dates → Reserve → …) plus lifecycle helpers; still references 24h holds in places | `reorg/platform-v1` | Yes | DIRTY / CONFLICTING | Base SHA `778881a8…` (behind tip). Overlaps **#62** and touches owner-shell / calendar / pricing files also used by #56/#57/#65. | **reconcile-first** — rebase onto post-#62 baseline; **must not reintroduce 24h expiry** |
-| **#56** | Owner Calendar: Sync Calendars, day-press actions, fail-closed Direct holds | `reorg/platform-v1` | Yes | DIRTY / CONFLICTING | Shares `api/calendar.js`, `api/inquiries.js`, `api/owner.js`, calendar/pricing/financials JS with #47/#65 | **reconcile-first** — coordinate shared owner-shell / calendar files via Gate Keeper |
-| **#58** | Redesign Owner Financials as a performance dashboard. **Owns Financials UI honest-data rules** (see Appendix A). | `reorg/platform-v1` | No | CLEAN | Overlaps Financials HTML/JS with **#57** and **#65**. #58 notes: if #57 merges first, rebase. Gate Keeper sequences shared files; does **not** redefine #58 metrics. | **reconcile-first** (shared Financials / shell); Financial bot owns honest-data rules |
+| **#56** | Owner Calendar: Sync Calendars, day-press actions, fail-closed Direct holds. **Prior Calendar UI** — Design may take owner calendar UI; Business Logic does **not** own this UI PR. | `reorg/platform-v1` | Yes | DIRTY / CONFLICTING | Shares `api/calendar.js`, `api/inquiries.js`, `api/owner.js`, calendar/pricing/financials JS with #47/#65 | **reconcile-first** — Design/UI lane; Gate Keeper coordinates shared files |
+| **#58** | Redesign Owner Financials as a performance dashboard. **Financial owns honest-data rules** (Appendix A). **Parked for owner review / not merge-ready until JB.** | `reorg/platform-v1` | No | CLEAN | Overlaps **#57** / **#65** on owner shell. Gate Keeper sequences shared files; does **not** redefine #58 metrics. | **reconcile-first** — parked for owner review; not merge-ready until JB |
 | **#57** | Owner portal shell/nav consistency across Pricing + Financials | `reorg/platform-v1` | No | CLEAN | Shares `owner-shell.js`, Pricing/Financials chrome with **#58** and **#65** | **reconcile-first** (shared owner-shell) |
 | **#65** | Owner portal nav, Overview KPI destinations, sticky context | `reorg/platform-v1` | Yes | CLEAN | Broad owner-shell + destination pages; overlap notes in PR for Calendar #56 and Financials #58 | **reconcile-first** — coordinate shared owner-shell files via Gate Keeper |
 | **#50** | Remove owner portal passcode on Preview (`ownerAuthOpen` / `requireOwnerAuth`; **auth off by default**) | `reorg/platform-v1` | Yes | DIRTY / CONFLICTING | Companion **#51**. PR body warns Owner Portal becomes publicly readable/writable. | **do-not-merge** as written |
@@ -164,11 +164,13 @@ Recommendation only. Gate Keeper coordinates shared files. Do not merge/close/re
 
 ### Business Logic bot — bounded tasks
 
+Business Logic owns **server** availability / quote / hold / pricing **reliability**. No Stripe work and no new discounts. Draft PR **#56** is prior **Calendar UI**; Design may take owner calendar UI. Business Logic does **not** own that UI PR.
+
 | Task | Stay inside | Do not take |
 | --- | --- | --- |
-| Land #62 lock semantics on post-tip baseline | `lib/db.js`, `api/inquiries.js`, `api/owner.js` (lock/expiry/status only) | Guest visual redesign; owner-shell nav; Financials dashboard; Calendar day-press |
+| Land #62 lock semantics on post-tip baseline | `lib/db.js`, `api/inquiries.js`, `api/owner.js` (lock/expiry/status only) | Guest visual redesign; owner-shell nav; Financials dashboard; Calendar UI (#56) |
 | Keep #47 from restoring 24h expiry when it rebases | Same APIs + `lib/booking-lifecycle.js` if still present after rebase | Inventing contract/payment/confirm order |
-| Calendar fail-closed Direct holds (#56 server bits) | `api/calendar.js`, `api/quote.js`, `api/inquiries.js` hold/OTA fail-closed only | Rewriting #47 guest widget or #62 lock rule |
+| Availability / quote / hold / pricing reliability | `api/calendar.js`, `api/quote.js`, `api/inquiries.js`, shared pricing/hold server paths — reliability only | Stripe; new discounts; owner Calendar UI PR #56 |
 | Auth | Leave #50/#51 flagged | Rewriting those PRs without Joel authorization |
 
 ### UI / UX bot — bounded tasks
@@ -176,7 +178,7 @@ Recommendation only. Gate Keeper coordinates shared files. Do not merge/close/re
 | Task | Stay inside | Do not take |
 | --- | --- | --- |
 | Reconcile #47 guest path onto post-#62 lock | `booking-v2.html`, `index.html`, `assets/js/booking-listing.js`, booking CSS, guest copy | Reintroducing 24h expiry; Stripe/OpenSign claims |
-| Owner Calendar #56 | `owner-v1/calendar.html`, `assets/js/calendar-view.js`, calendar CSS | Rewriting shared `owner-shell.js` without Gate Keeper |
+| Owner Calendar UI (#56 is prior draft; Design may take) | `owner-v1/calendar.html`, `assets/js/calendar-view.js`, calendar CSS | Rewriting shared `owner-shell.js` without Gate Keeper; assigning #56 to Business Logic |
 | Financials #58 / shell #57 / nav #65 | Coordinate one owner-shell source; rebase the others | Parallel uncoordinated edits to `assets/js/owner-shell.js`, `owner-v1/financials.html`, `assets/js/financials-v1.js` |
 
 ### Shared files that require Gate Keeper sequencing
@@ -235,11 +237,18 @@ Verified present in this repo (2026-09-07):
 
 ## Appendix A — Financial bot ownership (PR #58)
 
-PR **#58** owns Owner Financials **honest-data rules**. Gate Keeper sequences shared Financials/shell files with #57/#65; it does **not** redefine these metrics. Financial reviews this section.
+PR **#58** owns Owner Financials **honest-data rules**. Financial approved the existing points below. Gate Keeper sequences shared Financials/shell files with #57/#65; it does **not** redefine these metrics. Financial reviews this section.
+
+**Status:** #58 is **parked for owner review on Preview**; **not merge-ready until JB says so**. Preview `booking_financials` on `preview/reorg/platform-v1` may be empty until import (OTA cards stay honest-empty).
 
 | Rule | Meaning |
 | --- | --- |
 | No fake fillers | Do not invent `$0`, fees, NOI, or occupancy just to fill a cell. Show `—` / omit when the value cannot be computed from stored data. |
-| Owner Booking Revenue ≠ Net Income | After known channel-related deductions, before operating expenses. Not Net Income / NOI. |
+| Gross Revenue | Guest paid / booking value. |
+| Owner Booking Revenue ≠ Net Income | After known channel deductions, before opex. Not Net Income / NOI. |
 | America/Chicago MTD | Period math (including month-to-date) uses America/Chicago check-in dates. |
+| API contract | Do not alter `/api/financials` response shape or calculations unless an explicit Financials PR says so. |
+| Direct Booking Share | Prior-period pts only when real comparable stored data exists (never invent). |
+| Occupancy | Guest nights ÷ calendar nights. Owner stays and manual blocks are not occupied nights. |
+| Cross-module stay links | Only with stable IDs — no guest-name/date matching. |
 | OTA rows | Use `booking_financials` for OTA rows. Do not invent reservation records or Stripe wording for OTA stays. |
