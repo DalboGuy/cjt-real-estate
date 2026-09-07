@@ -181,7 +181,13 @@
 
       <aside class="side-column" aria-label="Booking controls">
         <div class="booking-sidebar-stack">
-          <div class="booking-card">
+          <div class="booking-card" id="bookingCard">
+            <ol class="listing-flow-rail" aria-label="Booking steps">
+              <li data-listing-step="dates">Dates</li>
+              <li data-listing-step="guests">Guests</li>
+              <li data-listing-step="quote">Quote</li>
+              <li data-listing-step="request">Request</li>
+            </ol>
             <div id="bookPrice" class="booking-price"><span class="price-main">Add dates for prices</span></div>
             <div class="booking-selectors">
               <div class="date-selector-row">
@@ -189,20 +195,20 @@
                 <button class="selector" type="button" data-open-calendar><span class="selector-label">Checkout</span><span class="selector-value" data-checkout-value>Add date</span></button>
               </div>
               <div class="guest-wrap">
-                <button class="selector guest-selector" type="button" data-open-guests><span><span class="selector-label">Guests</span><span class="selector-value" data-guests-value>1 guest</span></span><span>⌄</span></button>
-                <div id="guestPopover" class="guest-popover"><div class="guest-row"><div><strong>Guests</strong><div class="selector-value">Maximum 14</div></div><div class="stepper"><button id="guestMinus" type="button" aria-label="Remove guest">−</button><b id="guestCount">1</b><button id="guestPlus" type="button" aria-label="Add guest">+</button></div></div></div>
+                <button class="selector guest-selector" type="button" data-open-guests aria-expanded="false" aria-controls="guestPopover"><span><span class="selector-label">Guests</span><span class="selector-value" data-guests-value>1 guest</span></span><span>⌄</span></button>
+                <div id="guestPopover" class="guest-popover" role="dialog" aria-label="Choose number of guests"><div class="guest-row"><div><strong>Guests</strong><div class="selector-value">Maximum 14 overnight guests</div></div><div class="stepper"><button id="guestMinus" type="button" aria-label="Remove guest">−</button><b id="guestCount">1</b><button id="guestPlus" type="button" aria-label="Add guest">+</button></div></div></div>
               </div>
             </div>
-            <button id="bookNowBtn" class="btn btn-primary" type="button">Book Now</button>
-            <div class="charge-note">You won't be charged yet. Book Now reserves these dates until CJT reviews or an owner releases them.</div>
+            <button id="bookNowBtn" class="btn btn-primary" type="button">Check dates</button>
+            <div class="charge-note">You won't be charged yet. Requesting these dates reserves them until CJT reviews or an owner releases them.</div>
             <p class="booking-agreement-line"><a href="/booking-agreement">Booking agreement</a></p>
+            <div id="listingHealth" class="listing-health" hidden></div>
             <div id="quoteError" class="quote-error" hidden></div>
             <div id="quoteBreakdown" class="quote-breakdown">
               <div class="quote-row"><span>Lodging</span><strong id="quoteLodging">—</strong></div>
               <div class="quote-row"><span>Cleaning</span><strong id="quoteCleaning">—</strong></div>
               <div class="quote-row"><span>Taxes</span><strong id="quoteTax">—</strong></div>
               <div class="quote-row total"><span>Total</span><strong id="quoteTotal">—</strong></div>
-              <div id="paymentCopy" class="payment-box quote-trust" aria-live="polite"></div>
               <div style="margin-top:10px"><button id="refreshQuote" class="micro-link" type="button">Refresh price</button></div>
             </div>
           </div>
@@ -227,14 +233,101 @@
 
   <footer class="footer"><div class="wrap footer-row"><div><strong>CJT Realty · Sand &amp; Sea Manor</strong><div class="selector-value">1720 Avenue M · Galveston, TX 77550</div></div><div><a href="mailto:cjtrealestateholdings@gmail.com">Contact CJT Realty</a> · <a href="/owner-v1">Owner Portal</a></div></div></footer>
 
-  <div class="mobile-bookbar"><div class="mobile-book-copy"><div id="mobilePrice" class="mobile-price"><strong>Add dates</strong><span>See total price</span></div><a class="mobile-agreement" href="/booking-agreement">Booking agreement</a></div><button id="mobileBookBtn" class="btn btn-primary" type="button">Book Now</button></div>
+  <div class="mobile-bookbar"><div class="mobile-book-copy"><div id="mobilePrice" class="mobile-price"><strong>Add dates</strong><span>See total price</span></div><a class="mobile-agreement" href="/booking-agreement">Booking agreement</a></div><button id="mobileBookBtn" class="btn btn-primary" type="button">Check dates</button></div>
 
   <div id="galleryModal" class="modal" role="dialog" aria-modal="true" aria-label="Sand and Sea Manor photo gallery"><div class="modal-panel wide"><div class="modal-header"><h2>Sand &amp; Sea Manor photos</h2><button id="galleryClose" class="modal-close" type="button" aria-label="Close gallery">×</button></div><div class="modal-body"><div class="gallery-tools"><button class="gallery-filter active" type="button" data-gallery-filter="all">All</button><button class="gallery-filter" type="button" data-gallery-filter="interior">Common areas</button><button class="gallery-filter" type="button" data-gallery-filter="kitchen">Kitchen</button><button class="gallery-filter" type="button" data-gallery-filter="bedrooms">Bedrooms</button><button class="gallery-filter" type="button" data-gallery-filter="amenities">Outdoor amenities</button><button class="gallery-filter" type="button" data-gallery-filter="bath">Bathrooms</button><button class="gallery-filter" type="button" data-gallery-filter="exterior">Exterior</button><button class="gallery-filter" type="button" data-gallery-filter="aerial">Aerial</button><span id="galleryCount" class="selector-value"></span></div><div id="galleryGrid" class="gallery-grid"></div></div></div></div>
   <div id="photoViewer" class="viewer" role="dialog" aria-modal="true" aria-label="Enlarged property photo"><button id="viewerClose" class="viewer-close" type="button" aria-label="Close photo">×</button><button id="viewerPrev" class="viewer-prev" type="button" aria-label="Previous photo">‹</button><img id="viewerImage" alt="Sand and Sea Manor property photo"><div id="viewerMeta" class="viewer-meta"></div><button id="viewerNext" class="viewer-next" type="button" aria-label="Next photo">›</button></div>
 
   <div id="calendarModal" class="modal" role="dialog" aria-modal="true" aria-label="Choose booking dates"><div class="modal-panel calendar-panel"><div class="modal-header"><h2>Choose your dates</h2><button id="calendarClose" class="modal-close" type="button" aria-label="Close calendar">×</button></div><div class="modal-body"><div class="calendar-toolbar"><button id="calPrev" type="button" aria-label="Previous month">‹</button><strong id="calendarSelection">Choose check-in and check-out dates</strong><button id="calNext" type="button" aria-label="Next month">›</button></div><div class="calendar-months"><div id="calendarMonth1" class="month"></div><div id="calendarMonth2" class="month secondary"></div></div><div class="calendar-legend"><span>Available dates are selectable</span><span>Unavailable dates are crossed out</span></div><div id="calendarHealth" class="calendar-status">Checking live availability…</div></div></div></div>
 
-  <div id="bookingModal" class="modal" role="dialog" aria-modal="true" aria-label="Book Sand and Sea Manor"><div class="modal-panel"><div class="modal-header"><h2>Book Sand &amp; Sea Manor</h2><button id="bookingClose" class="modal-close" type="button" aria-label="Close booking form">×</button></div><div class="modal-body"><div id="bookingSummary" class="booking-summary"></div><form id="bookingForm"><div class="booking-modal-grid"><div class="field"><label for="guestName">Name</label><input id="guestName" name="name" autocomplete="name" required></div><div class="field"><label for="guestEmail">Email</label><input id="guestEmail" name="email" type="email" autocomplete="email" required></div><div class="field"><label for="guestPhone">Phone</label><input id="guestPhone" name="phone" type="tel" autocomplete="tel" required></div><div class="field"><label for="tripType">Trip type</label><select id="tripType" name="trip_type" required><option value="">Select</option><option>Family trip</option><option>Friends / group getaway</option><option>Celebration</option><option>Work / retreat</option><option>Galveston event</option><option>Other</option></select></div><div class="field"><label for="pets">Bringing a pet?</label><select id="pets" name="pets" required><option value="no">No</option><option value="yes">Yes — please review with us</option></select></div><div class="field"><label for="event">Planning an event or gathering?</label><select id="event" name="event" required><option value="no">No</option><option value="yes">Yes — please review with us</option></select></div><div class="field full"><label for="guestMessage">Anything CJT should know?</label><textarea id="guestMessage" name="message" placeholder="Tell us about your trip, special requests, pet, or event details."></textarea></div><div class="field full"><label style="display:flex;gap:9px;align-items:flex-start;font-weight:600"><input type="checkbox" required style="width:auto;margin-top:3px"> <span>I understand this request reserves these dates until CJT reviews or an owner releases them, and is subject to CJT approval, the <a href="/booking-agreement" target="_blank" rel="noopener">booking agreement</a>, and required payment.</span></label></div><div class="field full"><button id="bookingSubmit" class="btn btn-primary" type="submit">Book Now — Reserve These Dates</button><div id="bookingMessage" class="form-message"></div></div></div></form></div></div></div>
+  <div id="bookingModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="bookingStepTitle">
+    <div class="modal-panel booking-flow-panel">
+      <div class="modal-header booking-flow-header">
+        <button id="bookingBack" class="modal-back" type="button" aria-label="Back">‹</button>
+        <div>
+          <p id="bookingStepKicker" class="booking-step-kicker">Your info</p>
+          <h2 id="bookingStepTitle">Guest information</h2>
+        </div>
+        <button id="bookingClose" class="modal-close" type="button" aria-label="Close booking">×</button>
+      </div>
+      <div class="modal-body booking-flow-body">
+        <ol class="booking-progress" aria-label="Request to book steps">
+          <li data-progress="dates">Dates</li>
+          <li data-progress="guests">Guests</li>
+          <li data-progress="quote">Quote</li>
+          <li data-progress="info">Your info</li>
+          <li data-progress="review">Review</li>
+          <li data-progress="done">Received</li>
+        </ol>
+        <div id="bookingSummary" class="booking-summary"></div>
+        <form id="bookingForm" novalidate>
+          <section id="guestDetailsStep" class="booking-step" data-step="info">
+            <div class="booking-modal-grid">
+              <div class="field"><label for="guestName">Name</label><input id="guestName" name="name" autocomplete="name" required></div>
+              <div class="field"><label for="guestEmail">Email</label><input id="guestEmail" name="email" type="email" autocomplete="email" required></div>
+              <div class="field full"><label for="guestPhone">Phone</label><input id="guestPhone" name="phone" type="tel" autocomplete="tel" required></div>
+              <div class="field full">
+                <label for="guestMessage">Anything CJT should know?</label>
+                <textarea id="guestMessage" name="message" placeholder="Optional note for CJT — pets, events, or special plans can be mentioned here."></textarea>
+                <p class="field-hint">This is a guest note only. Trip type, pets, and events are not structured booking fields on this form.</p>
+              </div>
+              <div class="field full">
+                <button id="continueToReview" class="btn btn-primary" type="button">Continue to review</button>
+              </div>
+            </div>
+          </section>
+          <section id="reviewStep" class="booking-step" data-step="review" hidden>
+            <div class="review-grid">
+              <div class="review-block">
+                <h3>Stay</h3>
+                <dl>
+                  <div><dt>Dates</dt><dd id="reviewDates">—</dd></div>
+                  <div><dt>Nights</dt><dd id="reviewNights">—</dd></div>
+                  <div><dt>Guests</dt><dd id="reviewGuests">—</dd></div>
+                </dl>
+              </div>
+              <div class="review-block">
+                <h3>Quote</h3>
+                <div class="quote-row"><span>Lodging</span><strong id="reviewLodging">—</strong></div>
+                <div class="quote-row"><span>Cleaning</span><strong id="reviewCleaning">—</strong></div>
+                <div class="quote-row"><span>Taxes</span><strong id="reviewTax">—</strong></div>
+                <div class="quote-row total"><span>Total</span><strong id="reviewTotal">—</strong></div>
+                <div id="reviewPaymentCopy" class="payment-box quote-trust"></div>
+              </div>
+              <div class="review-block">
+                <h3>Guest contact</h3>
+                <dl>
+                  <div><dt>Name</dt><dd id="reviewName">—</dd></div>
+                  <div><dt>Email</dt><dd id="reviewEmail">—</dd></div>
+                  <div><dt>Phone</dt><dd id="reviewPhone">—</dd></div>
+                  <div id="reviewMessageRow" hidden><dt>Note</dt><dd id="reviewMessage">—</dd></div>
+                </dl>
+              </div>
+            </div>
+            <label class="agree-row">
+              <input id="requestAgree" type="checkbox">
+              <span>I understand this request reserves these dates until CJT reviews or an owner releases them, and is subject to CJT approval, the <a href="/booking-agreement" target="_blank" rel="noopener">booking agreement</a>, and required payment.</span>
+            </label>
+            <button id="bookingSubmit" class="btn btn-primary" type="submit">Request to Book</button>
+            <div id="bookingMessage" class="form-message"></div>
+          </section>
+          <section id="requestDoneStep" class="booking-step booking-done" data-step="done" hidden>
+            <p id="doneReplayBanner" class="replay-banner" hidden>This request was already received. The booking reference below is your existing reservation, not a new hold.</p>
+            <h3 id="doneTitle">Reservation received</h3>
+            <p id="doneHold" class="done-hold"></p>
+            <p class="done-ref">Booking reference: <strong id="doneRef">—</strong></p>
+            <dl class="done-summary">
+              <div><dt>Dates</dt><dd id="doneDates">—</dd></div>
+              <div><dt>Guests</dt><dd id="doneGuests">—</dd></div>
+              <div><dt>Quote total</dt><dd id="doneTotal">—</dd></div>
+            </dl>
+            <p id="doneNext" class="done-next"></p>
+            <button id="doneBrowse" class="btn btn-outline" type="button">Back to listing</button>
+          </section>
+        </form>
+      </div>
+    </div>
+  </div>
 
   <div id="amenitiesModal" class="modal amenities-sheet" role="dialog" aria-modal="true" aria-label="What this place offers"><div class="modal-panel wide amenities-sheet-panel"><div class="modal-header amenities-sheet-header"><span class="amenities-sheet-grabber" aria-hidden="true"></span><h2>What this place offers</h2><button id="amenitiesClose" class="modal-close amenities-sheet-close" type="button" aria-label="Close amenities">×</button></div><div class="modal-body amenities-sheet-body"><div id="amenitiesModalGrid" class="amenity-directory amenities-modal-directory" aria-label="All amenities">
             <div class="amenity-column">
