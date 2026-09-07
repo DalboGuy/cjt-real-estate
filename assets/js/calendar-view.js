@@ -308,6 +308,7 @@
     if(s.ok===false) bits.push(s.error||'failed');
     else if(s.skipped) bits.push('deduped');
     else bits.push(`${s.count||0} nights`);
+    if(s.lastSuccessfulAt) bits.push(new Date(s.lastSuccessfulAt).toLocaleString());
     return bits.join(' · ');
   }
 
