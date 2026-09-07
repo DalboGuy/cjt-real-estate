@@ -8,6 +8,7 @@ const {
   findDuplicateReservation,
   inquiryHttpStatus,
   inquirySuccessBody,
+  normalizeInquiryOptions,
   persistInquiry,
   quoteSnapshotFor,
   resolveDatesConflict
@@ -53,6 +54,10 @@ module.exports = async function (req, res) {
     if (checkout <= checkin) return res.status(400).json({ error: 'invalid_dates', message: 'Check-out must be after check-in.' });
     const today = new Date().toISOString().slice(0, 10);
     if (checkin < today) return res.status(400).json({ error: 'past_date', message: 'Check-in must be a future date.' });
+    const options = normalizeInquiryOptions(body);
+    if (!options.ok) {
+      return res.status(options.status || 400).json({ error: options.error, message: options.message });
+    }
 
     let quote;
     try {
@@ -70,7 +75,12 @@ module.exports = async function (req, res) {
       notes,
       checkin,
       checkout,
-      quote
+      quote,
+      trip_type: options.trip_type,
+      bringing_pet: options.bringing_pet,
+      pet_details: options.pet_details,
+      planning_event: options.planning_event,
+      event_details: options.event_details
     };
 
     const sql = db();
