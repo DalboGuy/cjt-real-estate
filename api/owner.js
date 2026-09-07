@@ -3,7 +3,7 @@ const { db, ensureSchema, expireHolds }=require('../lib/db');
 const {previewPasswordFreeActive}=require('../lib/preview-access');
 const {ownerAdjustedQuote,normalizeOwnerQuote}=require('../lib/pricing');
 const {paymentSnapshot}=require('../lib/payments');
-const {getOtaBlockedDates, resolveFeedUrl, FEED_ENV_BY_SOURCE, REQUIRED_FEEDS, urlHostHint}=require('../lib/availability');
+const {getOtaBlockedDates, listOwnerConnections, FEED_ENV_BY_SOURCE, MAX_OWNER_CALENDARS, urlHostHint}=require('../lib/availability');
 
 function parseCookies(header=''){return Object.fromEntries(header.split(';').map(v=>v.trim()).filter(Boolean).map(v=>{const i=v.indexOf('=');return [decodeURIComponent(v.slice(0,i)),decodeURIComponent(v.slice(i+1))];}));}
 function hash(v){return crypto.createHash('sha256').update(v).digest('hex');}
@@ -125,18 +125,23 @@ module.exports=async function(req,res){
       return res.status(200).json({ok:true});
     }
 
+
+
     if(req.method==='POST'&&body.action==='calendar_feeds_status'){
-      const sources=['airbnb','vrbo','booking.com'];
-      const feeds=[];
-      for(const source of sources){
-        const resolved=await resolveFeedUrl(source);
-        feeds.push({
-          source,
-          required:REQUIRED_FEEDS.includes(source),
-          configured:Boolean(resolved.url),
-          origin:resolved.origin,
-          hostHint:resolved.url?urlHostHint(resolved.url):null
-        });
+      const connections=await listOwnerConnections();
+      const feeds=connections.map(row=>({
+        id:Number(row.id),
+        label:row.label,
+        configured:true,
+        origin:'owner',
+        hostHint:urlHostHint(row.feed_url),
+        updatedAt:row.updated_at
+      }));
+      const envFeeds=[];
+      for(const [name, envName] of Object.entries(FEED_ENV_BY_SOURCE)){
+        const url=String(process.env[envName]||'').trim();
+        if(!url) continue;
+        envFeeds.push({ name, configured:true, origin:'env', hostHint:urlHostHint(url) });
       }
       let liveSources=[];
       try{
@@ -145,28 +150,38 @@ module.exports=async function(req,res){
       }catch(e){
         liveSources=[{name:'ota',ok:false,error:e.message,missingEnv:e.missingEnv}];
       }
-      return res.status(200).json({feeds, liveSources, checkedAt:new Date().toISOString()});
+      return res.status(200).json({
+        feeds,
+        envFeeds,
+        maxOwnerCalendars:MAX_OWNER_CALENDARS,
+        ownerCount:feeds.length,
+        liveSources,
+        checkedAt:new Date().toISOString()
+      });
     }
 
     if(req.method==='POST'&&body.action==='calendar_feeds_save'){
-      const source=String(body.source||'').trim().toLowerCase();
+      const label=String(body.label||'').trim().slice(0,80);
       const feedUrl=String(body.feedUrl||'').trim();
-      if(!['airbnb','vrbo','booking.com'].includes(source))return res.status(400).json({error:'invalid_source'});
-      if(!/^https:\/\//i.test(feedUrl))return res.status(400).json({error:'invalid_feed_url',message:'Use a full https:// iCal URL.'});
-      await sql`
-        INSERT INTO calendar_feeds(source,feed_url,updated_at,updated_by)
-        VALUES (${source},${feedUrl},now(),'owner')
-        ON CONFLICT (source) DO UPDATE SET feed_url=EXCLUDED.feed_url, updated_at=now(), updated_by='owner'
+      if(!label) return res.status(400).json({error:'missing_label',message:'Give this calendar a short name.'});
+      if(!/^https:\/\//i.test(feedUrl)) return res.status(400).json({error:'invalid_feed_url',message:'Use a full https:// iCal URL.'});
+      const existing=await sql`SELECT count(*)::int AS n FROM calendar_connections`;
+      if((existing[0]?.n||0)>=MAX_OWNER_CALENDARS){
+        return res.status(409).json({error:'calendar_limit',message:`You can connect up to ${MAX_OWNER_CALENDARS} calendars.`});
+      }
+      const rows=await sql`
+        INSERT INTO calendar_connections(label, feed_url, updated_at, updated_by)
+        VALUES (${label}, ${feedUrl}, now(), 'owner')
+        RETURNING id, label, updated_at
       `;
-      return res.status(200).json({ok:true, source, hostHint:urlHostHint(feedUrl), origin:'owner'});
+      return res.status(200).json({ok:true, feed:{id:Number(rows[0].id), label:rows[0].label, hostHint:urlHostHint(feedUrl), origin:'owner'}});
     }
 
     if(req.method==='POST'&&body.action==='calendar_feeds_clear'){
-      const source=String(body.source||'').trim().toLowerCase();
-      if(!['airbnb','vrbo','booking.com'].includes(source))return res.status(400).json({error:'invalid_source'});
-      await sql`DELETE FROM calendar_feeds WHERE source=${source}`;
-      const resolved=await resolveFeedUrl(source);
-      return res.status(200).json({ok:true, source, stillConfigured:Boolean(resolved.url), origin:resolved.origin, hostHint:resolved.url?urlHostHint(resolved.url):null});
+      const id=Number(body.id);
+      if(!Number.isInteger(id)||id<1) return res.status(400).json({error:'invalid_id'});
+      await sql`DELETE FROM calendar_connections WHERE id=${id}`;
+      return res.status(200).json({ok:true, id});
     }
 
     return res.status(405).json({error:'method_not_allowed'});
