@@ -1,18 +1,8 @@
 const crypto=require('crypto');
 const { db, ensureSchema, expireHolds }=require('../lib/db');
+const {ownerAuthOpen,requireOwnerAuth,parseCookies,sha256}=require('../lib/owner-auth');
 
-function parseCookies(header=''){return Object.fromEntries(header.split(';').map(v=>v.trim()).filter(Boolean).map(v=>{const i=v.indexOf('=');return [decodeURIComponent(v.slice(0,i)),decodeURIComponent(v.slice(i+1))];}));}
-function hash(v){return crypto.createHash('sha256').update(v).digest('hex');}
 function safeEqual(a,b){const A=Buffer.from(String(a||'')),B=Buffer.from(String(b||''));return A.length===B.length&&crypto.timingSafeEqual(A,B);}
-
-async function authenticated(req){
-  await ensureSchema();
-  const token=parseCookies(req.headers.cookie||'').cjt_owner_session;
-  if(!token)return false;
-  const sql=db();
-  const rows=await sql`SELECT token_hash FROM owner_sessions WHERE token_hash=${hash(token)} AND expires_at>now() LIMIT 1`;
-  return rows.length>0;
-}
 
 function setSessionCookie(res,token){res.setHeader('Set-Cookie',`cjt_owner_session=${encodeURIComponent(token)}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=43200`);}
 function clearSessionCookie(res){res.setHeader('Set-Cookie','cjt_owner_session=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0');}
@@ -23,15 +13,16 @@ module.exports=async function(req,res){
     const sql=db();
     const body=typeof req.body==='string'?JSON.parse(req.body||'{}'):(req.body||{});
     if(req.method==='POST'&&body.action==='login'){
+      if(ownerAuthOpen())return res.status(200).json({ok:true,ownerAuthOpen:true});
       if(!process.env.OWNER_PORTAL_PASSCODE)return res.status(503).json({error:'owner_login_not_configured'});
       if(!safeEqual(body.passcode,process.env.OWNER_PORTAL_PASSCODE))return res.status(401).json({error:'invalid_passcode'});
       const token=crypto.randomBytes(32).toString('hex');
       await sql`DELETE FROM owner_sessions WHERE expires_at<=now()`;
-      await sql`INSERT INTO owner_sessions(token_hash,expires_at) VALUES (${hash(token)},now()+interval '12 hours')`;
+      await sql`INSERT INTO owner_sessions(token_hash,expires_at) VALUES (${sha256(token)},now()+interval '12 hours')`;
       setSessionCookie(res,token);
-      return res.status(200).json({ok:true});
+      return res.status(200).json({ok:true,ownerAuthOpen:false});
     }
-    if(!(await authenticated(req)))return res.status(401).json({error:'unauthorized'});
+    if(!(await requireOwnerAuth(req,res)))return;
 
     if(req.method==='GET'){
       await expireHolds();
@@ -42,12 +33,12 @@ module.exports=async function(req,res){
         ORDER BY CASE WHEN status IN ('released','expired','cancelled') THEN 1 ELSE 0 END, checkin ASC, created_at DESC
         LIMIT 250
       `;
-      return res.status(200).json({reservations});
+      return res.status(200).json({reservations,ownerAuthOpen:ownerAuthOpen()});
     }
 
     if(req.method==='POST'&&body.action==='logout'){
       const token=parseCookies(req.headers.cookie||'').cjt_owner_session;
-      if(token)await sql`DELETE FROM owner_sessions WHERE token_hash=${hash(token)}`;
+      if(token)await sql`DELETE FROM owner_sessions WHERE token_hash=${sha256(token)}`;
       clearSessionCookie(res);
       return res.status(200).json({ok:true});
     }
