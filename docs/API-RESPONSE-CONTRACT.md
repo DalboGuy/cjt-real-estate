@@ -60,6 +60,7 @@ All of these require an owner session (or preview password-free). Unauthenticate
 | `calendar_feeds_save` | `{ ok: true, feed: { id, label, hostHint, origin: "owner" } }` | 400 `missing_label` / `invalid_feed_url`; 409 `calendar_limit` |
 | `calendar_feeds_clear` | `{ ok: true, id }` | 400 `invalid_id` |
 | `calendar_entry_save` | `{ ok: true, entry: { id, kind, start_date, end_date, notes } }` | 400 `invalid_kind` / `invalid_dates` / `invalid_range` |
+| `calendar_entry_update` | `{ ok: true, entry: { id, kind, start_date, end_date, notes } }` | 400 `invalid_id`; 404 `not_found` |
 | `calendar_entry_delete` | `{ ok: true, id }` | 400 `invalid_id`; 404 `not_found` |
 | `calendar_settings_save` | `{ ok: true, settings: { prepBufferEnabled, showGuestNames, showGuestContact } }` | 500 `owner_api_error` |
 | `login` | `{ ok: true }` + `Set-Cookie: cjt_owner_session=…` | 401 `invalid_passcode`; 503 `owner_login_not_configured` |
@@ -529,6 +530,8 @@ Channel ids: `direct`, `airbnb`, `vrbo`, `booking.com`, `owner_stay`, `manual_bl
 `owner_stay` and `manual_block` **do** conflict with `direct` on the same night (`unique` claiming channels > 1). Same for Direct + Airbnb. Owner stays / manual blocks **block guests** but do **not** count as booked occupancy.
 
 `calendar_entry_save` does **not** 409 on overlap. It returns 200; the owner UI may toast “Owner stay saved. Overlaps an existing guest stay or OTA block.”
+
+`calendar_entry_update` is **notes-only**. Body: `{ action: "calendar_entry_update", id, notes }`. Notes are trimmed and capped at 500 characters (`String(notes||'').trim().slice(0,500) || null`). Success returns the same `entry` shape as save (`id`, `kind`, `start_date`, `end_date`, `notes`; dates as `::text`). It does **not** change `kind`, `start_date`, or `end_date`, does **not** re-check date conflicts, and sets `updated_at = now()`. Unknown id → 404 `{ "error": "not_found" }`; non-integer / `< 1` id → 400 `{ "error": "invalid_id" }`.
 
 Events carry `channel`, `kind`, `reservationId` (direct) or `entryId` (owner block/stay), `blocksGuests`, `occupancy`, `canDelete`.
 
