@@ -9,6 +9,8 @@
   <link rel="stylesheet" href="/assets/css/modules.css">
   <style>
     .pricing-table-wrap{overflow:auto;border:1px solid var(--cjt-line);border-radius:12px;background:#fff}.pricing-table{width:100%;border-collapse:collapse;min-width:680px}.pricing-table th,.pricing-table td{padding:11px 12px;border-bottom:1px solid var(--cjt-line);text-align:left;white-space:nowrap}.pricing-table th{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--cjt-muted);background:#fafbf9}.pricing-table tr:last-child td{border-bottom:0}.pricing-table td:first-child{font-weight:800}.pricing-table .money{text-align:right}.pricing-form{display:grid;gap:12px}.pricing-form label{display:grid;gap:5px;color:var(--cjt-muted);font-size:.78rem;font-weight:800}.pricing-form input{width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid var(--cjt-line);border-radius:10px;background:#fff;color:var(--cjt-ink);font:inherit}.quote-result{margin-top:16px;border-top:1px solid var(--cjt-line);padding-top:14px}.quote-grid{display:grid;grid-template-columns:1fr auto;gap:8px;margin:0}.quote-grid dt{color:var(--cjt-muted)}.quote-grid dd{margin:0;font-weight:800;text-align:right}.quote-total{font-size:1.15rem;padding-top:9px;border-top:1px solid var(--cjt-line);margin-top:5px}.quote-error{color:#8b2f2f;background:#fff5f3;border:1px solid #e7b7ad;border-radius:10px;padding:10px 12px;font-size:.84rem}.pricing-note{color:var(--cjt-muted);font-size:.82rem;line-height:1.5}.schedule{margin-top:14px;padding:12px;border-radius:10px;background:#f4f8f5;border:1px solid var(--cjt-line);font-size:.83rem}.schedule strong{display:block;margin-bottom:3px}.disabled-card{opacity:.78}
+  
+    .season-groups{display:grid;gap:10px}.season-group{border:1px solid var(--cjt-line);border-radius:12px;background:#fff;overflow:hidden}.season-group summary{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 14px;cursor:pointer;list-style:none}.season-group summary::-webkit-details-marker{display:none}.season-group summary:focus-visible{outline:3px solid var(--cjt-accent,#6b8f71);outline-offset:-3px}.season-group-heading{display:grid;gap:3px;min-width:0}.season-group-heading strong{font-size:.96rem}.season-group-heading span{font-size:.78rem;color:var(--cjt-muted);font-weight:700}.season-group-chevron{font-size:1.2rem;color:var(--cjt-muted);transition:transform .15s ease}.season-group[open] summary{border-bottom:1px solid var(--cjt-line)}.season-group[open] .season-group-chevron{transform:rotate(180deg)}.season-group-body{padding:0 10px 10px}.season-group-body .pricing-table-wrap{border:0;border-radius:0}@media(max-width:600px){.season-group summary{padding:12px}.season-group-heading span{line-height:1.35}.season-group-body{padding:0 4px 4px}}
   </style>
 </head>
 <body>
@@ -63,7 +65,7 @@
           <section class="module-main">
             <div class="card">
               <div class="card-head"><div><h3>Season schedule</h3><p>Rates and minimum stays are loaded from the booking engine.</p></div><span id="seasonCount" class="badge good">Loading…</span></div>
-              <div id="seasonTable" class="pricing-table-wrap"><div class="empty">Loading published seasons…</div></div>
+              <div id="seasonTable"><div class="empty">Loading published seasons…</div></div>
               <p id="weekendNote" class="pricing-note" style="margin-bottom:0">Weekend rates and the published window load with the schedule.</p>
             </div>
             <div class="card disabled-card" style="margin-top:16px"><div class="card-head"><div><h3>Season overrides</h3><p>Date-level changes will be managed here in a future owner workflow.</p></div><span class="badge">Planned</span></div><button class="btn btn-secondary" type="button" disabled>Overrides coming soon</button></div>
@@ -109,6 +111,39 @@
       if(list.length===2)return `${list[0]} and ${list[1]}`;
       return `${list.slice(0,-1).join(', ')}, and ${list[list.length-1]}`;
     }
+    function monthKey(value){
+      const match=String(value||'').match(/^(\d{4})-(\d{2})-/);
+      return match?`${match[1]}-${match[2]}`:'';
+    }
+    function monthLabel(key){
+      const [year,month]=key.split('-').map(Number);
+      return new Date(Date.UTC(year,month-1,1)).toLocaleDateString(undefined,{month:'short',year:'numeric',timeZone:'UTC'});
+    }
+    function monthKeyForDate(value){
+      return `${value.getFullYear()}-${String(value.getMonth()+1).padStart(2,'0')}`;
+    }
+    function seasonTableMarkup(seasons){
+      return `<div class="pricing-table-wrap"><table class="pricing-table"><thead><tr><th>Season</th><th>Start</th><th>End</th><th class="money">Weekday</th><th class="money">Weekend</th><th>Min nights</th></tr></thead><tbody>${seasons.map(s=>`<tr><td>${esc(s.name)}</td><td>${esc(date(s.start))}</td><td>${esc(date(s.end))}</td><td class="money">${money(s.weekday)}</td><td class="money">${money(s.weekend)}</td><td>${esc(s.minNights)}</td></tr>`).join('')}</tbody></table></div>`;
+    }
+    function renderSeasonSchedule(seasons){
+      const grouped=new Map();
+      seasons.forEach(s=>{
+        const key=monthKey(s.start);
+        if(!key)return;
+        if(!grouped.has(key))grouped.set(key,[]);
+        grouped.get(key).push(s);
+      });
+      const now=new Date();
+      const openMonths=new Set([monthKeyForDate(now),monthKeyForDate(new Date(now.getFullYear(),now.getMonth()+1,1))]);
+      const groups=[...grouped.entries()].sort(([a],[b])=>a.localeCompare(b));
+      seasonTable.innerHTML=`<div class="season-groups">${groups.map(([key,items])=>{
+        const rates=items.flatMap(s=>[Number(s.weekday),Number(s.weekend)]).filter(Number.isFinite);
+        const min=rates.length?Math.min(...rates):0;
+        const max=rates.length?Math.max(...rates):0;
+        const countLabel=`${items.length} season${items.length===1?'':'s'}`;
+        return `<details class="season-group"${openMonths.has(key)?' open':''}><summary><span class="season-group-heading"><strong>${esc(monthLabel(key))}</strong><span>${countLabel} · ${money(min)}–${money(max)} / night</span></span><span class="season-group-chevron" aria-hidden="true">⌄</span></summary><div class="season-group-body">${seasonTableMarkup(items)}</div></details>`;
+      }).join('')}</div>`;
+    }
     function renderPricing(d){
       const split=`${Math.round(Number(d.advancePaymentPct)*100)}% at booking · balance ${d.splitPaymentThresholdDays} days before arrival`;
       const weekendLabel=joinDays(d.weekendDays);
@@ -119,7 +154,7 @@
       const maxGuests=Number(d.maxGuests)||14;
       guestsInput.max=String(maxGuests);
       if(Number(guestsInput.value)>maxGuests)guestsInput.value=String(maxGuests);
-      seasonTable.innerHTML=`<table class="pricing-table"><thead><tr><th>Season</th><th>Start</th><th>End</th><th class="money">Weekday</th><th class="money">Weekend</th><th>Min nights</th></tr></thead><tbody>${d.seasons.map(s=>`<tr><td>${esc(s.name)}</td><td>${esc(date(s.start))}</td><td>${esc(date(s.end))}</td><td class="money">${money(s.weekday)}</td><td class="money">${money(s.weekend)}</td><td>${esc(s.minNights)}</td></tr>`).join('')}</tbody></table>`;
+      renderSeasonSchedule(d.seasons);
       document.getElementById('lastChecked').textContent='Schedule loaded';
     }
     function quoteError(payload){
