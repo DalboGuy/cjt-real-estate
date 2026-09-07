@@ -52,8 +52,10 @@ Acceptance:
 
 ### 5. Isolate preview from production data
 
+Current wiring: Vercel Preview uses `CJT_DATABASE_URL` + `CJT_DB_TARGET=preview` against official Neon branch `preview/reorg/platform-v1` (`ep-rapid-bird`). Sibling `reorg-platform-v1` is not the Preview target. `CJT_ALLOW_PROD_DB` stays unset on Preview. See [PREVIEW-DATABASE-SETUP.md](./PREVIEW-DATABASE-SETUP.md).
+
 Acceptance:
-- Vercel preview uses a development/reorganization database branch;
+- Vercel preview uses the official Preview Neon branch (`preview/reorg/platform-v1`), not production and not sibling `reorg-platform-v1`;
 - preview booking submissions cannot create real production holds/reservations;
 - production remains unchanged until explicit cutover approval.
 
@@ -66,11 +68,11 @@ Acceptance:
 
 ### 7. Finish true 14-guest end-to-end support
 
-Current state: UI/API allow 14; production reservation constraint still reflects the earlier limit.
+Current state: UI/API allow 14. Official Preview (`preview/reorg/platform-v1`) and Production (`main`) already `CHECK` guests 1–14. Remaining work is end-to-end Preview acceptance, not re-applying the constraint. See [FOURTEEN-GUEST-OCCUPANCY.md](./FOURTEEN-GUEST-OCCUPANCY.md).
 
 Acceptance:
-- additive production migration separately approved by Joel;
-- 1–14 guest reservation request works end-to-end after approved migration;
+- 1–14 guest reservation request works end-to-end on Preview;
+- production already has the 1–14 CHECK; do not treat Production as still 1–12;
 - rollback path retained.
 
 ### 8. Complete the transaction loop

@@ -1,19 +1,25 @@
 # Fourteen-guest occupancy cutover
 
-Status: **Needs review / Partial — not Built.** This PR prepares the code and additive SQL for Issue #22; it does not migrate production.
+Status: **Schema is already 1–14 on both official Neon branches.** Remaining work is Preview end-to-end acceptance, not re-applying the CHECK.
 
 ## Behavior
 
 - Pricing and request validation support 1–14 guests.
-- A new database initialized from this branch uses `guests BETWEEN 1 AND 14`.
-- An existing database with the old reservation check remains safe: a 13–14 guest inquiry returns HTTP 503 with `occupancy_migration_pending` and asks the guest to contact CJT Realty. It does not silently fail or write a partial reservation.
-- After the additive migration is applied to an isolated reorganization/preview database, reservation requests for 1–14 guests use the normal hold flow.
+- New databases initialized from this branch use `guests BETWEEN 1 AND 14`.
+- **Verified 2026-09-07** on Neon project `holy-block-00778872`:
+  - Official Preview `preview/reorg/platform-v1` (`br-damp-wildflower-avtyiin5`): `reservation_guest_count_valid` is `CHECK (guests >= 1 AND guests <= 14)`.
+  - Production `main` (`br-billowing-smoke-avawnhdx`): the same 1–14 CHECK.
+  - Legacy sibling `reorg-platform-v1` also already has 1–14; it is **not** the Vercel Preview target.
+- Production is **not** still limited to 1–12. Do not treat 13–14 Preview or Production requests as “migration pending” unless a leftover database actually still has the old check.
+- If an old 1–12 CHECK is somehow still in place, a 13–14 guest inquiry returns HTTP 503 with `occupancy_migration_pending` and asks the guest to contact CJT Realty. That path is a safety net, not the current official Preview/Production state.
 
-## Joel: apply to the Neon reorganization/preview branch now
+Forward SQL remains in `docs/migrations/002-fourteen-guest-occupancy.sql` for recovery/history. Do not re-run it as a required Preview or Production step.
 
-1. In the Neon console, select the approved `reorg-platform-v1` branch (or an approved disposable child), not the production `main` branch.
-2. Review `docs/migrations/002-fourteen-guest-occupancy.sql` and run its forward section in that branch's SQL editor.
-3. Verify the result before testing:
+## Joel: Preview wiring (do not point at the sibling branch)
+
+1. Official Preview Neon branch is `preview/reorg/platform-v1` (`br-damp-wildflower-avtyiin5` / `ep-rapid-bird`), not sibling `reorg-platform-v1` (`ep-long-hall`). See [PREVIEW-DATABASE-SETUP.md](./PREVIEW-DATABASE-SETUP.md).
+2. Vercel Preview already uses `CJT_DATABASE_URL` + `CJT_DB_TARGET=preview`. Leave `CJT_ALLOW_PROD_DB` unset on Preview. Neon-managed `DATABASE_URL` still exists; do not rely on it alone.
+3. Optional sanity check (SQL editor on `preview/reorg/platform-v1` only):
 
    ```sql
    SELECT conname, pg_get_constraintdef(oid)
@@ -22,14 +28,13 @@ Status: **Needs review / Partial — not Built.** This PR prepares the code and 
      AND conname = 'reservation_guest_count_valid';
    ```
 
-   The definition must allow guests between 1 and 14.
-4. Point the Vercel Preview `DATABASE_URL` at that reorganization/child branch with `CJT_DB_TARGET=preview` and without `CJT_ALLOW_PROD_DB`. Keep secrets in Vercel/Neon only.
-5. Test one normal request and one 14-guest request in Preview, then verify the hold and booking event exist only on the reorganization/child branch.
+   Expect guests between 1 and 14.
+4. Test one normal request and one 14-guest request on Preview. Confirm the hold exists only on `preview/reorg/platform-v1`, not production `main`.
 
-Do not use this SQL to change the production branch as part of this PR. No production database was migrated here.
+This docs change does not set Production `CJT_DB_TARGET` / `CJT_ALLOW_PROD_DB`. Those must be set in Vercel before promoting the guarded SHA; not in this PR.
 
-## Separate production approval and cutover later
+## Production
 
-Before production can accept 13–14 guest reservations, Joel must explicitly approve the production target and cutover timing, confirm a current recovery snapshot/backup, and verify the Vercel production environment points at the canonical production Neon branch. After that separate approval, run the same forward SQL against production, verify the constraint and a controlled end-to-end request, and record the result. Until then, production keeps the clear migration-pending response for 13–14 guests.
+The occupancy CHECK is already 1–14 on production `main`. Separate Joel approval is still required before promoting application SHAs or changing Production env guards. Do not use this document as a reason to copy Preview connection strings into Production.
 
-The rollback is documented in the migration file. It first blocks rollback when any reservation has more than 12 guests, then restores the 1–12 check. Rollback also requires Joel's decision about any affected holds or reservations.
+Rollback SQL in the migration file still first blocks rollback when any reservation has more than 12 guests, then restores the 1–12 check. Rollback also requires Joel's decision about any affected holds or reservations.

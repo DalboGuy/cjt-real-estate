@@ -33,7 +33,9 @@ This project contains the schema expected by the current Vercel runtime and the 
 - Parent: live production `main`
 - Compute: intentionally not provisioned at creation
 
-All Platform v1 database design/migration work should target this branch or disposable child branches until an explicit production migration is approved.
+**Later correction (2026-09-07):** this console-created sibling is **not** the Vercel Preview target. Treat it as legacy/sibling only (host prefix `ep-long-hall`). Official Preview is `preview/reorg/platform-v1` (`br-damp-wildflower-avtyiin5` / `ep-rapid-bird`), wired through `CJT_DATABASE_URL` + `CJT_DB_TARGET=preview`. See [PREVIEW-DATABASE-SETUP.md](./PREVIEW-DATABASE-SETUP.md).
+
+All Platform v1 database design/migration work should target the official Preview branch or disposable child branches until an explicit production migration is approved.
 
 ## Current live application tables
 
@@ -133,7 +135,7 @@ Before migration, decide whether to:
 1. copy those 3 example messages into the live/reorganization database as development fixtures, or
 2. leave production clean and populate it only through the planned Gmail ingestion pipeline.
 
-Recommendation: use development fixtures only on the `reorg-platform-v1` database branch and let production communications populate from verified ingestion rather than manual seeding.
+Recommendation: use development fixtures only on official Preview `preview/reorg/platform-v1` (not sibling `reorg-platform-v1`) and let production communications populate from verified ingestion rather than manual seeding.
 
 ## Runtime confirmation basis
 
@@ -145,7 +147,8 @@ This resolves the Phase 0 database discrepancy.
 
 - Treat `holy-block-00778872 / br-billowing-smoke-avawnhdx / neondb` as the canonical current production database.
 - Treat snapshot `snap-rapid-mode-av50d8hm` as the production pre-reorganization database recovery point.
-- Perform Platform v1 schema work on `br-falling-cherry-avxasm60` or disposable child branches.
-- Do not point production Vercel environment variables at a reorganization database branch until cutover is explicitly approved.
+- Perform Platform v1 schema work on official Preview `preview/reorg/platform-v1` (`br-damp-wildflower-avtyiin5`) or disposable child branches. Sibling `reorg-platform-v1` / `br-falling-cherry-avxasm60` is not the Vercel Preview target.
+- Do not point production Vercel environment variables at a Preview database branch until cutover is explicitly approved.
 - Do not delete the secondary CJT Neon project or its snapshot until the Platform v1 migration is complete and verified.
 - Do not copy database credentials or Vercel secrets into GitHub documentation.
+- Preview runtime prefers `CJT_DATABASE_URL` over Neon-managed `DATABASE_URL`. Production still needs `CJT_DB_TARGET=production` and `CJT_ALLOW_PROD_DB=1` before promoting the guarded SHA; do not set those from a docs-only change.

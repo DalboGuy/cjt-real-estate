@@ -186,7 +186,10 @@ Do not assume the current schema is complete until this discrepancy is resolved.
 
 Known configuration names referenced by code include:
 
-- `DATABASE_URL`
+- `DATABASE_URL` (Neon-managed; still present on Preview and Production)
+- `CJT_DATABASE_URL` (Preview override; preferred by `lib/db.js` — see [PREVIEW-DATABASE-SETUP.md](./PREVIEW-DATABASE-SETUP.md))
+- `CJT_DB_TARGET`
+- `CJT_ALLOW_PROD_DB` (Production only; must stay unset on Preview)
 - `OWNER_PORTAL_PASSCODE`
 - `AIRBNB_ICAL_URL`
 - `VRBO_ICAL_URL`
@@ -303,7 +306,7 @@ Public/guest target structure remains separate from Owner Operations.
 
 Before moving files or changing routes:
 
-1. Reconcile the live Vercel `DATABASE_URL` target with the Neon project/branch documented above.
+1. Reconcile the live Vercel database target with the official Preview Neon branch `preview/reorg/platform-v1` (`CJT_DATABASE_URL`, not sibling `reorg-platform-v1`). See [PREVIEW-DATABASE-SETUP.md](./PREVIEW-DATABASE-SETUP.md).
 2. Inventory reservation/booking data and confirm where it currently lives.
 3. Define the canonical Platform v1 route map.
 4. Define the normalized Platform v1 data model.

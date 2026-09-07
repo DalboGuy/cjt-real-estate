@@ -22,7 +22,7 @@ This repository is shared work for the CJT Realty platform. These rules apply to
 
 - Production Git checkpoint and production database must remain unchanged unless Joel explicitly approves a production cutover or migration.
 - Do not point preview deployments at production data when a safe development branch is available.
-- Database experiments belong on the Neon reorganization branch or disposable child branches.
+- Database experiments belong on the official Preview Neon branch `preview/reorg/platform-v1` (or an approved disposable child). Sibling `reorg-platform-v1` is not the Vercel Preview target. Runtime prefers `CJT_DATABASE_URL` over Neon-managed `DATABASE_URL`; see `docs/PREVIEW-DATABASE-SETUP.md`.
 - Never hardcode secrets, credentials, signed URLs, API tokens, iCal secrets, or connection strings in source or documentation.
 - Public website assets must be read-only to anonymous users. Do not grant public write access.
 

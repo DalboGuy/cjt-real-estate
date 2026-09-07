@@ -174,13 +174,13 @@ The owner explicitly narrowed identity/security work to items **4 and 5 only**. 
 4. **Password recovery — Built foundation.** One-time 30-minute reset tokens, password replacement, and invalidation of the user's existing sessions after a successful reset. Automated email delivery uses a protected runtime delivery hook and remains inactive until that connection is configured.
 5. **Sessions & audit — Built.** Named users can review/revoke their own active sessions; Administrators can review/revoke named-account sessions. Authentication and session actions write to the shared audit trail when `audit_log` is present.
 
-The `password_reset_tokens` and `audit_log` tables are present on the Neon reorganization branch. Preview code does **not** create these tables on the production database.
+The `password_reset_tokens` and `audit_log` tables are present on isolated non-production Neon branches. Preview code does **not** create these tables on the production database.
 
 ## Temporary preview access — 2026-09-05
 
 At the owner's request, application-password gates were temporarily bypassed for **preview GET/read access from 8:25 PM to 9:25 PM Central on Sep 5, 2026**. The bypass is coded with a fixed expiration timestamp and only activates when `VERCEL_ENV=preview`; production authentication is unchanged.
 
-Data-changing POST/write actions remain session-protected during temporary password-free preview windows. Database access is also fail-closed for Vercel Preview unless `CJT_DB_TARGET=preview`; `CJT_ALLOW_PROD_DB=1` is accepted only in Vercel Production. The Preview `DATABASE_URL` must still be verified in Vercel/Neon as the reorganization or disposable development branch.
+Data-changing POST/write actions remain session-protected during temporary password-free preview windows. Database access is fail-closed for Vercel Preview unless `CJT_DB_TARGET=preview`; `CJT_ALLOW_PROD_DB` must stay unset on Preview. Runtime prefers `CJT_DATABASE_URL` over Neon-managed `DATABASE_URL` and rejects Preview hosts containing `ep-calm-field`. The official Preview Neon branch is `preview/reorg/platform-v1` (`br-damp-wildflower-avtyiin5` / `ep-rapid-bird`). Sibling `reorg-platform-v1` (`ep-long-hall`) is not the Vercel Preview target. See [PREVIEW-DATABASE-SETUP.md](./PREVIEW-DATABASE-SETUP.md).
 
 Reserved Under construction routes currently cover:
 
