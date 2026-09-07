@@ -5,6 +5,7 @@ const {ownerAdjustedQuote,normalizeOwnerQuote}=require('../lib/pricing');
 const {paymentSnapshot}=require('../lib/payments');
 const {getOtaBlockedDates, listOwnerConnections, FEED_ENV_BY_SOURCE, MAX_OWNER_CALENDARS, urlHostHint, eachDate}=require('../lib/availability');
 const {buildOwnerCalendarView, validIsoDate}=require('../lib/calendar-view');
+const {planOwnerTransition,notUpdatedError,conflictBody}=require('../lib/booking-transitions');
 
 function parseCookies(header=''){return Object.fromEntries(header.split(';').map(v=>v.trim()).filter(Boolean).map(v=>{const i=v.indexOf('=');return [decodeURIComponent(v.slice(0,i)),decodeURIComponent(v.slice(i+1))];}));}
 function hash(v){return crypto.createHash('sha256').update(v).digest('hex');}
@@ -94,6 +95,11 @@ module.exports=async function(req,res){
     if(req.method==='POST'&&body.action==='update'){
       const id=String(body.id||'').trim(),next=String(body.status||'').trim();
       if(!id)return res.status(400).json({error:'missing_id'});
+      const currentRows=await sql`SELECT id,status FROM reservations WHERE id=${id} LIMIT 1`;
+      const current=currentRows[0];
+      if(!current)return res.status(404).json({error:'reservation_not_found'});
+      const plan=planOwnerTransition(current.status,next);
+      if(!plan.ok)return res.status(409).json(conflictBody(plan.error));
       let eventType;
       let changed=[];
       if(next==='accept_request'){
@@ -122,7 +128,7 @@ module.exports=async function(req,res){
       }else{
         return res.status(400).json({error:'invalid_status'});
       }
-      if(!changed.length)return res.status(409).json({error:'status_transition_not_applied',message:'The reservation changed or this action is no longer available. Refresh and try again.'});
+      if(!changed.length)return res.status(409).json(conflictBody(notUpdatedError({from:plan.from,to:plan.to,action:plan.action})));
       await sql`INSERT INTO booking_events(reservation_id,event_type,actor) VALUES (${id},${eventType},'owner')`;
       return res.status(200).json({ok:true,reservation:changed[0]});
     }
