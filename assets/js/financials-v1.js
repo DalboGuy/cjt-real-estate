@@ -19,8 +19,6 @@ const filterStatus=document.getElementById('filterStatus');
 const filterSource=document.getElementById('filterSource');
 const filterPayment=document.getElementById('filterPayment');
 const filterStripe=document.getElementById('filterStripe');
-const filterFrom=document.getElementById('filterFrom');
-const filterTo=document.getElementById('filterTo');
 const advFrom=document.getElementById('advFrom');
 const advTo=document.getElementById('advTo');
 const filterGuest=document.getElementById('filterGuest');
@@ -28,6 +26,8 @@ const filterId=document.getElementById('filterId');
 const financialSearch=document.getElementById('financialSearch');
 const clearFilters=document.getElementById('clearFilters');
 const filterPopover=document.getElementById('filterPopover');
+const periodSheet=document.getElementById('periodSheet');
+const channelSheet=document.getElementById('channelSheet');
 const fpScrim=document.getElementById('fpScrim');
 const stayDrawer=document.getElementById('stayDrawer');
 const methodModal=document.getElementById('methodModal');
@@ -36,18 +36,20 @@ function esc(v=''){return String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt
 function money(v){if(v==null||v==='')return '—';const n=Number(v);if(!Number.isFinite(n))return '—';return n.toLocaleString(undefined,{style:'currency',currency:'USD'})}
 function moneyFull(v){if(v==null||v==='')return '—';const n=Number(v);if(!Number.isFinite(n))return '—';return n.toLocaleString(undefined,{style:'currency',currency:'USD',maximumFractionDigits:0})}
 function pct(v){if(v==null||!Number.isFinite(Number(v)))return '—';return `${Math.round(Number(v)*1000)/10}%`}
+function sharePct(v){if(v==null||!Number.isFinite(Number(v)))return '—';return `${(Number(v)*100).toFixed(1)}%`}
 function countOrDash(v){return v==null||v===''?'—':String(v)}
 function date(v){if(!v)return '—';return new Date(`${String(v).slice(0,10)}T12:00:00`).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'})}
 function stayDate(v){const day=String(v||'').slice(0,10);return /^\d{4}-\d{2}-\d{2}$/.test(day)?day:''}
 function statusLabel(v=''){return ({inquiry_hold:'New request',hold_verified:'Accepted / hold',contract_sent:'Contract sent',contract_signed:'Contract signed',confirmed:'Confirmed',completed:'Completed',pending:'Pending',released:'Released',expired:'Expired',cancelled:'Cancelled'})[v]||String(v).replaceAll('_',' ')}
-function statusClass(status=''){return ['confirmed','contract_signed','completed'].includes(status)?'good':['inquiry_hold','hold_verified','contract_sent','pending'].includes(status)?'warn':''}
-function paymentLabel(status){return ({verified:'Verified',checkout_pending:'Checkout pending',unverified:'Pending',ota:'OTA'})[status]||'Pending'}
-function paymentClass(status){return status==='verified'?'good':status==='ota'?'':'warn'}
+function isMobileFilters(){return window.matchMedia('(max-width:780px)').matches}
 function showLogin(){ownerApp.classList.add('hidden');loginShell.classList.remove('hidden')}
 function showApp(){loginShell.classList.add('hidden');ownerApp.classList.remove('hidden')}
 function notice(text){const n=document.getElementById('moduleNotice');n.textContent=text;n.classList.toggle('hidden',!text)}
 function reservationHref(id){return `/owner-v1/reservations?booking=${encodeURIComponent(id||'')}`}
 function addMoney(sum,value){if(value==null)return sum;return (sum||0)+value}
+function isDirectReservation(row){return row&&row.kind!=='ota'&&Boolean(row.id)}
+function customFromInputs(){return [...document.querySelectorAll('[data-custom-range] .fp-from')]}
+function customToInputs(){return [...document.querySelectorAll('[data-custom-range] .fp-to')]}
 
 function chicagoParts(now=new Date()){
   const parts=new Intl.DateTimeFormat('en-US',{timeZone:PROPERTY_TZ,year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(now);
@@ -133,6 +135,13 @@ function rangeLabel(range){
   }
   return 'All stays';
 }
+function periodShortLabel(){
+  return ({month:'This Month',ytd:'YTD',last12:'Last 12 Months','2025':'2025',custom:'Custom'})[filters.range]||'Period';
+}
+function channelShortLabel(){
+  const opt=filterChannel?.selectedOptions?.[0];
+  return opt?.textContent||'All Channels';
+}
 
 function stayBucket(row,today=todayKey()){
   const checkin=stayDate(row.checkin);
@@ -145,6 +154,19 @@ function stayBucket(row,today=todayKey()){
   if(row.payment?.verified)return 'paid';
   if(row.closed)return 'closed';
   return 'pending';
+}
+function paymentState(row){
+  if(!row||row.kind==='ota'){
+    if(row?.payment?.verifiedAmount!=null)return {label:'Paid out',detail:money(row.payment.verifiedAmount)+' collected',klass:'good',code:'paid_out'};
+    if(row?.expectedPayout!=null&&!row.closed)return {label:'Expected payout',detail:money(row.expectedPayout),klass:'',code:'expected'};
+    return {label:'Unknown',detail:'No stored payout',klass:'',code:'unknown'};
+  }
+  if(row.payment?.verified){
+    const type=String(row.payment.paymentType||'').toLowerCase();
+    if(type==='deposit')return {label:'Deposit paid',detail:money(row.payment.verifiedAmount),klass:'good',code:'deposit_paid'};
+    return {label:'Paid',detail:money(row.payment.verifiedAmount),klass:'good',code:'paid'};
+  }
+  return {label:'Pending',detail:row.payment?.checkoutCreated?'Checkout created · not verified':'No verified payment',klass:'warn',code:'pending'};
 }
 function otaFee(row){
   if(row.kind!=='ota'||row.closed||row.quote?.missing)return null;
@@ -167,6 +189,12 @@ function priorDeltaLabel(range){
 function percentChange(current,previous){
   if(current==null||previous==null||previous===0)return null;
   return (current-previous)/previous;
+}
+function sharePointDelta(currentShare,priorShare){
+  if(currentShare==null||priorShare==null)return null;
+  const pts=Math.round((currentShare-priorShare)*1000)/10;
+  if(!Number.isFinite(pts)||pts===0)return null;
+  return pts;
 }
 
 function matchesChannel(row){
@@ -286,6 +314,10 @@ function channelMix(rows){
     return bucket;
   }).sort((a,b)=>(b.revenue||0)-(a.revenue||0));
 }
+function directShareFromMix(mix){
+  const direct=mix.find(item=>item.channel==='direct');
+  return direct&&direct.share!=null?direct.share:null;
+}
 function monthKeysBetween(from,to){
   const start=stayDate(from),end=stayDate(to);
   if(!start||!end||start>end)return [];
@@ -341,7 +373,7 @@ function pacing(now=new Date()){
     });
     const period=periodFromRows(windowRows);
     const occ=occupancy(rows,{from:today,to});
-    return {days,stays:windowRows.length,revenue:period.total,nights:period.nights,occupancy:occ.occupancy};
+    return {days,stays:windowRows.length,revenue:period.total,nights:period.nights,occupancy:occ.occupancy,adr:period.adr};
   });
 }
 
@@ -350,6 +382,15 @@ function deltaChip(change,label){
   const up=change>=0;
   const text=`${up?'+':''}${Math.round(change*1000)/10}% ${label||'vs prior'}`;
   return `<span class="fp-delta ${up?'up':'down'}">${esc(text)}</span>`;
+}
+function ptsChip(pts,label){
+  if(pts==null||pts===0)return '';
+  const up=pts>0;
+  const text=`${up?'↑':'↓'} ${Math.abs(pts)} pts ${label||'vs prior'}`;
+  return `<span class="fp-delta ${up?'up':'down'}">${esc(text)}</span>`;
+}
+function tip(label,text){
+  return `<span class="fp-tip"><span>${esc(label)}</span><button class="fp-tip-btn" type="button" aria-label="${esc(label)} info">i</button><span class="fp-tip-body">${esc(text)}</span></span>`;
 }
 
 async function financialsApi(){
@@ -374,11 +415,29 @@ function advancedCount(){
 function filtersAreActive(){
   return filters.range!=='ytd'||filters.channel!=='all'||advancedCount()>0||Boolean(financialSearch.value.trim())||stayTab!=='all';
 }
+function syncCustomDates(){
+  customFromInputs().forEach(el=>{el.value=filters.from||''});
+  customToInputs().forEach(el=>{el.value=filters.to||''});
+  document.querySelectorAll('[data-custom-range]').forEach(el=>el.classList.toggle('hidden',filters.range!=='custom'));
+}
 function syncRangeButtons(){
-  filterRange.querySelectorAll('[data-range]').forEach(btn=>{
+  document.querySelectorAll('[data-range]').forEach(btn=>{
     btn.classList.toggle('active',btn.dataset.range===filters.range);
   });
-  document.querySelector('.fp-custom')?.classList.toggle('hidden',filters.range!=='custom');
+  syncCustomDates();
+}
+function syncStickyBar(){
+  const periodBtn=document.getElementById('stickyPeriod');
+  const channelBtn=document.getElementById('stickyChannel');
+  const filtersBtn=document.getElementById('stickyFilters');
+  if(!periodBtn)return;
+  const n=advancedCount();
+  periodBtn.textContent=periodShortLabel();
+  periodBtn.classList.toggle('is-active',filters.range!=='ytd');
+  channelBtn.textContent=channelShortLabel();
+  channelBtn.classList.toggle('is-active',filters.channel!=='all');
+  filtersBtn.textContent=n?`Filters (${n})`:'Filters';
+  filtersBtn.classList.toggle('is-active',n>0);
 }
 function syncFilterBadge(){
   const btn=document.getElementById('openFilters');
@@ -387,6 +446,7 @@ function syncFilterBadge(){
   if(n)btn.setAttribute('data-count',String(n));
   else btn.removeAttribute('data-count');
   clearFilters.classList.toggle('hidden',!filtersAreActive());
+  syncStickyBar();
 }
 function syncChannelOptions(){
   const current=filters.channel;
@@ -398,6 +458,60 @@ function syncChannelOptions(){
   filterChannel.innerHTML=[...seen.entries()].map(([value,label])=>`<option value="${esc(value)}">${esc(label)}</option>`).join('');
   filters.channel=seen.has(current)?current:'all';
   filterChannel.value=filters.channel;
+  const list=document.getElementById('sheetChannels');
+  if(list){
+    list.innerHTML=[...seen.entries()].map(([value,label])=>`<button type="button" class="fp-sheet-option ${value===filters.channel?'active':''}" data-channel="${esc(value)}">${esc(label)}</button>`).join('');
+  }
+}
+
+function overlayOpen(){
+  return !stayDrawer.classList.contains('hidden')||!methodModal.classList.contains('hidden')||!filterPopover.classList.contains('hidden')||!periodSheet.classList.contains('hidden')||!channelSheet.classList.contains('hidden');
+}
+function closeOverlays(){
+  stayDrawer.classList.add('hidden');
+  methodModal.classList.add('hidden');
+  filterPopover.classList.add('hidden');
+  periodSheet.classList.add('hidden');
+  channelSheet.classList.add('hidden');
+  fpScrim.classList.add('hidden');
+}
+function openScrimSheet(el){
+  stayDrawer.classList.add('hidden');
+  methodModal.classList.add('hidden');
+  filterPopover.classList.add('hidden');
+  periodSheet.classList.add('hidden');
+  channelSheet.classList.add('hidden');
+  el.classList.remove('hidden');
+  fpScrim.classList.remove('hidden');
+}
+function openFilterSheet(){
+  stayDrawer.classList.add('hidden');
+  methodModal.classList.add('hidden');
+  periodSheet.classList.add('hidden');
+  channelSheet.classList.add('hidden');
+  filterPopover.classList.remove('hidden');
+  if(isMobileFilters()){
+    filterPopover.style.top='';
+    filterPopover.style.right='';
+    filterPopover.style.left='';
+    fpScrim.classList.remove('hidden');
+    return;
+  }
+  const btn=document.getElementById('openFilters');
+  const rect=btn?.getBoundingClientRect();
+  if(rect){
+    filterPopover.style.top=`${Math.round(rect.bottom+8)}px`;
+    filterPopover.style.right=`${Math.round(window.innerWidth-rect.right)}px`;
+    filterPopover.style.left='auto';
+  }
+}
+
+function withPreservedScroll(fn){
+  const y=window.scrollY||document.documentElement.scrollTop||0;
+  fn();
+  const restore=()=>window.scrollTo(0,y);
+  restore();
+  requestAnimationFrame(restore);
 }
 
 function renderKpis(period,range,prior,upcoming,occ){
@@ -408,12 +522,13 @@ function renderKpis(period,range,prior,upcoming,occ){
   const grossDelta=incompleteCustom?'':deltaChip(percentChange(period.total,prior.total),deltaLabel);
   const ownerDelta=incompleteCustom?'':deltaChip(percentChange(period.expectedPayout,prior.expectedPayout),deltaLabel);
   const occHint=incompleteCustom?'Choose a start and end date':(occ.occupancy==null?'Occupancy needs a bounded period':`${pct(occ.occupancy)} occupancy · ${countOrDash(occ.booked)} of ${countOrDash(occ.available)} nights`);
+  const upcomingBits=[upcoming.nights!=null?`${countOrDash(upcoming.nights)} nights`:'',upcoming.occupancy!=null?`${pct(upcoming.occupancy)} occupancy`:''].filter(Boolean);
   host.innerHTML=`
-    <article class="fp-kpi"><span class="label">Gross Revenue</span><b class="value">${esc(incompleteCustom?'—':moneyFull(period.total))}</b>${grossDelta}<span class="hint">${esc(incompleteCustom?'Choose a custom check-in range':`Quoted + imported stays · ${rangeLabel(range)}`)}</span></article>
-    <article class="fp-kpi owner"><span class="label">Owner Revenue</span><b class="value">${esc(incompleteCustom?'—':moneyFull(period.expectedPayout))}</b>${ownerDelta}<span class="hint">After known channel fees and guest taxes</span></article>
-    <article class="fp-kpi"><span class="label">Booked Nights</span><b class="value">${esc(incompleteCustom?'—':countOrDash(period.nights))}</b><span class="hint">${esc(occHint)}</span></article>
+    <article class="fp-kpi"><span class="label">${tip('Gross Revenue','What the guest paid for the stay, as stored on Direct quotes and imported OTA gross.')}</span><b class="value">${esc(incompleteCustom?'—':moneyFull(period.total))}</b>${grossDelta}<span class="hint">${esc(incompleteCustom?'Choose a custom check-in range':`Quoted + imported stays · ${rangeLabel(range)}`)}</span></article>
+    <article class="fp-kpi owner"><span class="label">${tip('Owner Booking Revenue','Retained after known channel-related deductions, before operating expenses. Not Net Income or NOI.')}</span><b class="value">${esc(incompleteCustom?'—':moneyFull(period.expectedPayout))}</b>${ownerDelta}<span class="hint">After known channel deductions — not net income</span></article>
+    <article class="fp-kpi"><span class="label">${tip('Booked Nights','Occupancy is guest-occupied nights ÷ calendar nights in the period. Owner stays and manual blocks are not counted.')}</span><b class="value">${esc(incompleteCustom?'—':countOrDash(period.nights))}</b><span class="hint">${esc(occHint)}</span></article>
     <article class="fp-kpi"><span class="label">ADR</span><b class="value">${esc(incompleteCustom?'—':money(period.adr))}</b><span class="hint">Average daily rate from gross ÷ nights</span></article>
-    <article class="fp-kpi"><span class="label">Upcoming Revenue</span><b class="value">${esc(moneyFull(upcoming.revenue))}</b><span class="hint">${esc(countOrDash(upcoming.nights))} nights already booked in the next 90 days</span></article>`;
+    <article class="fp-kpi"><span class="label">Booked Revenue — Next 90 Days</span><b class="value">${esc(moneyFull(upcoming.revenue))}</b><span class="hint">${esc(upcomingBits.join(' · ')||'Already on the books')}</span></article>`;
 }
 
 function renderChart(rows,range){
@@ -459,58 +574,64 @@ function renderChart(rows,range){
 function renderSummary(story,range){
   const host=document.getElementById('financialSummary');
   const hint=document.getElementById('summaryHint');
-  if(hint)hint.textContent=rangeLabel(range);
+  if(hint)hint.textContent=`${rangeLabel(range)} · known deductions only`;
   const feeNote=story.channelFeesPartial?'From stays with both gross and payout stored.':'Imported OTA gross minus stored payout.';
   host.innerHTML=`
     <div class="fp-summary-rows">
-      <div class="fp-summary-row"><span>Gross revenue</span><b>${esc(money(story.gross))}</b></div>
+      <div class="fp-summary-row"><span>${tip('Gross revenue','What the guest paid, as stored.')}</span><b>${esc(money(story.gross))}</b></div>
       <div class="fp-summary-row deduct"><span>Channel / OTA fees</span><b>${story.channelFees==null?'—':esc(money(story.channelFees))}</b></div>
       <div class="fp-summary-row deduct"><span>Payment processing</span><b>—</b></div>
       <div class="fp-summary-row deduct"><span>Other known deductions</span><b>${story.otherDeductions==null?'—':esc(money(story.otherDeductions))}</b></div>
-      <div class="fp-summary-row total"><span>Owner revenue</span><b>${esc(money(story.ownerRevenue))}</b></div>
+      <div class="fp-summary-row total"><span>${tip('Owner Booking Revenue','After known channel-related deductions, before operating expenses. Not Net Income or NOI.')}</span><b>${esc(money(story.ownerRevenue))}</b></div>
     </div>
-    <p class="fp-summary-note">Payment processing is unavailable — Stripe fees are not stored. Other known deductions are guest taxes when present. ${esc(story.channelFees==null?'Channel fees appear when imported stays include both gross and payout.':feeNote)} Cleaning, maintenance, and a full P&amp;L can land here later without mock lines.</p>`;
+    <p class="fp-summary-note">Payment processing is unavailable — Stripe fees are not stored. Other known deductions are guest taxes when present. ${esc(story.channelFees==null?'Channel fees appear when imported stays include both gross and payout.':feeNote)} Cleaning, maintenance, and operating expenses are not stored and are not shown.</p>`;
 }
 
-function renderChannels(rows){
+function renderChannels(rows,priorRows,range){
   const mix=channelMix(rows);
+  const priorShare=directShareFromMix(channelMix(priorRows));
+  const share=directShareFromMix(mix);
   const bar=document.getElementById('channelShare');
   const cards=document.getElementById('channelCards');
+  const shareHost=document.getElementById('directShare');
+  const pts=sharePointDelta(share,priorShare);
+  shareHost.innerHTML=`<span class="kicker">Direct Booking Share</span><b>${esc(sharePct(share))}</b>${ptsChip(pts,priorDeltaLabel(range))}`;
   if(!mix.length){
     bar.classList.add('hidden');
     cards.innerHTML='<div class="fp-muted-empty">No channel revenue in this view yet.</div>';
     return;
   }
   bar.classList.remove('hidden');
-  bar.innerHTML=mix.map(item=>`<span class="${esc(item.channel)}" style="width:${Math.max(2,(item.share||0)*100)}%" title="${esc(item.label)} ${esc(pct(item.share))}"></span>`).join('');
+  bar.innerHTML=mix.map(item=>`<span class="${esc(item.channel)}" style="width:${Math.max(2,(item.share||0)*100)}%" title="${esc(item.label)} ${esc(sharePct(item.share))}"></span>`).join('');
   cards.innerHTML=mix.map(item=>`
-    <article class="fp-channel">
-      <div class="name"><span class="platform ${esc(item.channel)}">${esc(item.label)}</span><span class="muted">${esc(pct(item.share))}</span></div>
+    <article class="fp-channel ${item.channel==='direct'?'is-direct':''}">
+      <div class="name"><span class="platform ${esc(item.channel)}">${esc(item.label)}</span><span class="muted">${esc(sharePct(item.share))}</span></div>
       <div class="value">${esc(moneyFull(item.revenue))}</div>
       <div class="meta">${esc(countOrDash(item.nights))} nights · ADR ${esc(money(item.adr))} · ${esc(item.stays)} stay${item.stays===1?'':'s'}</div>
     </article>`).join('');
 }
 
-function renderStory(story){
-  const host=document.getElementById('grossNetStory');
-  const steps=[
-    ['Gross',story.gross,''],
-    ['OTA fees',story.channelFees,'deduct'],
-    ['Processing',null,'deduct'],
-    ['Taxes',story.otherDeductions,'deduct'],
-    ['Owner revenue',story.ownerRevenue,'owner']
-  ];
-  host.innerHTML=steps.map((step,i)=>`${i?`<div class="fp-flow-arrow" aria-hidden="true">→</div>`:''}<div class="fp-flow-step ${step[2]}"><span>${esc(step[0])}</span><b>${esc(money(step[1]))}</b></div>`).join('');
-}
-
 function renderPacing(){
   const windows=pacing();
-  document.getElementById('pacingCards').innerHTML=windows.map(item=>`
-    <article class="fp-pace">
+  const host=document.getElementById('pacingCards');
+  host.innerHTML=`<table class="fp-pace-table"><thead><tr><th>Window</th><th class="money">Revenue</th><th class="num">Nights</th><th class="num">Occupancy</th><th class="money">ADR</th></tr></thead><tbody>${windows.map(item=>`
+    <tr>
+      <td>Next ${esc(item.days)} days</td>
+      <td class="money">${esc(moneyFull(item.revenue))}</td>
+      <td class="num">${esc(countOrDash(item.nights))}</td>
+      <td class="num">${item.occupancy==null?'—':esc(pct(item.occupancy))}</td>
+      <td class="money">${esc(money(item.adr))}</td>
+    </tr>`).join('')}</tbody></table>
+  <div class="fp-pace-cards">${windows.map(item=>`
+    <article class="fp-pace-card">
       <strong>Next ${esc(item.days)} days</strong>
       <b>${esc(moneyFull(item.revenue))}</b>
-      <span>${esc(countOrDash(item.nights))} nights · ${item.occupancy==null?'occupancy —':esc(pct(item.occupancy))+' occupancy'} · ${esc(item.stays)} stay${item.stays===1?'':'s'}</span>
-    </article>`).join('');
+      <div class="fp-pace-meta">
+        <div><span>Nights</span><em>${esc(countOrDash(item.nights))}</em></div>
+        <div><span>Occupancy</span><em>${item.occupancy==null?'—':esc(pct(item.occupancy))}</em></div>
+        <div><span>ADR</span><em>${esc(money(item.adr))}</em></div>
+      </div>
+    </article>`).join('')}</div>`;
 }
 
 function quoteBadges(row){
@@ -525,15 +646,8 @@ function stayCell(row){
   return `<div class="fp-guest">${esc(row.guestName||'Guest')}</div><div class="muted">${esc(date(row.checkin))} → ${esc(date(row.checkout))}${row.nights?` · ${esc(row.nights)} nights`:''}</div>`;
 }
 function paymentCell(row){
-  if(row.kind==='ota'){
-    const collected=row.payment?.verifiedAmount;
-    return `<span class="badge">${esc(stayBucket(row)==='paid'?'Channel':'OTA')}</span><div class="muted" style="margin-top:6px">${collected!=null?esc(money(collected))+' collected':'Channel payout'}</div>`;
-  }
-  const paymentStatus=row.payment?.status||'unverified';
-  const detail=row.payment?.verified
-    ? `${esc(money(row.payment.verifiedAmount))} verified${row.payment.paymentType?' · '+esc(row.payment.paymentType):''}`
-    : (row.payment?.checkoutCreated?'Checkout created · not verified':'No verified payment');
-  return `<span class="badge ${paymentClass(paymentStatus)}">${esc(paymentLabel(paymentStatus))}</span><div class="muted" style="margin-top:6px">${detail}</div>`;
+  const state=paymentState(row);
+  return `<span class="badge ${state.klass}">${esc(state.label)}</span><div class="muted" style="margin-top:6px">${esc(state.detail)}</div>`;
 }
 
 function renderTable(rows){
@@ -551,7 +665,7 @@ function renderTable(rows){
     financialList.innerHTML='<div class="empty">No stays match these filters. Stored totals are unchanged — try Clear.</div>';
     return;
   }
-  financialList.innerHTML=`<div class="fp-table-wrap"><table class="fp-table"><thead><tr><th>Guest</th><th>Stay</th><th>Source</th><th class="money">Nights</th><th class="money">Gross</th><th class="money">Fees</th><th class="money">Owner Revenue</th><th>Payment</th></tr></thead><tbody>${rows.map(row=>{
+  financialList.innerHTML=`<div class="fp-table-wrap"><table class="fp-table"><thead><tr><th>Guest</th><th>Stay</th><th>Source</th><th class="money">Nights</th><th class="money">Gross</th><th class="money">Fees</th><th class="money">Owner booking</th><th>Payment</th></tr></thead><tbody>${rows.map(row=>{
     const missing=Boolean(row.quote?.missing);
     const fee=otaFee(row);
     return `<tr data-stay-id="${esc(row.id)}">
@@ -561,7 +675,7 @@ function renderTable(rows){
       <td data-label="Nights" class="money">${esc(countOrDash(row.nights))}</td>
       <td data-label="Gross" class="money">${esc(money(missing?null:row.quote?.total))}</td>
       <td data-label="Fees" class="money">${esc(money(fee))}</td>
-      <td data-label="Owner Revenue" class="money">${esc(money(row.expectedPayout))}</td>
+      <td data-label="Owner booking" class="money">${esc(money(row.expectedPayout))}</td>
       <td data-label="Payment">${paymentCell(row)}</td>
     </tr>`;
   }).join('')}</tbody></table></div>
@@ -575,7 +689,7 @@ function renderTable(rows){
       <div class="fp-stay-money">
         <div><span>Gross</span><b>${esc(money(missing?null:row.quote?.total))}</b></div>
         <div><span>Fees</span><b>${esc(money(otaFee(row)))}</b></div>
-        <div><span>Owner</span><b>${esc(money(row.expectedPayout))}</b></div>
+        <div><span>Owner booking</span><b>${esc(money(row.expectedPayout))}</b></div>
       </div>
       <div style="margin-top:10px">${paymentCell(row)}</div>
     </article>`;
@@ -586,13 +700,19 @@ function kv(label,value){
   if(value==null||value==='')return '';
   return `<div class="fp-kv"><span>${esc(label)}</span><b>${value}</b></div>`;
 }
+function drawerLinks(row){
+  if(isDirectReservation(row)){
+    return `<div class="fp-drawer-links"><a class="btn btn-secondary" href="${esc(reservationHref(row.id))}">View Reservation</a></div>`;
+  }
+  return `<p class="fp-summary-note">Reservation record unavailable</p>`;
+}
 function openDrawer(id){
   const row=financialRows.find(item=>String(item.id)===String(id));
   if(!row)return;
   const missing=Boolean(row.quote?.missing);
   const fee=otaFee(row);
   const adr=stayAdr(row);
-  const directLink=row.kind!=='ota'?`<a class="btn btn-secondary" href="${esc(reservationHref(row.id))}">Open in Reservations</a>`:'';
+  const pay=paymentState(row);
   stayDrawer.innerHTML=`
     <div class="fp-drawer-head">
       <div>
@@ -613,42 +733,41 @@ function openDrawer(id){
       ${kv('Taxes',esc(money(missing?null:row.quote?.taxes)))}
       ${kv('Channel fees',esc(money(fee)))}
       ${kv('Gross',esc(money(missing?null:row.quote?.total)))}
-      ${kv('Owner revenue / payout',esc(money(row.expectedPayout)))}
-      ${row.kind==='ota'?kv('Collected',esc(money(row.payment?.verifiedAmount))):kv('Stripe',esc(paymentLabel(row.payment?.status)))}
-      ${row.kind!=='ota'&&row.payment?.verifiedAmount!=null?kv('Verified amount',esc(money(row.payment.verifiedAmount))):''}
-      ${row.kind!=='ota'&&row.payment?.paymentType?kv('Payment type',esc(row.payment.paymentType)):''}
+      ${kv('Owner Booking Revenue',esc(money(row.expectedPayout)))}
+      ${kv('Payment',esc(pay.label))}
+      ${pay.detail?kv('Payment detail',esc(pay.detail)):''}
       ${row.guestEmail?kv('Guest email',esc(row.guestEmail)):''}
       ${row.guests!=null?kv('Guests',esc(row.guests)):''}
       ${row.importedSource?kv('Import source',esc(row.importedSource)):''}
     </div>
-    <div class="widget-footer" style="margin-top:18px">${directLink}</div>`;
+    ${drawerLinks(row)}`;
   stayDrawer.classList.remove('hidden');
-  fpScrim.classList.remove('hidden');
-}
-function closeOverlays(){
-  stayDrawer.classList.add('hidden');
-  methodModal.classList.add('hidden');
+  periodSheet.classList.add('hidden');
+  channelSheet.classList.add('hidden');
   filterPopover.classList.add('hidden');
-  fpScrim.classList.add('hidden');
+  methodModal.classList.add('hidden');
+  fpScrim.classList.remove('hidden');
 }
 
 function renderAll(){
   const range=activeRange();
   const rows=periodRows(range);
   const period=periodFromRows(rows);
-  const prior=periodFromRows(periodRows(priorRange(range)));
-  const upcoming=pacing()[2]||{revenue:null,nights:null};
+  const priorRows=periodRows(priorRange(range));
+  const prior=periodFromRows(priorRows);
+  const upcoming=pacing()[2]||{revenue:null,nights:null,occupancy:null};
   const occ=occupancy(scopedRows(),range);
   renderKpis(period,range,prior,upcoming,occ);
   renderChart(rows,range);
-  const story=feeStory(rows);
-  renderSummary(story,range);
-  renderChannels(rows);
-  renderStory(story);
+  renderSummary(feeStory(rows),range);
+  renderChannels(rows,priorRows,range);
   renderPacing();
   renderTable(tableRows());
   syncRangeButtons();
   syncFilterBadge();
+}
+function renderAllPreservingScroll(){
+  withPreservedScroll(renderAll);
 }
 
 function resetFilters(){
@@ -669,8 +788,6 @@ function resetFilters(){
   filterSource.value='all';
   filterPayment.value='all';
   filterStripe.value='all';
-  filterFrom.value='';
-  filterTo.value='';
   advFrom.value='';
   advTo.value='';
   filterGuest.value='';
@@ -679,7 +796,7 @@ function resetFilters(){
   filterChannel.value='all';
   document.querySelectorAll('#stayTabs [data-tab]').forEach(btn=>btn.classList.toggle('active',btn.dataset.tab==='all'));
   closeOverlays();
-  renderAll();
+  renderAllPreservingScroll();
 }
 
 async function loadFinancials(){
@@ -712,31 +829,21 @@ async function loadFinancials(){
   }
 }
 
-filterRange.addEventListener('click',e=>{
-  const btn=e.target.closest('[data-range]');
-  if(!btn)return;
-  filters.range=btn.dataset.range;
-  if(filters.range!=='custom'){filters.from='';filters.to='';filterFrom.value='';filterTo.value='';}
-  renderAll();
-});
-filterChannel.addEventListener('change',()=>{filters.channel=filterChannel.value;renderAll()});
-filterStatus.addEventListener('change',()=>{filters.status=filterStatus.value});
-filterSource.addEventListener('change',()=>{filters.source=filterSource.value});
-filterPayment.addEventListener('change',()=>{filters.payment=filterPayment.value});
-filterStripe.addEventListener('change',()=>{filters.stripe=filterStripe.value});
-filterFrom.addEventListener('change',()=>{filters.from=filterFrom.value;renderAll()});
-filterTo.addEventListener('change',()=>{filters.to=filterTo.value;renderAll()});
-advFrom.addEventListener('change',()=>{filters.advFrom=advFrom.value});
-advTo.addEventListener('change',()=>{filters.advTo=advTo.value});
-filterGuest.addEventListener('input',()=>{filters.guest=filterGuest.value});
-filterId.addEventListener('input',()=>{filters.id=filterId.value});
-financialSearch.addEventListener('input',()=>{renderTable(tableRows());syncFilterBadge()});
-clearFilters.addEventListener('click',resetFilters);
-document.getElementById('refreshFinancials')?.addEventListener('click',loadFinancials);
-document.getElementById('openFilters')?.addEventListener('click',()=>{
-  filterPopover.classList.toggle('hidden');
-});
-document.getElementById('applyFilters')?.addEventListener('click',()=>{
+function setPeriod(range,{closeSheet=true}={}){
+  filters.range=range;
+  if(filters.range!=='custom'){filters.from='';filters.to='';}
+  syncRangeButtons();
+  renderAllPreservingScroll();
+  if(closeSheet&&isMobileFilters()&&filters.range!=='custom')closeOverlays();
+}
+function setChannel(value,{closeSheet=true}={}){
+  filters.channel=value;
+  if(filterChannel)filterChannel.value=value;
+  document.querySelectorAll('#sheetChannels [data-channel]').forEach(btn=>btn.classList.toggle('active',btn.dataset.channel===value));
+  renderAllPreservingScroll();
+  if(closeSheet&&isMobileFilters())closeOverlays();
+}
+function readAdvancedFromForm(){
   filters.status=filterStatus.value;
   filters.source=filterSource.value;
   filters.payment=filterPayment.value;
@@ -745,30 +852,92 @@ document.getElementById('applyFilters')?.addEventListener('click',()=>{
   filters.advTo=advTo.value;
   filters.guest=filterGuest.value;
   filters.id=filterId.value;
+}
+
+document.addEventListener('click',e=>{
+  const rangeBtn=e.target.closest('[data-range]');
+  if(rangeBtn){
+    setPeriod(rangeBtn.dataset.range,{closeSheet:Boolean(rangeBtn.closest('#periodSheet'))});
+    return;
+  }
+  const channelBtn=e.target.closest('[data-channel]');
+  if(channelBtn){
+    setChannel(channelBtn.dataset.channel,{closeSheet:Boolean(channelBtn.closest('#channelSheet'))});
+    return;
+  }
+  const tipBtn=e.target.closest('.fp-tip-btn');
+  if(tipBtn){
+    e.preventDefault();
+    const tipEl=tipBtn.closest('.fp-tip');
+    document.querySelectorAll('.fp-tip.open').forEach(el=>{if(el!==tipEl)el.classList.remove('open')});
+    tipEl.classList.toggle('open');
+    return;
+  }
+  if(!e.target.closest('.fp-tip'))document.querySelectorAll('.fp-tip.open').forEach(el=>el.classList.remove('open'));
+  if(e.target.closest('[data-close-ui]'))closeOverlays();
+  if(!filterPopover.classList.contains('hidden')&&!isMobileFilters()&&!e.target.closest('#filterPopover')&&!e.target.closest('#openFilters')&&!e.target.closest('#stickyFilters')){
+    filterPopover.classList.add('hidden');
+  }
+});
+filterChannel.addEventListener('change',()=>setChannel(filterChannel.value,{closeSheet:false}));
+filterStatus.addEventListener('change',()=>{readAdvancedFromForm();renderAllPreservingScroll()});
+filterSource.addEventListener('change',()=>{readAdvancedFromForm();renderAllPreservingScroll()});
+filterPayment.addEventListener('change',()=>{readAdvancedFromForm();renderAllPreservingScroll()});
+filterStripe.addEventListener('change',()=>{readAdvancedFromForm();renderAllPreservingScroll()});
+advFrom.addEventListener('change',()=>{readAdvancedFromForm();renderAllPreservingScroll()});
+advTo.addEventListener('change',()=>{readAdvancedFromForm();renderAllPreservingScroll()});
+filterGuest.addEventListener('input',()=>{readAdvancedFromForm();renderAllPreservingScroll()});
+filterId.addEventListener('input',()=>{readAdvancedFromForm();renderAllPreservingScroll()});
+customFromInputs().forEach(el=>el.addEventListener('change',()=>{
+  filters.from=el.value;
+  customFromInputs().forEach(other=>{other.value=el.value});
+  renderAllPreservingScroll();
+}));
+customToInputs().forEach(el=>el.addEventListener('change',()=>{
+  filters.to=el.value;
+  customToInputs().forEach(other=>{other.value=el.value});
+  renderAllPreservingScroll();
+}));
+financialSearch.addEventListener('input',()=>{withPreservedScroll(()=>{renderTable(tableRows());syncFilterBadge()})});
+clearFilters.addEventListener('click',resetFilters);
+document.getElementById('refreshFinancials')?.addEventListener('click',loadFinancials);
+document.getElementById('openFilters')?.addEventListener('click',e=>{
+  e.stopPropagation();
+  if(!filterPopover.classList.contains('hidden')&&!isMobileFilters()){
+    filterPopover.classList.add('hidden');
+    return;
+  }
+  openFilterSheet();
+});
+document.getElementById('stickyFilters')?.addEventListener('click',e=>{e.stopPropagation();openFilterSheet()});
+document.getElementById('stickyPeriod')?.addEventListener('click',e=>{e.stopPropagation();openScrimSheet(periodSheet)});
+document.getElementById('stickyChannel')?.addEventListener('click',e=>{e.stopPropagation();openScrimSheet(channelSheet)});
+document.getElementById('applyFilters')?.addEventListener('click',()=>{
+  readAdvancedFromForm();
   filterPopover.classList.add('hidden');
-  renderAll();
+  if(!overlayOpen())fpScrim.classList.add('hidden');
+  renderAllPreservingScroll();
 });
 document.getElementById('resetAdvanced')?.addEventListener('click',()=>{
   filters.status='all';filters.source='all';filters.payment='all';filters.stripe='all';
   filters.advFrom='';filters.advTo='';filters.guest='';filters.id='';
   filterStatus.value='all';filterSource.value='all';filterPayment.value='all';filterStripe.value='all';
   advFrom.value='';advTo.value='';filterGuest.value='';filterId.value='';
-  renderAll();
+  renderAllPreservingScroll();
 });
 document.getElementById('chartToggle')?.addEventListener('click',e=>{
   const btn=e.target.closest('[data-chart]');
   if(!btn)return;
   chartMetric=btn.dataset.chart;
   document.querySelectorAll('#chartToggle [data-chart]').forEach(el=>el.classList.toggle('active',el===btn));
-  renderChart(periodRows(),activeRange());
+  withPreservedScroll(()=>renderChart(periodRows(),activeRange()));
 });
 document.getElementById('stayTabs')?.addEventListener('click',e=>{
   const btn=e.target.closest('[data-tab]');
   if(!btn)return;
   stayTab=btn.dataset.tab;
   document.querySelectorAll('#stayTabs [data-tab]').forEach(el=>el.classList.toggle('active',el===btn));
-  renderTable(tableRows());
-  syncFilterBadge();
+  withPreservedScroll(()=>{renderTable(tableRows());syncFilterBadge()});
 });
 financialList.addEventListener('click',e=>{
   const row=e.target.closest('[data-stay-id]');
@@ -776,17 +945,15 @@ financialList.addEventListener('click',e=>{
   openDrawer(row.dataset.stayId);
 });
 document.getElementById('openMethod')?.addEventListener('click',()=>{
+  stayDrawer.classList.add('hidden');
+  filterPopover.classList.add('hidden');
+  periodSheet.classList.add('hidden');
+  channelSheet.classList.add('hidden');
   methodModal.classList.remove('hidden');
   fpScrim.classList.remove('hidden');
 });
 document.getElementById('closeMethod')?.addEventListener('click',closeOverlays);
 fpScrim.addEventListener('click',closeOverlays);
-document.addEventListener('click',e=>{
-  if(e.target.closest('[data-close-ui]'))closeOverlays();
-  if(!filterPopover.classList.contains('hidden')&&!e.target.closest('#filterPopover')&&!e.target.closest('#openFilters')){
-    filterPopover.classList.add('hidden');
-  }
-});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeOverlays()});
 loginForm.addEventListener('submit',async e=>{
   e.preventDefault();

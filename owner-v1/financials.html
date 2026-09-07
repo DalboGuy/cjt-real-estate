@@ -57,12 +57,19 @@
         </div>
         <div class="top-actions">
           <span id="lastChecked" class="meta">Loading…</span>
+          <button id="openMethod" class="fp-icon-btn" type="button" aria-label="How financials are calculated" title="How financials are calculated">ⓘ</button>
           <button id="refreshFinancials" class="btn btn-secondary" type="button">Refresh</button>
         </div>
       </header>
 
       <div class="content fp-page">
         <div id="moduleNotice" class="notice hidden"></div>
+
+        <div id="fpStickyBar" class="fp-sticky-bar" role="toolbar" aria-label="Financials filters">
+          <button id="stickyPeriod" class="fp-sticky-chip" type="button" aria-haspopup="dialog">YTD</button>
+          <button id="stickyChannel" class="fp-sticky-chip" type="button" aria-haspopup="dialog">All Channels</button>
+          <button id="stickyFilters" class="fp-sticky-chip" type="button" aria-haspopup="dialog">Filters</button>
+        </div>
 
         <div class="fp-toolbar" role="search" aria-label="Financials period and channel">
           <div class="fp-toolbar-main">
@@ -73,77 +80,27 @@
               <button type="button" class="fp-pill" data-range="2025">2025</button>
               <button type="button" class="fp-pill" data-range="custom">Custom</button>
             </div>
-            <div class="fp-custom hidden">
-              <input id="filterFrom" class="fp-date" type="date" aria-label="From date">
-              <input id="filterTo" class="fp-date" type="date" aria-label="To date">
+            <div class="fp-custom hidden" data-custom-range>
+              <input class="fp-date fp-from" type="date" aria-label="From date">
+              <input class="fp-date fp-to" type="date" aria-label="To date">
             </div>
-            <label class="fp-visually-hidden" for="filterChannel" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">Channel</label>
+            <label class="fp-visually-hidden" for="filterChannel">Channel</label>
             <select id="filterChannel" class="fp-select" aria-label="Channel">
               <option value="all">All Channels</option>
             </select>
           </div>
           <div class="fp-toolbar-end" style="position:relative">
             <button id="openFilters" class="fp-ghost" type="button">Filters</button>
-            <button id="openMethod" class="fp-icon-btn" type="button" aria-label="How financials are calculated" title="How financials are calculated">ⓘ</button>
             <button id="clearFilters" class="fp-clear hidden" type="button">Clear</button>
-            <div id="filterPopover" class="fp-popover hidden" role="dialog" aria-label="Advanced filters">
-          <div class="fp-filter-grid">
-            <label>Status
-              <select id="filterStatus" class="fp-select">
-                <option value="all">All statuses</option>
-                <option value="active">Active</option>
-                <option value="closed">Closed</option>
-              </select>
-            </label>
-            <label>Source
-              <select id="filterSource" class="fp-select">
-                <option value="all">All sources</option>
-                <option value="direct">Direct</option>
-                <option value="ota">OTA</option>
-              </select>
-            </label>
-            <label>Payment
-              <select id="filterPayment" class="fp-select">
-                <option value="all">All payments</option>
-                <option value="paid">Paid</option>
-                <option value="pending">Pending</option>
-                <option value="upcoming">Upcoming</option>
-              </select>
-            </label>
-            <label>Stripe
-              <select id="filterStripe" class="fp-select">
-                <option value="all">All Stripe</option>
-                <option value="verified">Verified</option>
-                <option value="pending">Pending</option>
-              </select>
-            </label>
-            <label>Check-in from
-              <input id="advFrom" class="fp-date" type="date">
-            </label>
-            <label>Check-in to
-              <input id="advTo" class="fp-date" type="date">
-            </label>
-            <label class="span-2">Guest
-              <input id="filterGuest" class="fp-search" type="search" placeholder="Guest name">
-            </label>
-            <label class="span-2">Reservation ID
-              <input id="filterId" class="fp-search" type="search" placeholder="Booking or reservation ID">
-            </label>
-          </div>
-          <div class="fp-filter-actions">
-            <button id="resetAdvanced" class="btn btn-secondary" type="button">Reset</button>
-            <button id="applyFilters" class="btn btn-primary" type="button">Done</button>
-          </div>
-            </div>
           </div>
         </div>
 
         <section id="financialKpis" class="fp-kpis is-loading" aria-label="Performance snapshot">
           <article class="fp-kpi"><span class="label">Gross Revenue</span><b class="value">—</b><span class="hint">Quoted + imported stays</span></article>
-          <article class="fp-kpi owner"><span class="label">Owner Revenue</span><b class="value">—</b><span class="hint">After channel / payment fees</span></article>
+          <article class="fp-kpi owner"><span class="label">Owner Booking Revenue</span><b class="value">—</b><span class="hint">After known channel deductions</span></article>
           <article class="fp-kpi"><span class="label">Booked Nights</span><b class="value">—</b><span class="hint">Occupancy when calculable</span></article>
           <article class="fp-kpi"><span class="label">ADR</span><b class="value">—</b><span class="hint">Average daily rate</span></article>
-          <article class="fp-kpi"><span class="label">Upcoming Revenue</span><b class="value">—</b><span class="hint">Booked next 90 days</span></article>
+          <article class="fp-kpi"><span class="label">Booked Revenue — Next 90 Days</span><b class="value">—</b><span class="hint">Already on the books</span></article>
         </section>
 
         <section class="fp-stage">
@@ -164,8 +121,8 @@
           <article class="fp-card">
             <div class="fp-card-head">
               <div>
-                <h3>Financial Summary</h3>
-                <p id="summaryHint">Gross to owner revenue</p>
+                <h3>Gross to Owner Booking Revenue</h3>
+                <p id="summaryHint">Known channel-related deductions only</p>
               </div>
             </div>
             <div id="financialSummary"></div>
@@ -178,6 +135,7 @@
               <h2>Revenue by Channel</h2>
               <p>Only platforms with stored stays in this view</p>
             </div>
+            <div id="directShare" class="fp-direct-share"></div>
           </div>
           <div id="channelShare" class="fp-share hidden" aria-hidden="true"></div>
           <div id="channelCards" class="fp-channels"></div>
@@ -186,18 +144,8 @@
         <section class="fp-card">
           <div class="fp-card-head">
             <div>
-              <h2>Gross to Owner Revenue</h2>
-              <p>Known deductions only — cleaning, taxes, and maintenance expand later when stored</p>
-            </div>
-          </div>
-          <div id="grossNetStory" class="fp-flow"></div>
-        </section>
-
-        <section class="fp-card">
-          <div class="fp-card-head">
-            <div>
               <h2>Already on the books</h2>
-              <p>Upcoming booked revenue, nights, and occupancy for the next 30 / 60 / 90 days</p>
+              <p>Upcoming booked revenue for the next 30 / 60 / 90 days</p>
             </div>
           </div>
           <div id="pacingCards" class="fp-pacing"></div>
@@ -227,6 +175,83 @@
 
   <div id="fpScrim" class="fp-scrim hidden"></div>
   <aside id="stayDrawer" class="fp-drawer hidden" role="dialog" aria-label="Stay details"></aside>
+  <div id="filterPopover" class="fp-popover hidden" role="dialog" aria-label="Advanced filters">
+    <div class="fp-sheet-head">
+      <h2>Filters</h2>
+      <button class="icon-btn" type="button" data-close-ui aria-label="Close">×</button>
+    </div>
+    <div class="fp-filter-grid">
+      <label>Status
+        <select id="filterStatus" class="fp-select">
+          <option value="all">All statuses</option>
+          <option value="active">Active</option>
+          <option value="closed">Closed</option>
+        </select>
+      </label>
+      <label>Source
+        <select id="filterSource" class="fp-select">
+          <option value="all">All sources</option>
+          <option value="direct">Direct</option>
+          <option value="ota">OTA</option>
+        </select>
+      </label>
+      <label>Payment
+        <select id="filterPayment" class="fp-select">
+          <option value="all">All payments</option>
+          <option value="paid">Paid</option>
+          <option value="pending">Pending</option>
+          <option value="upcoming">Upcoming</option>
+        </select>
+      </label>
+      <label>Stripe
+        <select id="filterStripe" class="fp-select">
+          <option value="all">All Stripe</option>
+          <option value="verified">Verified</option>
+          <option value="pending">Pending</option>
+        </select>
+      </label>
+      <label>Check-in from
+        <input id="advFrom" class="fp-date" type="date">
+      </label>
+      <label>Check-in to
+        <input id="advTo" class="fp-date" type="date">
+      </label>
+      <label class="span-2">Guest
+        <input id="filterGuest" class="fp-search" type="search" placeholder="Guest name">
+      </label>
+      <label class="span-2">Reservation ID
+        <input id="filterId" class="fp-search" type="search" placeholder="Booking or reservation ID">
+      </label>
+    </div>
+    <div class="fp-filter-actions">
+      <button id="resetAdvanced" class="btn btn-secondary" type="button">Clear</button>
+      <button id="applyFilters" class="btn btn-primary" type="button">Apply</button>
+    </div>
+  </div>
+  <div id="periodSheet" class="fp-sheet fp-mini-sheet hidden" role="dialog" aria-label="Choose period">
+    <div class="fp-sheet-head">
+      <h2>Period</h2>
+      <button class="icon-btn" type="button" data-close-ui aria-label="Close">×</button>
+    </div>
+    <div id="sheetRange" class="fp-pills" role="group" aria-label="Period">
+      <button type="button" class="fp-pill" data-range="month">This Month</button>
+      <button type="button" class="fp-pill active" data-range="ytd">YTD</button>
+      <button type="button" class="fp-pill" data-range="last12">Last 12 Months</button>
+      <button type="button" class="fp-pill" data-range="2025">2025</button>
+      <button type="button" class="fp-pill" data-range="custom">Custom</button>
+    </div>
+    <div class="fp-custom hidden" data-custom-range>
+      <input class="fp-date fp-from" type="date" aria-label="From date">
+      <input class="fp-date fp-to" type="date" aria-label="To date">
+    </div>
+  </div>
+  <div id="channelSheet" class="fp-sheet fp-mini-sheet hidden" role="dialog" aria-label="Choose channel">
+    <div class="fp-sheet-head">
+      <h2>Channel</h2>
+      <button class="icon-btn" type="button" data-close-ui aria-label="Close">×</button>
+    </div>
+    <div id="sheetChannels" class="fp-sheet-list"></div>
+  </div>
   <div id="methodModal" class="fp-modal hidden" role="dialog" aria-labelledby="methodTitle">
     <div class="fp-modal-head">
       <h2 id="methodTitle">How financials are calculated</h2>
@@ -234,11 +259,11 @@
     </div>
     <div class="fp-method">
       <p>Periods use Sand &amp; Sea Manor’s local calendar (America/Chicago). KPIs, the chart, and channel mix follow check-in dates in the selected range.</p>
-      <p><strong>Gross Revenue</strong> is the stored stay total: Direct quotes (lodging + cleaning + tax) plus imported OTA gross. Missing amounts stay as dashes — never invented zeros.</p>
-      <p><strong>Owner Revenue</strong> is Direct lodging + cleaning, or the stored OTA expected payout. Guest taxes are not treated as owner revenue.</p>
+      <p><strong>Gross Revenue</strong> is what the guest paid for the stay as stored: Direct quotes (lodging + cleaning + tax) plus imported OTA gross. Missing amounts stay as dashes — never invented zeros.</p>
+      <p><strong>Owner Booking Revenue</strong> is what is retained after known channel-related deductions — Direct lodging + cleaning, or the stored OTA expected payout — and before operating expenses. It is not Net Income or NOI. Guest taxes are not treated as owner booking revenue.</p>
       <p><strong>Channel / OTA fees</strong> are derived only when an imported stay has both gross and payout. Stripe processing fees are not stored, so payment processing stays unavailable.</p>
-      <p><strong>ADR</strong> is gross ÷ booked nights when both exist. Occupancy is unique guest nights overlapping the period ÷ nights in the period for this one home. Owner blocks and calendar holds are not subtracted here.</p>
-      <p><strong>OTA rows</strong> come from imported Airbnb, Vrbo, and Booking.com stays. Direct rows use reservation quotes. Stripe is Direct-only and is not live — unverified payments stay pending. OTA stays settle on their channel.</p>
+      <p><strong>ADR</strong> is gross ÷ booked nights when both exist. Occupancy is guest-occupied nights overlapping the period ÷ calendar nights in the period for this one home. Owner stays and manual blocks are not counted here.</p>
+      <p><strong>OTA rows</strong> come from imported Airbnb, Vrbo, and Booking.com stays. Direct rows use reservation quotes. Direct payment labels are Pending, Deposit paid, or Paid from stored Stripe events — refunds are not stored. OTA labels are Expected payout, Paid out, or Unknown from imported payout fields. OTA stays settle on their channel.</p>
     </div>
   </div>
 
