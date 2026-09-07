@@ -62,8 +62,8 @@ function renderTasks(data){
   const available=data.available!==false;
   const s=data.summary||{};
   document.getElementById('taskSummary').innerHTML=`
-    <div class="summary-card"><span>Open</span><b>${esc(countOrDash(s.open,available))}</b><span>${available?'Not done or cancelled':'Unavailable'}</span></div>
-    <div class="summary-card"><span>Overdue</span><b>${esc(countOrDash(s.overdue,available))}</b><span>${available?'Past due and still open':'Not verified'}</span></div>
+    <a class="summary-card kpi-card" href="/owner-v1/tasks?status=open&property=sand-sea-manor"><span>Open</span><b>${esc(countOrDash(s.open,available))}</b><span>${available?'Not done or cancelled':'Unavailable'}</span></a>
+    <a class="summary-card kpi-card" href="/owner-v1/tasks?due=overdue&status=open&property=sand-sea-manor"><span>Overdue</span><b>${esc(countOrDash(s.overdue,available))}</b><span>${available?'Past due and still open':'Not verified'}</span></a>
     <div class="summary-card"><span>High priority</span><b>${esc(countOrDash(s.high_priority,available))}</b><span>${available?'Open high/urgent':'Not verified'}</span></div>`;
   const list=document.getElementById('taskList');
   if(!available){
@@ -131,10 +131,19 @@ document.getElementById('addTask').addEventListener('click',async()=>{
 window.addEventListener('cjt-context-change',loadTasks);
 loginForm.addEventListener('submit',async e=>{
   e.preventDefault();
+  const btn=loginForm.querySelector('button[type="submit"]');
+  if(btn?.disabled)return;
+  if(btn)btn.disabled=true;
   loginMsg.textContent='Signing in…';
-  const r=await fetch('/api/owner',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'login',passcode:document.getElementById('passcode').value})});
-  const d=await r.json().catch(()=>({}));
-  if(!r.ok){loginMsg.textContent=d.error==='owner_login_not_configured'?'Owner login is not configured for this environment.':'Invalid passcode.';return}
-  document.getElementById('passcode').value='';loginMsg.textContent='';loadTasks();
+  try{
+    const r=await fetch('/api/owner',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'login',passcode:document.getElementById('passcode').value})});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok){loginMsg.textContent=d.error==='owner_login_not_configured'?'Owner login is not configured for this environment.':'Invalid passcode.';return}
+    document.getElementById('passcode').value='';loginMsg.textContent='';loadTasks();
+  }catch(err){
+    loginMsg.textContent='Sign-in could not be completed. Try again.';
+  }finally{
+    if(btn)btn.disabled=false;
+  }
 });
 loadTasks();

@@ -62,6 +62,7 @@
     return context;
   }
   function writeContext(patch,opts={}){
+    if(opts.push)saveScroll();
     const next=writeContextSearch(location.search,patch,opts);
     const url=next.search?`${location.pathname}${next.search}`:location.pathname;
     if(opts.push)history.pushState({cjtContext:next.context},'',url);
@@ -92,17 +93,38 @@
     return {context:next,search:query?`?${query}`:''};
   }
   function chipLabels(){
-    return {status:'Status',period:'Period',channel:'Channel',source:'Source',unread:'Unread',q:'Search',view:'View',date:'Date',focus:'Focus',section:'Section',tab:'Tab',season:'Season',assignee:'Assignee',due:'Due',booking:'Booking',message:'Message',stripe:'Stripe'};
+    return {status:'Status',period:'Period',range:'Period',channel:'Channel',source:'Source',unread:'Unread',q:'Search',view:'View',date:'Date',focus:'Focus',section:'Section',tab:'Tab',season:'Season',assignee:'Assignee',due:'Due',booking:'Booking',message:'Message',stripe:'Stripe'};
+  }
+  const STATUS_DISPLAY={pending:'Request received',new:'Request received',inquiry_hold:'Request received',hold_verified:'Owner approved',contract_sent:'Contract sent',contract_signed:'Contract completed',confirmed:'Confirmed',completed:'Stay completed',action:'Need action',active:'Active',closed:'Closed'};
+  const PERIOD_DISPLAY={month:'This month',ytd:'YTD',year:'This year',last12:'Last 12 months',all:'All'};
+  function displayContextValue(key,value){
+    const text=String(value||'');
+    if(key==='status'&&STATUS_DISPLAY[text])return STATUS_DISPLAY[text];
+    if((key==='period'||key==='range')&&PERIOD_DISPLAY[text])return PERIOD_DISPLAY[text];
+    if(key==='unread'&&(text==='1'||text==='true'))return 'Unread only';
+    return text;
+  }
+  function bookingFacts(record){
+    const status=String(record?.status||'');
+    const approved=['hold_verified','contract_sent','contract_signed','confirmed','completed'].includes(status);
+    return [
+      {id:'request_received',label:'Request received',done:Boolean(record?.id||status)},
+      {id:'owner_approved',label:'Owner approved',done:approved},
+      {id:'contract_sent',label:'Contract sent',done:Boolean(record?.contract_sent_at)||['contract_sent','contract_signed'].includes(status)},
+      {id:'contract_completed',label:'Contract completed',done:Boolean(record?.contract_signed_at)||status==='contract_signed'},
+      {id:'payment_received',label:'Payment received',done:Boolean(record?.payment?.verified||record?.deposit_received_at)},
+      {id:'confirmed',label:'Confirmed',done:status==='confirmed'||status==='completed'}
+    ];
   }
   function renderChips(){
     const host=document.getElementById('ownerContextChips');
     if(!host)return;
     const context=readContext();
     const labels=chipLabels();
-    const chips=Object.entries(context).filter(([key])=>key!=='property').map(([key,value])=>({key,value,display:`${labels[key]||key}: ${value}`}));
+    const chips=Object.entries(context).filter(([key])=>key!=='property').map(([key,value])=>({key,value,label:labels[key]||key}));
     if(!chips.length){host.innerHTML='';host.classList.add('hidden');return;}
     host.classList.remove('hidden');
-    host.innerHTML=`${chips.map(chip=>`<button type="button" class="context-chip" data-clear-key="${chip.key}">${esc(chip.display)} ×</button>`).join('')}<button type="button" class="context-chip-clear" data-clear-all>Clear all</button>`;
+    host.innerHTML=`${chips.map(chip=>`<button type="button" class="context-chip" data-clear-key="${chip.key}">${esc(chip.label)}: ${esc(displayContextValue(chip.key,chip.value))} ×</button>`).join('')}<button type="button" class="context-chip-clear" data-clear-all>Clear all</button>`;
     host.querySelectorAll('[data-clear-key]').forEach(btn=>btn.addEventListener('click',()=>{
       writeContext({[btn.getAttribute('data-clear-key')]:null},{push:true});
       window.dispatchEvent(new CustomEvent('cjt-context-change',{detail:readContext()}));
@@ -147,6 +169,8 @@
     cannotApply,
     statusLabel,
     paymentLabel,
+    bookingFacts,
+    displayContextValue,
     primary:PRIMARY,
     secondary:SECONDARY
   };
@@ -387,18 +411,30 @@
   }));
   if(!ownerPortal)bindLogout(document.getElementById('logout'));
 
-  const scrollKey=`cjt:scroll:${path}`;
+  function scrollKeyFor(search){
+    return `cjt:scroll:${path}${search==null?location.search:search}`;
+  }
+  function saveScroll(search){
+    try{sessionStorage.setItem(scrollKeyFor(search),String(window.scrollY||0));}catch(e){}
+  }
+  function restoreScroll(){
+    try{
+      const saved=Number(sessionStorage.getItem(scrollKeyFor(location.search))||0);
+      if(saved)requestAnimationFrame(()=>window.scrollTo(0,saved));
+    }catch(e){}
+  }
   if('scrollRestoration' in history)history.scrollRestoration='manual';
-  const saved=Number(sessionStorage.getItem(scrollKey)||0);
-  if(saved)requestAnimationFrame(()=>window.scrollTo(0,saved));
+  const navType=performance.getEntriesByType?.('navigation')?.[0]?.type;
+  if(navType==='back_forward')restoreScroll();
   window.addEventListener('beforeunload',(event)=>{
-    sessionStorage.setItem(scrollKey,String(window.scrollY||0));
+    saveScroll();
     if(dirty)event.returnValue='You have unsaved changes.';
   });
-  window.addEventListener('pagehide',()=>sessionStorage.setItem(scrollKey,String(window.scrollY||0)));
+  window.addEventListener('pagehide',()=>saveScroll());
   window.addEventListener('popstate',()=>{
     renderChips();
     window.dispatchEvent(new CustomEvent('cjt-context-change',{detail:readContext()}));
+    restoreScroll();
   });
 
   requestAnimationFrame(revealActive);

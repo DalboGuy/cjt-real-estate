@@ -390,7 +390,11 @@
   });
 
   loginForm.addEventListener('submit',async e=>{
-    e.preventDefault();loginMsg.textContent='Signing in…';
+    e.preventDefault();
+    const btn=loginForm.querySelector('button[type="submit"]');
+    if(btn?.disabled)return;
+    if(btn)btn.disabled=true;
+    loginMsg.textContent='Signing in…';
     try{
       const r=await fetch('/api/owner',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'login',passcode:document.getElementById('passcode').value})});
       const d=await r.json().catch(()=>({}));
@@ -402,6 +406,8 @@
       renderPricing(await getPricing());
     }catch(error){
       loginMsg.textContent=error.message==='owner_login_not_configured'?'Owner login is not configured for this environment.':'Invalid passcode.';
+    }finally{
+      if(btn)btn.disabled=false;
     }
   });
 

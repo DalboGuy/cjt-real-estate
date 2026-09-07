@@ -15,6 +15,25 @@ function fmt(v){return v?new Date(v).toLocaleString():'—'}
 function money(v){return Number(v||0).toLocaleString(undefined,{style:'currency',currency:'USD'});}
 function statusLabel(v=''){return window.CJTOwnerShell?.statusLabel?.(v)||({inquiry_hold:'Request received',hold_verified:'Owner approved',contract_sent:'Contract sent',contract_signed:'Contract completed',confirmed:'Confirmed'})[v]||String(v).replaceAll('_',' ')}
 function paymentLabel(r){return window.CJTOwnerShell?.paymentLabel?.(r)||(r?.payment?.verified||r?.deposit_received_at?'Payment received':'Payment pending')}
+function bookingFacts(r){return window.CJTOwnerShell?.bookingFacts?.(r)||[
+  {id:'request_received',label:'Request received',done:Boolean(r?.id||r?.status)},
+  {id:'owner_approved',label:'Owner approved',done:['hold_verified','contract_sent','contract_signed','confirmed','completed'].includes(r?.status)},
+  {id:'contract_sent',label:'Contract sent',done:Boolean(r?.contract_sent_at)||['contract_sent','contract_signed'].includes(r?.status)},
+  {id:'contract_completed',label:'Contract completed',done:Boolean(r?.contract_signed_at)||r?.status==='contract_signed'},
+  {id:'payment_received',label:'Payment received',done:Boolean(r?.payment?.verified||r?.deposit_received_at)},
+  {id:'confirmed',label:'Confirmed',done:r?.status==='confirmed'||r?.status==='completed'}
+]}
+function factBadges(r){
+  return bookingFacts(r).map(fact=>`<span class="badge ${fact.done?'good':''}">${esc(fact.done?fact.label:`${fact.label} pending`)}</span>`).join('');
+}
+function relatedMessageHref(bookingId){
+  const ctx=window.CJTOwnerShell?.readContext?.()||{};
+  if(!ctx.message)return '';
+  if(ctx.booking && ctx.booking!==bookingId)return '';
+  const params=new URLSearchParams({message:ctx.message,property:'sand-sea-manor'});
+  if(bookingId)params.set('booking',bookingId);
+  return `/owner-v1/communications?${params}`;
+}
 function isActive(r){return !['released','expired','cancelled'].includes(r.status)}
 function needsAction(r){return ['inquiry_hold','hold_verified','contract_sent','contract_signed'].includes(r.status)}
 function statusClass(status=''){return ['confirmed','completed'].includes(status)?'good':['inquiry_hold','hold_verified','contract_sent','contract_signed'].includes(status)?'warn':''}
@@ -136,7 +155,8 @@ function renderReservations(){
     card.className='reservation-card';
     card.id=`booking-${r.id}`;
     card.dataset.booking=r.id;
-    card.innerHTML=`<div class="reservation-grid"><div><span class="badge ${statusClass(r.status)}">${esc(statusLabel(r.status))}</span><h3>${esc(r.guest_name)} · ${esc(r.checkin)} → ${esc(r.checkout)}</h3><div class="reservation-meta">${esc(r.id)} · ${esc(r.guests)} guests · ${esc(r.guest_email)}${r.guest_phone?' · '+esc(r.guest_phone):''}</div>${r.notes?`<p class="reservation-meta">${esc(r.notes)}</p>`:''}<div class="reservation-badges">${hold}<span class="badge ${r.contract_sent_at||['contract_sent','contract_signed','confirmed'].includes(r.status)?'good':''}">${r.contract_sent_at||['contract_sent','contract_signed','confirmed'].includes(r.status)?'Contract sent':'Contract sent pending'}</span><span class="badge ${r.contract_signed_at||['contract_signed','confirmed'].includes(r.status)?'good':''}">${r.contract_signed_at||['contract_signed','confirmed'].includes(r.status)?'Contract completed':'Contract completed pending'}</span><span class="badge ${r.deposit_received_at||r.payment?.verified?'good':''}">${esc(paymentLabel(r))}</span>${r.status==='confirmed'?'<span class="badge good">Confirmed</span>':''}</div>${quoteMarkup(r)}</div><div><div class="reservation-meta">Created ${esc(fmt(r.created_at))}</div><div class="actions" style="margin-top:14px">${actionMarkup(r)}</div></div></div>`;
+    const messageLink=relatedMessageHref(r.id);
+    card.innerHTML=`<div class="reservation-grid"><div><span class="badge ${statusClass(r.status)}">${esc(statusLabel(r.status))}</span><h3>${esc(r.guest_name)} · ${esc(r.checkin)} → ${esc(r.checkout)}</h3><div class="reservation-meta">${esc(r.id)} · ${esc(r.guests)} guests · ${esc(r.guest_email)}${r.guest_phone?' · '+esc(r.guest_phone):''}</div>${r.notes?`<p class="reservation-meta">${esc(r.notes)}</p>`:''}<div class="reservation-badges">${hold}${factBadges(r)}${messageLink?`<a class="badge" href="${esc(messageLink)}">Open message</a>`:''}</div>${quoteMarkup(r)}</div><div><div class="reservation-meta">Created ${esc(fmt(r.created_at))}</div><div class="actions" style="margin-top:14px">${actionMarkup(r)}</div></div></div>`;
     card.querySelectorAll('button[data-action]').forEach(b=>b.onclick=()=>updateReservation(r.id,b.dataset.action,card));
     card.querySelector('[data-quote="save"]')?.addEventListener('click',()=>saveQuote(r,card));
     card.querySelector('[data-quote-input]')?.addEventListener('input',e=>{quoteDrafts[r.id]=e.target.value;});
@@ -244,11 +264,20 @@ window.addEventListener('cjt-context-change',()=>{
 });
 loginForm.addEventListener('submit',async e=>{
   e.preventDefault();
+  const btn=loginForm.querySelector('button[type="submit"]');
+  if(btn?.disabled)return;
+  if(btn)btn.disabled=true;
   loginMsg.textContent='Signing in…';
-  const r=await fetch('/api/owner',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'login',passcode:document.getElementById('passcode').value})});
-  const d=await r.json().catch(()=>({}));
-  if(!r.ok){loginMsg.textContent=d.error==='owner_login_not_configured'?'Owner login is not configured for this environment.':'Invalid passcode.';return}
-  document.getElementById('passcode').value='';loginMsg.textContent='';loadReservations();
+  try{
+    const r=await fetch('/api/owner',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'login',passcode:document.getElementById('passcode').value})});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok){loginMsg.textContent=d.error==='owner_login_not_configured'?'Owner login is not configured for this environment.':'Invalid passcode.';return}
+    document.getElementById('passcode').value='';loginMsg.textContent='';loadReservations();
+  }catch(err){
+    loginMsg.textContent='Sign-in could not be completed. Try again.';
+  }finally{
+    if(btn)btn.disabled=false;
+  }
 });
 
 loadReservations();

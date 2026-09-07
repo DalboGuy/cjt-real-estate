@@ -178,6 +178,9 @@ async function load(){
 
 loginForm.addEventListener('submit',async e=>{
   e.preventDefault();
+  const btn=loginForm.querySelector('button[type="submit"]');
+  if(btn?.disabled)return;
+  if(btn)btn.disabled=true;
   loginMsg.textContent='Signing in…';
   const passcode=document.getElementById('passcode').value;
   try{
@@ -187,7 +190,11 @@ loginForm.addEventListener('submit',async e=>{
     document.getElementById('passcode').value='';
     loginMsg.textContent='';
     await load();
-  }catch(e){loginMsg.textContent=e.message==='owner_login_not_configured'?'Owner login is not configured for this environment.':'Invalid passcode.'}
+  }catch(err){
+    loginMsg.textContent=err.message==='owner_login_not_configured'?'Owner login is not configured for this environment.':'Invalid passcode.';
+  }finally{
+    if(btn)btn.disabled=false;
+  }
 });
 
 load();
