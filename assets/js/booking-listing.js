@@ -103,9 +103,44 @@
   function openCalendar(){if(selectedStart){const d=toUtc(selectedStart);pickerCursor=new Date(d.getUTCFullYear(),d.getUTCMonth(),1)}renderPicker();calendarModal.classList.add('show');document.body.classList.add('modal-open')}
   function closeCalendar(){calendarModal.classList.remove('show');document.body.classList.remove('modal-open')}
   document.querySelectorAll('[data-open-calendar]').forEach(b=>b.onclick=openCalendar);$('calendarClose').onclick=closeCalendar;$('calPrev').onclick=()=>{pickerCursor=new Date(pickerCursor.getFullYear(),pickerCursor.getMonth()-1,1);renderPicker()};$('calNext').onclick=()=>{pickerCursor=new Date(pickerCursor.getFullYear(),pickerCursor.getMonth()+1,1);renderPicker()};calendarModal.addEventListener('click',e=>{if(e.target===calendarModal)closeCalendar()});
+  function sourceHealthAllowsInventory(httpStatus, body){
+    const sh=body&&body.sourceHealth;
+    return httpStatus===200 && !!(sh&&sh.ok===true&&sh.failClosed!==true);
+  }
+  function responseMessage(body, fallback){
+    const msg=body&&typeof body.message==='string'?body.message.trim():'';
+    return msg||fallback;
+  }
+  function applyAvailabilityUnknown(body){
+    calendarHealthy=false;
+    blocked=new Set();
+    $('calendarHealth').textContent=responseMessage(body,'Live availability is temporarily unavailable. Please contact CJT.');
+    renderPicker();
+  }
+  function isQuoteFailClosed(httpStatus, body){
+    const sh=body&&body.sourceHealth;
+    if(httpStatus===503)return true;
+    if(sh&&(sh.ok===false||sh.failClosed===true))return true;
+    if(httpStatus===200)return !sourceHealthAllowsInventory(httpStatus, body);
+    return false;
+  }
   async function refreshAvailability(){
     $('calendarHealth').textContent='Checking live availability…';calendarHealthy=false;
-    try{const r=await fetch('/api/calendar',{cache:'no-store'});if(!r.ok)throw new Error('availability_unavailable');const d=await r.json();blocked=new Set(d.blockedDates||[]);const required=(d.sources||[]).filter(s=>['airbnb','vrbo'].includes(String(s.name).toLowerCase()));calendarHealthy=required.length?required.every(s=>s.ok!==false):true;$('calendarHealth').textContent=calendarHealthy?'Availability synced from connected calendars.':'One or more required calendars could not be verified. Booking requests are temporarily paused.';renderPicker()}catch{$('calendarHealth').textContent='Live availability is temporarily unavailable. Please contact CJT.';calendarHealthy=false;renderPicker()}}
+    try{
+      const r=await fetch('/api/calendar',{cache:'no-store'});
+      const d=await r.json().catch(()=>({}));
+      if(!sourceHealthAllowsInventory(r.status,d)){
+        applyAvailabilityUnknown(d);
+        return;
+      }
+      blocked=new Set(d.blockedDates||[]);
+      calendarHealthy=true;
+      $('calendarHealth').textContent='Availability synced from connected calendars.';
+      renderPicker();
+    }catch{
+      applyAvailabilityUnknown(null);
+    }
+  }
   refreshAvailability();
 
   const guestPopover=$('guestPopover');
@@ -130,7 +165,16 @@
   async function loadQuote(){
     if(!selectedStart||!selectedEnd)return resetQuote();if(!calendarHealthy){$('quoteError').hidden=false;$('quoteError').textContent='Live availability cannot be verified right now.';return}
     $('bookPrice').innerHTML='<span class="price-main">Checking price…</span>';$('bookNowBtn').disabled=true;
-    try{const u=new URL('/api/quote',location.origin);u.searchParams.set('checkin',selectedStart);u.searchParams.set('checkout',selectedEnd);u.searchParams.set('guests',String(guests));const r=await fetch(u,{cache:'no-store'}),d=await r.json();if(!r.ok)throw new Error(d.message||'Price is unavailable for those dates.');renderQuote(d.quote)}catch(e){currentQuote=null;$('quoteBreakdown').classList.remove('show');$('quoteError').hidden=false;$('quoteError').textContent=e.message;$('bookPrice').innerHTML='<span class="price-main">Dates need review</span>'}finally{$('bookNowBtn').disabled=false}}
+    try{
+      const u=new URL('/api/quote',location.origin);u.searchParams.set('checkin',selectedStart);u.searchParams.set('checkout',selectedEnd);u.searchParams.set('guests',String(guests));
+      const r=await fetch(u,{cache:'no-store'}),d=await r.json().catch(()=>({}));
+      if(isQuoteFailClosed(r.status,d)){
+        applyAvailabilityUnknown(d);
+        throw new Error(responseMessage(d,'Live availability cannot be verified right now.'));
+      }
+      if(!r.ok)throw new Error(responseMessage(d,'Price is unavailable for those dates.'));
+      renderQuote(d.quote);
+    }catch(e){currentQuote=null;$('quoteBreakdown').classList.remove('show');$('quoteError').hidden=false;$('quoteError').textContent=e.message;$('bookPrice').innerHTML='<span class="price-main">Dates need review</span>'}finally{$('bookNowBtn').disabled=false}}
   $('refreshQuote').onclick=loadQuote;
 
   const bookingModal=$('bookingModal'),bookingForm=$('bookingForm');
