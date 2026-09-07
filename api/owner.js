@@ -3,6 +3,7 @@ const { db, ensureSchema, expireHolds }=require('../lib/db');
 const {previewPasswordFreeActive}=require('../lib/preview-access');
 const {ownerAdjustedQuote}=require('../lib/pricing');
 const {paymentSnapshot}=require('../lib/payments');
+const {getOtaBlockedDates, resolveFeedUrl, FEED_ENV_BY_SOURCE, REQUIRED_FEEDS, urlHostHint}=require('../lib/availability');
 
 function parseCookies(header=''){return Object.fromEntries(header.split(';').map(v=>v.trim()).filter(Boolean).map(v=>{const i=v.indexOf('=');return [decodeURIComponent(v.slice(0,i)),decodeURIComponent(v.slice(i+1))];}));}
 function hash(v){return crypto.createHash('sha256').update(v).digest('hex');}
@@ -123,6 +124,51 @@ module.exports=async function(req,res){
       await sql`INSERT INTO booking_events(reservation_id,event_type,actor) VALUES (${id},${eventType},'owner')`;
       return res.status(200).json({ok:true});
     }
+
+    if(req.method==='POST'&&body.action==='calendar_feeds_status'){
+      const sources=['airbnb','vrbo','booking.com'];
+      const feeds=[];
+      for(const source of sources){
+        const resolved=await resolveFeedUrl(source);
+        feeds.push({
+          source,
+          required:REQUIRED_FEEDS.includes(source),
+          configured:Boolean(resolved.url),
+          origin:resolved.origin,
+          hostHint:resolved.url?urlHostHint(resolved.url):null
+        });
+      }
+      let liveSources=[];
+      try{
+        const live=await getOtaBlockedDates();
+        liveSources=live.sources||[];
+      }catch(e){
+        liveSources=[{name:'ota',ok:false,error:e.message,missingEnv:e.missingEnv}];
+      }
+      return res.status(200).json({feeds, liveSources, checkedAt:new Date().toISOString()});
+    }
+
+    if(req.method==='POST'&&body.action==='calendar_feeds_save'){
+      const source=String(body.source||'').trim().toLowerCase();
+      const feedUrl=String(body.feedUrl||'').trim();
+      if(!['airbnb','vrbo','booking.com'].includes(source))return res.status(400).json({error:'invalid_source'});
+      if(!/^https:\/\//i.test(feedUrl))return res.status(400).json({error:'invalid_feed_url',message:'Use a full https:// iCal URL.'});
+      await sql`
+        INSERT INTO calendar_feeds(source,feed_url,updated_at,updated_by)
+        VALUES (${source},${feedUrl},now(),'owner')
+        ON CONFLICT (source) DO UPDATE SET feed_url=EXCLUDED.feed_url, updated_at=now(), updated_by='owner'
+      `;
+      return res.status(200).json({ok:true, source, hostHint:urlHostHint(feedUrl), origin:'owner'});
+    }
+
+    if(req.method==='POST'&&body.action==='calendar_feeds_clear'){
+      const source=String(body.source||'').trim().toLowerCase();
+      if(!['airbnb','vrbo','booking.com'].includes(source))return res.status(400).json({error:'invalid_source'});
+      await sql`DELETE FROM calendar_feeds WHERE source=${source}`;
+      const resolved=await resolveFeedUrl(source);
+      return res.status(200).json({ok:true, source, stillConfigured:Boolean(resolved.url), origin:resolved.origin, hostHint:resolved.url?urlHostHint(resolved.url):null});
+    }
+
     return res.status(405).json({error:'method_not_allowed'});
   }catch(e){console.error('owner api error',e);return res.status(500).json({error:'owner_api_error'});}
 };
