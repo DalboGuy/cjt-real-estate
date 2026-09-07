@@ -275,9 +275,44 @@
               <div class="field"><label for="guestEmail">Email</label><input id="guestEmail" name="email" type="email" autocomplete="email" required></div>
               <div class="field full"><label for="guestPhone">Phone</label><input id="guestPhone" name="phone" type="tel" autocomplete="tel" required></div>
               <div class="field full">
-                <label for="guestMessage">Anything CJT should know?</label>
-                <textarea id="guestMessage" name="message" placeholder="Optional note for CJT — pets, events, or special plans can be mentioned here."></textarea>
-                <p class="field-hint">This is a guest note only. Trip type, pets, and events are not structured booking fields on this form.</p>
+                <label for="tripType">Trip type <span class="optional-tag">Optional</span></label>
+                <select id="tripType" name="trip_type">
+                  <option value="">Leave unanswered</option>
+                  <option value="Leisure">Leisure</option>
+                  <option value="Family">Family</option>
+                  <option value="Business">Business</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <fieldset class="field full choice-field">
+                <legend>Bringing a pet? <span class="optional-tag">Optional</span></legend>
+                <div class="choice-pills" role="radiogroup" aria-label="Bringing a pet">
+                  <button type="button" class="choice-pill" data-choice="bringing_pet" data-value="yes" aria-pressed="false">Yes</button>
+                  <button type="button" class="choice-pill" data-choice="bringing_pet" data-value="no" aria-pressed="false">No</button>
+                </div>
+                <input type="hidden" id="bringingPetValue" name="bringing_pet" value="">
+                <p class="field-hint">Unanswered is OK. Details are only needed if you choose Yes.</p>
+                <div id="petDetailsWrap" class="details-wrap" hidden>
+                  <label for="petDetails">Pet details</label>
+                  <textarea id="petDetails" name="pet_details" maxlength="1000" placeholder="Type, size, and anything CJT should review."></textarea>
+                </div>
+              </fieldset>
+              <fieldset class="field full choice-field">
+                <legend>Planning an event? <span class="optional-tag">Optional</span></legend>
+                <div class="choice-pills" role="radiogroup" aria-label="Planning an event">
+                  <button type="button" class="choice-pill" data-choice="planning_event" data-value="yes" aria-pressed="false">Yes</button>
+                  <button type="button" class="choice-pill" data-choice="planning_event" data-value="no" aria-pressed="false">No</button>
+                </div>
+                <input type="hidden" id="planningEventValue" name="planning_event" value="">
+                <p class="field-hint">Unanswered is OK. Events are reviewed case by case.</p>
+                <div id="eventDetailsWrap" class="details-wrap" hidden>
+                  <label for="eventDetails">Event details</label>
+                  <textarea id="eventDetails" name="event_details" maxlength="1000" placeholder="What you are planning and about how many people."></textarea>
+                </div>
+              </fieldset>
+              <div class="field full">
+                <label for="guestMessage">Anything else CJT should know?</label>
+                <textarea id="guestMessage" name="message" placeholder="Optional note — arrival plans, accessibility, or other details."></textarea>
               </div>
               <div class="field full">
                 <button id="continueToReview" class="btn btn-primary" type="button">Continue to review</button>
@@ -309,6 +344,14 @@
                   <div><dt>Email</dt><dd id="reviewEmail">—</dd></div>
                   <div><dt>Phone</dt><dd id="reviewPhone">—</dd></div>
                   <div id="reviewMessageRow" hidden><dt>Note</dt><dd id="reviewMessage">—</dd></div>
+                </dl>
+              </div>
+              <div id="reviewTripBlock" class="review-block" hidden>
+                <h3>Trip details</h3>
+                <dl>
+                  <div id="reviewTripTypeRow" hidden><dt>Trip type</dt><dd id="reviewTripType">—</dd></div>
+                  <div id="reviewPetRow" hidden><dt>Pets</dt><dd id="reviewPet">—</dd></div>
+                  <div id="reviewEventRow" hidden><dt>Event</dt><dd id="reviewEvent">—</dd></div>
                 </dl>
               </div>
             </div>

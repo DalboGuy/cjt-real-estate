@@ -135,6 +135,19 @@ body.amenities-sheet-open .widget-visible{visibility:hidden!important;pointer-ev
 .review-block dd,.done-summary dd{margin:2px 0 0;font-weight:650}
 .agree-row{display:flex;gap:10px;align-items:flex-start;margin:16px 0 14px;font-size:.86rem;font-weight:650;line-height:1.45}
 .agree-row input{width:auto;margin-top:3px;flex:0 0 auto}
+.optional-tag{margin-left:6px;font-size:.66rem;letter-spacing:.04em;text-transform:uppercase;font-weight:750;color:var(--muted)}
+.choice-field{border:1px solid var(--line);border-radius:14px;padding:12px 14px 14px;background:#fff;min-width:0}
+.choice-field legend{padding:0;font-size:.78rem;font-weight:800}
+.choice-pills{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.choice-pill{min-height:44px;border:1px solid #bdc6c4;border-radius:12px;background:#fff;font-weight:750;cursor:pointer;color:var(--ink)}
+.choice-pill.is-selected,.choice-pill[aria-pressed="true"]{background:var(--deep);color:#fff;border-color:var(--deep)}
+.choice-pill:focus-visible{outline:2px solid var(--deep);outline-offset:2px}
+.details-wrap{display:grid;gap:6px;margin-top:4px}
+.details-wrap[hidden]{display:none!important}
+.details-wrap label{font-size:.78rem;font-weight:800}
+.details-wrap textarea{width:100%;min-width:0;border:1px solid #bdc6c4;border-radius:10px;padding:12px;min-height:88px;resize:vertical}
+#tripType{min-height:48px}
+#reviewTripBlock[hidden]{display:none!important}
 .booking-flow-body .btn-primary{width:100%;min-height:48px}
 .booking-done{text-align:left}
 .booking-done h3{font:500 1.55rem/1.2 Georgia,serif;margin:0 0 10px}
@@ -148,6 +161,11 @@ body.amenities-sheet-open .widget-visible{visibility:hidden!important;pointer-ev
   .booking-flow-panel{width:100%;max-height:95vh}
   .booking-progress{gap:5px}
   .booking-progress li{font-size:.62rem;padding:4px 6px}
+  .choice-field{padding:12px}
+  .choice-pill{min-height:46px}
+}
+@media(min-width:768px){
+  .choice-pills{max-width:280px}
 }
 
 /* Always-visible guest stepper (do not hide +/− inside a clipped popover). */
