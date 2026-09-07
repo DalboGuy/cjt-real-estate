@@ -116,7 +116,12 @@
     const r=await fetch('/api/owner',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,...payload})});
     const d=await r.json().catch(()=>({}));
     if(r.status===401) throw new Error('unauthorized');
-    if(!r.ok) throw new Error(d.message||d.error||'owner_request_failed');
+    if(!r.ok){
+      const err=new Error(d.message||d.error||'owner_request_failed');
+      err.status=r.status;
+      err.code=d.error||'';
+      throw err;
+    }
     return d;
   }
 
@@ -124,10 +129,24 @@
     return {view,year,month,focusDate};
   }
 
-  // Normal nav uses calendar_view. Sync Calendars uses calendar_sync (full_refresh).
+  function isUnsupportedSyncAction(error){
+    const status=error.status;
+    const blob=`${error.code||''} ${error.message||''}`.toLowerCase();
+    if(status===405 || /method_not_allowed/.test(blob)) return true;
+    if((status===400 || status===404) && /unknown|unsupported|not[_ -]?implemented|invalid_action|unknown_action|unrecognized/.test(blob)) return true;
+    return /unsupported action|unknown action|unknown_action|invalid_action/.test(blob);
+  }
+
+  // Nav uses calendar_view. Sync prefers calendar_sync (full_refresh); fall back if tip lacks the action.
   async function fetchCalendarSnapshot(params, opts={}){
-    const action=opts.reason==='sync'?'calendar_sync':'calendar_view';
-    return ownerApi(action,params);
+    if(opts.reason!=='sync') return ownerApi('calendar_view',params);
+    try{
+      return await ownerApi('calendar_sync',params);
+    }catch(e){
+      if(e.message==='unauthorized') throw e;
+      if(isUnsupportedSyncAction(e)) return ownerApi('calendar_view',params);
+      throw e;
+    }
   }
 
   function deriveSyncOk(sync){
