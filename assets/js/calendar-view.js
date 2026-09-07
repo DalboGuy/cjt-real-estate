@@ -464,11 +464,15 @@
     if(view==='day') return fmt(snapshotDay());
     return monthTitle(snapshot.range.year,snapshot.range.month);
   }
+  function occupyingEvents(date,evs){
+    return evs.filter(ev=>ev.start<=date&&date<ev.end);
+  }
   function nightHeatClass(date,evs){
     const night=snapshot?.nights?.[date];
+    const occupying=occupyingEvents(date,evs);
     if(night?.conflict) return 'heat-conflict';
-    if(evs.some(ev=>ev.occupancy)) return 'heat-booked';
-    if(evs.length) return 'heat-blocked';
+    if(occupying.some(ev=>ev.occupancy)) return 'heat-booked';
+    if(occupying.length) return 'heat-blocked';
     return 'heat-open';
   }
   function fillDayButton(btn,date,opts={}){
@@ -561,7 +565,7 @@
       monthDates.forEach(date=>{
         const btn=document.createElement('button');
         const evs=fillDayButton(btn,date,{className:'cal-year-day',heat:true,pillLimit:0});
-        if(evs.length) visibleCount+=1;
+        if(occupyingEvents(date,evs).length) visibleCount+=1;
         grid.appendChild(btn);
       });
       section.append(h,dow,grid);
