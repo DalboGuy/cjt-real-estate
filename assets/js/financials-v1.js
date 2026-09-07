@@ -114,8 +114,8 @@ function periodFromRows(rows){
 function chartFromRows(rows,range){
   const contributing=rows.filter(row=>!row.closed&&!row.quote?.missing);
   const dates=contributing.map(row=>stayDate(row.checkin)).filter(Boolean).sort();
-  const from=range.from||dates[0]||'';
-  const to=range.to||dates[dates.length-1]||'';
+  const from=dates[0]||range.from||'';
+  const to=dates[dates.length-1]||range.to||'';
   const keys=monthKeysBetween(from?`${from.slice(0,7)}-01`:'',to?lastDayOfMonth(to.slice(0,4),to.slice(5,7)):'');
   const byMonth=new Map(keys.map(key=>({month:key,label:monthLabel(key),direct:null,ota:null,total:null})).map(item=>[item.month,item]));
   for(const row of contributing){
