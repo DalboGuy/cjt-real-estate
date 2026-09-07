@@ -1,6 +1,6 @@
 # API response contract (UI / UX)
 
-Status: **Draft — documents what the APIs already return** on `reorg/platform-v1` tip `884c127` (merged **#71** atomic inquiry / replay, **#72** fail-closed `sourceHealth`, **#73** quote nightly consistency). No application code changed in this docs PR.
+Status: **Draft — documents what the APIs already return** on `reorg/platform-v1` tip `de0ab95` plus this year/day view contract. Merged **#71** atomic inquiry / replay, **#72** fail-closed `sourceHealth`, **#73** quote nightly consistency, **#80** owner `calendar_sync`. Year/day range helpers are additive on owner `calendar_view` / `calendar_sync` only.
 
 This file is the UI/UX source of truth for **error codes, HTTP status, and JSON shapes** on guest booking and owner booking/calendar. It records **real** fields already returned. Where product language differs from the wire (`availability_unknown`, `duplicate_submission`, `fromStatus` / `toStatus`), the alias is called out so UI can map it — do not invent those strings on the server.
 
@@ -336,8 +336,8 @@ Closed (`released` / `expired` / `cancelled`) → `invalid_transition` for those
 | Quote 503 feed health | **Required** | **Required** |
 | Quote 400 / 422 pricing | omitted | **omitted** — do not treat as fail-closed |
 | Inquiry 201 / 200 / 409 | omitted | omitted |
-| Owner `calendar_view` | `sync.sources` (Direct/db + inbound iCal). **No** `sourceHealth` | `sync.mode` is `"view"`. Use `sync.ok` + `sync.configError` — not guest fail-closed |
-| Owner `calendar_sync` | Same `sync.sources` as `calendar_view`. **No** `sourceHealth` | Same snapshot as `calendar_view` for `view` / `year` / `month` / `focusDate`, plus `sync.mode: "full_refresh"` |
+| Owner `calendar_view` | `sync.sources` (Direct/db + inbound iCal). **No** `sourceHealth` | `sync.mode` is `"view"`. `view` is `"month"` \| `"week"` \| `"year"` \| `"day"`. Use `sync.ok` + `sync.configError` — not guest fail-closed |
+| Owner `calendar_sync` | Same `sync.sources` as `calendar_view`. **No** `sourceHealth` | Same snapshot as `calendar_view` for `view` / `year` / `month` / `focusDate` (including `year` and `day`), plus `sync.mode: "full_refresh"` |
 | Owner `calendar_feeds_status` | `liveSources` (same objects as `sync.sources`). **No** `sourceHealth` | `sync.mode` is `"probe"`. 200 even when a feed is down — **not** the Sync Calendars success signal |
 
 ### `sourceHealth` (canonical)
@@ -471,7 +471,37 @@ Calendar 200 also sets `Cache-Control: s-maxage=60, stale-while-revalidate=180`.
 | `sync.sources[]` | Preserves `name`, `label`, `channel`, `duplicateOf`, `hostHint`, `origin`, `ok`, `error`, `count`. `lastSuccessfulAt` is set **only** when this fetch succeeded; **omit** on failure. Direct/`db` may omit `lastSuccessfulAt` (this implementation omits it — do not invent a persisted iCal timestamp) |
 | Direct vs owner blocks | Direct is `origin: "db"` in `sync.sources`. Owner stays / manual blocks stay separate events in the merged snapshot (`nights` / `events` / `conflicts`); they are not folded into Direct |
 
-`calendar_sync` is the one-round-trip grid refresh (same `view` / `year` / `month` / `focusDate` snapshot as `calendar_view`). `calendar_feeds_status` remains a connection probe (`sync.mode: "probe"`) and must not be treated as Sync Calendars success.
+`calendar_sync` is the one-round-trip grid refresh (same `view` / `year` / `month` / `focusDate` snapshot as `calendar_view`). Accepted `view` values: `"month"` (default), `"week"`, `"year"`, `"day"`. Unknown values fall back to `"month"`. `year` selects the calendar year for `view: "year"` (and still fills `range.year` / month occupancy). `focusDate` (`YYYY-MM-DD`) selects the week or the exclusive-end day window (`dayStart` … `dayEnd`). `calendar_feeds_status` remains a connection probe (`sync.mode: "probe"`) and must not be treated as Sync Calendars success.
+
+Owner snapshot `range` always includes month, week, year, and day windows so UI can switch without a second fetch of bounds:
+
+```json
+{
+  "view": "year",
+  "range": {
+    "year": 2026,
+    "month": 9,
+    "start": "2026-09-01",
+    "end": "2026-10-01",
+    "yearStart": "2026-01-01",
+    "yearEnd": "2027-01-01",
+    "weekStart": "2026-09-06",
+    "weekEnd": "2026-09-13",
+    "day": "2026-09-10",
+    "dayStart": "2026-09-10",
+    "dayEnd": "2026-09-11",
+    "today": "2026-09-07"
+  },
+  "occupancy": {
+    "viewedMonth": { "label": "2026-09", "start": "2026-09-01", "end": "2026-10-01", "booked": 9, "total": 30, "pct": 30 },
+    "viewedWeek": { "start": "2026-09-06", "end": "2026-09-13", "booked": 3, "total": 7, "pct": 43 },
+    "viewedYear": { "start": "2026-01-01", "end": "2027-01-01", "booked": 9, "total": 365, "pct": 2 },
+    "viewedDay": { "start": "2026-09-10", "end": "2026-09-11", "booked": 1, "total": 1, "pct": 100 }
+  }
+}
+```
+
+`nights` / `events` / `conflicts` clip to the active `view` window (year has no extra pad; month / week / day pad ±7 days). Occupancy keys above are always present. Occupancy math is unchanged: guest holds + confirmed + OTA only.
 
 A night is a **conflict** when more than one **claiming** channel (anything except `prep`) occupies it, **or** a prep night overlaps occupancy.
 
@@ -534,6 +564,7 @@ Until that slice lands, guest UI has a single unavailable state; owner UI alread
 - Guest inquiry success ignores `replayed` (safe: `r.ok` + `reservation.id` still work).
 - Owner reservations collapse all 409s into one toast; they already show `message`, including `from`/`to` if the client later wants a richer invalid-transition banner.
 - Owner `calendar_view` / `calendar_sync` can be 200 with a failed OTA probe (`sync.ok === false`, `sync.configError` set). That is **not** the guest fail-closed contract. `calendar_feeds_status` (`sync.mode: "probe"`) is not the Sync Calendars success signal.
+- Owner Calendar UI still renders Month / Week only. `view: "year"` / `"day"` is a documented backend contract for a later UI slice.
 
 ---
 
