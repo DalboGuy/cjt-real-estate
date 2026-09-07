@@ -73,6 +73,38 @@
   function monthTitle(y,m){
     return new Date(Date.UTC(y,m-1,1)).toLocaleDateString('en-US',{month:'long',year:'numeric',timeZone:'UTC'});
   }
+  function monthName(y,m){
+    return new Date(Date.UTC(y,m-1,1)).toLocaleDateString('en-US',{month:'long',timeZone:'UTC'});
+  }
+  function viewNoun(){
+    if(view==='week') return 'week';
+    if(view==='year') return 'year';
+    if(view==='day') return 'day';
+    return 'month';
+  }
+  function copySummaryLabel(){
+    return `Copy ${viewNoun()} summary`;
+  }
+  function setViewToggles(){
+    document.getElementById('viewMonth')?.classList.toggle('active',view==='month');
+    document.getElementById('viewWeek')?.classList.toggle('active',view==='week');
+    document.getElementById('viewYear')?.classList.toggle('active',view==='year');
+    document.getElementById('viewDay')?.classList.toggle('active',view==='day');
+  }
+  function snapshotDay(){
+    return snapshot?.range?.day||snapshot?.range?.dayStart||null;
+  }
+  function datesInSnapshotRange(start,end){
+    const out=[];
+    if(!start||!end||start>=end) return out;
+    let d=start;
+    while(d<end){
+      out.push(d);
+      d=addDays(d,1);
+      if(out.length>370) break;
+    }
+    return out;
+  }
   function statusLabel(bucket){
     return STATUS_LABELS[bucket]||bucket||'';
   }
@@ -274,17 +306,30 @@
     }
   }
 
+  function occupancyForCurrentView(){
+    const occ=snapshot?.occupancy||{};
+    if(view==='week') return occ.viewedWeek||occ.viewedMonth;
+    if(view==='year') return occ.viewedYear;
+    if(view==='day') return occ.viewedDay;
+    return occ.viewedMonth;
+  }
+  function occupancyPeriodLabel(){
+    const today=snapshot?.range?.today||'';
+    if(view==='week') return 'This week';
+    if(view==='year') return Number(today.slice(0,4))===Number(snapshot?.range?.year)?'This year':'Viewed year';
+    if(view==='day') return snapshotDay()===today?'Today':'Viewed day';
+    const thisMonth=snapshot?.range?.year===Number(today.slice(0,4))&&snapshot?.range?.month===Number(today.slice(5,7));
+    return thisMonth?'This month':'Viewed month';
+  }
   function renderOccupancy(){
     const el=document.getElementById('occupancyStrip');
     if(!el)return;
     if(!snapshot?.occupancy||!snapshot.range){el.innerHTML='';return;}
-    const viewed=view==='week'?(snapshot.occupancy.viewedWeek||snapshot.occupancy.viewedMonth):snapshot.occupancy.viewedMonth;
+    const viewed=occupancyForCurrentView();
     const next30=snapshot.occupancy.next30;
     const next90=snapshot.occupancy.next90;
-    const thisMonth=snapshot.range.year===Number(snapshot.range.today.slice(0,4))&&snapshot.range.month===Number(snapshot.range.today.slice(5,7));
-    const period=view==='week'?'This week':(thisMonth?'This month':'Viewed month');
     const cards=[
-      [period, `${viewed?.pct??'—'}%`, `${viewed?.booked??'—'} of ${viewed?.total??'—'} guest nights`],
+      [occupancyPeriodLabel(), `${viewed?.pct??'—'}%`, `${viewed?.booked??'—'} of ${viewed?.total??'—'} guest nights`],
       ['Next 30 days', `${next30?.pct??'—'}%`, `${next30?.booked??'—'} of ${next30?.total??'—'} guest nights`],
       ['Next 90 days', `${next90?.pct??'—'}%`, `${next90?.booked??'—'} of ${next90?.total??'—'} guest nights`]
     ];
@@ -368,6 +413,36 @@
 
   function renderSkeleton(){
     if(!mount)return;
+    if(view==='year'){
+      const wrap=document.createElement('div');
+      wrap.className='cal-year cal-skeleton';
+      const months=document.createElement('div');
+      months.className='cal-year-months';
+      for(let i=0;i<12;i++){
+        const cell=document.createElement('div');
+        cell.className='cal-year-month cal-year-month-skel';
+        cell.setAttribute('aria-hidden','true');
+        months.appendChild(cell);
+      }
+      wrap.appendChild(months);
+      mount.innerHTML='';
+      mount.appendChild(wrap);
+      return;
+    }
+    if(view==='day'){
+      const wrap=document.createElement('div');
+      wrap.className='cal-day-view';
+      const cell=document.createElement('div');
+      cell.className='cal-day cal-day-skel';
+      cell.setAttribute('aria-hidden','true');
+      const agenda=document.createElement('div');
+      agenda.className='cal-agenda cal-skeleton';
+      agenda.setAttribute('aria-hidden','true');
+      wrap.append(cell,agenda);
+      mount.innerHTML='';
+      mount.appendChild(wrap);
+      return;
+    }
     const dow=document.createElement('div');
     dow.className='cal-dow';
     DOW.forEach(d=>{const s=document.createElement('span');s.textContent=d;dow.appendChild(s);});
@@ -383,57 +458,178 @@
     mount.append(dow,grid);
   }
 
+  function viewTitleText(){
+    if(view==='week') return `Week of ${fmt(snapshot.range.weekStart)}`;
+    if(view==='year') return String(snapshot.range.year);
+    if(view==='day') return fmt(snapshotDay());
+    return monthTitle(snapshot.range.year,snapshot.range.month);
+  }
+  function nightHeatClass(date,evs){
+    const night=snapshot?.nights?.[date];
+    if(night?.conflict) return 'heat-conflict';
+    if(evs.some(ev=>ev.occupancy)) return 'heat-booked';
+    if(evs.length) return 'heat-blocked';
+    return 'heat-open';
+  }
+  function fillDayButton(btn,date,opts={}){
+    const today=snapshot.range.today;
+    const night=snapshot.nights?.[date]||{channels:[],eventIds:[],checkins:[],checkouts:[],conflict:false,prep:false};
+    const evs=nightEvents(date);
+    const map=eventsById();
+    btn.type='button';
+    btn.className=opts.className||'cal-day';
+    if(opts.outside) btn.classList.add('outside');
+    if(date===today) btn.classList.add('today');
+    if(night.conflict) btn.classList.add('conflict');
+    if(!evs.length) btn.classList.add('open');
+    if(opts.heat) btn.classList.add(nightHeatClass(date,evs));
+    const ci=(night.checkins||[]).filter(id=>eventVisible(map.get(id)||{})).length;
+    const co=(night.checkouts||[]).filter(id=>eventVisible(map.get(id)||{})).length;
+    const pillLimit=opts.pillLimit??(view==='week'?6:3);
+    const pills=evs.filter(ev=>ev.start<=date&&date<ev.end).slice(0,pillLimit);
+    const num=Number(date.slice(8,10));
+    if(opts.heat){
+      btn.innerHTML=`<span class="cal-day-num">${num}</span>`;
+      btn.title=`${fmt(date)}${evs.length?` · ${evs.map(ev=>ev.label).join(', ')}`:''}`;
+    }else{
+      btn.innerHTML=`<span class="cal-day-num">${num}</span>
+        <span class="cal-markers">${ci?`<span class="cal-ci">CI</span>`:''}${co?`<span class="cal-co">CO</span>`:''}${night.conflict?`<span class="cal-co">Overlap</span>`:''}</span>
+        <span class="cal-pills">${pills.map(ev=>`<span class="cal-pill ${esc(ev.channel)}">${esc(ev.label)}</span>`).join('')}</span>`;
+    }
+    btn.addEventListener('click',()=>openDrawer(date));
+    return evs;
+  }
+  function renderAgenda(list,opts={}){
+    const wrap=document.createElement('div');
+    wrap.className='cal-agenda';
+    const heading=document.createElement('h4');
+    heading.textContent=opts.heading||'Stays and blocks';
+    wrap.appendChild(heading);
+    if(!list.length){
+      const empty=document.createElement('div');
+      empty.className='empty';
+      empty.textContent=opts.empty||'No stays or blocks in this view.';
+      wrap.appendChild(empty);
+      return wrap;
+    }
+    list.forEach(ev=>{
+      const row=document.createElement('button');
+      row.type='button';
+      row.className='cal-agenda-row';
+      const extra=ev.statusBucket==='hold'?` · ${statusLabel('hold')}`:(ev.occupancy?'':' · not in occupancy');
+      row.innerHTML=`<span><strong>${esc(ev.label)}</strong><span>${esc(ev.start)} → ${esc(ev.end)} · ${esc(ev.nights)} night${ev.nights===1?'':'s'}${extra}</span></span><span class="badge ${ev.statusBucket==='hold'?'warn':''}">${esc(ev.channel)}</span>`;
+      const openDate=opts.clampStart&&ev.start<opts.clampStart?opts.clampStart:ev.start;
+      row.addEventListener('click',()=>openDrawer(openDate));
+      wrap.appendChild(row);
+    });
+    return wrap;
+  }
+  function renderYearView(){
+    const yearStart=snapshot.range.yearStart;
+    const yearEnd=snapshot.range.yearEnd;
+    const wrap=document.createElement('div');
+    wrap.className='cal-year';
+    const monthsEl=document.createElement('div');
+    monthsEl.className='cal-year-months';
+    const dates=datesInSnapshotRange(yearStart,yearEnd);
+    const byMonth=new Map();
+    dates.forEach(date=>{
+      const key=date.slice(0,7);
+      if(!byMonth.has(key)) byMonth.set(key,[]);
+      byMonth.get(key).push(date);
+    });
+    let visibleCount=0;
+    byMonth.forEach((monthDates,key)=>{
+      const y=Number(key.slice(0,4));
+      const m=Number(key.slice(5,7));
+      const section=document.createElement('section');
+      section.className='cal-year-month';
+      const h=document.createElement('h4');
+      h.textContent=monthName(y,m);
+      const dow=document.createElement('div');
+      dow.className='cal-year-dow';
+      DOW.forEach(d=>{const s=document.createElement('span');s.textContent=d.slice(0,1);dow.appendChild(s);});
+      const grid=document.createElement('div');
+      grid.className='cal-year-grid';
+      const leading=new Date(`${monthDates[0]}T00:00:00Z`).getUTCDay();
+      for(let i=0;i<leading;i++){
+        const padCell=document.createElement('span');
+        padCell.className='cal-year-pad';
+        padCell.setAttribute('aria-hidden','true');
+        grid.appendChild(padCell);
+      }
+      monthDates.forEach(date=>{
+        const btn=document.createElement('button');
+        const evs=fillDayButton(btn,date,{className:'cal-year-day',heat:true,pillLimit:0});
+        if(evs.length) visibleCount+=1;
+        grid.appendChild(btn);
+      });
+      section.append(h,dow,grid);
+      monthsEl.appendChild(section);
+    });
+    const key=document.createElement('p');
+    key.className='metric-label cal-year-key';
+    key.textContent='Heat uses this year snapshot: open, guest-booked, owner/manual block, overlap. Press a day for the same night drawer.';
+    const range=summaryRange();
+    const agendaEvents=(snapshot.events||[]).filter(ev=>eventVisible(ev)&&ev.statusBucket!=='cancelled'&&ev.end>range.start&&ev.start<range.end)
+      .sort((a,b)=>a.start.localeCompare(b.start)||a.end.localeCompare(b.end));
+    wrap.append(monthsEl,key,renderAgenda(agendaEvents,{heading:`Stays and blocks in ${snapshot.range.year}`,clampStart:yearStart}));
+    mount.innerHTML='';
+    mount.appendChild(wrap);
+    return visibleCount;
+  }
+  function renderDayView(){
+    const date=snapshotDay();
+    const wrap=document.createElement('div');
+    wrap.className='cal-day-view';
+    const btn=document.createElement('button');
+    const evs=date?fillDayButton(btn,date,{className:'cal-day cal-day-focus',pillLimit:8}):[];
+    if(date) wrap.appendChild(btn);
+    wrap.appendChild(renderAgenda(evs,{heading:'This day',empty:'No stays or blocks on this day.'}));
+    mount.innerHTML='';
+    mount.appendChild(wrap);
+    return evs.length;
+  }
   function renderGrid(){
     if(!mount)return;
     if(!snapshot?.range){
       if(loadState==='loading') renderSkeleton();
       return;
     }
-    const y=snapshot.range.year;
-    const m=snapshot.range.month;
-    const today=snapshot.range.today;
     const title=document.getElementById('calTitle');
-    if(title) title.textContent=view==='week'?`Week of ${fmt(snapshot.range.weekStart)}`:monthTitle(y,m);
-    document.getElementById('viewMonth')?.classList.toggle('active',view==='month');
-    document.getElementById('viewWeek')?.classList.toggle('active',view==='week');
+    if(title) title.textContent=viewTitleText();
+    setViewToggles();
 
-    const start=view==='week'?snapshot.range.weekStart:`${y}-${pad(m)}-01`;
-    const leading=view==='week'?0:new Date(`${start}T00:00:00Z`).getUTCDay();
-    const gridStart=addDays(start,-leading);
-    const cells=view==='week'?7:42;
-    const map=eventsById();
     let visibleCount=0;
+    if(view==='year'){
+      visibleCount=renderYearView();
+    }else if(view==='day'){
+      visibleCount=renderDayView();
+    }else{
+      const y=snapshot.range.year;
+      const m=snapshot.range.month;
+      const start=view==='week'?snapshot.range.weekStart:`${y}-${pad(m)}-01`;
+      const leading=view==='week'?0:new Date(`${start}T00:00:00Z`).getUTCDay();
+      const gridStart=addDays(start,-leading);
+      const cells=view==='week'?7:42;
 
-    const dow=document.createElement('div');
-    dow.className='cal-dow';
-    DOW.forEach(d=>{const s=document.createElement('span');s.textContent=d;dow.appendChild(s);});
-    const grid=document.createElement('div');
-    grid.className=`cal-grid${view==='week'?' cal-week':''}`;
+      const dow=document.createElement('div');
+      dow.className='cal-dow';
+      DOW.forEach(d=>{const s=document.createElement('span');s.textContent=d;dow.appendChild(s);});
+      const grid=document.createElement('div');
+      grid.className=`cal-grid${view==='week'?' cal-week':''}`;
 
-    for(let i=0;i<cells;i++){
-      const date=addDays(gridStart,i);
-      const inMonth=date.startsWith(`${y}-${pad(m)}`);
-      const night=snapshot.nights?.[date]||{channels:[],eventIds:[],checkins:[],checkouts:[],conflict:false,prep:false};
-      const evs=nightEvents(date);
-      if(evs.length) visibleCount+=1;
-      const btn=document.createElement('button');
-      btn.type='button';
-      btn.className='cal-day';
-      if(view==='month'&&!inMonth) btn.classList.add('outside');
-      if(date===today) btn.classList.add('today');
-      if(night.conflict) btn.classList.add('conflict');
-      if(!evs.length) btn.classList.add('open');
-      const ci=(night.checkins||[]).filter(id=>eventVisible(map.get(id)||{})).length;
-      const co=(night.checkouts||[]).filter(id=>eventVisible(map.get(id)||{})).length;
-      const pills=evs.filter(ev=>ev.start<=date&&date<ev.end).slice(0,view==='week'?6:3);
-      btn.innerHTML=`<span class="cal-day-num">${Number(date.slice(8,10))}</span>
-        <span class="cal-markers">${ci?`<span class="cal-ci">CI</span>`:''}${co?`<span class="cal-co">CO</span>`:''}${night.conflict?`<span class="cal-co">Overlap</span>`:''}</span>
-        <span class="cal-pills">${pills.map(ev=>`<span class="cal-pill ${esc(ev.channel)}">${esc(ev.label)}</span>`).join('')}</span>`;
-      btn.addEventListener('click',()=>openDrawer(date));
-      grid.appendChild(btn);
+      for(let i=0;i<cells;i++){
+        const date=addDays(gridStart,i);
+        const inMonth=date.startsWith(`${y}-${pad(m)}`);
+        const btn=document.createElement('button');
+        const evs=fillDayButton(btn,date,{outside:view==='month'&&!inMonth});
+        if(evs.length) visibleCount+=1;
+        grid.appendChild(btn);
+      }
+      mount.innerHTML='';
+      mount.append(dow,grid);
     }
-    mount.innerHTML='';
-    mount.append(dow,grid);
     const empty=document.getElementById('calendarEmpty');
     if(empty) empty.classList.toggle('hidden', visibleCount>0);
   }
@@ -560,6 +756,11 @@
 
   function summaryRange(){
     if(view==='week') return {start:snapshot.range.weekStart,end:snapshot.range.weekEnd,label:`Week of ${fmt(snapshot.range.weekStart)}`};
+    if(view==='year') return {start:snapshot.range.yearStart,end:snapshot.range.yearEnd,label:String(snapshot.range.year)};
+    if(view==='day'){
+      const day=snapshotDay();
+      return {start:snapshot.range.dayStart||day,end:snapshot.range.dayEnd||(day?addDays(day,1):null),label:fmt(day)};
+    }
     return {start:snapshot.range.start,end:snapshot.range.end,label:monthTitle(snapshot.range.year,snapshot.range.month)};
   }
 
@@ -567,7 +768,7 @@
     if(!snapshot)return '';
     const settings=snapshot.settings||{};
     const range=summaryRange();
-    const occ=view==='week'?(snapshot.occupancy.viewedWeek||snapshot.occupancy.viewedMonth):snapshot.occupancy.viewedMonth;
+    const occ=occupancyForCurrentView();
     const lines=[
       `${snapshot.property?.name||'Calendar'} — ${range.label}`,
       `Occupancy (guest holds + confirmed + OTA only): ${occ?.pct??'—'}% this view · ${snapshot.occupancy?.next30?.pct??'—'}% next 30 · ${snapshot.occupancy?.next90?.pct??'—'}% next 90`,
@@ -602,7 +803,8 @@
       return;
     }
     const copyBtn=document.getElementById('copySummary');
-    if(copyBtn) copyBtn.textContent=view==='week'?'Copy week summary':'Copy month summary';
+    if(copyBtn) copyBtn.textContent=copySummaryLabel();
+    setViewToggles();
     renderLegend();
     renderFilters();
     renderOccupancy();
@@ -627,7 +829,8 @@
       snapshot=data;
       year=data.range.year;
       month=data.range.month;
-      if(view==='week'&&!focusDate) focusDate=data.range.weekStart;
+      if(view==='week') focusDate=data.range.weekStart||focusDate;
+      if(view==='day') focusDate=data.range.day||data.range.dayStart||focusDate;
       applySettings(data.settings);
       const empty=!(data.events||[]).length;
       setLoadChrome(empty?'empty':'loaded');
@@ -685,24 +888,46 @@
     finally{savingSettings=false;}
   }
 
+  function shiftFocus(days){
+    focusDate=addDays(weekFocusDate(),days);
+    year=Number(focusDate.slice(0,4));
+    month=Number(focusDate.slice(5,7));
+    return load().catch(()=>{});
+  }
+  function focusDateInYear(nextYear){
+    const next=`${nextYear}${(focusDate||`${nextYear}-01-01`).slice(4)}`;
+    const parsed=new Date(`${next}T00:00:00Z`);
+    if(Number.isNaN(parsed.getTime())||parsed.toISOString().slice(0,10)!==next) return `${nextYear}-01-01`;
+    return next;
+  }
   document.getElementById('calPrev')?.addEventListener('click',()=>{
-    if(!year||!month)return;
-    if(view==='week'){
-      focusDate=addDays(weekFocusDate(),-7);
-      year=Number(focusDate.slice(0,4));
-      month=Number(focusDate.slice(5,7));
+    if(view==='year'){
+      if(!year)return;
+      year-=1;
+      if(focusDate) focusDate=focusDateInYear(year);
       return load().catch(()=>{});
     }
+    if(view==='day'){
+      if(!weekFocusDate())return;
+      return shiftFocus(-1);
+    }
+    if(!year||!month)return;
+    if(view==='week') return shiftFocus(-7);
     month-=1;if(month<1){month=12;year-=1;}load().catch(()=>{});
   });
   document.getElementById('calNext')?.addEventListener('click',()=>{
-    if(!year||!month)return;
-    if(view==='week'){
-      focusDate=addDays(weekFocusDate(),7);
-      year=Number(focusDate.slice(0,4));
-      month=Number(focusDate.slice(5,7));
+    if(view==='year'){
+      if(!year)return;
+      year+=1;
+      if(focusDate) focusDate=focusDateInYear(year);
       return load().catch(()=>{});
     }
+    if(view==='day'){
+      if(!weekFocusDate())return;
+      return shiftFocus(1);
+    }
+    if(!year||!month)return;
+    if(view==='week') return shiftFocus(7);
     month+=1;if(month>12){month=1;year+=1;}load().catch(()=>{});
   });
   document.getElementById('calToday')?.addEventListener('click',()=>{
@@ -711,18 +936,22 @@
     focusDate=snapshot?.range?.today||null;
     load().catch(()=>{});
   });
-  document.getElementById('viewMonth')?.addEventListener('click',()=>{view='month';load().catch(()=>{});});
-  document.getElementById('viewWeek')?.addEventListener('click',()=>{
-    view='week';
-    focusDate=weekFocusDate();
+  function switchView(next){
+    view=next;
+    if(next==='week'||next==='day') focusDate=weekFocusDate();
+    setViewToggles();
     load().catch(()=>{});
-  });
+  }
+  document.getElementById('viewMonth')?.addEventListener('click',()=>switchView('month'));
+  document.getElementById('viewWeek')?.addEventListener('click',()=>switchView('week'));
+  document.getElementById('viewYear')?.addEventListener('click',()=>switchView('year'));
+  document.getElementById('viewDay')?.addEventListener('click',()=>switchView('day'));
   document.getElementById('syncCalendars')?.addEventListener('click',()=>syncCalendars());
   document.getElementById('openBlockForm')?.addEventListener('click',()=>fillForm(snapshot?.range?.today||null,'manual_block'));
   document.getElementById('copySummary')?.addEventListener('click',async()=>{
     try{
       await navigator.clipboard.writeText(monthSummaryText());
-      showNotice(view==='week'?'Week summary copied':'Month summary copied');
+      showNotice(`${viewNoun().charAt(0).toUpperCase()}${viewNoun().slice(1)} summary copied`);
     }catch{showNotice('Select and copy the summary from the calendar list');}
   });
   document.getElementById('showGuestNames')?.addEventListener('change',()=>saveSettings(true));
