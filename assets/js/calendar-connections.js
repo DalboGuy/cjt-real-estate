@@ -6,7 +6,16 @@
   const liveProbe=document.getElementById('liveProbe');
   const addForm=document.getElementById('addFeedForm');
   const addBtn=document.getElementById('addFeedBtn');
+  const exportInput=document.getElementById('exportCalendarLink');
   let maxOwner=10;
+
+  const standardExport=`${location.origin}/direct-bookings.ics`;
+  const bookingComExport=`${location.origin}/bookingcom.ics`;
+
+  function setExportLink(url){
+    if(exportInput) exportInput.value=url;
+  }
+  setExportLink(standardExport);
 
   function showNotice(text,ms=4000){
     if(!notice)return;
@@ -14,6 +23,19 @@
     notice.classList.remove('hidden');
     setTimeout(()=>notice.classList.add('hidden'),ms);
   }
+
+  document.getElementById('copyExportLink')?.addEventListener('click',async()=>{
+    const value=exportInput?.value||standardExport;
+    try{
+      await navigator.clipboard.writeText(value);
+      showNotice('CJT calendar link copied');
+    }catch{
+      exportInput?.select();
+      showNotice('Select the link and copy it');
+    }
+  });
+  document.getElementById('useBookingComExport')?.addEventListener('click',()=>{setExportLink(bookingComExport);showNotice('Using Booking.com export link');});
+  document.getElementById('useStandardExport')?.addEventListener('click',()=>{setExportLink(standardExport);showNotice('Using standard export link');});
 
   function render(data){
     maxOwner=data.maxOwnerCalendars||10;
@@ -29,59 +51,28 @@
     if(cards){
       const feeds=data.feeds||[];
       cards.innerHTML=feeds.length?feeds.map(feed=>`<article class="card span-4" data-id="${feed.id}">
-        <div class="card-head"><div><h3>${feed.label}</h3><p>${feed.hostHint||'saved'} · owner</p></div><span class="badge good">Connected</span></div>
-        <div class="metric-label">Full iCal URL is stored server-side only.</div>
+        <div class="card-head"><div><h3>${feed.label}</h3><p>${feed.hostHint||'saved'} · imported</p></div><span class="badge good">Connected</span></div>
+        <div class="metric-label">Inbound .ics from the other website (URL hidden).</div>
         <div style="margin-top:12px"><button class="btn btn-secondary remove-feed" type="button">Remove</button></div>
-      </article>`).join(''):`<article class="card span-12"><div class="empty">No owner calendars yet. Add up to ${maxOwner} above.</div></article>`;
+      </article>`).join(''):`<article class="card span-12"><div class="empty">No inbound calendars yet. Complete Step 2 to import up to ${maxOwner}.</div></article>`;
     }
 
     if(envWrap){
       const envFeeds=data.envFeeds||[];
-      envWrap.innerHTML=envFeeds.length?`<article class="card span-12"><div class="card-head"><div><h3>Also reading from Vercel env</h3><p>These stay as a fallback / extra sources.</p></div></div><div class="list">${envFeeds.map(f=>`<div class="list-row"><div><strong>${f.name}</strong><span>${f.hostHint||'env'}</span></div><span class="badge">Env</span></div>`).join('')}</div></article>`:'';
+      envWrap.innerHTML=envFeeds.length?`<article class="card span-12"><div class="card-head"><div><h3>Also reading from Vercel env</h3><p>Fallback / extra sources.</p></div></div><div class="list">${envFeeds.map(f=>`<div class="list-row"><div><strong>${f.name}</strong><span>${f.hostHint||'env'}</span></div><span class="badge">Env</span></div>`).join('')}</div></article>`:'';
     }
   }
 
   async function load(){
-    try{
-      const r=await fetch('/api/owner',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'calendar_feeds_status'})});
-      const d=await r.json().catch(()=>({}));
-      if(r.status===401)return;
-      if(!r.ok)throw new Error(d.message||d.error||'Could not load calendar connections');
-      render(d);
-    }catch(e){showNotice(e.message||'Load failed');}
+    const r=await fetch('/api/owner',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'calendar_feeds_status'})});
+    const d=await r.json().catch(()=>({}));
+    if(r.status===401)return;
+    if(!r.ok)throw new Error(d.message||d.error||'Could not load calendar connections');
+    render(d);
   }
 
-  addForm?.addEventListener('submit',async e=>{
-    e.preventDefault();
-    const label=document.getElementById('feedLabel')?.value||'';
-    const feedUrl=document.getElementById('feedUrl')?.value||'';
-    if(addBtn)addBtn.disabled=true;
-    try{
-      const r=await fetch('/api/owner',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'calendar_feeds_save',label,feedUrl})});
-      const d=await r.json().catch(()=>({}));
-      if(!r.ok)throw new Error(d.message||d.error||'Save failed');
-      showNotice('Calendar added');
-      addForm.reset();
-      await load();
-    }catch(err){showNotice(err.message||'Save failed'); if(addBtn)addBtn.disabled=false;}
-  });
-
-  cards?.addEventListener('click',async e=>{
-    const btn=e.target.closest('.remove-feed');
-    if(!btn)return;
-    const id=Number(btn.closest('[data-id]')?.getAttribute('data-id'));
-    btn.disabled=true;
-    try{
-      const r=await fetch('/api/owner',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'calendar_feeds_clear',id})});
-      const d=await r.json().catch(()=>({}));
-      if(!r.ok)throw new Error(d.message||d.error||'Remove failed');
-      showNotice('Calendar removed');
-      await load();
-    }catch(err){showNotice(err.message||'Remove failed'); btn.disabled=false;}
-  });
-
   async function refreshAll(){
-    const btn=document.getElementById('refreshAllLinks')||document.getElementById('refreshFeeds');
+    const btn=document.getElementById('refreshAllLinks');
     const badge=document.getElementById('refreshAllBadge');
     const meta=document.getElementById('refreshAllMeta');
     if(btn)btn.disabled=true;
@@ -99,9 +90,39 @@
     }
   }
 
+  addForm?.addEventListener('submit',async e=>{
+    e.preventDefault();
+    const label=document.getElementById('feedLabel')?.value||'';
+    const feedUrl=document.getElementById('feedUrl')?.value||'';
+    if(addBtn)addBtn.disabled=true;
+    try{
+      const r=await fetch('/api/owner',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'calendar_feeds_save',label,feedUrl})});
+      const d=await r.json().catch(()=>({}));
+      if(!r.ok)throw new Error(d.message||d.error||'Save failed');
+      showNotice('Calendar added');
+      addForm.reset();
+      await load();
+    }catch(err){showNotice(err.message||'Save failed');}
+    finally{if(addBtn)addBtn.disabled=false;}
+  });
+
+  cards?.addEventListener('click',async e=>{
+    const btn=e.target.closest('.remove-feed');
+    if(!btn)return;
+    const id=Number(btn.closest('[data-id]')?.getAttribute('data-id'));
+    btn.disabled=true;
+    try{
+      const r=await fetch('/api/owner',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'calendar_feeds_clear',id})});
+      const d=await r.json().catch(()=>({}));
+      if(!r.ok)throw new Error(d.message||d.error||'Remove failed');
+      showNotice('Calendar removed');
+      await load();
+    }catch(err){showNotice(err.message||'Remove failed'); btn.disabled=false;}
+  });
+
   document.getElementById('refreshAllLinks')?.addEventListener('click',refreshAll);
   document.getElementById('refreshFeeds')?.addEventListener('click',refreshAll);
-  const boot=()=>{if(!document.getElementById('ownerApp')?.classList.contains('hidden'))load();};
+  const boot=()=>{if(!document.getElementById('ownerApp')?.classList.contains('hidden'))load().catch(e=>showNotice(e.message||'Load failed'));};
   setTimeout(boot,400);
   setTimeout(boot,1200);
 })();
