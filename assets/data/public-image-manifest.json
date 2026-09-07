@@ -489,6 +489,9 @@
     {
       "name": "Master Bedroom",
       "sourceFolderId": "1IxJqk17K7skT9ss5LMXQ6_WrFuCbp5W_",
+      "beds": "King bed",
+      "sleeps": 2,
+      "detail": "Main level · King bed · Sleeps 2",
       "photos": [
         {
           "name": "12.jpg",
@@ -520,6 +523,9 @@
     {
       "name": "Boho Room",
       "sourceFolderId": "1PHttJna7uy8D_d47gs_9Qz19oIdW7kJh",
+      "beds": "King + daybed with trundle",
+      "sleeps": 4,
+      "detail": "Upstairs · King + daybed with trundle · Sleeps 4",
       "photos": [
         {
           "name": "42.jpg",
@@ -536,6 +542,9 @@
     {
       "name": "Glam Room",
       "sourceFolderId": "1kk2QcvsaZxM8NJqqr9agvAmNWLWmsRQY",
+      "beds": "King bed",
+      "sleeps": 2,
+      "detail": "Upstairs · King bed · Sleeps 2",
       "photos": [
         {
           "name": "43.jpg",
@@ -552,6 +561,9 @@
     {
       "name": "Flex Room",
       "sourceFolderId": "1o-nrG3bMMqgZ4-Egm2XzNmXZ00MD2YGd",
+      "beds": "Twin daybed with trundle",
+      "sleeps": 2,
+      "detail": "Main level · Twin daybed with trundle · Sleeps 2",
       "photos": [
         {
           "name": "40.jpg",
@@ -568,6 +580,9 @@
     {
       "name": "Bunk Room",
       "sourceFolderId": "1ui0dfMhlt5S4d2wLA34rtyteAHp9PQlk",
+      "beds": "Queen + twin bunk beds",
+      "sleeps": 4,
+      "detail": "Upstairs · Queen + twin bunk beds · Sleeps 4",
       "photos": [
         {
           "name": "37.jpg",
