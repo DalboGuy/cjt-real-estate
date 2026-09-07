@@ -74,9 +74,12 @@
 
   function guestLabel(ev){
     const settings=snapshot?.settings||settingsFromForm();
-    if(!ev.guestName) return ev.summary||ev.label;
-    if(settings.showGuestNames===false) return 'Guest';
-    return ev.guestName;
+    if(ev.guestName){
+      if(settings.showGuestNames===false) return 'Guest';
+      return ev.guestName;
+    }
+    if(ev.summary&&ev.summary!==ev.label) return ev.summary;
+    return '';
   }
 
   function eventVisible(ev){
@@ -287,7 +290,10 @@
     if(!el||!snapshot)return;
     const rows=(snapshot.upcoming||[]).filter(eventVisible);
     if(!rows.length){el.innerHTML='<div class="empty">No upcoming stays or blocks.</div>';return;}
-    el.innerHTML=rows.map(ev=>`<div class="list-row" data-open="${esc(ev.start)}"><div><strong>${esc(ev.label)} · ${esc(guestLabel(ev))}</strong><span>${esc(ev.start)} → ${esc(ev.end)} · ${esc(ev.nights)} night${ev.nights===1?'':'s'}${ev.statusBucket==='hold'?' · hold':''}</span></div><span class="badge ${ev.statusBucket==='hold'?'warn':''}">${esc(ev.channel)}</span></div>`).join('');
+    el.innerHTML=rows.map(ev=>{
+      const who=guestLabel(ev);
+      return `<div class="list-row" data-open="${esc(ev.start)}"><div><strong>${esc(ev.label)}${who?` · ${esc(who)}`:''}</strong><span>${esc(ev.start)} → ${esc(ev.end)} · ${esc(ev.nights)} night${ev.nights===1?'':'s'}${ev.statusBucket==='hold'?' · hold':''}</span></div><span class="badge ${ev.statusBucket==='hold'?'warn':''}">${esc(ev.channel)}</span></div>`;
+    }).join('');
     el.querySelectorAll('[data-open]').forEach(row=>row.addEventListener('click',()=>openDrawer(row.getAttribute('data-open'))));
   }
 
