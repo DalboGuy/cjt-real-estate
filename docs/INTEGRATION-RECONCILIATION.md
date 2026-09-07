@@ -36,7 +36,7 @@ All Vercel Preview deployments for this project share the same Preview env vars 
 | `CJT_DB_TARGET` | `preview` | Required on Preview. |
 | `CJT_ALLOW_PROD_DB` | **Absent / unset** | Must stay unset on Preview. |
 
-Sibling Neon branch `reorg-platform-v1` (host prefix `ep-long-hall`) is **not** the Preview target. See also open docs PR #64.
+Sibling Neon branch `reorg-platform-v1` (host prefix `ep-long-hall`) is **not** the Preview target. Preview DB docs from **#64** are on this tip.
 
 Canonical Preview env write-up: `docs/PREVIEW-DATABASE-SETUP.md`. Do not put connection strings, secrets, or signed URLs in Git.
 
