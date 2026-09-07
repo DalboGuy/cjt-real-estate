@@ -66,3 +66,28 @@ body.amenities-sheet-open .widget-visible{visibility:hidden!important;pointer-ev
   #amenitiesModal .amenities-sheet-footer{display:block!important;flex:0 0 auto;position:relative;bottom:auto;z-index:4;padding:12px 16px max(14px,env(safe-area-inset-bottom));background:#fff;border-top:1px solid var(--line);box-shadow:0 -8px 22px rgba(13,43,49,.08)}
   #amenitiesModal .amenities-sheet-footer .btn{width:100%;min-height:48px}
 }
+
+/* Guest quote payment trust block */
+.booking-agreement-line{text-align:center;margin:2px 0 8px;font-size:.82rem}
+.booking-agreement-line a,.mobile-agreement,.agreement-link{color:var(--deep);font-weight:750;text-decoration:underline}
+.quote-trust{margin-top:14px}
+.quote-trust-schedule{display:grid;gap:2px}
+.quote-trust-row{align-items:flex-start}
+.quote-trust-row span{max-width:70%;line-height:1.35}
+.quote-trust-row.deposit span{font-weight:750}
+.quote-trust-detail,.quote-hold-note{margin:8px 0 0;color:var(--muted);font-size:.8rem;line-height:1.45}
+.quote-hold-note{margin-top:10px}
+.agreement-link{display:inline-block;margin-top:8px;font-size:.82rem}
+.mobile-book-copy{display:grid;gap:2px;min-width:0}
+.mobile-agreement{font-size:.72rem;white-space:nowrap}
+.booking-summary span{display:block}
+.agreement-page{width:min(720px,calc(100% - 32px));margin:32px auto 64px}
+.agreement-page h1{font:500 2rem/1.2 Georgia,serif;margin:8px 0 14px}
+.agreement-page h2{font-size:1.05rem;margin:22px 0 8px}
+.agreement-page p,.agreement-page li{color:#405154}
+.agreement-page ul{margin:0;padding-left:1.15rem;display:grid;gap:6px}
+.agreement-card{border:1px solid var(--line);border-radius:18px;background:#fff;padding:22px 22px 18px;box-shadow:var(--shadow)}
+@media(max-width:780px){
+  .mobile-bookbar{align-items:flex-end}
+  .mobile-book-copy{padding-right:8px}
+}

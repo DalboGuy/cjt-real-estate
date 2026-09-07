@@ -84,7 +84,7 @@
   }
   function renderPicker(){renderMonth($('calendarMonth1'),pickerCursor,false);renderMonth($('calendarMonth2'),new Date(pickerCursor.getFullYear(),pickerCursor.getMonth()+1,1),true);$('calendarSelection').textContent=selectedStart?(selectedEnd?`${fmt(selectedStart)} – ${fmt(selectedEnd)}`:`${fmt(selectedStart)} — choose checkout`):'Choose check-in and check-out dates'}
   function updateSelectors(){const inText=selectedStart?fmt(selectedStart).replace(/, \d{4}/,''):'Add date',outText=selectedEnd?fmt(selectedEnd).replace(/, \d{4}/,''):'Add date';document.querySelectorAll('[data-checkin-value]').forEach(el=>el.textContent=inText);document.querySelectorAll('[data-checkout-value]').forEach(el=>el.textContent=outText);document.querySelectorAll('[data-guests-value]').forEach(el=>el.textContent=`${guests} guest${guests===1?'':'s'}`)}
-  function resetQuote(){currentQuote=null;$('quoteBreakdown').classList.remove('show');$('quoteError').hidden=true;$('bookPrice').innerHTML='<span class="price-main">Add dates for prices</span>';$('mobilePrice').innerHTML='<strong>Add dates</strong><span>See total price</span>';$('bookNowBtn').disabled=false}
+  function resetQuote(){currentQuote=null;$('quoteBreakdown').classList.remove('show');$('quoteError').hidden=true;$('bookPrice').innerHTML='<span class="price-main">Add dates for prices</span>';$('mobilePrice').innerHTML='<strong>Add dates</strong><span>See total price</span>';if($('paymentCopy'))$('paymentCopy').innerHTML='';$('bookNowBtn').disabled=false}
   function selectDate(date,isBlocked){
     if(!selectedStart||selectedEnd||date<=selectedStart){if(isBlocked)return;selectedStart=date;selectedEnd='';resetQuote()}
     else{const nights=eachDate(selectedStart,date);if(nights.some(d=>blocked.has(d))){if(!isBlocked){selectedStart=date;selectedEnd='';resetQuote()}return}else{selectedEnd=date;resetQuote()}}
@@ -103,9 +103,19 @@
   document.querySelectorAll('[data-open-guests]').forEach(b=>b.onclick=e=>{e.stopPropagation();guestPopover.classList.toggle('show')});$('guestMinus').onclick=e=>{e.stopPropagation();updateGuests(guests-1)};$('guestPlus').onclick=e=>{e.stopPropagation();updateGuests(guests+1)};document.addEventListener('click',e=>{if(!guestPopover.contains(e.target)&&!e.target.closest('[data-open-guests]'))guestPopover.classList.remove('show')});updateGuests(1);
 
   function renderQuote(q){
-    currentQuote=q;const total=money(q.total),nightLabel=`${q.nights} night${q.nights===1?'':'s'}`;$('bookPrice').innerHTML=`<span class="price-main">${total}</span> <span class="price-note">total · ${nightLabel}</span>`;$('mobilePrice').innerHTML=`<strong>${total}</strong><span>${nightLabel} · total</span>`;
+    currentQuote=q;const total=money(q.total),nightLabel=`${q.nights} night${q.nights===1?'':'s'}`;
+    const trust=(window.CJTQuoteTrust&&window.CJTQuoteTrust.guestPaymentTrust)?window.CJTQuoteTrust.guestPaymentTrust(q):null;
+    $('bookPrice').innerHTML=`<span class="price-main">${total}</span> <span class="price-note">total · ${nightLabel}</span>`;
+    $('mobilePrice').innerHTML=`<strong>${total}</strong><span>${trust?`${esc(trust.mobileNote)} · ${nightLabel}`:`${nightLabel} · total`}</span>`;
     $('quoteLodging').textContent=money(q.lodgingSubtotal);$('quoteCleaning').textContent=money(q.cleaningFee);$('quoteTax').textContent=money(q.taxes);$('quoteTotal').textContent=total;$('quoteBreakdown').classList.add('show');$('quoteError').hidden=true;
-    const p=q.paymentSchedule||{};if(p.mode==='split')$('paymentCopy').innerHTML=`<strong>${money(p.dueAtBooking)} due when accepted</strong>Remaining ${money(p.remainingBalance)} due ${esc(p.balanceDueDateLabel||'30 days before check-in')}.`;else $('paymentCopy').innerHTML=`<strong>${total} due when accepted</strong>${p.reason==='within_30_days'?'This stay begins within 30 days, so the full balance is due at booking.':'Full payment is due for this reservation.'}`;
+    if($('paymentCopy')){
+      if(window.CJTQuoteTrust&&window.CJTQuoteTrust.guestPaymentTrustMarkup)$('paymentCopy').innerHTML=window.CJTQuoteTrust.guestPaymentTrustMarkup(q,money);
+      else{
+        const p=q.paymentSchedule||{};
+        if(p.mode==='split')$('paymentCopy').innerHTML=`<strong>${money(p.dueAtBooking)} due when accepted</strong>Remaining ${money(p.remainingBalance)} due ${esc(p.balanceDueDateLabel||'30 days before check-in')}.`;
+        else $('paymentCopy').innerHTML=`<strong>${total} due when accepted</strong>${p.reason==='within_30_days'?'This stay begins within 30 days, so the full balance is due at booking.':'Full payment is due for this reservation.'}`;
+      }
+    }
   }
   async function loadQuote(){
     if(!selectedStart||!selectedEnd)return resetQuote();if(!calendarHealthy){$('quoteError').hidden=false;$('quoteError').textContent='Live availability cannot be verified right now.';return}
@@ -114,7 +124,7 @@
   $('refreshQuote').onclick=loadQuote;
 
   const bookingModal=$('bookingModal'),bookingForm=$('bookingForm');
-  function openBooking(){if(!selectedStart||!selectedEnd){openCalendar();return}if(!currentQuote){loadQuote();return}$('bookingSummary').innerHTML=`<strong>${fmt(selectedStart)} – ${fmt(selectedEnd)} · ${guests} guest${guests===1?'':'s'}</strong><span>${currentQuote.nights} nights · ${money(currentQuote.total)} total</span>`;bookingModal.classList.add('show');document.body.classList.add('modal-open')}
+  function openBooking(){if(!selectedStart||!selectedEnd){openCalendar();return}if(!currentQuote){loadQuote();return}const trust=(window.CJTQuoteTrust&&window.CJTQuoteTrust.guestPaymentTrust)?window.CJTQuoteTrust.guestPaymentTrust(currentQuote):null;$('bookingSummary').innerHTML=`<strong>${fmt(selectedStart)} – ${fmt(selectedEnd)} · ${guests} guest${guests===1?'':'s'}</strong><span>${currentQuote.nights} nights · ${money(currentQuote.total)} total</span>${trust?`<span>${esc(trust.depositLabel)} · ${money(trust.depositAmount)}</span>`:''}`;bookingModal.classList.add('show');document.body.classList.add('modal-open')}
   function closeBooking(){bookingModal.classList.remove('show');document.body.classList.remove('modal-open')}
   $('bookNowBtn').onclick=openBooking;$('mobileBookBtn').onclick=openBooking;$('bookingClose').onclick=closeBooking;bookingModal.addEventListener('click',e=>{if(e.target===bookingModal)closeBooking()});
   bookingForm.addEventListener('submit',async e=>{
