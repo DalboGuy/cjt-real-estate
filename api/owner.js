@@ -8,6 +8,7 @@ const {buildOwnerCalendarView, validIsoDate}=require('../lib/calendar-view');
 const {planOwnerTransition,notUpdatedError,conflictBody}=require('../lib/booking-transitions');
 const {assertSendConfigured, createAndSendDocument, parseMetadata}=require('../lib/opensign');
 const {insertOwnerBlockIfClear}=require('../lib/date-conflicts');
+const {listReservations,readReservationWindowParams,resolveReservationWindow}=require('../lib/reservation-queries');
 
 function parseCookies(header=''){return Object.fromEntries(header.split(';').map(v=>v.trim()).filter(Boolean).map(v=>{const i=v.indexOf('=');return [decodeURIComponent(v.slice(0,i)),decodeURIComponent(v.slice(i+1))];}));}
 function hash(v){return crypto.createHash('sha256').update(v).digest('hex');}
@@ -43,23 +44,15 @@ module.exports=async function(req,res){
     if(!(await authenticated(req)))return res.status(401).json({error:'unauthorized'});
 
     if(req.method==='GET'){
-      const reservations=await sql`
-        SELECT r.id,r.guest_name,r.guest_email,r.guest_phone,r.guests,r.notes,r.checkin::text,r.checkout::text,r.status,
-               r.hold_expires_at,r.contract_sent_at,r.contract_signed_at,r.deposit_received_at,r.released_at,r.created_at,r.updated_at,
-               q.quote
-        FROM reservations r
-        LEFT JOIN LATERAL (
-          SELECT e.metadata->'quote' AS quote
-          FROM booking_events e
-          WHERE e.reservation_id=r.id AND e.metadata ? 'quote'
-          ORDER BY e.created_at DESC,e.id DESC
-          LIMIT 1
-        ) q ON true
-        ORDER BY CASE WHEN r.status IN ('released','expired','cancelled') THEN 1 ELSE 0 END, r.checkin ASC, r.created_at DESC
-        LIMIT 250
-      `;
+      let window;
+      try{window=resolveReservationWindow(readReservationWindowParams(req));}
+      catch(error){
+        if(error.code==='invalid_date_range')return res.status(400).json({error:error.code,message:error.message});
+        throw error;
+      }
+      const reservations=await listReservations(sql,{includeClosed:true,withQuote:true,from:window.from,to:window.to});
       const reservationsWithPayments=await Promise.all(reservations.map(async reservation=>({...reservation,quote:normalizeOwnerQuote(reservation.quote),payment:await paymentSnapshot(sql,reservation.id)})));
-      return res.status(200).json({reservations:reservationsWithPayments,temporaryPasswordFree:previewPasswordFreeActive(req)});
+      return res.status(200).json({reservations:reservationsWithPayments,from:window.from,to:window.to,temporaryPasswordFree:previewPasswordFreeActive(req)});
     }
 
     if(req.method==='POST'&&body.action==='logout'){
