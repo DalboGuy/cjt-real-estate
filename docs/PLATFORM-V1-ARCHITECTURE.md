@@ -410,14 +410,21 @@ Later analytics can derive ADR, occupancy and RevPAR from reservation + financia
 - Live Neon project: `holy-block-00778872`
 - Live Neon branch: `br-billowing-smoke-avawnhdx` (`main`)
 
-### Reorganization development
+### Official Vercel Preview (current)
 
 - Git branch: `reorg/platform-v1`
-- Neon development branch: `br-falling-cherry-avxasm60` (`reorg-platform-v1`)
+- Neon Preview branch: `preview/reorg/platform-v1` (`br-damp-wildflower-avtyiin5`, host prefix `ep-rapid-bird`)
+- Vercel Preview override: `CJT_DATABASE_URL` + `CJT_DB_TARGET=preview`. Leave `CJT_ALLOW_PROD_DB` unset on Preview.
+- Neon-managed `DATABASE_URL` still exists on Preview and Production; runtime prefers `CJT_DATABASE_URL`. Do not rely on `DATABASE_URL` alone for Preview. See [PREVIEW-DATABASE-SETUP.md](./PREVIEW-DATABASE-SETUP.md).
 
-Do not change production `DATABASE_URL` during design work.
+### Legacy / sibling Neon branch (not the Preview target)
 
-When database development begins, provision a compute on the reorganization Neon branch only when needed and use branch-specific development/preview configuration.
+- Neon branch: `reorg-platform-v1` (`br-falling-cherry-avxasm60`, host prefix `ep-long-hall`)
+- Console-created sibling of production. Do not point Vercel Preview at it.
+
+Do not change production `DATABASE_URL` during design work. Before promoting a SHA that includes the production DB guards, Production also needs `CJT_DB_TARGET=production` and `CJT_ALLOW_PROD_DB=1` (not set yet; not part of a docs-only change).
+
+When database development begins, use `preview/reorg/platform-v1` (or an approved disposable child of that official Preview branch).
 
 ## 13. Migration phases
 
@@ -473,7 +480,7 @@ Acceptance: a new verified OTA email appears in Communications automatically and
 
 ### Phase 5 — data normalization
 
-On the reorganization Neon branch first:
+On the official Preview Neon branch (`preview/reorg/platform-v1`) first:
 
 - properties
 - channels

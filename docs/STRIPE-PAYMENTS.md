@@ -21,7 +21,7 @@ Joel must set these in the Vercel **Preview** environment for a preview Stripe t
 - `STRIPE_PUBLISHABLE_KEY` — **optional for this server-hosted Checkout slice**; reserved for a future Elements flow and not read by the current implementation.
 - `PUBLIC_SITE_URL` — optional; when absent, the server derives the request host for Checkout return URLs. Set this to the preview URL when using a stable Stripe configuration.
 
-Stripe webhook endpoint: `https://<preview-host>/api/payments`, subscribed to `checkout.session.completed`. Use Stripe test mode for preview. Do not point preview at production `DATABASE_URL`; retain the existing `CJT_DB_TARGET=preview` guard.
+Stripe webhook endpoint: `https://<preview-host>/api/payments`, subscribed to `checkout.session.completed`. Use Stripe test mode for preview. Preview database isolation is `CJT_DATABASE_URL` (official Neon branch `preview/reorg/platform-v1` / `ep-rapid-bird`) plus `CJT_DB_TARGET=preview`; leave `CJT_ALLOW_PROD_DB` unset. Do not rely on Neon-managed `DATABASE_URL` alone, and do not point Preview at production (`ep-calm-field`) or sibling `reorg-platform-v1` (`ep-long-hall`). See [PREVIEW-DATABASE-SETUP.md](./PREVIEW-DATABASE-SETUP.md).
 
 ## Known limitations / remaining Partial work
 

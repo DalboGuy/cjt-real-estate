@@ -75,11 +75,13 @@ The following rules are mandatory:
 
 ## Database work
 
-- Production Neon: protected.
-- Reorganization Neon branch: development baseline.
-- Feature-specific database work should use the reorganization branch or disposable child branches.
+- Production Neon (`main` / `ep-calm-field`): protected.
+- Official Vercel Preview Neon branch: `preview/reorg/platform-v1` (`br-damp-wildflower-avtyiin5` / `ep-rapid-bird`). Runtime prefers `CJT_DATABASE_URL` with `CJT_DB_TARGET=preview`.
+- Sibling `reorg-platform-v1` (`ep-long-hall`) is legacy only — not the Preview target.
+- Feature-specific database work should use the official Preview branch or disposable child branches.
 - Schema changes are additive first.
 - Production migration requires Joel's explicit approval.
+- Details: `docs/PREVIEW-DATABASE-SETUP.md`.
 
 ## Public asset work
 

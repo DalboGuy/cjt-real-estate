@@ -1,66 +1,85 @@
 # Preview vs production database setup
 
-Status: **Needs review until Joel verifies the Vercel and Neon environment wiring.**
+Status: **Live isolation is wired.** This document matches `lib/db.js` and the Neon/Vercel setup Gate Keeper applied. Joel should still confirm a Preview inquiry lands only on the official Preview Neon branch before promoting this guarded SHA to Production.
 
-This project uses the same `DATABASE_URL` variable name in every deployment, so the **Vercel environment scope** is part of the database configuration. Preview must use the Neon reorganization/development branch and must never inherit the production database value. No connection strings or credentials belong in Git.
+No connection strings or credentials belong in Git. Names, Neon branch names, branch ids, and redacted host prefixes only.
 
-## Runtime safety guard
+## Canonical Preview wiring (current)
 
-`lib/db.js` validates the deployment scope before creating the Neon client or running schema initialization:
+Runtime (`lib/db.js`) prefers `CJT_DATABASE_URL` over Neon-managed `DATABASE_URL`. Do not rely on `DATABASE_URL` alone for Preview. The Neon integration still injects `DATABASE_URL` on **Preview and Production**; that managed value is not the Preview override.
 
-| Deployment | Required settings | Result |
+| Deployment | Required settings | Fail-closed if |
 | --- | --- | --- |
-| Vercel Production | `DATABASE_URL`, `CJT_DB_TARGET=production`, `CJT_ALLOW_PROD_DB=1` | Production access is explicitly opted in. |
-| Vercel Preview | `DATABASE_URL`, `CJT_DB_TARGET=preview`, and no `CJT_ALLOW_PROD_DB=1` | Preview can use only the explicitly labelled preview configuration. |
-| Local / non-Vercel development | `DATABASE_URL`; `CJT_DB_TARGET=local` is optional | Existing local workflow remains compatible; use a non-production database. |
+| Vercel Preview | `CJT_DATABASE_URL` (official Preview branch), `CJT_DB_TARGET=preview`, and **no** `CJT_ALLOW_PROD_DB` | Missing target, `CJT_ALLOW_PROD_DB=1` leaked into Preview, or host contains `ep-calm-field` |
+| Vercel Production | Effective URL (usually Neon-managed `DATABASE_URL`), `CJT_DB_TARGET=production`, `CJT_ALLOW_PROD_DB=1` | Either production guard is missing. **These two vars are not set on Production yet** — set them before promoting this SHA; do not set them from this docs PR. |
+| Local / non-Vercel | `CJT_DATABASE_URL` or `DATABASE_URL`; `CJT_DB_TARGET=local` is optional | `CJT_ALLOW_PROD_DB=1` is never valid outside Vercel Production |
 
-A preview with a missing target, a production target, or a leaked production opt-in fails closed before any read or write. This applies to quote/calendar reads as well as inquiry and owner writes; after the safe preview database is configured, the existing read and booking behavior is unchanged.
+A Preview deployment with a missing target, a leaked production opt-in, or a production Neon host fails closed before any read or write. That includes quote/calendar reads as well as inquiry and owner writes.
+
+## Neon branches (do not mix these up)
+
+Official Vercel Preview target:
+
+- Neon branch name: `preview/reorg/platform-v1`
+- Branch id: `br-damp-wildflower-avtyiin5`
+- Host prefix: `ep-rapid-bird`
+- Created by the Vercel/Neon integration (`creation_source: vercel`)
+
+Legacy / sibling — **not** the Vercel Preview target:
+
+- Neon branch name: `reorg-platform-v1`
+- Branch id: `br-falling-cherry-avxasm60`
+- Host prefix: `ep-long-hall`
+- Console-created sibling of production. Keep it for history if useful; do not point Preview at it.
+
+Production (rejected on Preview):
+
+- Neon branch name: `main`
+- Branch id: `br-billowing-smoke-avawnhdx`
+- Host prefix: `ep-calm-field`
+- Preview must never use this host. The runtime rejects any Preview URL whose hostname contains `ep-calm-field`.
 
 ## Vercel configuration for Joel
 
-Set these in the Vercel project UI using the indicated **Environment** scope:
+Set these in the Vercel project UI using the indicated **Environment** scope. Paste values only in Vercel/Neon — never in Git.
 
-### Preview
+### Preview (already applied — keep it this way)
 
-- `DATABASE_URL` — the connection string for Neon branch `reorg-platform-v1` or an approved disposable child branch.
+- `CJT_DATABASE_URL` — connection string for Neon branch `preview/reorg/platform-v1` (`ep-rapid-bird`). This is the override Preview actually uses.
 - `CJT_DB_TARGET` — `preview`.
-- `CJT_ALLOW_PROD_DB` — do not configure this variable for Preview.
+- `CJT_ALLOW_PROD_DB` — **leave unset**. Do not add it to Preview.
+- `DATABASE_URL` — Neon-managed; it still exists. Runtime ignores it when `CJT_DATABASE_URL` is set. Do not treat it as the Preview target.
 
-If a disposable child branch is used, it must be a child of the approved development/reorganization branch and its lifecycle must be owned by the team.
+If you ever replace Preview's override, copy the Connect snippet for `preview/reorg/platform-v1` only. Do not use `reorg-platform-v1` / `ep-long-hall` or production / `ep-calm-field`.
 
-### Production
+### Production (not yet complete — required before this guarded SHA goes live)
 
-- Keep `DATABASE_URL` pointed at the existing production Neon branch.
-- `CJT_DB_TARGET` — `production`.
-- `CJT_ALLOW_PROD_DB` — `1`.
+- Keep Neon-managed `DATABASE_URL` pointed at production `main` (`ep-calm-field`).
+- `CJT_DB_TARGET` — `production` — **not set yet**.
+- `CJT_ALLOW_PROD_DB` — `1` — **not set yet**.
 
-Configure these before deploying this branch to Production. The guard does not migrate, seed, or otherwise modify production data.
+Set those two Production-only variables in the Vercel UI **before** promoting a SHA that includes `lib/db.js` production guards. Do not set them as part of a docs-only PR. The guard does not migrate, seed, or otherwise modify production data.
+
+Until those Production vars exist, a Production deploy of this SHA will fail closed (`Production database access requires CJT_ALLOW_PROD_DB=1` / `CJT_DB_TARGET=production`). That is intentional.
 
 ### Development
 
-Use a local `.env` file or shell environment that is not committed. Point `DATABASE_URL` at a disposable/local or Neon development branch. `CJT_DB_TARGET=local` is optional when `VERCEL_ENV` is unset.
+Use a local `.env` file or shell environment that is not committed. Prefer `CJT_DATABASE_URL` (or `DATABASE_URL`) pointed at a disposable/local database or at `preview/reorg/platform-v1`. `CJT_DB_TARGET=local` is optional when `VERCEL_ENV` is unset. Never set `CJT_ALLOW_PROD_DB=1` locally.
 
-## Neon checklist
+## Joel checklist
 
-1. Confirm the branch named `reorg-platform-v1` (or an approved child) is the Preview target.
-2. Provision/enable compute and apply any required schema work on that branch only.
-3. Do not change the production branch or copy a production connection string into the Preview scope.
-4. If the development branch contains copied production records, sanitize or limit access according to the team's data-handling policy before sharing Preview URLs.
+1. In Neon, confirm the official Preview branch is `preview/reorg/platform-v1` (`br-damp-wildflower-avtyiin5` / `ep-rapid-bird`), not sibling `reorg-platform-v1`.
+2. In Vercel → Preview env: `CJT_DATABASE_URL` and `CJT_DB_TARGET=preview` are present; `CJT_ALLOW_PROD_DB` is absent.
+3. Do not delete or “fix” Neon-managed `DATABASE_URL` on Preview just because it exists — the runtime prefers `CJT_DATABASE_URL`.
+4. Redeploy Preview after any env change.
+5. Hit `/api/quote` and `/api/calendar` on Preview — they should succeed.
+6. Create one test inquiry on Preview. Confirm the hold exists on `preview/reorg/platform-v1` and **not** on production `main`.
+7. Before Production promotion of this guarded SHA: add Production `CJT_DB_TARGET=production` and `CJT_ALLOW_PROD_DB=1`. Do not add those to Preview.
 
-`ensureSchema()` still creates/updates the application tables on the configured database. That is expected on the isolated development branch and is not a production migration.
-
-## Verification checklist
-
-Joel should verify in the Vercel UI and Neon console (without putting values in Git):
-
-- Preview has the three-scope settings above and Production has its explicit opt-in.
-- A Preview deployment succeeds and `/api/quote` and `/api/calendar` remain readable.
-- A test inquiry on Preview creates a hold only on the development/reorganization branch.
-- The same test does not appear on the production branch.
-- A Preview deployment with the production opt-in accidentally copied into its scope returns a configuration error instead of opening a database connection.
+`ensureSchema()` still creates/updates application tables on whichever database the runtime connected to. That is expected on the isolated Preview branch and is not a production migration.
 
 ## Known limitations
 
-- The runtime cannot inspect Neon control-plane metadata from a `DATABASE_URL` and therefore cannot prove which Neon branch a correctly formatted URL names. The explicit `CJT_DB_TARGET` check prevents accidental environment-scope inheritance; Joel must still verify that the Preview secret value names the approved Neon branch.
-- A missing or incorrect Preview configuration disables all database-backed API routes rather than silently accepting writes. This is intentional fail-closed behavior.
-- This change does not alter pricing, availability, reservation, or owner workflow logic.
+- The runtime cannot inspect Neon control-plane metadata from a URL. `CJT_DB_TARGET=preview` plus the `ep-calm-field` host reject are the safety net; Joel still confirms `CJT_DATABASE_URL` names `preview/reorg/platform-v1`.
+- A missing or incorrect Preview configuration disables all database-backed API routes rather than silently accepting writes.
+- This document does not change pricing, availability, reservation, or owner workflow logic.
