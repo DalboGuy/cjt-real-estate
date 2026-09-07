@@ -37,6 +37,36 @@ function relatedMessageHref(bookingId){
 function isActive(r){return !['released','expired','cancelled'].includes(r.status)}
 function needsAction(r){return ['inquiry_hold','hold_verified','contract_sent','contract_signed'].includes(r.status)}
 function statusClass(status=''){return ['confirmed','completed'].includes(status)?'good':['inquiry_hold','hold_verified','contract_sent','contract_signed'].includes(status)?'warn':''}
+function optionalBool(v){return v===true?true:v===false?false:null}
+function answeredText(v){const t=String(v??'').trim();return t||''}
+function yesNoDetails(flag,details){
+  if(flag===true){
+    const extra=answeredText(details);
+    return extra?`Yes — ${extra}`:'Yes';
+  }
+  if(flag===false)return 'No';
+  return 'Not answered';
+}
+function tripLabel(tripType){return answeredText(tripType)||'Not answered'}
+function inquiryFacts(r){
+  const pet=optionalBool(r?.bringing_pet);
+  const event=optionalBool(r?.planning_event);
+  return {
+    trip:tripLabel(r?.trip_type),
+    pets:yesNoDetails(pet,r?.pet_details),
+    event:yesNoDetails(event,r?.event_details),
+    petSearch:pet===true?answeredText(r?.pet_details):'',
+    eventSearch:event===true?answeredText(r?.event_details):''
+  };
+}
+function inquiryMarkup(r){
+  const facts=inquiryFacts(r);
+  return `<div class="reservation-meta">${[
+    `Trip: ${esc(facts.trip)}`,
+    `Pets: ${esc(facts.pets)}`,
+    `Event: ${esc(facts.event)}`
+  ].map(line=>`<div>${line}</div>`).join('')}</div>`;
+}
 function showLogin(){ownerApp.classList.add('hidden');loginShell.classList.remove('hidden')}
 function showApp(){loginShell.classList.add('hidden');ownerApp.classList.remove('hidden')}
 function notice(text){const n=document.getElementById('moduleNotice');n.textContent=text;n.classList.remove('hidden');setTimeout(()=>n.classList.add('hidden'),5000)}
@@ -96,7 +126,8 @@ function filteredReservations(){
     const match=reservationFilter==='all'||(reservationFilter==='new'&&r.status==='inquiry_hold')||(reservationFilter==='active'&&isActive(r))||(reservationFilter==='action'&&needsAction(r))||(reservationFilter==='confirmed'&&r.status==='confirmed')||(reservationFilter==='closed'&&!isActive(r));
     if(!match)return false;
     if(!q)return true;
-    return [r.id,r.guest_name,r.guest_email,r.guest_phone,r.notes,r.checkin,r.checkout,r.status,r.quote?.total].join(' ').toLowerCase().includes(q);
+    const facts=inquiryFacts(r);
+    return [r.id,r.guest_name,r.guest_email,r.guest_phone,r.notes,r.checkin,r.checkout,r.status,r.quote?.total,facts.trip,facts.pets,facts.event,facts.petSearch,facts.eventSearch].join(' ').toLowerCase().includes(q);
   });
 }
 
@@ -156,7 +187,7 @@ function renderReservations(){
     card.id=`booking-${r.id}`;
     card.dataset.booking=r.id;
     const messageLink=relatedMessageHref(r.id);
-    card.innerHTML=`<div class="reservation-grid"><div><span class="badge ${statusClass(r.status)}">${esc(statusLabel(r.status))}</span><h3>${esc(r.guest_name)} · ${esc(r.checkin)} → ${esc(r.checkout)}</h3><div class="reservation-meta">${esc(r.id)} · ${esc(r.guests)} guests · ${esc(r.guest_email)}${r.guest_phone?' · '+esc(r.guest_phone):''}</div>${r.notes?`<p class="reservation-meta">${esc(r.notes)}</p>`:''}<div class="reservation-badges">${hold}${factBadges(r)}${messageLink?`<a class="badge" href="${esc(messageLink)}">Open message</a>`:''}</div>${quoteMarkup(r)}</div><div><div class="reservation-meta">Created ${esc(fmt(r.created_at))}</div><div class="actions" style="margin-top:14px">${actionMarkup(r)}</div></div></div>`;
+    card.innerHTML=`<div class="reservation-grid"><div><span class="badge ${statusClass(r.status)}">${esc(statusLabel(r.status))}</span><h3>${esc(r.guest_name)} · ${esc(r.checkin)} → ${esc(r.checkout)}</h3><div class="reservation-meta">${esc(r.id)} · ${esc(r.guests)} guests · ${esc(r.guest_email)}${r.guest_phone?' · '+esc(r.guest_phone):''}</div>${r.notes?`<p class="reservation-meta">${esc(r.notes)}</p>`:''}${inquiryMarkup(r)}<div class="reservation-badges">${hold}${factBadges(r)}${messageLink?`<a class="badge" href="${esc(messageLink)}">Open message</a>`:''}</div>${quoteMarkup(r)}</div><div><div class="reservation-meta">Created ${esc(fmt(r.created_at))}</div><div class="actions" style="margin-top:14px">${actionMarkup(r)}</div></div></div>`;
     card.querySelectorAll('button[data-action]').forEach(b=>b.onclick=()=>updateReservation(r.id,b.dataset.action,card));
     card.querySelector('[data-quote="save"]')?.addEventListener('click',()=>saveQuote(r,card));
     card.querySelector('[data-quote-input]')?.addEventListener('input',e=>{quoteDrafts[r.id]=e.target.value;});
