@@ -1,7 +1,7 @@
 const crypto=require('crypto');
 const { db, ensureSchema, expireHolds }=require('../lib/db');
 const {previewPasswordFreeActive}=require('../lib/preview-access');
-const {ownerAdjustedQuote}=require('../lib/pricing');
+const {ownerAdjustedQuote,normalizeOwnerQuote}=require('../lib/pricing');
 const {paymentSnapshot}=require('../lib/payments');
 const {getOtaBlockedDates, resolveFeedUrl, FEED_ENV_BY_SOURCE, REQUIRED_FEEDS, urlHostHint}=require('../lib/availability');
 
@@ -55,7 +55,7 @@ module.exports=async function(req,res){
         ORDER BY CASE WHEN r.status IN ('released','expired','cancelled') THEN 1 ELSE 0 END, r.checkin ASC, r.created_at DESC
         LIMIT 250
       `;
-      const reservationsWithPayments=await Promise.all(reservations.map(async reservation=>({...reservation,payment:await paymentSnapshot(sql,reservation.id)})));
+      const reservationsWithPayments=await Promise.all(reservations.map(async reservation=>({...reservation,quote:normalizeOwnerQuote(reservation.quote),payment:await paymentSnapshot(sql,reservation.id)})));
       return res.status(200).json({reservations:reservationsWithPayments,temporaryPasswordFree:previewPasswordFreeActive(req)});
     }
 
