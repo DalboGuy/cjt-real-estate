@@ -64,7 +64,7 @@
             <div class="card">
               <div class="card-head"><div><h3>Season schedule</h3><p>Rates and minimum stays are loaded from the booking engine.</p></div><span id="seasonCount" class="badge good">Loading…</span></div>
               <div id="seasonTable" class="pricing-table-wrap"><div class="empty">Loading published seasons…</div></div>
-              <p class="pricing-note" style="margin-bottom:0">Weekend rates apply Friday and Saturday. Dates outside the published window are not available for online direct-booking quotes.</p>
+              <p id="weekendNote" class="pricing-note" style="margin-bottom:0">Weekend rates and the published window load with the schedule.</p>
             </div>
             <div class="card disabled-card" style="margin-top:16px"><div class="card-head"><div><h3>Season overrides</h3><p>Date-level changes will be managed here in a future owner workflow.</p></div><span class="badge">Planned</span></div><button class="btn btn-secondary" type="button" disabled>Overrides coming soon</button></div>
           </section>
@@ -75,7 +75,7 @@
               <form id="quoteForm" class="pricing-form">
                 <label>Check-in<input id="quoteCheckin" type="date" required></label>
                 <label>Check-out<input id="quoteCheckout" type="date" required></label>
-                <label>Guests<input id="quoteGuests" type="number" min="1" value="2" required></label>
+                <label>Guests<input id="quoteGuests" type="number" min="1" max="14" value="2" required></label>
                 <button class="btn btn-primary" type="submit">Calculate quote</button>
               </form>
               <div id="quoteResult" class="quote-result hidden"></div>
@@ -102,14 +102,49 @@
       if(!r.ok)throw new Error(d.message||'Pricing data could not be loaded.');
       return d;
     }
+    function joinDays(days){
+      const list=(days||[]).filter(Boolean);
+      if(!list.length)return 'the configured weekend days';
+      if(list.length===1)return list[0];
+      if(list.length===2)return `${list[0]} and ${list[1]}`;
+      return `${list.slice(0,-1).join(', ')}, and ${list[list.length-1]}`;
+    }
     function renderPricing(d){
       const split=`${Math.round(Number(d.advancePaymentPct)*100)}% at booking · balance ${d.splitPaymentThresholdDays} days before arrival`;
+      const weekendLabel=joinDays(d.weekendDays);
       summary.innerHTML=[['Cleaning fee',money(d.cleaningFee)],['Tax rate',`${Number(d.taxRate)*100}%`],['Pricing through',date(d.pricingThrough)],['Max guests',d.maxGuests],['Weekend days',(d.weekendDays||[]).map(v=>v.slice(0,3)).join(' / ')],['Payment terms',split]].map(([label,value])=>`<div class="summary-card"><span>${esc(label)}</span><b>${esc(value)}</b></div>`).join('');
       document.getElementById('seasonCount').textContent=`${d.seasons.length} seasons`;
+      document.getElementById('weekendNote').textContent=`Weekend rates apply ${weekendLabel}. Dates outside the published window are not available for online direct-booking quotes.`;
+      const guestsInput=document.getElementById('quoteGuests');
+      const maxGuests=Number(d.maxGuests)||14;
+      guestsInput.max=String(maxGuests);
+      if(Number(guestsInput.value)>maxGuests)guestsInput.value=String(maxGuests);
       seasonTable.innerHTML=`<table class="pricing-table"><thead><tr><th>Season</th><th>Start</th><th>End</th><th class="money">Weekday</th><th class="money">Weekend</th><th>Min nights</th></tr></thead><tbody>${d.seasons.map(s=>`<tr><td>${esc(s.name)}</td><td>${esc(date(s.start))}</td><td>${esc(date(s.end))}</td><td class="money">${money(s.weekday)}</td><td class="money">${money(s.weekend)}</td><td>${esc(s.minNights)}</td></tr>`).join('')}</tbody></table>`;
       document.getElementById('lastChecked').textContent='Schedule loaded';
     }
-    function quoteError(error){return `<div class="quote-error">${esc(error.message||'Quote could not be calculated.')}</div>`}
+    function quoteError(payload){
+      const code=payload&&payload.code;
+      const msg=payload&&payload.message;
+      let title='Quote could not be calculated';
+      let detail=msg||'Try again with different dates or guests.';
+      if(code==='OTA_FEED_CONFIG_MISSING'||/Missing required OTA calendar feed/i.test(msg||'')){
+        title='Calendar feeds are not configured';
+        detail='Preview is missing AIRBNB_ICAL_URL and/or VRBO_ICAL_URL, so availability-backed quotes fail closed. The season schedule above is still valid; fix calendar env, then retry the tester.';
+      }else if(code==='dates_unavailable'){
+        title='Those nights are unavailable';
+        detail=msg||'One or more requested nights are blocked on the live calendar.';
+      }else if(code==='pricing_not_published'){
+        title='Outside the published pricing window';
+        detail=msg;
+      }else if(code==='minimum_stay'||code==='invalid_dates'||code==='invalid_guests'){
+        title='Quote rules blocked this stay';
+        detail=msg;
+      }else if(code==='quote_unavailable'){
+        title='Quote service unavailable';
+        detail=msg||'The booking engine could not calculate this quote right now.';
+      }
+      return `<div class="quote-error"><strong style="display:block;margin-bottom:4px">${esc(title)}</strong>${esc(detail)}</div>`;
+    }
     function renderQuote(q){
       const s=q.paymentSchedule||{};
       const schedule=s.mode==='split'?`<strong>Split payment</strong>${money(s.dueAtBooking)} due at booking · ${money(s.remainingBalance)} due ${esc(s.balanceDueDateLabel||'before arrival')}.`:`<strong>Full payment</strong>${money(s.dueAtBooking||q.total)} due at booking.`;
@@ -119,7 +154,7 @@
     document.getElementById('quoteForm').addEventListener('submit',async e=>{
       e.preventDefault();quoteResult.classList.remove('hidden');quoteResult.innerHTML='<div class="meta">Calculating…</div>';
       const params=new URLSearchParams({checkin:document.getElementById('quoteCheckin').value,checkout:document.getElementById('quoteCheckout').value,guests:document.getElementById('quoteGuests').value});
-      try{const r=await fetch(`/api/quote?${params}`,{cache:'no-store'}),d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.message||'The quote could not be calculated.');renderQuote(d.quote)}catch(error){quoteResult.innerHTML=quoteError(error)}
+      try{const r=await fetch(`/api/quote?${params}`,{cache:'no-store'}),d=await r.json().catch(()=>({}));if(!r.ok){quoteResult.innerHTML=quoteError({code:d.error||d.code,message:d.message||'The quote could not be calculated.'});return}renderQuote(d.quote)}catch(error){quoteResult.innerHTML=quoteError({code:'quote_unavailable',message:error.message})}
     });
     loginForm.addEventListener('submit',async e=>{
       e.preventDefault();loginMsg.textContent='Signing in…';
