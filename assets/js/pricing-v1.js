@@ -366,14 +366,14 @@
   });
 
   (async()=>{
+    showApp();
     try{
       const data=await getPricing();
-      showApp();
       resetSeasonForm();
       renderPricing(data);
     }catch(error){
       if(error.message==='unauthorized')showLogin();
-      else{showApp();showNotice(error.message,'err')}
+      else showNotice(error.message,'err');
     }
   })();
 })();

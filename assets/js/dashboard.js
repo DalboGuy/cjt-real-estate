@@ -68,9 +68,9 @@ function renderTasks(t){
 }
 
 async function load(){
+  showApp();
   try{
     const data=await fetchDashboard();
-    showApp();
     renderCommunications(data.communications||{});
     renderReservations(data.reservations||{});
     renderFinancials(data.financials||{});
