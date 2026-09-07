@@ -490,7 +490,16 @@
     }catch(error){
       summary?.classList.remove('is-loading');
       if(error.message==='unauthorized')showLogin();
-      else{showApp();showNotice(error.message,'err')}
+      else{
+        showApp();
+        showNotice(error.message,'err');
+        if(seasonTable)seasonTable.innerHTML='<div class="empty">Published seasons could not be loaded. The Neon schedule was not changed.</div>';
+        if(shell()?.setLastChecked)shell().setLastChecked('Load failed');
+        else{
+          const last=document.getElementById('lastChecked');
+          if(last)last.textContent='Load failed';
+        }
+      }
     }finally{
       if(refreshBtn)refreshBtn.disabled=false;
     }

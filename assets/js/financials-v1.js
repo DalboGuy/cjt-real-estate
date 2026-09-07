@@ -312,6 +312,12 @@ async function loadFinancials(){
     if(e.message==='unauthorized')return showLogin();
     showApp();
     notice('Financials could not be loaded. Stored quotes and payments were not changed.');
+    if(financialList)financialList.innerHTML='<div class="empty">Financials could not be loaded. Stored quotes and payments were not changed.</div>';
+    if(window.CJTOwnerShell?.setLastChecked)window.CJTOwnerShell.setLastChecked('Load failed');
+    else{
+      const last=document.getElementById('lastChecked');
+      if(last)last.textContent='Load failed';
+    }
   }finally{
     if(refreshBtn)refreshBtn.disabled=false;
   }
