@@ -206,6 +206,7 @@
     if($('guestPlus'))$('guestPlus').disabled=guests>=MAX_GUESTS;
     syncFormGuests();
     updateSelectors();
+    if($('bookingModal')?.classList.contains('show'))paintBookingSummary();
     resetQuote();
     if(selectedStart&&selectedEnd)loadQuote();
   }
@@ -219,6 +220,7 @@
     $('quoteLodging').textContent=money(q.lodgingSubtotal);$('quoteCleaning').textContent=money(q.cleaningFee);$('quoteTax').textContent=money(q.taxes);$('quoteTotal').textContent=total;$('quoteBreakdown').classList.add('show');$('quoteError').hidden=true;
     const p=q.paymentSchedule||{};if(p.mode==='split')$('paymentCopy').innerHTML=`<strong>${money(p.dueAtBooking)} initially (50%)</strong>Remaining ${money(p.remainingBalance)} due ${esc(p.balanceDueDateLabel||'30 days before arrival')}. Payment collection is deferred — you will not be charged now.`;else $('paymentCopy').innerHTML=`<strong>${total} due in full</strong>${p.reason==='within_30_days'?'Arrival is within 30 days, so the documented schedule requires full payment when the booking is completed.':'Full payment is documented for this reservation.'} Payment collection is deferred — you will not be charged now.`;
     paintPrimaryCtas();
+    if($('bookingModal')?.classList.contains('show'))paintBookingSummary();
   }
   async function loadQuote(){
     if(!selectedStart||!selectedEnd)return resetQuote();
