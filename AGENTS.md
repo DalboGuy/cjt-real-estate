@@ -9,6 +9,7 @@ This repository is shared work for the CJT Realty platform. These rules apply to
 3. Read the GitHub Issue for the feature you are assigned.
 4. Read `docs/AI-COLLABORATION.md`.
 5. If the issue touches the current repair effort, read `docs/REPAIR-BACKLOG-2026-09-06.md`.
+6. Read `docs/INTEGRATION-RECONCILIATION.md` for the integration baseline SHA, open PR map, and merge dispositions.
 
 ## Branching and ownership
 
