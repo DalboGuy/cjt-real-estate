@@ -73,7 +73,7 @@ module.exports = async function (req, res) {
     } catch (e) {
       const detail = String(e.message || '').toLowerCase();
       if (detail.includes('reservations_no_overlap')) {
-        return res.status(409).json({ error: 'dates_unavailable', message: 'Those dates were just placed on hold by another guest.' });
+        return res.status(409).json({ error: 'dates_unavailable', message: 'Those dates are no longer available. Please choose different dates.' });
       }
       if (isOccupancyConstraintViolation(e) && guests > 12) {
         return res.status(503).json({ error: 'occupancy_migration_pending', message: 'The home accommodates up to 14 guests, but online submission for groups of 13–14 is being updated. Please contact CJT Realty and we will place the request directly.' });
@@ -99,10 +99,10 @@ module.exports = async function (req, res) {
       calendarBlocked: true,
       confirmed: false,
       paymentCollected: false,
-      message: 'Your request is not yet confirmed. Those dates are blocked on the public calendar for 24 hours while CJT Realty reviews the request. No payment is collected now.'
+      message: 'Your request is not yet confirmed. CJT Realty will review it. The stay is not confirmed until the owners approve. No payment is collected now.'
     });
   } catch (e) {
     console.error('inquiry error', e);
-    return res.status(500).json({ error: 'booking_unavailable', message: 'We could not place the hold. Please contact CJT Realty directly.' });
+    return res.status(500).json({ error: 'booking_unavailable', message: 'We could not send the booking request. Please contact CJT Realty directly.' });
   }
 };

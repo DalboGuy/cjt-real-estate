@@ -63,11 +63,11 @@
   paintSave(saved);$('saveBtn').onclick=()=>{const next=$('saveBtn').dataset.saved!=='1';localStorage.setItem('cjt_sand_sea_saved',next?'1':'0');paintSave(next)};
 
   const CTA_CHECK='Check availability';
-  const CTA_HOLD='Request 24-hour hold (no payment)';
-  const CTA_SUBMIT='Send hold request — not a confirmed booking';
+  const CTA_REQUEST='Request to book';
+  const CTA_SUBMIT='Send booking request';
   let blocked=new Set(),calendarHealthy=false,selectedStart='',selectedEnd='',guests=1,currentQuote=null;
   let pickerCursor=new Date();pickerCursor=new Date(pickerCursor.getFullYear(),pickerCursor.getMonth(),1);
-  let ignoreBackdropUntil=0;
+  let ignoreBackdropUntil=0,calendarReturnTo='listing',requestStep='guest';
   const calendarModal=$('calendarModal');
   function isMobileBooking(){return window.matchMedia('(max-width:780px)').matches}
   function guardBackdrop(){ignoreBackdropUntil=Date.now()+600}
@@ -89,10 +89,12 @@
   function updateSelectors(){const inText=selectedStart?fmt(selectedStart).replace(/, \d{4}/,''):'Add date',outText=selectedEnd?fmt(selectedEnd).replace(/, \d{4}/,''):'Add date';document.querySelectorAll('[data-checkin-value]').forEach(el=>el.textContent=inText);document.querySelectorAll('[data-checkout-value]').forEach(el=>el.textContent=outText);document.querySelectorAll('[data-guests-value]').forEach(el=>el.textContent=`${guests} guest${guests===1?'':'s'}`)}
   function paintPrimaryCtas(){
     const ready=!!(selectedStart&&selectedEnd&&currentQuote);
-    const label=ready?CTA_HOLD:CTA_CHECK;
+    const label=ready?CTA_REQUEST:CTA_CHECK;
     [$('bookNowBtn'),$('mobileBookBtn')].forEach(btn=>{if(!btn)return;btn.textContent=label;btn.classList.toggle('cta-hold',ready)});
     const note=document.querySelector('.charge-note');
-    if(note)note.textContent=ready?'All-in quote shown. This requests a 24-hour hold for CJT review. No payment now. Not a confirmed booking.':'Choose dates to see the all-in price. No payment to check availability.';
+    if(note)note.textContent=ready?'All-in quote shown. Request to book sends a booking request — not confirmed until the owners approve. No payment now.':'Choose dates to see the all-in price. No payment to check availability.';
+    const change=$('changeDatesCard');
+    if(change)change.hidden=!ready;
     syncTripDatesClass();
   }
   function syncTripDatesClass(){
@@ -122,18 +124,33 @@
   function completeDatePick(){
     guardBackdrop();
     calendarModal.classList.remove('show');
+    if(calendarReturnTo==='guest'){
+      document.body.classList.add('modal-open');
+      Promise.resolve(loadQuote()).finally(()=>openBooking({step:'guest'}));
+      return;
+    }
     document.body.classList.remove('modal-open');
     revealBookingStep();
     Promise.resolve(loadQuote()).finally(()=>revealBookingStep());
   }
-  function openCalendar(){
+  function openCalendar(from){
     guardBackdrop();
+    calendarReturnTo=from||(selectedStart&&selectedEnd?'card':'listing');
+    const title=$('calendarTitle');
+    if(title)title.textContent=selectedStart&&selectedEnd?'Change your dates':'Choose your dates';
     if(selectedStart){const d=toUtc(selectedStart);pickerCursor=new Date(d.getUTCFullYear(),d.getUTCMonth(),1)}
     renderPicker();calendarModal.classList.add('show');document.body.classList.add('modal-open');
   }
-  function closeCalendar(){calendarModal.classList.remove('show');document.body.classList.remove('modal-open')}
-  document.querySelectorAll('[data-open-calendar]').forEach(b=>b.onclick=e=>{e.preventDefault();e.stopPropagation();openCalendar()});
-  $('calendarClose').onclick=closeCalendar;
+  function backFromCalendar(){
+    calendarModal.classList.remove('show');
+    if(calendarReturnTo==='guest'&&selectedStart&&selectedEnd){openBooking({step:'guest'});return}
+    document.body.classList.remove('modal-open');
+    if(selectedStart&&selectedEnd)revealBookingStep();
+  }
+  function closeCalendar(){backFromCalendar()}
+  document.querySelectorAll('[data-open-calendar]').forEach(b=>b.onclick=e=>{e.preventDefault();e.stopPropagation();openCalendar(selectedStart&&selectedEnd?'card':'listing')});
+  $('calendarClose').onclick=backFromCalendar;
+  $('calendarBack')?.addEventListener('click',backFromCalendar);
   $('calPrev').onclick=()=>{pickerCursor=new Date(pickerCursor.getFullYear(),pickerCursor.getMonth()-1,1);renderPicker()};
   $('calNext').onclick=()=>{pickerCursor=new Date(pickerCursor.getFullYear(),pickerCursor.getMonth()+1,1);renderPicker()};
   calendarModal.addEventListener('pointerdown',e=>{if(e.target!==calendarModal||shouldIgnoreBackdrop())return;closeCalendar()});
@@ -159,8 +176,8 @@
     const el=$('calendarHealth');
     calendarHealthy=!!(health&&health.ok)&&!fetchFailed;
     el.classList.toggle('is-degraded',!calendarHealthy);
-    if(fetchFailed){el.textContent='Live calendar feeds could not be refreshed. Open nights stay selectable; only past dates and known blocked nights are disabled. A hold request still rechecks availability.';return}
-    if(health&&health.degraded&&health.degraded.length){el.textContent=`Calendar feeds are degraded (${health.degraded.join(', ')}). Open nights stay selectable; blocked nights stay blocked. A hold request still rechecks live availability.`;return}
+    if(fetchFailed){el.textContent='Live calendar feeds could not be refreshed. Open nights stay selectable; only past dates and known blocked nights are disabled. A booking request still rechecks availability.';return}
+    if(health&&health.degraded&&health.degraded.length){el.textContent=`Calendar feeds are degraded (${health.degraded.join(', ')}). Open nights stay selectable; blocked nights stay blocked. A booking request still rechecks live availability.`;return}
     el.textContent=(health&&health.message)||'Availability synced from connected calendars.';
   }
   async function refreshAvailability(){
@@ -197,19 +214,85 @@
   $('refreshQuote').onclick=loadQuote;
 
   const bookingModal=$('bookingModal'),bookingForm=$('bookingForm');
-  function openBooking(){if(!selectedStart||!selectedEnd){openCalendar();return}if(!currentQuote){loadQuote();return}$('bookingSummary').innerHTML=`<strong>${fmt(selectedStart)} – ${fmt(selectedEnd)} · ${guests} guest${guests===1?'':'s'}</strong><span>${currentQuote.nights} nights · ${money(currentQuote.total)} total</span>`;bookingModal.classList.add('show');document.body.classList.add('modal-open')}
-  function closeBooking(){bookingModal.classList.remove('show');document.body.classList.remove('modal-open')}
-  $('bookNowBtn').onclick=openBooking;$('mobileBookBtn').onclick=openBooking;$('bookingClose').onclick=closeBooking;bookingModal.addEventListener('click',e=>{if(e.target===bookingModal)closeBooking()});
+  function paintBookingSummary(){
+    const nights=currentQuote?`${currentQuote.nights} night${currentQuote.nights===1?'':'s'} · ${money(currentQuote.total)} total`:'Dates selected';
+    $('bookingSummary').innerHTML=`<strong>${fmt(selectedStart)} – ${fmt(selectedEnd)} · ${guests} guest${guests===1?'':'s'}</strong><span>${nights}</span><button type="button" id="changeDatesModal" class="micro-link change-dates-link">Change dates</button>`;
+    const change=$('changeDatesModal');
+    if(change)change.onclick=()=>{bookingModal.classList.remove('show');openCalendar('guest')};
+  }
+  function showRequestStep(step){
+    requestStep=step==='review'?'review':'guest';
+    const guestStep=$('guestDetailsStep'),reviewStep=$('reviewStep');
+    if(guestStep)guestStep.hidden=requestStep!=='guest';
+    if(reviewStep)reviewStep.hidden=requestStep!=='review';
+    const kicker=$('bookingStepKicker'),title=$('bookingStepTitle');
+    if(kicker)kicker.textContent=requestStep==='review'?'Step 2 of 2':'Step 1 of 2';
+    if(title)title.textContent=requestStep==='review'?'Review and send':'Your details';
+    const agree=$('requestAgree');
+    if(agree)agree.required=requestStep==='review';
+  }
+  function syncFormGuests(){const input=$('formGuests');if(input)input.value=String(guests)}
+  function collectGuestFields(){
+    const f=new FormData(bookingForm);
+    const count=Math.max(1,Math.min(14,Number(f.get('form_guests')||guests)));
+    if(count!==guests)updateGuests(count);
+    return {
+      name:String(f.get('name')||'').trim(),
+      email:String(f.get('email')||'').trim(),
+      phone:String(f.get('phone')||'').trim(),
+      trip_type:String(f.get('trip_type')||''),
+      pets:String(f.get('pets')||'no'),
+      event:String(f.get('event')||'no'),
+      message:String(f.get('message')||'').trim(),
+      guests
+    };
+  }
+  function paintReview(details){
+    const pet=details.pets==='yes'?'Yes — please review':'No';
+    const party=details.event==='yes'?'Yes — please review':'No';
+    $('reviewDetails').innerHTML=`<p><strong>${esc(details.name)}</strong><br>${esc(details.email)}${details.phone?`<br>${esc(details.phone)}`:''}</p><p>${guests} guest${guests===1?'':'s'} · ${esc(details.trip_type||'Trip')}</p><p>Pets: ${pet}<br>Party or event: ${party}</p>${details.message?`<p>${esc(details.message)}</p>`:''}<p>This is a booking request. It is not confirmed until the owners approve. No payment now.</p>`;
+  }
+  function openBooking(opts){
+    if(!selectedStart||!selectedEnd){openCalendar('listing');return}
+    if(!currentQuote){loadQuote();return}
+    const step=(opts&&opts.step)||'guest';
+    if($('formGuests'))syncFormGuests();
+    paintBookingSummary();
+    showRequestStep(step);
+    bookingModal.classList.add('show');
+    document.body.classList.add('modal-open');
+  }
+  function closeBooking(){bookingModal.classList.remove('show');document.body.classList.remove('modal-open');if(selectedStart&&selectedEnd)revealBookingStep()}
+  function backFromBooking(){
+    if(requestStep==='review'){showRequestStep('guest');return}
+    bookingModal.classList.remove('show');
+    openCalendar('card');
+  }
+  $('bookNowBtn').onclick=()=>openBooking({step:'guest'});
+  $('mobileBookBtn').onclick=()=>openBooking({step:'guest'});
+  $('bookingClose').onclick=closeBooking;
+  $('bookingBack')?.addEventListener('click',backFromBooking);
+  $('changeDatesCard')?.addEventListener('click',()=>openCalendar('card'));
+  bookingModal.addEventListener('click',e=>{if(e.target===bookingModal)closeBooking()});
   $('dismissBookingStep')?.addEventListener('click',()=>{document.body.classList.add('booking-step-collapsed');document.body.classList.remove('has-trip-dates');const card=$('bookingCard');if(card)card.classList.remove('is-next-step');syncSupportChat();const bar=document.querySelector('.mobile-bookbar');if(bar)try{bar.scrollIntoView({behavior:'smooth',block:'end'})}catch{}});
+  $('continueToReview')?.addEventListener('click',()=>{
+    if(!bookingForm.reportValidity())return;
+    const details=collectGuestFields();
+    paintReview(details);
+    showRequestStep('review');
+  });
   bookingForm.addEventListener('submit',async e=>{
-    e.preventDefault();if(!currentQuote||!selectedStart||!selectedEnd)return;const btn=$('bookingSubmit'),msg=$('bookingMessage'),f=new FormData(bookingForm);btn.disabled=true;btn.textContent='Sending your request…';msg.className='form-message';msg.textContent='';
-    const payload={name:f.get('name'),email:f.get('email'),phone:f.get('phone'),checkin:selectedStart,checkout:selectedEnd,guests:String(guests),message:String(f.get('message')||'').trim(),pets:f.get('pets'),event:f.get('event'),trip_type:f.get('trip_type')};
-    try{const r=await fetch('/api/inquiries',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}),d=await r.json();if(!r.ok)throw new Error(d.message||'We could not send the hold request.');(d.blockedDates||[]).forEach(date=>blocked.add(date));renderPicker();msg.className='form-message show';msg.innerHTML=`<strong>Request received — not yet confirmed.</strong><br>Booking reference: ${esc(d.reservation.id)}<br>Those dates are blocked on the public calendar for 24 hours while CJT Realty reviews the request. No payment was collected.`;btn.style.display='none';await refreshAvailability()}catch(err){msg.className='form-message error show';msg.textContent=err.message}finally{btn.disabled=false;btn.textContent=CTA_SUBMIT}});
+    e.preventDefault();if(!currentQuote||!selectedStart||!selectedEnd)return;
+    if(requestStep!=='review'){if(bookingForm.reportValidity()){paintReview(collectGuestFields());showRequestStep('review')}return}
+    const btn=$('bookingSubmit'),msg=$('bookingMessage'),details=collectGuestFields();
+    btn.disabled=true;btn.textContent='Sending your request…';msg.className='form-message';msg.textContent='';
+    const payload={name:details.name,email:details.email,phone:details.phone,checkin:selectedStart,checkout:selectedEnd,guests:String(guests),message:details.message,pets:details.pets,event:details.event,trip_type:details.trip_type};
+    try{const r=await fetch('/api/inquiries',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}),d=await r.json();if(!r.ok)throw new Error(d.message||'We could not send the booking request.');(d.blockedDates||[]).forEach(date=>blocked.add(date));renderPicker();msg.className='form-message show';msg.innerHTML=`<strong>Request received — not yet confirmed.</strong><br>Booking reference: ${esc(d.reservation.id)}<br>CJT Realty will review your request. The stay is not confirmed until the owners approve. No payment was collected.`;btn.style.display='none';const back=$('bookingBack'),cont=$('continueToReview');if(back)back.hidden=true;if(cont)cont.hidden=true;await refreshAvailability()}catch(err){msg.className='form-message error show';msg.textContent=err.message}finally{btn.disabled=false;if(btn.style.display!=='none')btn.textContent=CTA_SUBMIT}});
 
   $('amenitiesBtn').onclick=()=>{$('amenitiesModal').classList.add('show');document.body.classList.add('modal-open')};$('amenitiesClose').onclick=()=>{$('amenitiesModal').classList.remove('show');document.body.classList.remove('modal-open')};$('amenitiesModal').addEventListener('click',e=>{if(e.target===$('amenitiesModal'))$('amenitiesClose').click()});
 
   window.addEventListener('message',e=>{if(e.origin!==location.origin||e.data?.type!=='cjt-reviews-height')return;const frame=$('houfyReviews');if(frame&&Number(e.data.height)>200)frame.style.height=`${Math.min(2200,Number(e.data.height)+12)}px`});
-  document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(calendarModal.classList.contains('show'))closeCalendar();if(bookingModal.classList.contains('show'))closeBooking();if($('amenitiesModal').classList.contains('show'))$('amenitiesClose').click()});
+  document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(calendarModal.classList.contains('show'))backFromCalendar();else if(bookingModal.classList.contains('show'))backFromBooking();else if($('amenitiesModal').classList.contains('show'))$('amenitiesClose').click()});
   function syncSupportChat(){
     const api=window.Tawk_API;
     if(!api)return;
