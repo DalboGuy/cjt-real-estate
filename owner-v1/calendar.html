@@ -53,23 +53,31 @@
       </header>
 
       <div class="content">
-        <div class="section-title"><div><h2>Property calendar</h2><p>Direct holds, OTA iCal blocks, owner stays, and manual blackouts on one grid. Outbound push to live Airbnb/VRBO is paused; other sites import the CJT .ics link in Connections.</p></div><span class="status-pill" id="viewStatusPill">Loading…</span></div>
+        <div class="section-title cal-section-title"><div><h2>Calendar</h2><p>Direct stays, OTA iCal blocks, owner stays, and manual blackouts on one grid. Outbound push to live Airbnb/VRBO is paused; other sites import the CJT .ics link in Connections.</p></div><span class="status-pill" id="viewStatusPill" data-state="loading">Loading…</span></div>
         <div id="moduleNotice" class="notice hidden"></div>
         <div id="occupancyStrip" class="summary-grid cal-occupancy"></div>
         <p class="metric-label cal-occupancy-note">Occupancy counts guest holds, confirmed stays, and OTA blocks. Owner stays and manual blocks close nights but are not booked %.</p>
         <div id="syncStrip" class="cal-sync" aria-live="polite"></div>
         <div id="conflictBanner" class="notice cal-conflict hidden"></div>
 
-        <div class="cal-toolbar">
+        <div class="cal-toolbar owner-sticky-controls" data-module="calendar">
           <div class="cal-month-nav">
             <button class="btn btn-secondary" id="calPrev" type="button">‹</button>
-            <h3 id="calTitle">Loading…</h3>
+            <h3 id="calTitle">Calendar</h3>
             <button class="btn btn-secondary" id="calNext" type="button">›</button>
             <button class="btn btn-secondary" id="calToday" type="button">Today</button>
           </div>
-          <div class="filter-row">
-            <button class="filter-btn active" id="viewMonth" type="button">Month</button>
-            <button class="filter-btn" id="viewWeek" type="button">Week</button>
+          <div class="cal-toolbar-actions">
+            <div class="cal-sticky-actions">
+              <button class="btn btn-primary" id="syncCalendars" type="button">Sync Calendars</button>
+              <button class="btn btn-secondary" id="openBlockForm" type="button">+ Block Dates</button>
+            </div>
+            <div class="filter-row cal-view-toggles" role="group" aria-label="Calendar view">
+              <button class="filter-btn active" id="viewMonth" type="button">Month</button>
+              <button class="filter-btn" id="viewWeek" type="button">Week</button>
+              <button class="filter-btn" id="viewYear" type="button" disabled title="Needs calendar view support">Year</button>
+              <button class="filter-btn" id="viewDay" type="button" disabled title="Needs calendar view support">Day</button>
+            </div>
             <button class="btn btn-secondary" id="copySummary" type="button">Copy month summary</button>
           </div>
         </div>
@@ -82,7 +90,8 @@
           <label><input id="prepBuffer" type="checkbox"> 1-day prep after checkout (off until you opt in)</label>
         </div>
         <div id="calendarLegend" class="cal-legend"></div>
-        <div id="calendarMount"></div>
+        <div id="calendarMount" class="cal-mount" data-state="loading" aria-busy="true"></div>
+        <div id="calendarFailed" class="empty cal-failed-note hidden" role="status"></div>
         <div id="calendarEmpty" class="empty cal-empty-note hidden">No stays or blocks in this view. Open nights stay bookable on the guest page unless an OTA feed is missing.</div>
 
         <div class="module-grid" style="margin-top:18px">
@@ -93,8 +102,8 @@
             </div>
           </section>
           <aside class="module-side">
-            <div class="card">
-              <div class="card-head"><div><h3>Close nights</h3><p>Manual blackout or owner personal stay. End date is the morning the home is available again.</p></div><span class="badge">Sand &amp; Sea Manor</span></div>
+            <div class="card" id="blockFormCard">
+              <div class="card-head"><div><h3>Block Dates / Owner Stay</h3><p>Manual blackout or owner personal stay. End date is the morning the home is available again.</p></div><span class="badge">Sand &amp; Sea Manor</span></div>
               <form id="blockForm" class="cal-form">
                 <label>Type
                   <select id="blockKind" required>
@@ -114,6 +123,7 @@
 
         <details class="cal-connections">
           <summary><span>Calendar connections (iCal import / export)</span><span class="status-pill" id="feedStatusPill">Loading…</span></summary>
+          <p class="metric-label cal-connections-note">Live check and Refresh all links only probe saved feeds — they do not replace Sync Calendars, which reloads this Calendar snapshot.</p>
           <section class="grid">
             <article class="card span-12">
               <div class="card-head"><div><h3>Step 1</h3><p>Add this link on the other website (Airbnb / VRBO / Booking.com calendar import).</p></div><span class="badge good">Export</span></div>
@@ -165,6 +175,7 @@
     <button class="btn btn-secondary" id="drawerClose" type="button">Close</button>
     <h2 id="drawerTitle">Night detail</h2>
     <p id="drawerMeta" class="metric-label"></p>
+    <div id="drawerActions" class="cal-drawer-actions"></div>
     <div id="drawerBody"></div>
   </aside>
 
