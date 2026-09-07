@@ -137,10 +137,55 @@
   function openBooking(){if(!selectedStart||!selectedEnd){openCalendar();return}if(!currentQuote){loadQuote();return}const trust=(window.CJTQuoteTrust&&window.CJTQuoteTrust.guestPaymentTrust)?window.CJTQuoteTrust.guestPaymentTrust(currentQuote):null;$('bookingSummary').innerHTML=`<strong>${fmt(selectedStart)} – ${fmt(selectedEnd)} · ${guests} guest${guests===1?'':'s'}</strong><span>${currentQuote.nights} nights · ${money(currentQuote.total)} total</span>${trust?`<span>${esc(trust.depositLabel)} · ${money(trust.depositAmount)}</span>`:''}`;bookingModal.classList.add('show');document.body.classList.add('modal-open')}
   function closeBooking(){bookingModal.classList.remove('show');document.body.classList.remove('modal-open')}
   $('bookNowBtn').onclick=openBooking;$('mobileBookBtn').onclick=openBooking;$('bookingClose').onclick=closeBooking;bookingModal.addEventListener('click',e=>{if(e.target===bookingModal)closeBooking()});
+  function syncConditionalTripFields(){
+    const petYes=$('pets').value==='yes';
+    const eventYes=$('event').value==='yes';
+    $('petDetailsField').hidden=!petYes;
+    $('eventDetailsField').hidden=!eventYes;
+    $('petDetails').required=petYes;
+    $('eventDetails').required=eventYes;
+    if(!petYes)$('petDetails').value='';
+    if(!eventYes)$('eventDetails').value='';
+  }
+  $('pets').addEventListener('change',syncConditionalTripFields);
+  $('event').addEventListener('change',syncConditionalTripFields);
+  syncConditionalTripFields();
+
   bookingForm.addEventListener('submit',async e=>{
-    e.preventDefault();if(!currentQuote||!selectedStart||!selectedEnd)return;const btn=$('bookingSubmit'),msg=$('bookingMessage'),f=new FormData(bookingForm);btn.disabled=true;btn.textContent='Holding your dates…';msg.className='form-message';msg.textContent='';const details=[];if(f.get('pets')==='yes')details.push('Guest is asking for pet approval.');if(f.get('event')==='yes')details.push('Guest is asking about an event/gathering.');if(f.get('message'))details.push(String(f.get('message')).trim());
-    const payload={name:f.get('name'),email:f.get('email'),phone:f.get('phone'),checkin:selectedStart,checkout:selectedEnd,guests:String(guests),message:details.join('\n')};
-    try{const r=await fetch('/api/inquiries',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}),d=await r.json();if(!r.ok)throw new Error(d.message||'We could not place the booking hold.');msg.className='form-message show';msg.innerHTML=`<strong>Your dates are held for 24 hours.</strong><br>Booking reference: ${esc(d.reservation.id)}<br>CJT Realty will review the request and continue the agreement/payment process.`;btn.style.display='none';await refreshAvailability()}catch(err){msg.className='form-message error show';msg.textContent=err.message}finally{btn.disabled=false;btn.textContent='Book Now — Hold These Dates'}});
+    e.preventDefault();
+    if(!currentQuote||!selectedStart||!selectedEnd)return;
+    const btn=$('bookingSubmit'),msg=$('bookingMessage'),f=new FormData(bookingForm);
+    btn.disabled=true;
+    btn.textContent='Reserving your dates…';
+    msg.className='form-message';
+    msg.textContent='';
+    const payload={
+      name:f.get('name'),
+      email:f.get('email'),
+      phone:f.get('phone'),
+      checkin:selectedStart,
+      checkout:selectedEnd,
+      guests:String(guests),
+      tripType:f.get('trip_type'),
+      bringingPet:f.get('pets')==='yes',
+      petDetails:f.get('pet_details')||'',
+      planningEvent:f.get('event')==='yes',
+      eventDetails:f.get('event_details')||'',
+      message:f.get('message')||''
+    };
+    try{
+      const r=await fetch('/api/inquiries',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      const d=await r.json();
+      if(!r.ok)throw new Error(d.message||'We could not reserve those dates.');
+      bookingForm.querySelector('.booking-modal-grid').innerHTML=`<div class="field full"><div class="form-message show"><strong>Your dates are reserved while CJT reviews your request.</strong><br><br><strong>Booking reference:</strong> ${esc(d.reservation.id)}<br><strong>Stay:</strong> ${esc(fmt(selectedStart))} – ${esc(fmt(selectedEnd))}<br><strong>Guests:</strong> ${guests}<br><strong>Total trip price:</strong> ${money(d.quote.total)}<br><br>These dates will remain unavailable unless CJT releases or declines the request. If accepted, CJT will continue the booking agreement and payment process.</div></div>`;
+      await refreshAvailability();
+    }catch(err){
+      msg.className='form-message error show';
+      msg.textContent=err.message;
+      btn.disabled=false;
+      btn.textContent='Submit Request & Reserve Dates';
+    }
+  });
 
   const amenitiesModal=$('amenitiesModal');
   let amenitiesHistoryOpen=false;
