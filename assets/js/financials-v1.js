@@ -60,7 +60,7 @@ function renderSummary(summary){
   document.getElementById('sideVerified').textContent=counts.stripeVerified||0;
   document.getElementById('sidePending').textContent=counts.stripePending||0;
   const monthHint=document.getElementById('mtdMonthHint');
-  if(monthHint)monthHint.textContent=`Month-to-date uses ${month} in America/Chicago.`;
+  if(monthHint)monthHint.textContent=`${month}, America/Chicago`;
   if(summary.stripeNote)document.getElementById('stripeNote').textContent=summary.stripeNote;
 }
 
