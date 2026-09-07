@@ -1,0 +1,125 @@
+const assert = require('assert');
+const {
+  assembleEvents,
+  buildNightMap,
+  occupancyForRange,
+  reservationStatusBucket,
+  monthBounds,
+  addDays,
+  DEFAULT_SETTINGS
+} = require('../lib/calendar-view');
+const {
+  parseIcalEvents,
+  classifyChannel,
+  normalizeFeedUrl,
+  sanitizePublicText,
+  eachDate
+} = require('../lib/availability');
+
+function expectThrow(fn, message) {
+  try {
+    fn();
+  } catch (error) {
+    if (message) assert.ok(String(error.message).includes(message));
+    return;
+  }
+  throw new Error('expected throw');
+}
+
+assert.strictEqual(classifyChannel({ label: 'Airbnb house' }), 'airbnb');
+assert.strictEqual(classifyChannel({ host: 'ical.vrbo.com' }), 'vrbo');
+assert.strictEqual(classifyChannel({ label: 'Booking.com iCal' }), 'booking.com');
+assert.strictEqual(classifyChannel({ label: 'Houfy calendar' }), 'other');
+
+assert.strictEqual(
+  normalizeFeedUrl('https://Example.com/feed.ics/?b=1&a=2#'),
+  normalizeFeedUrl('https://example.com/feed.ics?a=2&b=1')
+);
+
+const ics = [
+  'BEGIN:VCALENDAR',
+  'BEGIN:VEVENT',
+  'DTSTART;VALUE=DATE:20260910',
+  'DTEND;VALUE=DATE:20260913',
+  'SUMMARY:Reserved',
+  'UID:abc-123',
+  'STATUS:CONFIRMED',
+  'DESCRIPTION:See https://secret.example/token and guest@example.com',
+  'END:VEVENT',
+  'BEGIN:VEVENT',
+  'DTSTART;VALUE=DATE:20260920',
+  'DTEND;VALUE=DATE:20260921',
+  'SUMMARY:Cancelled night',
+  'STATUS:CANCELLED',
+  'END:VEVENT',
+  'END:VCALENDAR'
+].join('\n');
+
+const parsed = parseIcalEvents(ics);
+assert.strictEqual(parsed.length, 2);
+assert.deepStrictEqual(eachDate(parsed[0].start, parsed[0].end), ['2026-09-10', '2026-09-11', '2026-09-12']);
+assert.ok(!parsed[0].notes.includes('http'));
+assert.ok(!parsed[0].notes.includes('@'));
+assert.strictEqual(sanitizePublicText('token ABCDEF0123456789ABCDEF0123456789 and hi'), 'token and hi');
+
+assert.strictEqual(reservationStatusBucket('inquiry_hold'), 'hold');
+assert.strictEqual(reservationStatusBucket('confirmed'), 'confirmed');
+assert.strictEqual(reservationStatusBucket('cancelled'), 'cancelled');
+
+const reservations = [
+  { id: 'DB-1', guest_name: 'Ada', guests: 4, guest_email: 'ada@example.com', guest_phone: '555', notes: 'late check-in', checkin: '2026-09-10', checkout: '2026-09-13', status: 'confirmed' },
+  { id: 'DB-2', guest_name: 'Cancelled', guests: 2, checkin: '2026-09-18', checkout: '2026-09-20', status: 'cancelled' }
+];
+const otaEvents = [
+  { start: '2026-09-12', end: '2026-09-15', summary: 'Reserved', channel: 'airbnb', origin: 'env', status: 'CONFIRMED', uid: 'air1' },
+  { start: '2026-09-12', end: '2026-09-15', summary: 'Reserved', channel: 'airbnb', origin: 'owner', uid: 'air-dup' },
+  { start: '2026-09-22', end: '2026-09-24', summary: 'Blocked', channel: 'vrbo', origin: 'env', uid: 'vrbo1' }
+];
+const entries = [
+  { id: 7, kind: 'owner_stay', start_date: '2026-09-01', end_date: '2026-09-03', notes: 'family' },
+  { id: 8, kind: 'manual_block', start_date: '2026-09-28', end_date: '2026-09-30', notes: 'hvac' }
+];
+
+const events = assembleEvents({ otaEvents, reservations, entries, settings: DEFAULT_SETTINGS });
+assert.ok(events.some((e) => e.channel === 'direct' && e.reservationId === 'DB-1'));
+assert.ok(events.some((e) => e.channel === 'direct' && e.statusBucket === 'cancelled'));
+assert.strictEqual(events.filter((e) => e.channel === 'airbnb').length, 1);
+assert.ok(!events.some((e) => e.channel === 'prep'));
+
+const nights = buildNightMap(events);
+assert.ok(nights['2026-09-12'].conflict, 'direct + airbnb overlap should conflict');
+assert.deepStrictEqual(new Set(nights['2026-09-12'].channels), new Set(['direct', 'airbnb']));
+assert.ok(!nights['2026-09-22'].conflict);
+assert.ok(nights['2026-09-01'].channels.includes('owner_stay'));
+assert.ok(nights['2026-09-28'].channels.includes('manual_block'));
+assert.ok(nights['2026-09-10'].checkins.includes('direct:DB-1'));
+assert.ok(nights['2026-09-13'].checkouts.includes('direct:DB-1'));
+
+const occ = occupancyForRange(events, '2026-09-01', '2026-10-01');
+assert.ok(occ.booked >= 3);
+assert.strictEqual(occ.total, 30);
+assert.ok(!events.filter((e) => e.start === '2026-09-01').every((e) => e.occupancy), 'owner stay is excluded from occupancy');
+const ownerNightBooked = events.some((e) => e.occupancy && e.start <= '2026-09-01' && '2026-09-01' < e.end);
+assert.strictEqual(ownerNightBooked, false);
+
+const withPrep = assembleEvents({
+  otaEvents,
+  reservations,
+  entries,
+  settings: { ...DEFAULT_SETTINGS, prepBufferEnabled: true }
+});
+assert.ok(withPrep.some((e) => e.id === 'prep:2026-09-13'));
+const prepNights = buildNightMap(withPrep);
+assert.ok(prepNights['2026-09-13'].prep);
+assert.ok(prepNights['2026-09-13'].conflict, 'prep overlapping next occupancy should conflict when airbnb continues');
+
+const month = monthBounds(2026, 9);
+assert.strictEqual(month.start, '2026-09-01');
+assert.strictEqual(month.end, '2026-10-01');
+assert.strictEqual(addDays('2026-09-30', 1), '2026-10-01');
+
+expectThrow(() => {
+  throw new Error('No calendar feeds configured');
+}, 'No calendar feeds configured');
+
+console.log('verify-calendar-view: ok');

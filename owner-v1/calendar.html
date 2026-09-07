@@ -3,17 +3,18 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>CJT Owner Portal · Calendar Connections</title>
+  <title>CJT Owner Portal · Calendar</title>
   <link rel="stylesheet" href="/assets/css/tokens.css">
   <link rel="stylesheet" href="/assets/css/owner-shell.css">
   <link rel="stylesheet" href="/assets/css/modules.css">
+  <link rel="stylesheet" href="/assets/css/calendar-view.css">
 </head>
 <body>
   <section id="loginShell" class="login-shell hidden">
     <div class="login-card">
       <div class="brand" style="color:var(--cjt-ink)">CJT REALTY<small style="color:var(--cjt-muted)">Owner Operations</small></div>
-      <h1>Calendar Connections</h1>
-      <p>Sign in to set up two-way calendar sync.</p>
+      <h1>Calendar</h1>
+      <p>Sign in to see every night, conflict, and calendar connection for Sand &amp; Sea Manor.</p>
       <form id="loginForm"><input id="passcode" type="password" placeholder="Owner passcode" autocomplete="current-password" required><button class="btn btn-primary" type="submit">Sign in</button></form>
       <div id="loginMsg" class="login-msg"></div>
     </div>
@@ -23,7 +24,7 @@
   <div id="ownerApp" class="owner-app hidden">
     <aside id="ownerSidebar" class="sidebar">
       <div class="brand">CJT REALTY<small>Owner Operations</small></div>
-      <div class="property-chip"><strong>Sand & Sea Manor</strong><span>1720 Avenue M · Galveston, TX</span></div>
+      <div class="property-chip"><strong>Sand &amp; Sea Manor</strong><span>1720 Avenue M · Galveston, TX</span><span class="ext">Single property · selector later</span></div>
       <nav class="nav" aria-label="Owner Portal">
         <a href="/owner-v1"><span>Dashboard</span></a>
         <a href="/owner-v1/communications"><span>Communications</span></a>
@@ -47,62 +48,128 @@
 
     <main class="main">
       <header class="topbar">
-        <div style="display:flex;align-items:center;gap:10px"><button id="mobileMenu" class="icon-btn mobile-menu" type="button" aria-label="Open menu">☰</button><div><h1>Calendar</h1><div class="meta">Two-way sync with Airbnb, VRBO, Booking.com, and more</div></div></div>
+        <div style="display:flex;align-items:center;gap:10px"><button id="mobileMenu" class="icon-btn mobile-menu" type="button" aria-label="Open menu">☰</button><div><h1>Calendar</h1><div class="meta">Single source of truth for nights, stays, and blocks</div></div></div>
         <div class="top-actions"><a class="btn btn-secondary" href="/#availability" target="_blank" rel="noopener">Guest calendar ↗</a></div>
       </header>
 
       <div class="content">
-        <div class="section-title"><div><h2>Connect to another website</h2><p>This two-way connection updates availability when a night is booked here or on the other site. Up to 10 inbound calendars.</p></div><span class="status-pill" id="feedStatusPill">Loading…</span></div>
+        <div class="section-title"><div><h2>Property calendar</h2><p>Direct holds, OTA iCal blocks, owner stays, and manual blackouts on one grid. Outbound push to live Airbnb/VRBO is paused; other sites import the CJT .ics link in Connections.</p></div><span class="status-pill" id="viewStatusPill">Loading…</span></div>
         <div id="moduleNotice" class="notice hidden"></div>
+        <div id="occupancyStrip" class="summary-grid cal-occupancy"></div>
+        <div id="syncStrip" class="cal-sync" aria-live="polite"></div>
+        <div id="conflictBanner" class="notice cal-conflict hidden"></div>
 
-        <section class="grid">
-          <article class="card span-12">
-            <div class="card-head"><div><h3>Step 1</h3><p>Add this link on the other website (Airbnb / VRBO / Booking.com calendar import).</p></div><span class="badge good">Export</span></div>
-            <label style="display:grid;gap:8px;font-weight:600;margin-top:8px">
-              <span>CJT direct-booking calendar link</span>
-              <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-                <input id="exportCalendarLink" type="text" readonly style="flex:1;min-width:220px">
-                <button id="copyExportLink" class="btn btn-primary" type="button">Copy</button>
-              </div>
-            </label>
-            <div class="metric-label" style="margin-top:10px">Publishes confirmed/held direct bookings so other sites block those nights.</div>
-            <div class="meta" style="margin-top:8px">Booking.com variant: <button id="useBookingComExport" class="card-link" type="button" style="border:0;background:none;cursor:pointer;padding:0;color:inherit;text-decoration:underline">use bookingcom.ics</button> · <button id="useStandardExport" class="card-link" type="button" style="border:0;background:none;cursor:pointer;padding:0;color:inherit;text-decoration:underline">use standard .ics</button></div>
-          </article>
+        <div class="cal-toolbar">
+          <div class="cal-month-nav">
+            <button class="btn btn-secondary" id="calPrev" type="button">‹</button>
+            <h3 id="calTitle">Loading…</h3>
+            <button class="btn btn-secondary" id="calNext" type="button">›</button>
+            <button class="btn btn-secondary" id="calToday" type="button">Today</button>
+          </div>
+          <div class="filter-row">
+            <button class="filter-btn active" id="viewMonth" type="button">Month</button>
+            <button class="filter-btn" id="viewWeek" type="button">Week</button>
+            <button class="btn btn-secondary" id="copySummary" type="button">Copy month summary</button>
+          </div>
+        </div>
 
-          <article class="card span-12">
-            <div class="card-head"><div><h3>Step 2</h3><p>Get a link ending in .ics from the other website and add it below.</p></div><span class="badge">Import</span></div>
-            <form id="addFeedForm" style="display:grid;gap:12px;margin-top:8px">
-              <label style="display:grid;gap:6px;font-weight:600"><span>Other website link</span><input id="feedUrl" name="feedUrl" type="url" inputmode="url" placeholder="https://… .ics" autocomplete="off" required></label>
-              <label style="display:grid;gap:6px;font-weight:600"><span>Calendar name</span><input id="feedLabel" name="label" maxlength="80" placeholder="e.g. Airbnb" required></label>
-              <div><button id="addFeedBtn" class="btn btn-primary" type="submit">Add calendar</button></div>
-            </form>
-          </article>
+        <div class="filter-row" id="channelFilters"></div>
+        <div class="filter-row" id="statusFilters" style="margin-top:8px"></div>
+        <div class="cal-privacy">
+          <label><input id="showGuestNames" type="checkbox" checked> Show guest names</label>
+          <label><input id="showGuestContact" type="checkbox"> Show guest contact</label>
+          <label><input id="prepBuffer" type="checkbox"> 1-day prep after checkout</label>
+        </div>
+        <div id="calendarLegend" class="cal-legend"></div>
+        <div id="calendarMount"></div>
+        <div id="calendarEmpty" class="empty cal-empty-note hidden">No stays or blocks in this view. Open nights stay bookable on the guest page unless an OTA feed is missing.</div>
 
-          <article class="card span-12" id="refreshAllWidget">
-            <div class="card-head"><div><h3>Refresh all links</h3><p>Re-check every saved calendar and env feed.</p></div><span class="badge" id="refreshAllBadge">Ready</span></div>
-            <div class="metric-label" id="refreshAllMeta">Last refresh: not run yet on this page.</div>
-            <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-              <button id="refreshAllLinks" class="btn btn-secondary" type="button">Refresh all links</button>
-              <button id="refreshFeeds" class="btn btn-secondary" type="button" hidden>Refresh</button>
-              <span class="meta" id="refreshAllHint">Does not change saved URLs — only re-tests them.</span>
+        <div class="module-grid" style="margin-top:18px">
+          <section class="module-main">
+            <div class="card">
+              <div class="card-head"><div><h3>Upcoming stays and blocks</h3><p>From today forward. Owner stays are listed but excluded from occupancy %.</p></div></div>
+              <div id="upcomingList" class="list compact-list"></div>
             </div>
-          </article>
+          </section>
+          <aside class="module-side">
+            <div class="card">
+              <div class="card-head"><div><h3>Close nights</h3><p>Manual blackout or owner personal stay. End date is the morning the home is available again.</p></div><span class="badge">Sand &amp; Sea Manor</span></div>
+              <form id="blockForm" class="cal-form">
+                <label>Type
+                  <select id="blockKind" required>
+                    <option value="manual_block">Manual block</option>
+                    <option value="owner_stay">Owner stay</option>
+                  </select>
+                </label>
+                <label>Start (check-in / first closed night)<input id="blockStart" type="date" required></label>
+                <label>Available again (check-out)<input id="blockEnd" type="date" required></label>
+                <label>Notes <input id="blockNotes" maxlength="500" placeholder="Maintenance, family stay…"></label>
+                <button class="btn btn-primary" type="submit">Save on calendar</button>
+              </form>
+              <p class="metric-label" style="margin-top:12px">These nights are blocked on the guest booking calendar. They are also added to the exported CJT .ics so other sites can import them. Pricing overlay is not in this view.</p>
+            </div>
+          </aside>
+        </div>
 
-          <article class="card span-12">
-            <div class="card-head"><div><h3>Live check</h3><p>Last availability probe</p></div></div>
-            <div id="liveProbe" class="empty">Checking…</div>
-            <div class="widget-footer"><a class="btn btn-secondary" href="/api/calendar" target="_blank" rel="noopener">Open /api/calendar ↗</a></div>
-          </article>
-        </section>
+        <details class="cal-connections" open>
+          <summary><span>Calendar connections (iCal import / export)</span><span class="status-pill" id="feedStatusPill">Loading…</span></summary>
+          <section class="grid">
+            <article class="card span-12">
+              <div class="card-head"><div><h3>Step 1</h3><p>Add this link on the other website (Airbnb / VRBO / Booking.com calendar import).</p></div><span class="badge good">Export</span></div>
+              <label style="display:grid;gap:8px;font-weight:600;margin-top:8px">
+                <span>CJT direct-booking calendar link</span>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+                  <input id="exportCalendarLink" type="text" readonly style="flex:1;min-width:220px">
+                  <button id="copyExportLink" class="btn btn-primary" type="button">Copy</button>
+                </div>
+              </label>
+              <div class="metric-label" style="margin-top:10px">Publishes confirmed/held direct bookings, owner stays, and manual blocks so other sites can block those nights. Live Airbnb/VRBO API push stays paused.</div>
+              <div class="meta" style="margin-top:8px">Booking.com variant: <button id="useBookingComExport" class="card-link" type="button" style="border:0;background:none;cursor:pointer;padding:0;color:inherit;text-decoration:underline">use bookingcom.ics</button> · <button id="useStandardExport" class="card-link" type="button" style="border:0;background:none;cursor:pointer;padding:0;color:inherit;text-decoration:underline">use standard .ics</button></div>
+            </article>
 
-        <div id="feedCards" class="grid" style="margin-top:16px"></div>
-        <div id="envFeeds" class="grid" style="margin-top:16px"></div>
+            <article class="card span-12">
+              <div class="card-head"><div><h3>Step 2</h3><p>Get a link ending in .ics from the other website and add it below.</p></div><span class="badge">Import</span></div>
+              <form id="addFeedForm" style="display:grid;gap:12px;margin-top:8px">
+                <label style="display:grid;gap:6px;font-weight:600"><span>Other website link</span><input id="feedUrl" name="feedUrl" type="url" inputmode="url" placeholder="https://… .ics" autocomplete="off" required></label>
+                <label style="display:grid;gap:6px;font-weight:600"><span>Calendar name</span><input id="feedLabel" name="label" maxlength="80" placeholder="e.g. Airbnb" required></label>
+                <div><button id="addFeedBtn" class="btn btn-primary" type="submit">Add calendar</button></div>
+              </form>
+            </article>
+
+            <article class="card span-12" id="refreshAllWidget">
+              <div class="card-head"><div><h3>Refresh all links</h3><p>Re-check every saved calendar and env feed.</p></div><span class="badge" id="refreshAllBadge">Ready</span></div>
+              <div class="metric-label" id="refreshAllMeta">Last refresh: not run yet on this page.</div>
+              <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+                <button id="refreshAllLinks" class="btn btn-secondary" type="button">Refresh all links</button>
+                <button id="refreshFeeds" class="btn btn-secondary" type="button" hidden>Refresh</button>
+                <span class="meta" id="refreshAllHint">Does not change saved URLs — only re-tests them.</span>
+              </div>
+            </article>
+
+            <article class="card span-12">
+              <div class="card-head"><div><h3>Live check</h3><p>Last availability probe</p></div></div>
+              <div id="liveProbe" class="empty">Checking…</div>
+              <div class="widget-footer"><a class="btn btn-secondary" href="/api/calendar" target="_blank" rel="noopener">Open /api/calendar ↗</a></div>
+            </article>
+          </section>
+          <div id="feedCards" class="grid" style="margin-top:16px"></div>
+          <div id="envFeeds" class="grid" style="margin-top:16px"></div>
+        </details>
       </div>
     </main>
   </div>
 
+  <div id="drawerBackdrop" class="cal-drawer-backdrop hidden"></div>
+  <aside id="nightDrawer" class="cal-drawer hidden" role="dialog" aria-modal="true" aria-labelledby="drawerTitle">
+    <button class="btn btn-secondary" id="drawerClose" type="button">Close</button>
+    <h2 id="drawerTitle">Night detail</h2>
+    <p id="drawerMeta" class="metric-label"></p>
+    <div id="drawerBody"></div>
+  </aside>
+
   <script src="/assets/js/owner-shell.js"></script>
   <script src="/assets/js/static-auth.js"></script>
   <script src="/assets/js/calendar-connections.js"></script>
+  <script src="/assets/js/calendar-view.js"></script>
 </body>
 </html>
