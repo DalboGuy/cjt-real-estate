@@ -9,7 +9,20 @@
   <link rel="stylesheet" href="/assets/css/modules.css">
   <style>
     .finance-table-wrap{overflow:auto;border:1px solid var(--cjt-line);border-radius:12px;background:#fff}
-    .finance-table{width:100%;border-collapse:collapse;min-width:860px}
+    .finance-table{width:100%;border-collapse:collapse;min-width:920px}
+    .finance-chart{background:#fff;border:1px solid var(--cjt-line);border-radius:14px;padding:16px 18px 12px;margin-bottom:16px}
+    .finance-chart-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:12px}
+    .finance-chart-head strong{font-size:.92rem}
+    .finance-chart-head span{color:var(--cjt-muted);font-size:.78rem}
+    .finance-chart-plot{display:flex;align-items:flex-end;gap:6px;min-height:150px}
+    .finance-chart-col{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px}
+    .finance-chart-stack{width:100%;height:130px;display:flex;flex-direction:column;justify-content:flex-end;background:#f4f7f6;border-radius:8px 8px 3px 3px;overflow:hidden}
+    .finance-chart-bar{width:100%;min-height:0}
+    .finance-chart-bar.direct{background:var(--cjt-deep)}
+    .finance-chart-bar.ota{background:#6b8f88}
+    .finance-chart-col em{font-style:normal;font-size:.62rem;font-weight:800;color:var(--cjt-muted);letter-spacing:.02em}
+    .finance-chart-empty{color:var(--cjt-muted);font-size:.84rem;padding:28px 0;text-align:center}
+    .finance-source{font-weight:800;font-size:.78rem}
     .finance-table th,.finance-table td{padding:12px 14px;border-bottom:1px solid var(--cjt-line);text-align:left;vertical-align:top}
     .finance-table th{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--cjt-muted);background:#fafbf9;white-space:nowrap}
     .finance-table tr:last-child td{border-bottom:0}
@@ -39,7 +52,7 @@
     <div class="login-card">
       <div class="brand" style="color:var(--cjt-ink)">CJT REALTY<small style="color:var(--cjt-muted)">Owner Operations</small></div>
       <h1>Financials</h1>
-      <p>Sign in to review stored quotes, expected payouts, and Stripe payment status.</p>
+      <p>Sign in to review Direct quotes, imported OTA stays, and Stripe payment status.</p>
       <form id="loginForm"><input id="passcode" type="password" placeholder="Owner passcode" autocomplete="current-password" required><button class="btn btn-primary" type="submit">Sign in</button></form>
       <div id="loginMsg" class="login-msg"></div>
     </div>
@@ -77,7 +90,7 @@
           <button id="mobileMenu" class="icon-btn mobile-menu" type="button" aria-label="Open menu">☰</button>
           <div>
             <h1>Financials</h1>
-            <div class="meta" id="financialSubtitle">Quoted totals from stored reservations · <span id="mtdMonthHint">America/Chicago</span></div>
+            <div class="meta" id="financialSubtitle">Direct quotes and imported OTA stays · <span id="mtdMonthHint">America/Chicago</span></div>
           </div>
         </div>
         <div class="top-actions">
@@ -91,20 +104,37 @@
         <div id="moduleNotice" class="notice hidden"></div>
 
         <div class="filter-bar" role="search" aria-label="Financials filters">
+          <div class="filter-field filter-field-range">
+            <span>Period</span>
+            <div id="filterRange" class="segmented" role="group" aria-label="Date range">
+              <button type="button" class="filter-btn" data-range="month">This month</button>
+              <button type="button" class="filter-btn active" data-range="year">This year</button>
+              <button type="button" class="filter-btn" data-range="all">All</button>
+              <button type="button" class="filter-btn" data-range="custom">Custom</button>
+            </div>
+          </div>
+          <label class="filter-field filter-custom hidden">
+            <span>From</span>
+            <input id="filterFrom" class="filter-date" type="date" aria-label="From date">
+          </label>
+          <label class="filter-field filter-custom hidden">
+            <span>To</span>
+            <input id="filterTo" class="filter-date" type="date" aria-label="To date">
+          </label>
+          <label class="filter-field">
+            <span>Source</span>
+            <select id="filterSource" class="filter-select" aria-label="Source">
+              <option value="all">All sources</option>
+              <option value="direct">Direct</option>
+              <option value="ota">OTA</option>
+            </select>
+          </label>
           <label class="filter-field">
             <span>Status</span>
             <select id="filterStatus" class="filter-select" aria-label="Status">
               <option value="all">All statuses</option>
               <option value="active">Active</option>
               <option value="closed">Closed</option>
-            </select>
-          </label>
-          <label class="filter-field">
-            <span>Quote</span>
-            <select id="filterQuote" class="filter-select" aria-label="Quote">
-              <option value="all">All quotes</option>
-              <option value="quoted">With quote</option>
-              <option value="missing">Missing quote</option>
             </select>
           </label>
           <label class="filter-field">
@@ -115,33 +145,29 @@
               <option value="pending">Pending</option>
             </select>
           </label>
-          <label class="filter-field">
-            <span>Period</span>
-            <select id="filterPeriod" class="filter-select" aria-label="Period">
-              <option value="all">All stays</option>
-              <option value="mtd">MTD check-in</option>
-            </select>
-          </label>
           <label class="filter-field filter-field-search">
             <span>Search</span>
-            <input id="financialSearch" class="search-box" type="search" placeholder="Guest, booking ID, dates…">
+            <input id="financialSearch" class="search-box" type="search" placeholder="Guest, booking ID, source…">
           </label>
           <button id="clearFilters" class="filter-clear hidden" type="button">Clear filters</button>
         </div>
 
         <div id="financialSummary" class="kpi-grid">
-          <div class="summary-card"><span>MTD quoted total</span><b>—</b><span>Lodging + cleaning + tax</span></div>
-          <div class="summary-card"><span>MTD expected payout</span><b>—</b><span>Lodging + cleaning from quotes</span></div>
-          <div class="summary-card"><span>With quotes</span><b>—</b><span>Bookings with a stored quote</span></div>
-          <div class="summary-card"><span>Stripe pending</span><b>—</b><span>No verified payment yet</span></div>
+          <div class="summary-card"><span>Revenue</span><b>—</b><span>Quoted + imported OTA</span></div>
+          <div class="summary-card"><span>Expected payout</span><b>—</b><span>Direct quotes + OTA payout</span></div>
+          <div class="summary-card"><span>Booked nights</span><b>—</b><span>Active stays in range</span></div>
+          <div class="summary-card"><span>Revenue / night</span><b>—</b><span>When nights and revenue exist</span></div>
         </div>
+
+        <div id="financialChart" class="finance-chart hidden"></div>
 
         <details class="about-disclosure">
           <summary>About these numbers</summary>
           <div class="about-body">
-            <p>Month-to-date totals use stored quotes on active stays checking in this month. The month follows America/Chicago, not UTC.</p>
-            <p>Quoted total is lodging + cleaning + tax. Expected payout is lodging + cleaning; taxes stay in their own column.</p>
-            <p id="stripeNote">Stripe payouts are not live. Pending means no verified payment event yet.</p>
+            <p>Date-range buttons use America/Chicago month and year boundaries. KPIs, chart, and table all follow the same check-in range.</p>
+            <p>Direct rows use stored reservation quotes (lodging + cleaning + tax). OTA rows come from imported Airbnb, Vrbo, and Booking.com stays — real stored amounts, not invented zeros.</p>
+            <p>Quoted / imported total is the stay total when it exists. Expected payout is lodging + cleaning on Direct quotes, or the stored OTA payout. Missing money stays <strong>—</strong>.</p>
+            <p id="stripeNote">Stripe is Direct-booking only and is not live. Pending means no verified payment event yet. OTA stays settle on their channel.</p>
           </div>
         </details>
 
