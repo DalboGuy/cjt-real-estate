@@ -218,6 +218,21 @@ Before starting feature work: read this file, then the assigned Issue, then `doc
 
 ---
 
+## Related docs (cross-links; do not replace)
+
+`docs/INTEGRATION-RECONCILIATION.md` is the **bot starting-point and PR disposition control doc** (baseline SHA, open PR map, merge/do-not-merge flags, lock semantics, Preview isolation). The documents below remain **authoritative** for acceptance, architecture, and collaboration where they apply. This file does not supersede them.
+
+Verified present in this repo (2026-09-07):
+
+| Path | Remains authoritative for |
+| --- | --- |
+| [docs/PROJECT-ACCEPTANCE-GATE.md](./PROJECT-ACCEPTANCE-GATE.md) | Feature acceptance checklist before marking Built or merging |
+| [docs/BOOKING-ACCEPTANCE-LEDGER-2026-09-06.md](./BOOKING-ACCEPTANCE-LEDGER-2026-09-06.md) | Guest booking page section-by-section acceptance ledger |
+| [docs/PLATFORM-V1-ARCHITECTURE.md](./PLATFORM-V1-ARCHITECTURE.md) | Platform-v1 architecture |
+| [docs/AI-COLLABORATION.md](./AI-COLLABORATION.md) | Cross-agent collaboration / handoff rules |
+
+---
+
 ## Appendix A — Financial bot ownership (PR #58)
 
 PR **#58** owns Owner Financials **honest-data rules**. Gate Keeper sequences shared Financials/shell files with #57/#65; it does **not** redefine these metrics. Financial reviews this section.
