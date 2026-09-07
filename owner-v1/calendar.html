@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>CJT Owner Portal · Calendar Connections</title>
+  <link rel="stylesheet" href="/assets/css/tokens.css">
+  <link rel="stylesheet" href="/assets/css/owner-shell.css">
+  <link rel="stylesheet" href="/assets/css/modules.css">
+</head>
+<body>
+  <section id="loginShell" class="login-shell hidden">
+    <div class="login-card">
+      <div class="brand" style="color:var(--cjt-ink)">CJT REALTY<small style="color:var(--cjt-muted)">Owner Operations</small></div>
+      <h1>Calendar Connections</h1>
+      <p>Sign in to connect Airbnb, VRBO, and Booking.com calendars.</p>
+      <form id="loginForm"><input id="passcode" type="password" placeholder="Owner passcode" autocomplete="current-password" required><button class="btn btn-primary" type="submit">Sign in</button></form>
+      <div id="loginMsg" class="login-msg"></div>
+    </div>
+  </section>
+
+  <div id="ownerBackdrop" class="backdrop hidden"></div>
+  <div id="ownerApp" class="owner-app hidden">
+    <aside id="ownerSidebar" class="sidebar">
+      <div class="brand">CJT REALTY<small>Owner Operations</small></div>
+      <div class="property-chip"><strong>Sand & Sea Manor</strong><span>1720 Avenue M · Galveston, TX</span></div>
+      <nav class="nav" aria-label="Owner Portal">
+        <a href="/owner-v1"><span>Dashboard</span></a>
+        <a href="/owner-v1/communications"><span>Communications</span></a>
+        <a href="/owner-v1/reservations"><span>Direct Bookings</span></a>
+        <a class="active" href="/owner-v1/calendar"><span>Calendar</span><span class="count">Live</span></a>
+        <button data-coming-soon="Pricing"><span>Pricing</span><span class="count">Soon</span></button>
+        <button data-coming-soon="Financials"><span>Financials</span><span class="count">Soon</span></button>
+        <div class="nav-section">Property</div>
+        <button data-coming-soon="Property"><span>Property</span></button>
+        <button data-coming-soon="Maintenance"><span>Maintenance</span></button>
+        <a href="/owner-v1/documents"><span>Documents</span></a>
+        <div class="nav-section">Reporting</div>
+        <button data-coming-soon="Analytics"><span>Analytics</span></button>
+        <div class="nav-section">System</div>
+        <a href="/account-v1"><span>My Account</span></a>
+        <a href="/admin-v1"><span>Admin</span></a>
+        <button data-coming-soon="Settings"><span>Settings</span></button>
+      </nav>
+      <div class="sidebar-footer"><a href="/" target="_blank" rel="noopener">Booking page ↗</a><button id="logout" type="button">Sign out</button></div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div style="display:flex;align-items:center;gap:10px"><button id="mobileMenu" class="icon-btn mobile-menu" type="button" aria-label="Open menu">☰</button><div><h1>Calendar</h1><div class="meta">OTA calendar connections for live availability</div></div></div>
+        <div class="top-actions"><button id="refreshFeeds" class="btn btn-secondary" type="button">Refresh status</button><a class="btn btn-secondary" href="/#availability" target="_blank" rel="noopener">Guest calendar ↗</a></div>
+      </header>
+
+      <div class="content">
+        <div class="section-title"><div><h2>Calendar connections</h2><p>Paste each channel’s export iCal URL here. URLs stay server-side — the portal only shows whether a feed is connected and if it can be read.</p></div><span class="status-pill" id="feedStatusPill">Loading…</span></div>
+        <div id="moduleNotice" class="notice hidden"></div>
+        <div id="feedCards" class="grid"></div>
+        <section class="grid" style="margin-top:16px">
+          <article class="card span-8">
+            <div class="card-head"><div><h3>How to get an iCal link</h3><p>In Airbnb, VRBO, or Booking.com, open the listing calendar → export / sync → copy the private iCal URL.</p></div></div>
+            <div class="list">
+              <div class="list-row"><div><strong>Airbnb</strong><span>Listing → Availability → Calendar sync / Export calendar</span></div></div>
+              <div class="list-row"><div><strong>VRBO</strong><span>Calendar → Import &amp; export calendars → Export</span></div></div>
+              <div class="list-row"><div><strong>Booking.com</strong><span>Rates &amp; Availability → Sync calendars → Export (optional)</span></div></div>
+            </div>
+          </article>
+          <article class="card span-4">
+            <div class="card-head"><div><h3>Live check</h3><p>Last public calendar probe</p></div></div>
+            <div id="liveProbe" class="empty">Checking…</div>
+            <div class="widget-footer"><a class="btn btn-secondary" href="/api/calendar" target="_blank" rel="noopener">Open /api/calendar ↗</a></div>
+          </article>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script src="/assets/js/owner-shell.js"></script>
+  <script src="/assets/js/static-auth.js"></script>
+  <script src="/assets/js/calendar-connections.js"></script>
+</body>
+</html>
