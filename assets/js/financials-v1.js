@@ -1,6 +1,7 @@
 let financialRows=[];
 let financialFilter='all';
 
+const PROPERTY_TZ='America/Chicago';
 const loginShell=document.getElementById('loginShell');
 const ownerApp=document.getElementById('ownerApp');
 const loginForm=document.getElementById('loginForm');
@@ -18,6 +19,22 @@ function showLogin(){ownerApp.classList.add('hidden');loginShell.classList.remov
 function showApp(){loginShell.classList.add('hidden');ownerApp.classList.remove('hidden')}
 function notice(text){const n=document.getElementById('moduleNotice');n.textContent=text;n.classList.remove('hidden')}
 
+function chicagoParts(now=new Date()){
+  const parts=new Intl.DateTimeFormat('en-US',{timeZone:PROPERTY_TZ,year:'numeric',month:'2-digit'}).formatToParts(now);
+  const year=parts.find(p=>p.type==='year')?.value||'';
+  const month=parts.find(p=>p.type==='month')?.value||'';
+  return {year,month,key:year&&month?`${year}-${month}`:''};
+}
+function chicagoMonthLabel(now=new Date()){
+  return new Intl.DateTimeFormat('en-US',{timeZone:PROPERTY_TZ,month:'short',year:'numeric'}).format(now);
+}
+function isMtdRow(row){
+  const day=String(row.checkin||'').slice(0,10);
+  const key=chicagoParts().key;
+  return Boolean(key)&&day.startsWith(`${key}-`);
+}
+function reservationHref(id){return `/owner-v1/reservations?booking=${encodeURIComponent(id||'')}`}
+
 async function financialsApi(){
   const r=await fetch('/api/financials',{cache:'no-store'});
   const d=await r.json().catch(()=>({}));
@@ -29,18 +46,21 @@ async function financialsApi(){
 function renderSummary(summary){
   const mtd=summary.mtd||{};
   const counts=summary.counts||{};
+  const month=summary.mtdMonthLabel||chicagoMonthLabel();
   const cards=[
-    ['MTD lodging',money(mtd.lodging),'quoted lodging, check-in this month'],
-    ['MTD taxes',money(mtd.taxes),'quoted taxes'],
-    ['MTD cleaning',money(mtd.cleaning),'quoted cleaning'],
-    ['MTD quoted total',money(mtd.total),'lodging + cleaning + tax'],
-    ['MTD expected payout',money(mtd.expectedPayout),'lodging + cleaning from quotes']
+    ['MTD lodging',money(mtd.lodging),`${month} · quoted lodging, check-in this month`],
+    ['MTD taxes',money(mtd.taxes),`${month} · quoted taxes`],
+    ['MTD cleaning',money(mtd.cleaning),`${month} · quoted cleaning`],
+    ['MTD quoted total',money(mtd.total),`${month} · lodging + cleaning + tax`],
+    ['MTD expected payout',money(mtd.expectedPayout),`${month} · lodging + cleaning from quotes`]
   ];
   document.getElementById('financialSummary').innerHTML=cards.map(c=>`<div class="summary-card"><span>${esc(c[0])}</span><b style="font-size:1.05rem">${esc(c[1])}</b><span>${esc(c[2])}</span></div>`).join('');
   document.getElementById('sideQuoted').textContent=counts.quotedBookings||0;
   document.getElementById('sideMissing').textContent=counts.missingQuote||0;
   document.getElementById('sideVerified').textContent=counts.stripeVerified||0;
   document.getElementById('sidePending').textContent=counts.stripePending||0;
+  const monthHint=document.getElementById('mtdMonthHint');
+  if(monthHint)monthHint.textContent=`Month-to-date uses ${month} in America/Chicago.`;
   if(summary.stripeNote)document.getElementById('stripeNote').textContent=summary.stripeNote;
 }
 
@@ -48,13 +68,6 @@ function renderFilters(){
   const vals=[['all','All'],['mtd','MTD check-in'],['quoted','With quote'],['missing','Missing quote'],['verified','Stripe verified'],['pending','Stripe pending'],['active','Active'],['closed','Closed']];
   document.getElementById('financialFilters').innerHTML=vals.map(([v,l])=>`<button class="filter-btn ${financialFilter===v?'active':''}" data-filter="${v}">${l}</button>`).join('');
   document.querySelectorAll('[data-filter]').forEach(b=>b.onclick=()=>{financialFilter=b.dataset.filter;renderFilters();renderBookings()});
-}
-
-function isMtdRow(row){
-  const day=String(row.checkin||'').slice(0,10);
-  const now=new Date();
-  const key=`${now.getUTCFullYear()}-${String(now.getUTCMonth()+1).padStart(2,'0')}`;
-  return day.startsWith(`${key}-`);
 }
 
 function filteredBookings(){
@@ -76,25 +89,35 @@ function filteredBookings(){
   });
 }
 
+function quoteBadges(row){
+  const quoteMissing=Boolean(row.quote?.missing);
+  if(quoteMissing)return '<div class="muted" style="margin-top:6px">No stored quote</div>';
+  const badges=[];
+  if(row.quote?.legacy)badges.push('<span class="badge warn">Legacy</span>');
+  if(row.quote?.ownerAdjusted)badges.push('<span class="badge">Owner adjusted</span>');
+  return badges.length?`<div class="finance-quote-badges">${badges.join('')}</div>`:'';
+}
+
 function renderBookings(){
   const rows=filteredBookings();
   if(!financialRows.length){
-    financialList.innerHTML='<div class="empty">No direct bookings are stored yet, so there are no quote or payment totals to show.</div>';
+    financialList.innerHTML='<div class="empty">No direct bookings are stored yet, so there are no quote or payment totals to show. Open Reservations when a stay is created.</div>';
     return;
   }
   if(!rows.length){
-    financialList.innerHTML='<div class="empty">No bookings match this filter. Stored quotes are still unchanged.</div>';
+    financialList.innerHTML='<div class="empty">No bookings match this filter or search. Stored quotes are unchanged — try All or clear the search.</div>';
     return;
   }
   financialList.innerHTML=`<div class="finance-table-wrap"><table class="finance-table"><thead><tr><th>Stay</th><th>Status</th><th class="money">Lodging</th><th class="money">Taxes</th><th class="money">Cleaning</th><th class="money">Quoted total</th><th class="money">Expected payout</th><th>Stripe</th></tr></thead><tbody>${rows.map(row=>{
     const quoteMissing=Boolean(row.quote?.missing);
     const paymentStatus=row.payment?.status||'unverified';
+    const href=reservationHref(row.id);
     const stripeDetail=row.payment?.verified
       ? `${esc(money(row.payment.verifiedAmount))} verified${row.payment.paymentType?' · '+esc(row.payment.paymentType):''}`
       : (row.payment?.checkoutCreated?'Checkout created · not verified':'No verified payment');
     return `<tr>
-      <td><div class="finance-guest">${esc(row.guestName||'Guest')}</div><div class="muted">${esc(date(row.checkin))} → ${esc(date(row.checkout))}</div><div class="muted">${esc(row.id)}${row.guests?` · ${esc(row.guests)} guests`:''}</div></td>
-      <td><span class="badge ${statusClass(row.status)}">${esc(statusLabel(row.status))}</span>${quoteMissing?'<div class="muted" style="margin-top:6px">No stored quote</div>':''}${row.quote?.legacy?'<div class="muted">Legacy quote</div>':''}</td>
+      <td><div class="finance-guest"><a class="finance-booking-link" href="${esc(href)}">${esc(row.guestName||'Guest')}</a></div><div class="muted">${esc(date(row.checkin))} → ${esc(date(row.checkout))}</div><div class="muted"><a class="finance-booking-link" href="${esc(href)}">${esc(row.id)}</a>${row.guests?` · ${esc(row.guests)} guests`:''}</div></td>
+      <td><span class="badge ${statusClass(row.status)}">${esc(statusLabel(row.status))}</span>${quoteBadges(row)}</td>
       <td class="money">${esc(money(quoteMissing?null:row.quote?.lodging))}</td>
       <td class="money">${esc(money(quoteMissing?null:row.quote?.taxes))}</td>
       <td class="money">${esc(money(quoteMissing?null:row.quote?.cleaning))}</td>
@@ -106,6 +129,8 @@ function renderBookings(){
 }
 
 async function loadFinancials(){
+  const refreshBtn=document.getElementById('refreshFinancials');
+  if(refreshBtn)refreshBtn.disabled=true;
   try{
     const data=await financialsApi();
     financialRows=data.bookings||[];
@@ -118,10 +143,13 @@ async function loadFinancials(){
     if(e.message==='unauthorized')return showLogin();
     showApp();
     notice('Financials could not be loaded. Stored quotes and payments were not changed.');
+  }finally{
+    if(refreshBtn)refreshBtn.disabled=false;
   }
 }
 
 document.getElementById('financialSearch').addEventListener('input',renderBookings);
+document.getElementById('refreshFinancials')?.addEventListener('click',loadFinancials);
 loginForm.addEventListener('submit',async e=>{
   e.preventDefault();
   loginMsg.textContent='Signing in…';

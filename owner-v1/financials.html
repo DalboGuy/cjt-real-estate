@@ -16,6 +16,10 @@
     .finance-table .money{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
     .finance-table .muted{color:var(--cjt-muted);font-size:.78rem}
     .finance-guest{font-weight:800}
+    .finance-booking-link{color:inherit;font-weight:800;text-decoration:underline;text-underline-offset:2px}
+    .finance-booking-link:hover{color:var(--cjt-deep)}
+    .finance-table tbody tr:hover{background:#fafbf9}
+    .finance-quote-badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
   </style>
 </head>
 <body>
@@ -58,18 +62,24 @@
     <main class="main">
       <header class="topbar">
         <div style="display:flex;align-items:center;gap:10px"><button id="mobileMenu" class="icon-btn mobile-menu" type="button" aria-label="Open menu">☰</button><div><h1>Financials</h1><div class="meta">Quoted booking economics from stored reservations</div></div></div>
-        <div class="top-actions"><span id="lastChecked" class="meta">Loading…</span><a class="btn btn-secondary" href="/owner-v1/reservations">Open Reservations ↗</a></div>
+        <div class="top-actions"><span id="lastChecked" class="meta">Loading…</span><button id="refreshFinancials" class="btn btn-secondary" type="button">Refresh</button><a class="btn btn-secondary" href="/owner-v1/reservations">Open Reservations ↗</a></div>
       </header>
 
       <div class="content">
-        <div class="section-title"><div><h2>Booking economics</h2><p>Month-to-date totals come from stored quotes on active stays checking in this month. Stripe payouts are not live; unverified payments stay pending.</p></div><span class="status-pill">Quotes &amp; payments</span></div>
+        <div class="section-title"><div><h2>Booking economics</h2><p>Month-to-date totals come from stored quotes on active stays checking in this month <span id="mtdMonthHint">(America/Chicago)</span>. Stripe payouts are not live; unverified payments stay pending.</p></div><span class="status-pill">Quotes &amp; payments</span></div>
         <div id="moduleNotice" class="notice hidden"></div>
-        <div id="financialSummary" class="summary-grid"></div>
+        <div id="financialSummary" class="summary-grid">
+          <div class="summary-card"><span>MTD lodging</span><b style="font-size:1.05rem">—</b><span>quoted lodging, check-in this month</span></div>
+          <div class="summary-card"><span>MTD taxes</span><b style="font-size:1.05rem">—</b><span>quoted taxes</span></div>
+          <div class="summary-card"><span>MTD cleaning</span><b style="font-size:1.05rem">—</b><span>quoted cleaning</span></div>
+          <div class="summary-card"><span>MTD quoted total</span><b style="font-size:1.05rem">—</b><span>lodging + cleaning + tax</span></div>
+          <div class="summary-card"><span>MTD expected payout</span><b style="font-size:1.05rem">—</b><span>lodging + cleaning from quotes</span></div>
+        </div>
 
         <div class="module-grid">
           <section class="module-main">
             <div class="toolbar-row"><div id="financialFilters" class="filter-row"></div><input id="financialSearch" class="search-box" placeholder="Search guest, booking ID, dates, status or payment…"></div>
-            <div id="financialList"></div>
+            <div id="financialList"><div class="empty">Loading stored quotes and payment status…</div></div>
           </section>
           <aside class="module-side">
             <div class="card quick-card">
