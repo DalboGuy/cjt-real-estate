@@ -2,6 +2,10 @@
 
 Status: **Partial / Needs review** on `grok/request-owner-complete-flow`.
 
+Preview: https://cjtbookingpage-git-grok-request-owner-c-48e57d-jibbailey82-7655.vercel.app
+
+Draft PR: https://github.com/DalboGuy/cjt-real-estate/pull/47
+
 This slice implements JB/Joel’s locked booking workflow through agreement acceptance. Stripe charges and automatic confirmation remain deferred.
 
 ## Locked path
