@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Payment received | Sand &amp; Sea Manor</title>
+  <style>
+    :root{--ink:#14343a;--deep:#0d2b31;--cream:#f7f1e7;--paper:#fffdf9;--muted:#6b7d80;--line:#dfe6e4}
+    *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,sans-serif;background:var(--cream);color:var(--ink);line-height:1.55}
+    .wrap{width:min(720px,calc(100% - 32px));margin:48px auto}
+    .card{background:#fff;border:1px solid var(--line);border-radius:22px;padding:28px;box-shadow:0 18px 50px rgba(13,43,49,.08)}
+    h1{font-family:Georgia,serif;font-weight:500;font-size:clamp(2rem,5vw,3rem);margin:.2rem 0 1rem}
+    .meta{color:var(--muted)}.btn{display:inline-flex;margin-top:18px;background:var(--deep);color:#fff;text-decoration:none;border-radius:999px;padding:12px 18px;font-weight:800}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="meta">Sand &amp; Sea Manor · Direct booking</div>
+      <h1 id="title">Checking your payment…</h1>
+      <p id="body">Please wait while we confirm your Stripe payment.</p>
+      <p id="ref" class="meta"></p>
+      <a class="btn" href="/">Back to the home</a>
+    </div>
+  </div>
+  <script>
+    const params=new URLSearchParams(location.search);
+    const sessionId=params.get('session_id');
+    const title=document.getElementById('title');
+    const body=document.getElementById('body');
+    const ref=document.getElementById('ref');
+    async function load(attempt=0){
+      if(!sessionId){
+        title.textContent='Payment canceled or incomplete';
+        body.textContent='No checkout session was found. You can return to the booking form to try again. Dates are only secured after a successful payment.';
+        return;
+      }
+      try{
+        const r=await fetch('/api/checkout?session_id='+encodeURIComponent(sessionId),{cache:'no-store'});
+        const d=await r.json();
+        if(!r.ok) throw new Error(d.message||'Could not confirm payment yet.');
+        if(!d.paid && attempt<6){
+          setTimeout(()=>load(attempt+1),1500);
+          return;
+        }
+        if(d.paid){
+          title.textContent='Payment received. Your dates are secured.';
+          body.textContent='This does not finish the booking by itself. CJT will send the rental contract next. After you sign it, the reservation is confirmed. Check your email for a receipt of this step.';
+          ref.textContent=`Reference ${d.reservation.id} · ${d.reservation.checkin} → ${d.reservation.checkout}${d.total?' · '+d.total:''}`;
+        }else{
+          title.textContent='Payment is still processing';
+          body.textContent='If you completed checkout, wait a moment and refresh. If you canceled, no payment was taken and the dates are not secured.';
+        }
+      }catch(err){
+        if(attempt<6){ setTimeout(()=>load(attempt+1),1500); return; }
+        title.textContent='We could not confirm payment yet';
+        body.textContent=err.message||'Please email cjtrealestateholdings@gmail.com with your name and dates.';
+      }
+    }
+    load();
+  </script>
+</body>
+</html>

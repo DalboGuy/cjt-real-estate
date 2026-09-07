@@ -1,16 +1,119 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CJT Owner Portal</title><style>
-:root{--ink:#14343a;--deep:#0d2b31;--cream:#f7f1e7;--paper:#fffdf9;--muted:#6b7d80;--line:#dfe6e4}*{box-sizing:border-box}body{margin:0;background:var(--cream);font-family:Inter,system-ui,sans-serif;color:var(--ink)}.wrap{width:min(1100px,calc(100% - 28px));margin:40px auto}.top{display:flex;justify-content:space-between;align-items:center;gap:12px}.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:20px;margin:14px 0;box-shadow:0 12px 32px rgba(13,43,49,.06)}.btn{border:0;border-radius:999px;padding:10px 15px;font-weight:800;cursor:pointer;text-decoration:none;display:inline-flex}.primary{background:var(--deep);color:#fff}.ghost{background:#eef2f1;color:var(--ink)}.danger{background:#7a2929;color:#fff}input{width:100%;padding:13px;border:1px solid var(--line);border-radius:10px;font:inherit}.login{max-width:420px;margin:90px auto}.grid{display:grid;grid-template-columns:1.2fr .8fr;gap:14px}.meta{color:var(--muted);font-size:.9rem}.status{font-weight:800;text-transform:uppercase;letter-spacing:.05em;font-size:.78rem}.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:15px}.top .actions{margin-top:0}.hidden{display:none}.badge{display:inline-block;padding:5px 9px;border-radius:999px;background:#eef2f1;margin:2px;font-size:.78rem}.warn{background:#fff1cc}.good{background:#dff3e7}@media(max-width:760px){.grid{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}}</style></head><body><div class="wrap">
-<div id="login" class="card login"><h1>CJT Owner Portal</h1><p class="meta">Sand & Sea Manor direct-booking controls.</p><form id="loginForm"><input id="passcode" type="password" placeholder="Owner passcode" required><div style="height:12px"></div><button class="btn primary">Sign in</button></form><p id="loginMsg" class="meta"></p></div>
-<div id="portal" class="hidden"><div class="top"><div><h1 style="margin:0">Direct Booking Dashboard</h1><div class="meta">Sand & Sea Manor · 1720 Avenue M</div></div><div class="actions"><a class="btn primary" href="/communications">Communications</a><button id="logout" class="btn ghost">Sign out</button></div></div><div id="list"></div></div>
-</div><script>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>CJT Owner Portal</title>
+  <style>
+    :root{--ink:#14343a;--deep:#0d2b31;--cream:#f7f1e7;--paper:#fffdf9;--muted:#6b7d80;--line:#dfe6e4}
+    *{box-sizing:border-box}body{margin:0;background:var(--cream);font-family:Inter,system-ui,sans-serif;color:var(--ink)}
+    .wrap{width:min(1100px,calc(100% - 28px));margin:40px auto}
+    .top{display:flex;justify-content:space-between;align-items:center;gap:12px}
+    .card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:20px;margin:14px 0;box-shadow:0 12px 32px rgba(13,43,49,.06)}
+    .btn{border:0;border-radius:999px;padding:10px 15px;font-weight:800;cursor:pointer;text-decoration:none;display:inline-flex}
+    .primary{background:var(--deep);color:#fff}.ghost{background:#eef2f1;color:var(--ink)}.danger{background:#7a2929;color:#fff}
+    input{width:100%;padding:13px;border:1px solid var(--line);border-radius:10px;font:inherit}
+    .login{max-width:420px;margin:90px auto}.grid{display:grid;grid-template-columns:1.2fr .8fr;gap:14px}
+    .meta{color:var(--muted);font-size:.9rem}.status{font-weight:800;text-transform:uppercase;letter-spacing:.05em;font-size:.78rem}
+    .actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:15px}.top .actions{margin-top:0}
+    .hidden{display:none}.badge{display:inline-block;padding:5px 9px;border-radius:999px;background:#eef2f1;margin:2px;font-size:.78rem}
+    .warn{background:#fff1cc}.good{background:#dff3e7}
+    @media(max-width:760px){.grid{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div id="login" class="card login">
+    <h1>CJT Owner Portal</h1>
+    <p class="meta">Sand &amp; Sea Manor direct-booking controls.</p>
+    <form id="loginForm">
+      <input id="passcode" type="password" placeholder="Owner passcode" required>
+      <div style="height:12px"></div>
+      <button class="btn primary">Sign in</button>
+    </form>
+    <p id="loginMsg" class="meta"></p>
+  </div>
+  <div id="portal" class="hidden">
+    <div class="top">
+      <div>
+        <h1 style="margin:0">Direct Booking Dashboard</h1>
+        <div class="meta">Sand &amp; Sea Manor · 1720 Avenue M</div>
+      </div>
+      <div class="actions">
+        <a class="btn primary" href="/communications">Communications</a>
+        <button id="logout" class="btn ghost">Sign out</button>
+      </div>
+    </div>
+    <div id="list"></div>
+  </div>
+</div>
+<script>
 const TEMPLATE='https://app.opensignlabs.com/publicsign?templateid=JGD2FwG4MP';
 const login=document.getElementById('login'),portal=document.getElementById('portal'),list=document.getElementById('list');
-async function api(opts={}){const r=await fetch('/api/owner',{headers:{'Content-Type':'application/json'},...opts});const d=await r.json().catch(()=>({}));if(r.status===401)throw new Error('unauthorized');if(!r.ok)throw new Error(d.error||'request_failed');return d}
+async function api(opts={}){const r=await fetch('/api/owner',{headers:{'Content-Type':'application/json'},...opts});const d=await r.json().catch(()=>({}));if(r.status===401)throw new Error('unauthorized');if(!r.ok)throw new Error(d.message||d.error||'request_failed');return d}
 function fmt(v){return v?new Date(v).toLocaleString():'—'}
+function money(cents){return cents==null?'':new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(cents/100)}
 function esc(v=''){return String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 async function load(){try{const d=await api();login.classList.add('hidden');portal.classList.remove('hidden');render(d.reservations||[])}catch(e){login.classList.remove('hidden');portal.classList.add('hidden')}}
-function render(rows){list.innerHTML=rows.length?'':'<div class="card">No booking records yet.</div>';for(const r of rows){const active=!['released','expired','cancelled'].includes(r.status);const hold=r.hold_expires_at?`<span class="badge ${new Date(r.hold_expires_at)-Date.now()<21600000?'warn':''}">Hold expires ${esc(fmt(r.hold_expires_at))}</span>`:'';const c=document.createElement('div');c.className='card';c.innerHTML=`<div class="grid"><div><div class="status">${esc(r.status.replaceAll('_',' '))}</div><h2 style="margin:.25rem 0">${esc(r.id)} · ${esc(r.checkin)} → ${esc(r.checkout)}</h2><div>${esc(r.guest_name)} · ${esc(r.guests)} guests</div><div class="meta">${esc(r.guest_email)}${r.guest_phone?' · '+esc(r.guest_phone):''}</div>${r.notes?`<p class="meta">${esc(r.notes)}</p>`:''}<div>${hold}<span class="badge ${r.contract_sent_at?'good':''}">Contract ${r.contract_sent_at?'sent':'pending'}</span><span class="badge ${r.contract_signed_at?'good':''}">Signed ${r.contract_signed_at?'yes':'pending'}</span><span class="badge ${r.deposit_received_at?'good':''}">Deposit ${r.deposit_received_at?'received':'pending'}</span></div></div><div><div class="meta">Created ${esc(fmt(r.created_at))}</div><div class="actions">${active?`<button class="btn ghost" data-a="maintain_hold">Maintain Hold</button><a class="btn ghost" target="_blank" rel="noopener" href="${TEMPLATE}">Open OpenSign</a><button class="btn ghost" data-a="contract_sent">Contract Sent</button><button class="btn ghost" data-a="contract_signed">Contract Signed</button><button class="btn primary" data-a="deposit_received">Received Deposit</button><button class="btn danger" data-a="release_dates">Release Dates</button>`:''}</div></div></div>`;c.querySelectorAll('button[data-a]').forEach(b=>b.onclick=()=>update(r.id,b.dataset.a));list.appendChild(c)}}
-async function update(id,status){if(status==='release_dates'&&!confirm('Release these dates back to inventory?'))return;await api({method:'POST',body:JSON.stringify({action:'update',id,status})});await load()}
-document.getElementById('loginForm').onsubmit=async e=>{e.preventDefault();const msg=document.getElementById('loginMsg');msg.textContent='Signing in…';try{await api({method:'POST',body:JSON.stringify({action:'login',passcode:document.getElementById('passcode').value})});document.getElementById('passcode').value='';msg.textContent='';await load()}catch(err){msg.textContent=err.message==='owner_login_not_configured'?'Owner portal passcode has not been configured in Vercel yet.':'Invalid passcode.'}};
-document.getElementById('logout').onclick=async()=>{await api({method:'POST',body:JSON.stringify({action:'logout'})}).catch(()=>{});location.reload()};load();
-</script></body></html>
+function actionsFor(r){
+  const s=r.status;
+  const sign=`<a class="btn ghost" target="_blank" rel="noopener" href="${TEMPLATE}">Open OpenSign</a>`;
+  if(s==='payment_received') return `${sign}<button class="btn primary" data-a="contract_sent">Contract sent</button>`;
+  if(s==='contract_sent') return `${sign}<button class="btn primary" data-a="contract_signed">Contract signed</button>`;
+  if(s==='contract_signed') return `<button class="btn primary" data-a="confirm_booking">Confirm booking</button>`;
+  if(s==='confirmed') return '';
+  if(s==='inquiry_hold'||s==='hold_verified') return `<button class="btn ghost" data-a="maintain_hold">Maintain Hold</button>${sign}<button class="btn ghost" data-a="contract_sent">Contract Sent</button><button class="btn danger" data-a="release_dates">Release Dates</button>`;
+  if(s==='checkout_pending') return `<button class="btn danger" data-a="release_dates">Release Dates</button>`;
+  return '';
+}
+function render(rows){
+  list.innerHTML=rows.length?'':'<div class="card">No booking records yet.</div>';
+  for(const r of rows){
+    const paid=r.paid_at||r.status==='payment_received'||r.status==='confirmed'||r.deposit_received_at;
+    const hold=r.hold_expires_at&&['inquiry_hold','hold_verified','checkout_pending'].includes(r.status)?`<span class="badge ${new Date(r.hold_expires_at)-Date.now()<21600000?'warn':''}">Hold expires ${esc(fmt(r.hold_expires_at))}</span>`:'';
+    const c=document.createElement('div');
+    c.className='card';
+    c.innerHTML=`<div class="grid"><div>
+      <div class="status">${esc(r.status.replaceAll('_',' '))}</div>
+      <h2 style="margin:.25rem 0">${esc(r.id)} · ${esc(r.checkin)} → ${esc(r.checkout)}</h2>
+      <div>${esc(r.guest_name)} · ${esc(r.guests)} guests${r.amount_cents!=null?' · '+esc(money(r.amount_cents)):''}</div>
+      <div class="meta">${esc(r.guest_email)}${r.guest_phone?' · '+esc(r.guest_phone):''}</div>
+      ${r.notes?`<p class="meta">${esc(r.notes)}</p>`:''}
+      <div>${hold}
+        <span class="badge ${paid?'good':''}">${paid?'Paid':'Payment pending'}</span>
+        <span class="badge ${r.contract_sent_at?'good':''}">Contract ${r.contract_sent_at?'sent':'pending'}</span>
+        <span class="badge ${r.contract_signed_at?'good':''}">Signed ${r.contract_signed_at?'yes':'pending'}</span>
+        <span class="badge ${r.status==='confirmed'?'good':''}">${r.status==='confirmed'?'Confirmed':'Not confirmed'}</span>
+      </div>
+    </div><div>
+      <div class="meta">Created ${esc(fmt(r.created_at))}${r.paid_at?' · Paid '+esc(fmt(r.paid_at)):''}</div>
+      <div class="actions">${actionsFor(r)}</div>
+    </div></div>`;
+    c.querySelectorAll('button[data-a]').forEach(b=>b.onclick=()=>update(r.id,b.dataset.a));
+    list.appendChild(c);
+  }
+}
+async function update(id,status){
+  if(status==='release_dates'&&!confirm('Release these dates back to inventory?'))return;
+  if(status==='confirm_booking'&&!confirm('Confirm this booking? The guest will be emailed that the stay is confirmed.'))return;
+  await api({method:'POST',body:JSON.stringify({action:'update',id,status})});
+  await load();
+}
+document.getElementById('loginForm').onsubmit=async e=>{
+  e.preventDefault();
+  const msg=document.getElementById('loginMsg');
+  msg.textContent='Signing in…';
+  try{
+    await api({method:'POST',body:JSON.stringify({action:'login',passcode:document.getElementById('passcode').value})});
+    document.getElementById('passcode').value='';
+    msg.textContent='';
+    await load();
+  }catch(err){
+    msg.textContent=err.message==='owner_login_not_configured'?'Owner portal passcode has not been configured in Vercel yet.':'Invalid passcode.';
+  }
+};
+document.getElementById('logout').onclick=async()=>{await api({method:'POST',body:JSON.stringify({action:'logout'})}).catch(()=>{});location.reload()};
+load();
+</script>
+</body>
+</html>

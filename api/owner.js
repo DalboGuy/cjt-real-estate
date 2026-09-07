@@ -1,5 +1,7 @@
 const crypto=require('crypto');
 const { db, ensureSchema, expireHolds }=require('../lib/db');
+const { sendBookingConfirmedEmail }=require('../lib/email');
+const { toYmd }=require('../lib/availability');
 
 function parseCookies(header=''){return Object.fromEntries(header.split(';').map(v=>v.trim()).filter(Boolean).map(v=>{const i=v.indexOf('=');return [decodeURIComponent(v.slice(0,i)),decodeURIComponent(v.slice(i+1))];}));}
 function hash(v){return crypto.createHash('sha256').update(v).digest('hex');}
@@ -37,7 +39,8 @@ module.exports=async function(req,res){
       await expireHolds();
       const reservations=await sql`
         SELECT id,guest_name,guest_email,guest_phone,guests,notes,checkin::text,checkout::text,status,
-               hold_expires_at,contract_sent_at,contract_signed_at,deposit_received_at,released_at,created_at,updated_at
+               hold_expires_at,contract_sent_at,contract_signed_at,deposit_received_at,released_at,
+               amount_cents,paid_at,stripe_checkout_session_id,stripe_payment_intent_id,created_at,updated_at
         FROM reservations
         ORDER BY CASE WHEN status IN ('released','expired','cancelled') THEN 1 ELSE 0 END, checkin ASC, created_at DESC
         LIMIT 250
@@ -60,14 +63,33 @@ module.exports=async function(req,res){
         await sql`UPDATE reservations SET status='hold_verified',hold_expires_at=GREATEST(COALESCE(hold_expires_at,now()),now())+interval '24 hours',updated_at=now() WHERE id=${id} AND status IN ('inquiry_hold','hold_verified')`;
         eventType='hold_maintained';
       }else if(next==='contract_sent'){
-        await sql`UPDATE reservations SET status='contract_sent',contract_sent_at=COALESCE(contract_sent_at,now()),hold_expires_at=NULL,updated_at=now() WHERE id=${id} AND status NOT IN ('released','cancelled','expired')`;
+        await sql`UPDATE reservations SET status='contract_sent',contract_sent_at=COALESCE(contract_sent_at,now()),hold_expires_at=NULL,updated_at=now() WHERE id=${id} AND status IN ('payment_received','inquiry_hold','hold_verified','contract_sent')`;
         eventType='contract_sent';
       }else if(next==='contract_signed'){
-        await sql`UPDATE reservations SET status='contract_signed',contract_signed_at=COALESCE(contract_signed_at,now()),hold_expires_at=NULL,updated_at=now() WHERE id=${id} AND status NOT IN ('released','cancelled','expired')`;
+        await sql`UPDATE reservations SET status='contract_signed',contract_signed_at=COALESCE(contract_signed_at,now()),hold_expires_at=NULL,updated_at=now() WHERE id=${id} AND status IN ('payment_received','contract_sent','contract_signed')`;
         eventType='contract_signed';
       }else if(next==='deposit_received'){
         await sql`UPDATE reservations SET status='confirmed',deposit_received_at=COALESCE(deposit_received_at,now()),hold_expires_at=NULL,updated_at=now() WHERE id=${id} AND status NOT IN ('released','cancelled','expired')`;
         eventType='deposit_received';
+      }else if(next==='confirm_booking'){
+        const rows=await sql`
+          UPDATE reservations
+          SET status='confirmed', hold_expires_at=NULL, updated_at=now()
+          WHERE id=${id} AND status='contract_signed'
+          RETURNING id, guest_name, guest_email, checkin::text AS checkin, checkout::text AS checkout, status
+        `;
+        if(!rows.length) return res.status(409).json({error:'invalid_status',message:'Mark the contract signed before confirming.'});
+        eventType='booking_confirmed';
+        try{
+          const r=rows[0];
+          await sendBookingConfirmedEmail({
+            to:r.guest_email,
+            name:r.guest_name,
+            id:r.id,
+            checkin:toYmd(r.checkin),
+            checkout:toYmd(r.checkout)
+          });
+        }catch(e){console.error('booking confirmed email error',e);}
       }else if(next==='release_dates'){
         await sql`UPDATE reservations SET status='released',released_at=now(),hold_expires_at=NULL,updated_at=now() WHERE id=${id} AND status<>'cancelled'`;
         eventType='dates_released';
