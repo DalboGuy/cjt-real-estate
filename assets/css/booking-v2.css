@@ -56,13 +56,13 @@ body.amenities-sheet-open iframe[title*="chat"],
 body.amenities-sheet-open div[class*="tawk-"],
 body.amenities-sheet-open .widget-visible{visibility:hidden!important;pointer-events:none!important;opacity:0!important}
 @media(max-width:780px){
-  #amenitiesModal.amenities-sheet{padding:14px 0 0;align-items:end;place-items:end center;overflow:hidden}
-  #amenitiesModal .amenities-sheet-panel{width:100%;max-height:calc(100dvh - 14px);max-height:calc(100svh - 14px);border-radius:18px 18px 0 0;display:flex;flex-direction:column;overflow:hidden}
-  #amenitiesModal .amenities-sheet-header{position:sticky;top:0;z-index:4;flex:0 0 auto;display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px 12px;padding:8px 14px 12px}
-  #amenitiesModal .amenities-sheet-grabber{display:block;grid-column:1/-1;justify-self:center;width:42px;height:4px;border-radius:999px;background:#c5cdcb;margin:2px 0 4px}
-  #amenitiesModal .amenities-sheet-header h2{margin:0;font-size:1.25rem}
-  #amenitiesModal .amenities-sheet-close{width:44px;min-width:44px;height:44px;font-size:1.55rem;line-height:1;border:1px solid var(--ink)}
-  #amenitiesModal .amenities-sheet-body{flex:1 1 auto;overflow:auto;-webkit-overflow-scrolling:touch;padding:16px 16px 8px}
-  #amenitiesModal .amenities-sheet-footer{display:block;flex:0 0 auto;position:sticky;bottom:0;z-index:4;padding:12px 16px max(14px,env(safe-area-inset-bottom));background:#fff;border-top:1px solid var(--line);box-shadow:0 -8px 22px rgba(13,43,49,.08)}
+  #amenitiesModal.show{padding:14px 0 0;align-items:end;place-items:end center;overflow:hidden}
+  #amenitiesModal .amenities-sheet-panel,#amenitiesModal .modal-panel{width:100%;max-height:calc(100dvh - 14px);border-radius:18px 18px 0 0;display:flex;flex-direction:column;overflow:hidden}
+  #amenitiesModal .amenities-sheet-header,#amenitiesModal .modal-header{position:relative;top:auto;z-index:4;flex:0 0 auto;display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px 12px;padding:8px 14px 12px}
+  #amenitiesModal .amenities-sheet-grabber{display:block!important;grid-column:1/-1;justify-self:center;width:42px;height:4px;border-radius:999px;background:#c5cdcb;margin:2px 0 4px}
+  #amenitiesModal .modal-header h2{margin:0;font-size:1.25rem}
+  #amenitiesModal .amenities-sheet-close,#amenitiesModal #amenitiesClose{width:44px;min-width:44px;height:44px;font-size:1.55rem;line-height:1;border:1px solid var(--ink)}
+  #amenitiesModal .amenities-sheet-body,#amenitiesModal .modal-body{flex:1 1 auto;overflow:auto;-webkit-overflow-scrolling:touch;padding:16px 16px 8px}
+  #amenitiesModal .amenities-sheet-footer{display:block!important;flex:0 0 auto;position:relative;bottom:auto;z-index:4;padding:12px 16px max(14px,env(safe-area-inset-bottom));background:#fff;border-top:1px solid var(--line);box-shadow:0 -8px 22px rgba(13,43,49,.08)}
   #amenitiesModal .amenities-sheet-footer .btn{width:100%;min-height:48px}
 }
