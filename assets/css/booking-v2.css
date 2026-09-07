@@ -149,3 +149,23 @@ body.amenities-sheet-open .widget-visible{visibility:hidden!important;pointer-ev
   .booking-progress{gap:5px}
   .booking-progress li{font-size:.62rem;padding:4px 6px}
 }
+
+/* Always-visible guest stepper (do not hide +/− inside a clipped popover). */
+.booking-selectors{overflow:visible}
+.guest-stepper-panel{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:12px 14px;border-top:1px solid #aeb8b6;background:#fff}
+.guest-stepper-copy{display:grid;gap:2px;min-width:0}
+.guest-max-hint{font-size:.72rem;color:var(--muted);line-height:1.3}
+.guest-stepper-panel .stepper,.mobile-guest-stepper .stepper{display:flex;align-items:center;gap:10px;flex:0 0 auto}
+.guest-stepper-panel .stepper button,.mobile-guest-stepper .stepper button{width:40px;height:40px;border-radius:999px;border:1px solid #aeb8b6;background:#fff;cursor:pointer;font-size:1.2rem;line-height:1;color:var(--deep)}
+.guest-stepper-panel .stepper button:disabled,.mobile-guest-stepper .stepper button:disabled{opacity:.4;cursor:not-allowed}
+.guest-stepper-panel .stepper b{min-width:1.5rem;text-align:center;font-size:1.05rem}
+.mobile-guest-stepper{display:none;align-items:center;justify-content:space-between;gap:10px;margin-top:6px}
+
+@media(max-width:780px){
+  .content-layout{display:flex;flex-direction:column}
+  .side-column{display:block;order:-1;margin:0 0 18px}
+  .booking-sidebar-stack{position:static}
+  .mobile-guest-stepper{display:flex}
+  .guest-stepper-panel .stepper button,.mobile-guest-stepper .stepper button{width:44px;height:44px}
+  .mobile-bookbar{align-items:flex-end}
+}
