@@ -1,6 +1,6 @@
 # API response contract (UI / UX)
 
-Status: **Draft — documents what the APIs already return** on `reorg/platform-v1` tip `de0ab95` plus this year/day view contract. Merged **#71** atomic inquiry / replay, **#72** fail-closed `sourceHealth`, **#73** quote nightly consistency, **#80** owner `calendar_sync`. Year/day range helpers are additive on owner `calendar_view` / `calendar_sync` only. Guest inquiry also accepts optional `trip_type` / pets / event fields (nullable; omit is unanswered).
+Status: **Draft — documents what the APIs already return** on `reorg/platform-v1` tip `de0ab95` plus this year/day view contract. Merged **#71** atomic inquiry / replay, **#72** fail-closed `sourceHealth`, **#73** quote nightly consistency, **#80** owner `calendar_sync`. Year/day range helpers are additive on owner `calendar_view` / `calendar_sync` only. Guest inquiry accepts optional `trip_type` / pets / event fields (nullable; omit is unanswered). Owner `GET /api/owner` list rows now include those five keys (`null` when unanswered or the row predates the columns).
 
 This file is the UI/UX source of truth for **error codes, HTTP status, and JSON shapes** on guest booking and owner booking/calendar. It records **real** fields already returned. Where product language differs from the wire (`availability_unknown`, `duplicate_submission`, `fromStatus` / `toStatus`), the alias is called out so UI can map it — do not invent those strings on the server.
 
@@ -288,7 +288,7 @@ All five are optional. Omitted, empty, or JSON `null` stores SQL `null`. Do **no
 }
 ```
 
-These fields are **not** on the 201/200 `reservation` object (owner list expose is later). They are persisted on `reservations` and copied into `inquiry_created` booking_events metadata alongside `guests` and `quote`. Duplicate replay returns the existing reservation as today and does **not** invent values on old rows.
+These fields are **not** on the guest 201/200 `reservation` object. They are persisted on `reservations` and copied into `inquiry_created` booking_events metadata alongside `guests` and `quote`. Duplicate replay returns the existing reservation as today and does **not** invent values on old rows. Owner `GET /api/owner` already spreads `listReservations` rows, so the five keys appear on each owner list reservation (`null` when unanswered or old). Read-only.
 
 Other inquiry errors:
 
@@ -302,6 +302,54 @@ Other inquiry errors:
 | 422 / `e.status` | `pricing_unavailable` or pricing `e.code` | Quote engine failed before persist |
 | 503 | `occupancy_migration_pending` | 13–14 guests hit a pending DB check |
 | 500 | `booking_unavailable` | Unexpected persist failure |
+
+### Owner reservation objects (`GET /api/owner`)
+
+`GET /api/owner` lists reservations via `listReservations` (`includeClosed: true`, `withQuote: true`) and spreads each row. The five inquiry columns are on every list object. They are **read-only** here: owner writes / transitions do not change them. `null` means the guest left the question unanswered **or** the row predates the columns.
+
+| Field | Wire | `null` means |
+| --- | --- | --- |
+| `trip_type` | `"Leisure"` \| `"Family"` \| `"Business"` \| `"Other"` \| `null` | Unanswered or old row |
+| `bringing_pet` | `true` \| `false` \| `null` | Unanswered or old row |
+| `pet_details` | string \| `null` | Not answered, `bringing_pet` is not true, or old row |
+| `planning_event` | `true` \| `false` \| `null` | Unanswered or old row |
+| `event_details` | string \| `null` | Not answered, `planning_event` is not true, or old row |
+
+```json
+{
+  "reservations": [
+    {
+      "id": "DB-20261010-ABC123",
+      "guest_name": "Ada Guest",
+      "guest_email": "ada@example.com",
+      "guests": 4,
+      "trip_type": "Family",
+      "bringing_pet": true,
+      "pet_details": "One small dog",
+      "planning_event": false,
+      "event_details": null,
+      "checkin": "2026-10-10",
+      "checkout": "2026-10-13",
+      "status": "inquiry_hold",
+      "quote": { },
+      "payment": { }
+    },
+    {
+      "id": "DB-20180101-OLD001",
+      "trip_type": null,
+      "bringing_pet": null,
+      "pet_details": null,
+      "planning_event": null,
+      "event_details": null
+    }
+  ],
+  "from": "2025-09-07",
+  "to": null,
+  "temporaryPasswordFree": false
+}
+```
+
+Guest inquiry 201/200 still returns only `id` / `checkin` / `checkout` / `status` / `hold_expires_at` on `reservation`.
 
 ---
 
@@ -602,4 +650,4 @@ Until that slice lands, guest UI has a single unavailable state; owner UI alread
 
 ## 12. Sources inspected
 
-`api/inquiries.js`, `api/owner.js`, `api/calendar.js`, `api/quote.js`, `lib/inquiry-create.js`, `lib/booking-transitions.js`, `lib/availability.js`, `lib/calendar-view.js`, plus tests `lib/inquiry-create.test.js`, `lib/booking-transitions.test.js`, `lib/availability.test.js`.
+`api/inquiries.js`, `api/owner.js`, `api/calendar.js`, `api/quote.js`, `lib/inquiry-create.js`, `lib/reservation-queries.js`, `lib/booking-transitions.js`, `lib/availability.js`, `lib/calendar-view.js`, plus tests `lib/inquiry-create.test.js`, `lib/reservation-queries.test.js`, `lib/booking-transitions.test.js`, `lib/availability.test.js`.
