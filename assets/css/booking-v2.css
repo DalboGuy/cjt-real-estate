@@ -88,7 +88,21 @@ body.amenities-sheet-open .widget-visible{visibility:hidden!important;pointer-ev
 .agreement-page p,.agreement-page li{color:#405154}
 .agreement-page ul{margin:0;padding-left:1.15rem;display:grid;gap:6px}
 .agreement-card{border:1px solid var(--line);border-radius:18px;background:#fff;padding:22px 22px 18px;box-shadow:var(--shadow)}
+/* Four Things-to-know columns wrap as a 2×2 in the listing column. */
+.policy-grid{grid-template-columns:1fr 1fr}
+
+.listing-faq{margin-top:22px;border-top:1px solid var(--line);padding-top:6px}
+.listing-faq details{border-bottom:1px solid var(--line);padding:11px 0}
+.listing-faq summary{cursor:pointer;font-weight:800;font-size:.92rem;color:var(--deep);list-style:none}
+.listing-faq summary::-webkit-details-marker{display:none}
+.listing-faq summary::after{content:'＋';float:right;color:var(--muted);font-weight:700}
+.listing-faq details[open] summary::after{content:'–'}
+.listing-faq details p{margin:8px 0 2px;color:#405154;font-size:.9rem;line-height:1.5;max-width:62ch}
+.listing-faq details a{color:var(--deep);font-weight:750;text-decoration:underline}
+.room-card-copy .room-beds{color:var(--muted);font-size:.9rem;line-height:1.35}
+
 @media(max-width:780px){
   .mobile-bookbar{align-items:flex-end}
   .mobile-book-copy{padding-right:8px}
+  .policy-grid{grid-template-columns:1fr}
 }
