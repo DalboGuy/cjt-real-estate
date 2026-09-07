@@ -165,6 +165,7 @@ module.exports=async function(req,res){
         tasksOverdue:KPI_DESTINATIONS.tasksOverdue(),
         tasksOpen:KPI_DESTINATIONS.tasksOpen(),
         financialsPeriod:KPI_DESTINATIONS.financialsPeriod('month'),
+        financialsYtd:KPI_DESTINATIONS.financialsYtd(),
         financialsStays:KPI_DESTINATIONS.financialsStays('month'),
         financialsUpcoming:KPI_DESTINATIONS.financialsUpcoming()
       },

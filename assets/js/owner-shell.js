@@ -16,7 +16,8 @@
     {id:'admin',label:'Admin',href:'/admin-v1'}
   ];
   const BOTTOM=['overview','calendar','bookings','financials','more'];
-  const CONTEXT_KEYS=['property','period','range','from','to','channel','source','status','stripe','q','booking','message','unread','view','date','focus','section','season','assignee','due','id'];
+  const CONTEXT_KEYS=['property','period','range','from','to','channel','source','status','stripe','q','booking','message','unread','view','date','focus','section','tab','season','assignee','due','id'];
+  const STATUS_LABELS={inquiry_hold:'Request received',hold_verified:'Owner approved',contract_sent:'Contract sent',contract_signed:'Contract completed',confirmed:'Confirmed',completed:'Stay completed',pending:'Request received',released:'Released',expired:'Expired',cancelled:'Cancelled'};
   const EMPTY=new Set(['','all','false','undefined','null']);
 
   const sidebar=document.getElementById('ownerSidebar');
@@ -91,7 +92,7 @@
     return {context:next,search:query?`?${query}`:''};
   }
   function chipLabels(){
-    return {status:'Status',period:'Period',channel:'Channel',source:'Source',unread:'Unread',q:'Search',view:'View',date:'Date',focus:'Focus',section:'Section',season:'Season',assignee:'Assignee',due:'Due',booking:'Booking',message:'Message',stripe:'Stripe'};
+    return {status:'Status',period:'Period',channel:'Channel',source:'Source',unread:'Unread',q:'Search',view:'View',date:'Date',focus:'Focus',section:'Section',tab:'Tab',season:'Season',assignee:'Assignee',due:'Due',booking:'Booking',message:'Message',stripe:'Stripe'};
   }
   function renderChips(){
     const host=document.getElementById('ownerContextChips');
@@ -117,6 +118,26 @@
     const where=String(page||'this page').trim()||'this page';
     return `${where} could not apply ${what}. The destination is open; clear filters or choose another record.`;
   }
+  function statusLabel(value){
+    const key=String(value||'').trim();
+    return STATUS_LABELS[key]||key.replaceAll('_',' ');
+  }
+  function paymentLabel(record){
+    const payment=record?.payment||{};
+    if(payment.verified||record?.deposit_received_at)return 'Payment received';
+    return 'Payment pending';
+  }
+  function markSticky(){
+    if(!ownerPortal)return;
+    if(!document.querySelector('.fp-sticky-bar,.fp-toolbar')){
+      document.querySelector('.filter-bar')?.classList.add('owner-sticky-controls');
+    }
+    if(document.querySelector('.cal-ops,.cal-chrome')){
+      document.querySelector('.cal-filter-bar')?.classList.add('owner-sticky-controls');
+    }else{
+      document.querySelector('.cal-toolbar')?.classList.add('owner-sticky-controls');
+    }
+  }
 
   window.CJTOwnerShell={
     markDirty(value=true){dirty=Boolean(value);},
@@ -124,6 +145,8 @@
     readContext,
     writeContext,
     cannotApply,
+    statusLabel,
+    paymentLabel,
     primary:PRIMARY,
     secondary:SECONDARY
   };
@@ -132,7 +155,10 @@
     const a=document.createElement('a');
     a.href=item.href;
     a.dataset.navId=item.id;
-    if(itemActive(item))a.classList.add('active');
+    if(itemActive(item)){
+      a.classList.add('active');
+      a.setAttribute('aria-current','page');
+    }
     const label=document.createElement('span');
     label.textContent=item.label;
     a.appendChild(label);
@@ -317,6 +343,7 @@
   mountBottomNav();
   mountShellBack();
   mountChipHost();
+  markSticky();
 
   menu?.addEventListener('click',openNav);
   backdrop?.addEventListener('click',closeNav);

@@ -111,13 +111,21 @@ document.getElementById('taskAssignee').addEventListener('change',()=>{
   loadTasks();
 });
 document.getElementById('addTask').addEventListener('click',async()=>{
-  const title=window.prompt('Task title');
-  if(!title)return;
+  const input=document.getElementById('taskTitle');
+  const btn=document.getElementById('addTask');
+  const title=(input?.value||'').trim();
+  if(!title){notice('Enter a task title.');return;}
+  if(btn.disabled)return;
+  btn.disabled=true;
   try{
     await tasksApi({method:'POST',body:JSON.stringify({action:'create',title,assignee:document.getElementById('taskAssignee').value.trim()})});
+    if(input)input.value='';
+    notice('Task saved.');
     await loadTasks();
   }catch(e){
     notice(e.message==='unauthorized'?'Sign in to add a task.':'This page could not save a task until the operations table is confirmed.');
+  }finally{
+    btn.disabled=false;
   }
 });
 window.addEventListener('cjt-context-change',loadTasks);

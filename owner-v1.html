@@ -45,7 +45,6 @@
       <div class="content">
         <div class="hero-row">
           <div><h2>Sand &amp; Sea Manor</h2><p>What needs attention today, then the next seven days, then the numbers behind it.</p></div>
-          <div class="status-strip"><span class="status-pill">Preview</span><span class="status-pill">Production unchanged</span></div>
         </div>
 
         <div id="moduleNotice" class="card hidden" style="margin-bottom:16px"></div>
@@ -74,7 +73,7 @@
           </article>
 
           <article class="card span-5">
-            <div class="card-head"><div><h3>Financial snapshot</h3><p>Quoted, expected payout, and verified receipts — not profit or NOI.</p></div><a class="card-link" id="openFinancials" href="/owner-v1/financials">Financials ↗</a></div>
+            <div class="card-head"><div><h3>Financial snapshot</h3><p>Gross, owner booking revenue, booked nights, and ADR — not profit or NOI.</p></div><a class="card-link" id="openFinancials" href="/owner-v1/financials">Financials ↗</a></div>
             <div id="financialSnapshot" class="split-metrics" style="grid-template-columns:1fr"></div>
           </article>
 
@@ -87,17 +86,6 @@
             <div class="card-head"><div><h3>Tasks</h3><p>Operations list for the property</p></div><a class="card-link" href="/owner-v1/tasks">Open Tasks ↗</a></div>
             <div id="taskSnapshot" class="split-metrics" style="grid-template-columns:1fr 1fr"></div>
             <div class="widget-footer"><a class="btn btn-primary" href="/owner-v1/tasks">Open Tasks</a></div>
-          </article>
-
-          <article class="card span-12 ops-note">
-            <details>
-              <summary>Platform and architecture notes</summary>
-              <div class="list" style="margin-top:12px">
-                <div class="list-row"><div><strong>Production</strong><span>Current owner workflows remain on /owner until cutover.</span></div><span class="badge good">Safe</span></div>
-                <div class="list-row"><div><strong>Preview</strong><span>This Overview is for daily ops. Admin maps and architecture live under Admin.</span></div><span class="badge">Moved</span></div>
-                <div class="list-row"><div><strong>Holds</strong><span>Booking-request dates stay blocked until you accept, reject, or release. Acceptance keeps them blocked.</span></div><span class="badge good">Owner-controlled</span></div>
-              </div>
-            </details>
           </article>
         </section>
       </div>

@@ -1,6 +1,6 @@
 let financialRows=[];
 let otaMeta={available:false,count:0};
-const filters={range:'year',status:'all',source:'all',stripe:'all',from:'',to:'',channel:'all',section:'overview'};
+const filters={range:'year',status:'all',source:'all',stripe:'all',from:'',to:''};
 
 const PROPERTY_TZ='America/Chicago';
 const loginShell=document.getElementById('loginShell');
@@ -83,50 +83,7 @@ async function financialsApi(){
   return d;
 }
 
-function applyFinanceContext(){
-  const ctx=window.CJTOwnerShell?.readContext?.()||{};
-  const period=String(ctx.period||ctx.range||'').toLowerCase();
-  if(['month','year','all','custom'].includes(period))filters.range=period;
-  if(ctx.from)filters.from=ctx.from;
-  if(ctx.to)filters.to=ctx.to;
-  if(ctx.status)filters.status=ctx.status;
-  if(ctx.stripe)filters.stripe=ctx.stripe;
-  if(ctx.channel){
-    filters.channel=ctx.channel;
-    filters.source=ctx.channel==='direct'?'direct':(ctx.channel==='ota'?'ota':filters.source);
-  }else if(ctx.source){
-    filters.source=ctx.source;
-    filters.channel=ctx.source;
-  }
-  if(ctx.section)filters.section=ctx.section;
-  if(filterStatus)filterStatus.value=filters.status;
-  if(filterSource)filterSource.value=['direct','ota','all'].includes(filters.source)?filters.source:'all';
-  if(filterStripe)filterStripe.value=filters.stripe;
-  if(filterFrom)filterFrom.value=filters.from;
-  if(filterTo)filterTo.value=filters.to;
-  if(financialSearch&&ctx.q!=null)financialSearch.value=ctx.q;
-  syncRangeButtons();
-}
-
-function persistFinanceContext(push){
-  window.CJTOwnerShell?.writeContext?.({
-    period:filters.range,
-    range:filters.range,
-    from:filters.from,
-    to:filters.to,
-    status:filters.status,
-    stripe:filters.stripe,
-    channel:filters.channel==='all'?null:filters.channel,
-    source:filters.source==='all'?null:filters.source,
-    section:filters.section==='overview'?null:filters.section,
-    q:financialSearch?.value||null
-  },{push:Boolean(push)});
-}
-
-function chicagoToday(){
-  const {year,month,day}=chicagoParts();
-  return year&&month&&day?`${year}-${month}-${day}`:'';
-}
+function rangeLabel(range){
   if(filters.range==='month')return 'This month';
   if(filters.range==='year')return 'This year';
   if(filters.range==='custom'){
@@ -139,7 +96,7 @@ function chicagoToday(){
 }
 
 function periodFromRows(rows){
-  const period={total:null,expectedPayout:null,nights:null,quotedBookings:0,directRevenue:null,otaRevenue:null,received:null};
+  const period={total:null,expectedPayout:null,nights:null,quotedBookings:0,directRevenue:null,otaRevenue:null};
   for(const row of rows){
     if(row.closed)continue;
     if(row.quote?.missing)continue;
@@ -149,7 +106,6 @@ function periodFromRows(rows){
     period.nights=addMoney(period.nights,row.nights);
     if(row.kind==='ota')period.otaRevenue=addMoney(period.otaRevenue,row.quote?.total);
     else period.directRevenue=addMoney(period.directRevenue,row.quote?.total);
-    if(row.payment?.verified)period.received=addMoney(period.received,row.payment.verifiedAmount);
   }
   period.revenuePerNight=period.total!=null&&period.nights?period.total/period.nights:null;
   return period;
@@ -178,20 +134,13 @@ function renderSummary(period,range,summary){
     period.directRevenue!=null?`Direct ${money(period.directRevenue)}`:'',
     period.otaRevenue!=null?`OTA ${money(period.otaRevenue)}`:''
   ].filter(Boolean).join(' · ')||'Quoted + imported OTA';
-  const received=period.received!=null?money(period.received):'—';
   const cards=[
-    ['Quoted / imported',money(period.total),mix,'stays'],
-    ['Expected payout',money(period.expectedPayout),'Before operating expenses — not profit / NOI','overview'],
-    ['Received / verified',received,'Stripe verified on Direct stays only','overview'],
-    ['Booked nights',countOrDash(period.nights),'Active stays in this range','stays']
+    ['Revenue',money(period.total),mix],
+    ['Expected payout',money(period.expectedPayout),'Direct quotes + stored OTA payout'],
+    ['Booked nights',countOrDash(period.nights),'Active stays in this range'],
+    ['Revenue / night',money(period.revenuePerNight),'When nights and revenue exist']
   ];
-  document.getElementById('financialSummary').innerHTML=cards.map(c=>`<a class="summary-card kpi-card" href="#finance-${c[3]}" data-section="${esc(c[3])}"><span>${esc(c[0])}</span><b>${esc(c[1])}</b><span>${esc(c[2])}</span></a>`).join('');
-  document.querySelectorAll('#financialSummary [data-section]').forEach(el=>el.addEventListener('click',e=>{
-    e.preventDefault();
-    filters.section=el.getAttribute('data-section');
-    persistFinanceContext(true);
-    scrollFinanceSection();
-  }));
+  document.getElementById('financialSummary').innerHTML=cards.map(c=>`<div class="summary-card"><span>${esc(c[0])}</span><b>${esc(c[1])}</b><span>${esc(c[2])}</span></div>`).join('');
   const monthHint=document.getElementById('mtdMonthHint');
   if(monthHint)monthHint.textContent=`${rangeLabel(range)} · ${PROPERTY_TZ}`;
   if(summary?.stripeNote){
@@ -224,7 +173,7 @@ function renderChart(rows,range){
 }
 
 function filtersAreActive(){
-  return filters.range!=='year'||filters.status!=='all'||filters.source!=='all'||filters.stripe!=='all'||filters.channel!=='all'||Boolean(filters.from)||Boolean(filters.to)||Boolean(financialSearch.value.trim());
+  return filters.range!=='year'||filters.status!=='all'||filters.source!=='all'||filters.stripe!=='all'||Boolean(filters.from)||Boolean(filters.to)||Boolean(financialSearch.value.trim());
 }
 
 function syncRangeButtons(){
@@ -243,8 +192,6 @@ function resetFilters(){
   filters.status='all';
   filters.source='all';
   filters.stripe='all';
-  filters.channel='all';
-  filters.section='overview';
   filters.from='';
   filters.to='';
   filterStatus.value='all';
@@ -269,11 +216,6 @@ function filteredBookings(){
     if(filters.status==='closed'&&!row.closed)return false;
     if(filters.source==='direct'&&ota)return false;
     if(filters.source==='ota'&&!ota)return false;
-    if(filters.channel&&filters.channel!=='all'&&filters.channel!=='direct'&&filters.channel!=='ota'&&String(row.channel||'')!==filters.channel)return false;
-    if(filters.section==='upcoming'){
-      const today=chicagoToday();
-      if(today&&stayDate(row.checkin)<today)return false;
-    }
     if(filters.stripe==='verified'&&(ota||!verified))return false;
     if(filters.stripe==='pending'&&(ota||verified))return false;
     if(!q)return true;
@@ -309,64 +251,12 @@ function stripeCell(row){
   return `<span class="badge ${paymentClass(paymentStatus)}">${esc(paymentLabel(paymentStatus))}</span><div class="muted" style="margin-top:6px">${stripeDetail}</div>`;
 }
 
-function renderChannelCards(){
-  const host=document.getElementById('finance-channels');
-  if(!host)return;
-  const byChannel=new Map();
-  for(const row of financialRows){
-    if(row.closed)continue;
-    const key=row.channel||(row.kind==='ota'?'ota':'direct');
-    if(!byChannel.has(key))byChannel.set(key,{channel:key,label:row.sourceLabel||key,quoted:null,expected:null,count:0});
-    const bucket=byChannel.get(key);
-    bucket.count+=1;
-    if(!row.quote?.missing)bucket.quoted=addMoney(bucket.quoted,row.quote?.total);
-    bucket.expected=addMoney(bucket.expected,row.expectedPayout);
-  }
-  const cards=[...byChannel.values()];
-  if(!cards.length){
-    host.innerHTML='<div class="empty" style="grid-column:1/-1">No channel totals in the current stored stays.</div>';
-    return;
-  }
-  host.innerHTML=cards.map(card=>`<button type="button" class="channel-card ${filters.channel===card.channel?'active':''}" data-channel="${esc(card.channel)}"><strong>${esc(card.label)}</strong><b>${esc(money(card.quoted))}</b><span>${esc(card.count)} stays · expected ${esc(money(card.expected))}</span></button>`).join('');
-  host.querySelectorAll('[data-channel]').forEach(btn=>btn.addEventListener('click',()=>{
-    filters.channel=btn.getAttribute('data-channel');
-    filters.source=filters.channel==='direct'?'direct':(filters.channel==='ota'?'ota':'all');
-    if(filterSource)filterSource.value=['direct','ota'].includes(filters.source)?filters.source:'all';
-    filters.section='channels';
-    persistFinanceContext(true);
-    renderBookings();
-  }));
-}
-
-function syncSectionNav(){
-  document.querySelectorAll('.owner-section-nav [data-section]').forEach(el=>{
-    el.classList.toggle('active',el.getAttribute('data-section')===(filters.section||'overview'));
-  });
-}
-
-function scrollFinanceSection(){
-  syncSectionNav();
-  const id=filters.section==='channels'?'finance-channels':filters.section==='upcoming'?'finance-upcoming':filters.section==='stays'?'finance-stays':'finance-overview';
-  document.getElementById(id)?.scrollIntoView({block:'start'});
-}
-
-function renderUpcomingNote(){
-  const host=document.getElementById('finance-upcoming');
-  if(!host)return;
-  const today=chicagoToday();
-  const upcoming=financialRows.filter(row=>!row.closed&&stayDate(row.checkin)>=today);
-  host.innerHTML=`<div class="empty">Upcoming stays with a future check-in: ${upcoming.length}. Use the Upcoming section to filter the table. Amounts stay quoted / expected / received — not profit.</div>`;
-}
-
 function renderBookings(){
   const range=activeRange();
   const rows=filteredBookings();
   const period=periodFromRows(rows);
   renderSummary(period,range,{stripeNote:window.__financialStripeNote});
   renderChart(rows,range);
-  renderChannelCards();
-  renderUpcomingNote();
-  syncSectionNav();
   const countEl=document.getElementById('financialCount');
   if(!financialRows.length){
     if(countEl)countEl.textContent='No stays yet';
@@ -383,7 +273,7 @@ function renderBookings(){
     syncClearControl();
     return;
   }
-  financialList.innerHTML=`<div class="finance-table-wrap"><table class="finance-table"><thead><tr><th>Stay</th><th>Source</th><th>Status</th><th class="money">Lodging</th><th class="money">Taxes</th><th class="money">Cleaning</th><th class="money">Quoted total</th><th class="money">Expected payout</th><th>Received / Stripe</th></tr></thead><tbody>${rows.map(row=>{
+  financialList.innerHTML=`<div class="finance-table-wrap"><table class="finance-table"><thead><tr><th>Stay</th><th>Source</th><th>Status</th><th class="money">Lodging</th><th class="money">Taxes</th><th class="money">Cleaning</th><th class="money">Total</th><th class="money">Expected payout</th><th>Stripe</th></tr></thead><tbody>${rows.map(row=>{
     const quoteMissing=Boolean(row.quote?.missing);
     return `<tr>
       <td data-label="Stay">${stayCell(row)}</td>
@@ -392,9 +282,9 @@ function renderBookings(){
       <td data-label="Lodging" class="money">${esc(money(quoteMissing?null:row.quote?.lodging))}</td>
       <td data-label="Taxes" class="money">${esc(money(quoteMissing?null:row.quote?.taxes))}</td>
       <td data-label="Cleaning" class="money">${esc(money(quoteMissing?null:row.quote?.cleaning))}</td>
-      <td data-label="Quoted total" class="money">${esc(money(quoteMissing?null:row.quote?.total))}</td>
+      <td data-label="Total" class="money">${esc(money(quoteMissing?null:row.quote?.total))}</td>
       <td data-label="Expected payout" class="money">${esc(money(row.expectedPayout))}</td>
-      <td data-label="Received / Stripe">${stripeCell(row)}</td>
+      <td data-label="Stripe">${stripeCell(row)}</td>
     </tr>`;
   }).join('')}</tbody></table></div>`;
   syncClearControl();
@@ -409,10 +299,8 @@ async function loadFinancials(){
     otaMeta=data.summary?.ota||{available:false,count:0};
     window.__financialStripeNote=data.summary?.stripeNote||'';
     showApp();
-    applyFinanceContext();
     syncRangeButtons();
     renderBookings();
-    if(filters.section&&filters.section!=='overview')scrollFinanceSection();
     document.getElementById('lastChecked').textContent=`Updated ${new Date(data.checkedAt||Date.now()).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})}`;
   }catch(e){
     if(e.message==='unauthorized')return showLogin();
@@ -429,25 +317,16 @@ filterRange.addEventListener('click',e=>{
   filters.range=btn.dataset.range;
   if(filters.range!=='custom'){filters.from='';filters.to='';filterFrom.value='';filterTo.value='';}
   syncRangeButtons();
-  persistFinanceContext(true);
   renderBookings();
 });
-filterStatus.addEventListener('change',()=>{filters.status=filterStatus.value;persistFinanceContext(true);renderBookings()});
-filterSource.addEventListener('change',()=>{filters.source=filterSource.value;filters.channel=filters.source;persistFinanceContext(true);renderBookings()});
-filterStripe.addEventListener('change',()=>{filters.stripe=filterStripe.value;persistFinanceContext(true);renderBookings()});
-filterFrom.addEventListener('change',()=>{filters.from=filterFrom.value;persistFinanceContext(false);renderBookings()});
-filterTo.addEventListener('change',()=>{filters.to=filterTo.value;persistFinanceContext(false);renderBookings()});
-financialSearch.addEventListener('input',()=>{persistFinanceContext(false);renderBookings()});
-clearFilters.addEventListener('click',()=>{resetFilters();persistFinanceContext(true)});
+filterStatus.addEventListener('change',()=>{filters.status=filterStatus.value;renderBookings()});
+filterSource.addEventListener('change',()=>{filters.source=filterSource.value;renderBookings()});
+filterStripe.addEventListener('change',()=>{filters.stripe=filterStripe.value;renderBookings()});
+filterFrom.addEventListener('change',()=>{filters.from=filterFrom.value;renderBookings()});
+filterTo.addEventListener('change',()=>{filters.to=filterTo.value;renderBookings()});
+financialSearch.addEventListener('input',renderBookings);
+clearFilters.addEventListener('click',resetFilters);
 document.getElementById('refreshFinancials')?.addEventListener('click',loadFinancials);
-document.querySelectorAll('.owner-section-nav [data-section]').forEach(el=>el.addEventListener('click',e=>{
-  e.preventDefault();
-  filters.section=el.getAttribute('data-section');
-  persistFinanceContext(true);
-  renderBookings();
-  scrollFinanceSection();
-}));
-window.addEventListener('cjt-context-change',()=>{applyFinanceContext();renderBookings()});
 loginForm.addEventListener('submit',async e=>{
   e.preventDefault();
   loginMsg.textContent='Signing in…';

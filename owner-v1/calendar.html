@@ -60,7 +60,7 @@
         <div id="syncStrip" class="cal-sync" aria-live="polite"></div>
         <div id="conflictBanner" class="notice cal-conflict hidden"></div>
 
-        <div class="cal-toolbar owner-sticky-controls" data-module="calendar">
+        <div class="cal-toolbar">
           <div class="cal-month-nav">
             <button class="btn btn-secondary" id="calPrev" type="button">‹</button>
             <h3 id="calTitle">Loading…</h3>
@@ -72,9 +72,10 @@
             <button class="filter-btn" id="viewWeek" type="button">Week</button>
             <button class="btn btn-secondary" id="copySummary" type="button">Copy month summary</button>
           </div>
-          <div class="filter-row" id="channelFilters"></div>
-          <div class="filter-row" id="statusFilters" style="margin-top:8px"></div>
         </div>
+
+        <div class="filter-row" id="channelFilters"></div>
+        <div class="filter-row" id="statusFilters" style="margin-top:8px"></div>
         <div class="cal-privacy">
           <label><input id="showGuestNames" type="checkbox" checked> Show guest names in night details</label>
           <label><input id="showGuestContact" type="checkbox"> Show guest phone/email in night details</label>
@@ -171,5 +172,6 @@
   <script src="/assets/js/static-auth.js"></script>
   <script src="/assets/js/calendar-connections.js"></script>
   <script src="/assets/js/calendar-view.js"></script>
+  <script src="/assets/js/owner-calendar-context.js"></script>
 </body>
 </html>

@@ -109,7 +109,7 @@ function renderReservationQuick(data){
   document.getElementById('quickAction').textContent=s.action_needed||0;
   document.getElementById('quickArrival').textContent=s.next_checkin||'None scheduled';
   const rows=data.reservations?.recent||[];
-  document.getElementById('quickReservations').innerHTML=rows.length?rows.map(r=>`<div class="list-row"><div><strong>${esc(r.guest_name)}</strong><span>${esc(r.checkin)} → ${esc(r.checkout)}</span></div><span class="badge">${esc(String(r.status||'').replaceAll('_',' '))}</span></div>`).join(''):'<div class="empty">No active direct-booking stays.</div>';
+  document.getElementById('quickReservations').innerHTML=rows.length?rows.map(r=>`<div class="list-row"><div><a href="/owner-v1/reservations?booking=${encodeURIComponent(r.id)}&property=sand-sea-manor"><strong>${esc(r.guest_name)}</strong><span>${esc(r.checkin)} → ${esc(r.checkout)}</span></a></div><span class="badge">${esc(window.CJTOwnerShell?.statusLabel?.(r.status)||String(r.status||'').replaceAll('_',' '))}</span></div>`).join(''):'<div class="empty">No active direct-booking stays.</div>';
 }
 
 function messageFromUrl(){

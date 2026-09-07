@@ -10,8 +10,13 @@ function countOrDash(v,available=true){if(!available||v==null||v==='')return '�
 function date(v){if(!v)return 'None scheduled';const d=new Date(`${v}T12:00:00`);return d.toLocaleDateString(undefined,{month:'short',day:'numeric'})}
 function dateTime(v){if(!v)return '';return new Date(v).toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}
 function weekday(v){return new Date(`${v}T12:00:00`).toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'})}
-function statusClass(status=''){return ['confirmed','contract_signed'].includes(status)?'good':['inquiry_hold','hold_verified','contract_sent'].includes(status)?'warn':''}
-function statusLabel(v=''){return String(v).replaceAll('_',' ')}
+function statusClass(status=''){
+  const key=String(status||'');
+  return ['confirmed','completed'].includes(key)?'good':['inquiry_hold','hold_verified','contract_sent','contract_signed'].includes(key)?'warn':'';
+}
+function statusLabel(v=''){return window.CJTOwnerShell?.statusLabel?.(v)||String(v).replaceAll('_',' ')}
+function paymentLabel(r){return window.CJTOwnerShell?.paymentLabel?.(r)||(r?.payment?.verified?'Payment received':'Payment pending')}
+function bookingHref(id){return `/owner-v1/reservations?booking=${encodeURIComponent(id||'')}&property=sand-sea-manor`}
 function showLogin(){ownerApp.classList.add('hidden');loginShell.classList.remove('hidden')}
 function showApp(){loginShell.classList.add('hidden');ownerApp.classList.remove('hidden')}
 
@@ -26,10 +31,11 @@ async function fetchDashboard(){
 function kpiCard({label,value,hint,href,available=true}){
   const display=available?esc(value):'—';
   const note=available?esc(hint||''):esc(hint||'Source unavailable');
+  const aria=`${label}, ${available?value:'unavailable'}`;
   if(!href||!available){
-    return `<div class="mini kpi-card is-static" aria-disabled="true"><b>${display}</b><span>${esc(label)}</span><span>${note}</span></div>`;
+    return `<div class="mini kpi-card is-static" aria-disabled="true" aria-label="${esc(aria)}"><b>${display}</b><span>${esc(label)}</span><span>${note}</span></div>`;
   }
-  return `<a class="mini kpi-card" href="${esc(href)}"><b>${display}</b><span>${esc(label)}</span><span>${note}</span></a>`;
+  return `<a class="mini kpi-card" href="${esc(href)}" aria-label="${esc(aria)}. Opens the matching records."><b>${display}</b><span>${esc(label)}</span><span>${note}</span></a>`;
 }
 
 function renderAttention(items){
@@ -48,19 +54,21 @@ function renderAttention(items){
 function renderWeek(data){
   const week=data.todayNext7||{};
   const dest=data.destinations||{};
+  const arrivals=week.arrivals||[];
+  const arrivalHref=arrivals.length===1?bookingHref(arrivals[0].id):(dest.calendarAgenda||'/owner-v1/calendar');
   document.getElementById('openAgenda').href=dest.calendarAgenda||'/owner-v1/calendar';
   document.getElementById('todayNext7').innerHTML=`
-    ${kpiCard({label:'Arrivals',value:week.arrivals?.length||0,hint:'Direct check-ins',href:dest.calendarAgenda})}
-    ${kpiCard({label:'Departures',value:week.departures?.length||0,hint:'Direct check-outs',href:dest.calendarAgenda})}
-    ${kpiCard({label:'In house',value:week.staying?.length||0,hint:'Direct stays tonight',href:dest.calendarAgenda})}`;
+    ${kpiCard({label:'Arrivals',value:arrivals.length,hint:'Direct check-ins',href:arrivalHref})}
+    ${kpiCard({label:'Departures',value:week.departures?.length||0,hint:'Direct check-outs',href:week.departures?.length===1?bookingHref(week.departures[0].id):(dest.calendarAgenda||'/owner-v1/calendar')})}
+    ${kpiCard({label:'In house',value:week.staying?.length||0,hint:'Direct stays tonight',href:week.staying?.length===1?bookingHref(week.staying[0].id):(dest.calendarAgenda||'/owner-v1/calendar')})}`;
   const rows=[
     ...(week.arrivals||[]).map(r=>({...r,kind:'Arrival'})),
     ...(week.departures||[]).map(r=>({...r,kind:'Departure'}))
   ];
   document.getElementById('weekList').innerHTML=rows.length?rows.map(r=>`
     <div class="list-row">
-      <div><strong>${esc(r.kind)} · ${esc(r.guest_name)}</strong><span>${esc(r.checkin)} → ${esc(r.checkout)}</span></div>
-      <a class="badge ${statusClass(r.status)}" href="/owner-v1/reservations?booking=${esc(r.id)}&property=sand-sea-manor">${esc(statusLabel(r.status))}</a>
+      <div><a href="${esc(bookingHref(r.id))}"><strong>${esc(r.kind)} · ${esc(r.guest_name)}</strong><span>${esc(r.checkin)} → ${esc(r.checkout)}</span></a></div>
+      <a class="badge ${statusClass(r.status)}" href="${esc(bookingHref(r.id))}">${esc(statusLabel(r.status))}</a>
     </div>`).join(''):'<div class="empty">No direct arrivals or departures in the next 7 days. OTA nights are on Calendar.</div>';
 }
 
@@ -104,12 +112,13 @@ function renderCalendarPreview(data){
 function renderFinancials(data){
   const f=data.financials||{};
   const dest=data.destinations||{};
-  document.getElementById('openFinancials').href=dest.financialsPeriod||'/owner-v1/financials';
+  const mtd=f.mtd||{};
+  document.getElementById('openFinancials').href=dest.financialsYtd||dest.financialsPeriod||'/owner-v1/financials';
   document.getElementById('financialSnapshot').innerHTML=`
-    ${kpiCard({label:'Quoted / imported',value:moneyOrDash(f.mtd_gross),hint:'Not profit or NOI',href:dest.financialsPeriod})}
-    ${kpiCard({label:'Expected payout',value:moneyOrDash(f.mtd_expected_payout),hint:'Before operating expenses',href:dest.financialsPeriod})}
-    ${kpiCard({label:'Stays with amounts',value:f.records||0,hint:'Direct + imported OTA',href:dest.financialsStays})}
-    ${kpiCard({label:'Stripe verified',value:f.stripe_verified||0,hint:'Received on Direct only',href:`${dest.financialsPeriod||'/owner-v1/financials'}&stripe=verified`})}`;
+    ${kpiCard({label:'Gross',value:moneyOrDash(f.mtd_gross),hint:'Guest paid · this month · not profit',href:dest.financialsPeriod})}
+    ${kpiCard({label:'Owner Booking Revenue',value:moneyOrDash(f.mtd_expected_payout),hint:'After known channel deductions — not NOI',href:dest.financialsPeriod})}
+    ${kpiCard({label:'Booked Nights',value:countOrDash(mtd.nights,mtd.nights!=null),hint:'This month',href:dest.financialsStays,available:mtd.nights!=null})}
+    ${kpiCard({label:'ADR',value:moneyOrDash(mtd.revenuePerNight),hint:'Gross ÷ booked nights',href:dest.financialsPeriod,available:mtd.revenuePerNight!=null})}`;
 }
 
 function renderTasks(data){
@@ -123,7 +132,7 @@ function renderTasks(data){
 
 function renderActivity(data){
   const bookings=(data.reservations?.recent||[]).map(r=>({
-    href:`/owner-v1/reservations?booking=${encodeURIComponent(r.id)}&property=sand-sea-manor`,
+    href:bookingHref(r.id),
     title:`${r.guest_name} · ${r.checkin} → ${r.checkout}`,
     meta:`Booking · ${statusLabel(r.status)}`,
     badge:statusLabel(r.status),
