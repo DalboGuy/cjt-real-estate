@@ -10,7 +10,7 @@
   <style>
     .finance-table-wrap{overflow:auto;border:1px solid var(--cjt-line);border-radius:12px;background:#fff}
     .finance-table{width:100%;border-collapse:collapse;min-width:860px}
-    .finance-table th,.finance-table td{padding:11px 12px;border-bottom:1px solid var(--cjt-line);text-align:left;vertical-align:top}
+    .finance-table th,.finance-table td{padding:12px 14px;border-bottom:1px solid var(--cjt-line);text-align:left;vertical-align:top}
     .finance-table th{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--cjt-muted);background:#fafbf9;white-space:nowrap}
     .finance-table tr:last-child td{border-bottom:0}
     .finance-table .money{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
@@ -20,6 +20,18 @@
     .finance-booking-link:hover{color:var(--cjt-deep)}
     .finance-table tbody tr:hover{background:#fafbf9}
     .finance-quote-badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+    @media(max-width:720px){
+      .finance-table{min-width:0}
+      .finance-table thead{display:none}
+      .finance-table,.finance-table tbody,.finance-table tr,.finance-table td{display:block;width:100%}
+      .finance-table tr{border-bottom:1px solid var(--cjt-line);padding:12px 14px}
+      .finance-table tr:last-child{border-bottom:0}
+      .finance-table td{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;border:0;padding:6px 0}
+      .finance-table td:first-child{padding-top:0}
+      .finance-table td::before{content:attr(data-label);color:var(--cjt-muted);font-size:.68rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase;flex:0 0 38%;max-width:120px}
+      .finance-table td.money{text-align:right;white-space:normal}
+      .finance-table tbody tr:hover{background:transparent}
+    }
   </style>
 </head>
 <body>
@@ -61,44 +73,80 @@
 
     <main class="main">
       <header class="topbar">
-        <div style="display:flex;align-items:center;gap:10px"><button id="mobileMenu" class="icon-btn mobile-menu" type="button" aria-label="Open menu">☰</button><div><h1>Financials</h1><div class="meta">Quoted booking economics from stored reservations</div></div></div>
-        <div class="top-actions"><span id="lastChecked" class="meta">Loading…</span><button id="refreshFinancials" class="btn btn-secondary" type="button">Refresh</button><a class="btn btn-secondary" href="/owner-v1/reservations">Open Reservations ↗</a></div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <button id="mobileMenu" class="icon-btn mobile-menu" type="button" aria-label="Open menu">☰</button>
+          <div>
+            <h1>Financials</h1>
+            <div class="meta" id="financialSubtitle">Quoted totals from stored reservations · <span id="mtdMonthHint">America/Chicago</span></div>
+          </div>
+        </div>
+        <div class="top-actions">
+          <span id="lastChecked" class="meta">Loading…</span>
+          <button id="refreshFinancials" class="btn btn-secondary" type="button">Refresh</button>
+          <a class="btn btn-secondary" href="/owner-v1/reservations">Reservations ↗</a>
+        </div>
       </header>
 
       <div class="content">
-        <div class="section-title"><div><h2>Booking economics</h2><p>Month-to-date totals come from stored quotes on active stays checking in this month (<span id="mtdMonthHint">America/Chicago</span>). Stripe payouts are not live; unverified payments stay pending.</p></div><span class="status-pill">Quotes &amp; payments</span></div>
         <div id="moduleNotice" class="notice hidden"></div>
-        <div id="financialSummary" class="summary-grid">
-          <div class="summary-card"><span>MTD lodging</span><b style="font-size:1.05rem">—</b><span>quoted lodging, check-in this month</span></div>
-          <div class="summary-card"><span>MTD taxes</span><b style="font-size:1.05rem">—</b><span>quoted taxes</span></div>
-          <div class="summary-card"><span>MTD cleaning</span><b style="font-size:1.05rem">—</b><span>quoted cleaning</span></div>
-          <div class="summary-card"><span>MTD quoted total</span><b style="font-size:1.05rem">—</b><span>lodging + cleaning + tax</span></div>
-          <div class="summary-card"><span>MTD expected payout</span><b style="font-size:1.05rem">—</b><span>lodging + cleaning from quotes</span></div>
+
+        <div class="filter-bar" role="search" aria-label="Financials filters">
+          <label class="filter-field">
+            <span>Status</span>
+            <select id="filterStatus" class="filter-select" aria-label="Status">
+              <option value="all">All statuses</option>
+              <option value="active">Active</option>
+              <option value="closed">Closed</option>
+            </select>
+          </label>
+          <label class="filter-field">
+            <span>Quote</span>
+            <select id="filterQuote" class="filter-select" aria-label="Quote">
+              <option value="all">All quotes</option>
+              <option value="quoted">With quote</option>
+              <option value="missing">Missing quote</option>
+            </select>
+          </label>
+          <label class="filter-field">
+            <span>Stripe</span>
+            <select id="filterStripe" class="filter-select" aria-label="Stripe">
+              <option value="all">All Stripe</option>
+              <option value="verified">Verified</option>
+              <option value="pending">Pending</option>
+            </select>
+          </label>
+          <label class="filter-field">
+            <span>Period</span>
+            <select id="filterPeriod" class="filter-select" aria-label="Period">
+              <option value="all">All stays</option>
+              <option value="mtd">MTD check-in</option>
+            </select>
+          </label>
+          <label class="filter-field" style="flex:1 1 220px">
+            <span>Search</span>
+            <input id="financialSearch" class="search-box" type="search" placeholder="Guest, booking ID, dates…">
+          </label>
+          <button id="clearFilters" class="filter-clear hidden" type="button">Clear filters</button>
         </div>
 
-        <div class="module-grid">
-          <section class="module-main">
-            <div class="toolbar-row"><div id="financialFilters" class="filter-row"></div><input id="financialSearch" class="search-box" placeholder="Search guest, booking ID, dates, status or payment…"></div>
-            <div id="financialList"><div class="empty">Loading stored quotes and payment status…</div></div>
-          </section>
-          <aside class="module-side">
-            <div class="card quick-card">
-              <div class="card-head"><div><h3>What these numbers are</h3><p>Built from existing booking records</p></div></div>
-              <div class="list compact-list">
-                <div class="list-row"><div><strong>Quoted totals</strong><span>Latest quote stored on each reservation</span></div></div>
-                <div class="list-row"><div><strong>Expected payout</strong><span>Lodging plus cleaning from that quote. Taxes are listed separately.</span></div></div>
-                <div class="list-row"><div><strong>Stripe</strong><span id="stripeNote">Verification is not live. Pending means no verified payment event yet.</span></div></div>
-              </div>
-              <div class="split-metrics" style="grid-template-columns:1fr 1fr;margin-top:14px">
-                <div class="mini"><b id="sideQuoted">0</b><span>With quotes</span></div>
-                <div class="mini"><b id="sideMissing">0</b><span>Missing quote</span></div>
-                <div class="mini"><b id="sideVerified">0</b><span>Stripe verified</span></div>
-                <div class="mini"><b id="sidePending">0</b><span>Stripe pending</span></div>
-              </div>
-              <div class="widget-footer"><a class="btn btn-primary" href="/owner-v1/reservations">Review a booking</a></div>
-            </div>
-          </aside>
+        <div id="financialSummary" class="kpi-grid">
+          <div class="summary-card"><span>MTD quoted total</span><b>—</b><span>Lodging + cleaning + tax</span></div>
+          <div class="summary-card"><span>MTD expected payout</span><b>—</b><span>Lodging + cleaning from quotes</span></div>
+          <div class="summary-card"><span>With quotes</span><b>—</b><span>Bookings with a stored quote</span></div>
+          <div class="summary-card"><span>Stripe pending</span><b>—</b><span>No verified payment yet</span></div>
         </div>
+
+        <details class="about-disclosure">
+          <summary>About these numbers</summary>
+          <div class="about-body">
+            <p>Month-to-date totals use stored quotes on active stays checking in this month. The month follows America/Chicago, not UTC.</p>
+            <p>Quoted total is lodging + cleaning + tax. Expected payout is lodging + cleaning; taxes stay in their own column.</p>
+            <p id="stripeNote">Stripe payouts are not live. Pending means no verified payment event yet.</p>
+          </div>
+        </details>
+
+        <div class="report-meta"><span id="financialCount">Stays</span></div>
+        <div id="financialList"><div class="empty">Loading stored quotes and payment status…</div></div>
       </div>
     </main>
   </div>

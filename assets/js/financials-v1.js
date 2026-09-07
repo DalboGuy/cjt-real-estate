@@ -1,5 +1,5 @@
 let financialRows=[];
-let financialFilter='all';
+const filters={status:'all',quote:'all',stripe:'all',period:'all'};
 
 const PROPERTY_TZ='America/Chicago';
 const loginShell=document.getElementById('loginShell');
@@ -7,6 +7,12 @@ const ownerApp=document.getElementById('ownerApp');
 const loginForm=document.getElementById('loginForm');
 const loginMsg=document.getElementById('loginMsg');
 const financialList=document.getElementById('financialList');
+const filterStatus=document.getElementById('filterStatus');
+const filterQuote=document.getElementById('filterQuote');
+const filterStripe=document.getElementById('filterStripe');
+const filterPeriod=document.getElementById('filterPeriod');
+const financialSearch=document.getElementById('financialSearch');
+const clearFilters=document.getElementById('clearFilters');
 
 function esc(v=''){return String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 function money(v){if(v==null||v==='')return '—';const n=Number(v);if(!Number.isFinite(n))return '—';return n.toLocaleString(undefined,{style:'currency',currency:'USD'})}
@@ -34,6 +40,7 @@ function isMtdRow(row){
   return Boolean(key)&&day.startsWith(`${key}-`);
 }
 function reservationHref(id){return `/owner-v1/reservations?booking=${encodeURIComponent(id||'')}`}
+function countOrDash(v){return v==null||v===''?'—':String(v)}
 
 async function financialsApi(){
   const r=await fetch('/api/financials',{cache:'no-store'});
@@ -48,42 +55,54 @@ function renderSummary(summary){
   const counts=summary.counts||{};
   const month=summary.mtdMonthLabel||chicagoMonthLabel();
   const cards=[
-    ['MTD lodging',money(mtd.lodging),`${month} · quoted lodging, check-in this month`],
-    ['MTD taxes',money(mtd.taxes),`${month} · quoted taxes`],
-    ['MTD cleaning',money(mtd.cleaning),`${month} · quoted cleaning`],
-    ['MTD quoted total',money(mtd.total),`${month} · lodging + cleaning + tax`],
-    ['MTD expected payout',money(mtd.expectedPayout),`${month} · lodging + cleaning from quotes`]
+    ['MTD quoted total',money(mtd.total),'Lodging + cleaning + tax'],
+    ['MTD expected payout',money(mtd.expectedPayout),'Lodging + cleaning from quotes'],
+    ['With quotes',countOrDash(counts.quotedBookings),'Bookings with a stored quote'],
+    ['Stripe pending',countOrDash(counts.stripePending),'No verified payment yet']
   ];
-  document.getElementById('financialSummary').innerHTML=cards.map(c=>`<div class="summary-card"><span>${esc(c[0])}</span><b style="font-size:1.05rem">${esc(c[1])}</b><span>${esc(c[2])}</span></div>`).join('');
-  document.getElementById('sideQuoted').textContent=counts.quotedBookings||0;
-  document.getElementById('sideMissing').textContent=counts.missingQuote||0;
-  document.getElementById('sideVerified').textContent=counts.stripeVerified||0;
-  document.getElementById('sidePending').textContent=counts.stripePending||0;
+  document.getElementById('financialSummary').innerHTML=cards.map(c=>`<div class="summary-card"><span>${esc(c[0])}</span><b>${esc(c[1])}</b><span>${esc(c[2])}</span></div>`).join('');
   const monthHint=document.getElementById('mtdMonthHint');
-  if(monthHint)monthHint.textContent=`${month}, America/Chicago`;
-  if(summary.stripeNote)document.getElementById('stripeNote').textContent=summary.stripeNote;
+  if(monthHint)monthHint.textContent=`${month} · America/Chicago`;
+  if(summary.stripeNote){
+    const stripeNote=document.getElementById('stripeNote');
+    if(stripeNote)stripeNote.textContent=summary.stripeNote;
+  }
 }
 
-function renderFilters(){
-  const vals=[['all','All'],['mtd','MTD check-in'],['quoted','With quote'],['missing','Missing quote'],['verified','Stripe verified'],['pending','Stripe pending'],['active','Active'],['closed','Closed']];
-  document.getElementById('financialFilters').innerHTML=vals.map(([v,l])=>`<button class="filter-btn ${financialFilter===v?'active':''}" data-filter="${v}">${l}</button>`).join('');
-  document.querySelectorAll('[data-filter]').forEach(b=>b.onclick=()=>{financialFilter=b.dataset.filter;renderFilters();renderBookings()});
+function filtersAreActive(){
+  return filters.status!=='all'||filters.quote!=='all'||filters.stripe!=='all'||filters.period!=='all'||Boolean(financialSearch.value.trim());
+}
+
+function syncClearControl(){
+  clearFilters.classList.toggle('hidden',!filtersAreActive());
+}
+
+function resetFilters(){
+  filters.status='all';
+  filters.quote='all';
+  filters.stripe='all';
+  filters.period='all';
+  filterStatus.value='all';
+  filterQuote.value='all';
+  filterStripe.value='all';
+  filterPeriod.value='all';
+  financialSearch.value='';
+  syncClearControl();
+  renderBookings();
 }
 
 function filteredBookings(){
-  const q=document.getElementById('financialSearch').value.trim().toLowerCase();
+  const q=financialSearch.value.trim().toLowerCase();
   return financialRows.filter(row=>{
     const quoteMissing=Boolean(row.quote?.missing);
     const verified=Boolean(row.payment?.verified);
-    const match=financialFilter==='all'
-      ||(financialFilter==='mtd'&&isMtdRow(row)&&!row.closed)
-      ||(financialFilter==='quoted'&&!quoteMissing)
-      ||(financialFilter==='missing'&&quoteMissing)
-      ||(financialFilter==='verified'&&verified)
-      ||(financialFilter==='pending'&&!verified)
-      ||(financialFilter==='active'&&!row.closed)
-      ||(financialFilter==='closed'&&row.closed);
-    if(!match)return false;
+    if(filters.status==='active'&&row.closed)return false;
+    if(filters.status==='closed'&&!row.closed)return false;
+    if(filters.quote==='quoted'&&quoteMissing)return false;
+    if(filters.quote==='missing'&&!quoteMissing)return false;
+    if(filters.stripe==='verified'&&!verified)return false;
+    if(filters.stripe==='pending'&&verified)return false;
+    if(filters.period==='mtd'&&!(isMtdRow(row)&&!row.closed))return false;
     if(!q)return true;
     return [row.id,row.guestName,row.guestEmail,row.checkin,row.checkout,row.status,row.payment?.status,row.quote?.total].join(' ').toLowerCase().includes(q);
   });
@@ -100,12 +119,19 @@ function quoteBadges(row){
 
 function renderBookings(){
   const rows=filteredBookings();
+  const countEl=document.getElementById('financialCount');
   if(!financialRows.length){
+    if(countEl)countEl.textContent='No stays yet';
     financialList.innerHTML='<div class="empty">No direct bookings are stored yet, so there are no quote or payment totals to show. Open Reservations when a stay is created.</div>';
+    syncClearControl();
     return;
   }
+  if(countEl)countEl.textContent=rows.length===financialRows.length
+    ? `${rows.length} stay${rows.length===1?'':'s'}`
+    : `${rows.length} of ${financialRows.length} stays`;
   if(!rows.length){
-    financialList.innerHTML='<div class="empty">No bookings match this filter or search. Stored quotes are unchanged — try All or clear the search.</div>';
+    financialList.innerHTML='<div class="empty">No bookings match these filters. Stored quotes are unchanged — try Clear filters.</div>';
+    syncClearControl();
     return;
   }
   financialList.innerHTML=`<div class="finance-table-wrap"><table class="finance-table"><thead><tr><th>Stay</th><th>Status</th><th class="money">Lodging</th><th class="money">Taxes</th><th class="money">Cleaning</th><th class="money">Quoted total</th><th class="money">Expected payout</th><th>Stripe</th></tr></thead><tbody>${rows.map(row=>{
@@ -116,16 +142,17 @@ function renderBookings(){
       ? `${esc(money(row.payment.verifiedAmount))} verified${row.payment.paymentType?' · '+esc(row.payment.paymentType):''}`
       : (row.payment?.checkoutCreated?'Checkout created · not verified':'No verified payment');
     return `<tr>
-      <td><div class="finance-guest"><a class="finance-booking-link" href="${esc(href)}">${esc(row.guestName||'Guest')}</a></div><div class="muted">${esc(date(row.checkin))} → ${esc(date(row.checkout))}</div><div class="muted"><a class="finance-booking-link" href="${esc(href)}">${esc(row.id)}</a>${row.guests?` · ${esc(row.guests)} guests`:''}</div></td>
-      <td><span class="badge ${statusClass(row.status)}">${esc(statusLabel(row.status))}</span>${quoteBadges(row)}</td>
-      <td class="money">${esc(money(quoteMissing?null:row.quote?.lodging))}</td>
-      <td class="money">${esc(money(quoteMissing?null:row.quote?.taxes))}</td>
-      <td class="money">${esc(money(quoteMissing?null:row.quote?.cleaning))}</td>
-      <td class="money">${esc(money(quoteMissing?null:row.quote?.total))}</td>
-      <td class="money">${esc(money(row.expectedPayout))}</td>
-      <td><span class="badge ${paymentClass(paymentStatus)}">${esc(paymentLabel(paymentStatus))}</span><div class="muted" style="margin-top:6px">${stripeDetail}</div></td>
+      <td data-label="Stay"><div class="finance-guest"><a class="finance-booking-link" href="${esc(href)}">${esc(row.guestName||'Guest')}</a></div><div class="muted">${esc(date(row.checkin))} → ${esc(date(row.checkout))}</div><div class="muted"><a class="finance-booking-link" href="${esc(href)}">${esc(row.id)}</a>${row.guests?` · ${esc(row.guests)} guests`:''}</div></td>
+      <td data-label="Status"><span class="badge ${statusClass(row.status)}">${esc(statusLabel(row.status))}</span>${quoteBadges(row)}</td>
+      <td data-label="Lodging" class="money">${esc(money(quoteMissing?null:row.quote?.lodging))}</td>
+      <td data-label="Taxes" class="money">${esc(money(quoteMissing?null:row.quote?.taxes))}</td>
+      <td data-label="Cleaning" class="money">${esc(money(quoteMissing?null:row.quote?.cleaning))}</td>
+      <td data-label="Quoted total" class="money">${esc(money(quoteMissing?null:row.quote?.total))}</td>
+      <td data-label="Expected payout" class="money">${esc(money(row.expectedPayout))}</td>
+      <td data-label="Stripe"><span class="badge ${paymentClass(paymentStatus)}">${esc(paymentLabel(paymentStatus))}</span><div class="muted" style="margin-top:6px">${stripeDetail}</div></td>
     </tr>`;
   }).join('')}</tbody></table></div>`;
+  syncClearControl();
 }
 
 async function loadFinancials(){
@@ -136,7 +163,6 @@ async function loadFinancials(){
     financialRows=data.bookings||[];
     showApp();
     renderSummary(data.summary||{});
-    renderFilters();
     renderBookings();
     document.getElementById('lastChecked').textContent=`Updated ${new Date(data.checkedAt||Date.now()).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})}`;
   }catch(e){
@@ -148,7 +174,12 @@ async function loadFinancials(){
   }
 }
 
-document.getElementById('financialSearch').addEventListener('input',renderBookings);
+filterStatus.addEventListener('change',()=>{filters.status=filterStatus.value;renderBookings()});
+filterQuote.addEventListener('change',()=>{filters.quote=filterQuote.value;renderBookings()});
+filterStripe.addEventListener('change',()=>{filters.stripe=filterStripe.value;renderBookings()});
+filterPeriod.addEventListener('change',()=>{filters.period=filterPeriod.value;renderBookings()});
+financialSearch.addEventListener('input',renderBookings);
+clearFilters.addEventListener('click',resetFilters);
 document.getElementById('refreshFinancials')?.addEventListener('click',loadFinancials);
 loginForm.addEventListener('submit',async e=>{
   e.preventDefault();
