@@ -1,7 +1,8 @@
 const crypto = require('crypto');
 const { db, ensureSchema, expireHolds } = require('../lib/db');
 const { getOtaBlockedDates } = require('../lib/availability');
-const { quoteStay, eachDate, MAX_GUESTS } = require('../lib/pricing');
+const { quoteStay, eachDate } = require('../lib/pricing');
+const { loadPricingCatalog } = require('../lib/pricing-store');
 
 function clean(v,max=500){return String(v||'').trim().slice(0,max);}
 function validDate(v){return /^\d{4}-\d{2}-\d{2}$/.test(String(v||''));}
@@ -16,15 +17,17 @@ module.exports=async function(req,res){
     const body=typeof req.body==='string'?JSON.parse(req.body||'{}'):(req.body||{});
     const guest_name=clean(body.name,120),guest_email=clean(body.email,180),guest_phone=clean(body.phone,60),notes=clean(body.message,2000);
     const checkin=clean(body.checkin,10),checkout=clean(body.checkout,10),guests=Number(body.guests);
-    if(!guest_name||!guest_email.includes('@')||!validDate(checkin)||!validDate(checkout)||!Number.isInteger(guests)||guests<1||guests>MAX_GUESTS){
-      return res.status(400).json({error:'invalid_request',message:`Please complete all required booking fields. Maximum overnight occupancy is ${MAX_GUESTS} guests.`});
+    const catalog=await loadPricingCatalog();
+    const maxGuests=Number(catalog.maxGuests||14);
+    if(!guest_name||!guest_email.includes('@')||!validDate(checkin)||!validDate(checkout)||!Number.isInteger(guests)||guests<1||guests>maxGuests){
+      return res.status(400).json({error:'invalid_request',message:`Please complete all required booking fields. Maximum overnight occupancy is ${maxGuests} guests.`});
     }
     if(checkout<=checkin) return res.status(400).json({error:'invalid_dates',message:'Check-out must be after check-in.'});
     const today=new Date().toISOString().slice(0,10);
     if(checkin<today) return res.status(400).json({error:'past_date',message:'Check-in must be a future date.'});
 
     let quote;
-    try{quote=quoteStay(checkin,checkout,guests);}catch(e){
+    try{quote=await quoteStay(checkin,checkout,guests,catalog);}catch(e){
       return res.status(e.status||422).json({error:e.code||'pricing_unavailable',message:e.message||'Pricing is not available for those dates.'});
     }
 

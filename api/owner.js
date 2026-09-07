@@ -85,7 +85,7 @@ module.exports=async function(req,res){
       if(['released','expired','cancelled'].includes(row.status))return res.status(409).json({error:'reservation_closed'});
       if(row.payment_started)return res.status(409).json({error:'payment_started',message:'The quote cannot change after a Stripe checkout has been created.'});
       let quote;
-      try{quote=ownerAdjustedQuote(row.quote||{},body.lodgingSubtotal);}catch(e){return res.status(e.status||400).json({error:e.code||'invalid_quote',message:e.message});}
+      try{quote=await ownerAdjustedQuote(row.quote||{},body.lodgingSubtotal);}catch(e){return res.status(e.status||400).json({error:e.code||'invalid_quote',message:e.message});}
       await sql`INSERT INTO booking_events(reservation_id,event_type,actor,metadata) VALUES (${id},'quote_updated','owner',${JSON.stringify({quote})}::jsonb)`;
       await sql`UPDATE reservations SET updated_at=now() WHERE id=${id}`;
       return res.status(200).json({ok:true,quote});

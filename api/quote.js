@@ -8,7 +8,7 @@ module.exports=async function(req,res){
     const checkin=String(req.query?.checkin||'').trim();
     const checkout=String(req.query?.checkout||'').trim();
     const guests=Number(req.query?.guests||1);
-    const quote=quoteStay(checkin,checkout,guests);
+    const quote=await quoteStay(checkin,checkout,guests);
 
     const blocked=new Set();
     const [ota,reservations]=await Promise.all([getOtaBlockedDates(),getActiveReservations()]);
