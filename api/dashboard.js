@@ -1,6 +1,7 @@
 const crypto=require('crypto');
 const {db,ensureSchema,expireHolds}=require('../lib/db');
 const {previewPasswordFreeActive}=require('../lib/preview-access');
+const {loadOwnerFinancials}=require('../lib/financials');
 
 function parseCookies(header=''){
   return Object.fromEntries(header.split(';').map(v=>v.trim()).filter(Boolean).map(v=>{
@@ -27,7 +28,7 @@ module.exports=async function(req,res){
     await expireHolds();
     const sql=db();
 
-    const [reservationSummary,recentReservations,communicationSummary,recentMessages,financialSummary,taskSummary,pricingSummary]=await Promise.all([
+    const [reservationSummary,recentReservations,communicationSummary,recentMessages,financials,taskSummary,pricingSummary]=await Promise.all([
       sql`
         SELECT
           count(*) FILTER (WHERE status NOT IN ('released','expired','cancelled') AND checkout>=current_date)::int AS upcoming,
@@ -59,19 +60,7 @@ module.exports=async function(req,res){
         ORDER BY received_at DESC
         LIMIT 3
       `,
-      sql`
-        SELECT
-          count(*)::int AS records,
-          COALESCE(sum(gross_revenue) FILTER (
-            WHERE checkin>=date_trunc('month',current_date)::date
-              AND checkin<(date_trunc('month',current_date)+interval '1 month')::date
-          ),0) AS mtd_gross,
-          COALESCE(sum(expected_payout) FILTER (
-            WHERE checkin>=date_trunc('month',current_date)::date
-              AND checkin<(date_trunc('month',current_date)+interval '1 month')::date
-          ),0) AS mtd_expected_payout
-        FROM booking_financials
-      `,
+      loadOwnerFinancials(sql),
       sql`
         SELECT
           count(*) FILTER (WHERE lower(COALESCE(status,'')) NOT IN ('completed','done','closed','cancelled'))::int AS open,
@@ -91,7 +80,7 @@ module.exports=async function(req,res){
       temporaryPasswordFree:previewPasswordFreeActive(req),
       reservations:{summary:reservationSummary[0]||{},recent:recentReservations},
       communications:{summary:communicationSummary[0]||{},recent:recentMessages},
-      financials:financialSummary[0]||{},
+      financials:financials.summary||{},
       tasks:taskSummary[0]||{},
       pricing:pricingSummary[0]||{}
     });

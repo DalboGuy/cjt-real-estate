@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>CJT Owner Portal · Financials</title>
+  <link rel="stylesheet" href="/assets/css/tokens.css">
+  <link rel="stylesheet" href="/assets/css/owner-shell.css">
+  <link rel="stylesheet" href="/assets/css/modules.css">
+  <style>
+    .finance-table-wrap{overflow:auto;border:1px solid var(--cjt-line);border-radius:12px;background:#fff}
+    .finance-table{width:100%;border-collapse:collapse;min-width:860px}
+    .finance-table th,.finance-table td{padding:11px 12px;border-bottom:1px solid var(--cjt-line);text-align:left;vertical-align:top}
+    .finance-table th{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--cjt-muted);background:#fafbf9;white-space:nowrap}
+    .finance-table tr:last-child td{border-bottom:0}
+    .finance-table .money{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+    .finance-table .muted{color:var(--cjt-muted);font-size:.78rem}
+    .finance-guest{font-weight:800}
+  </style>
+</head>
+<body>
+  <section id="loginShell" class="login-shell hidden">
+    <div class="login-card">
+      <div class="brand" style="color:var(--cjt-ink)">CJT REALTY<small style="color:var(--cjt-muted)">Owner Operations</small></div>
+      <h1>Financials</h1>
+      <p>Sign in to review stored quotes, expected payouts, and Stripe payment status.</p>
+      <form id="loginForm"><input id="passcode" type="password" placeholder="Owner passcode" autocomplete="current-password" required><button class="btn btn-primary" type="submit">Sign in</button></form>
+      <div id="loginMsg" class="login-msg"></div>
+    </div>
+  </section>
+
+  <div id="ownerBackdrop" class="backdrop hidden"></div>
+  <div id="ownerApp" class="owner-app hidden">
+    <aside id="ownerSidebar" class="sidebar">
+      <div class="brand">CJT REALTY<small>Owner Operations</small></div>
+      <div class="property-chip"><strong>Sand & Sea Manor</strong><span>1720 Avenue M · Galveston, TX</span></div>
+      <nav class="nav" aria-label="Owner Portal">
+        <a href="/owner-v1"><span>Dashboard</span></a>
+        <a href="/owner-v1/communications"><span>Communications</span></a>
+        <a href="/owner-v1/reservations"><span>Reservations</span></a>
+        <a href="/owner-v1/calendar"><span>Calendar</span><span class="count">Live</span></a>
+        <a href="/owner-v1/pricing"><span>Pricing</span><span class="count">Live</span></a>
+        <a class="active" href="/owner-v1/financials"><span>Financials</span><span class="count">Live</span></a>
+        <div class="nav-section">Property</div>
+        <button data-coming-soon="Property"><span>Property</span></button>
+        <button data-coming-soon="Maintenance"><span>Maintenance</span></button>
+        <a href="/owner-v1/documents"><span>Documents</span><span class="count">Plan</span></a>
+        <div class="nav-section">Reporting</div>
+        <button data-coming-soon="Analytics"><span>Analytics</span></button>
+        <div class="nav-section">System</div>
+        <a href="/account-v1"><span>My Account</span></a>
+        <a href="/admin-v1"><span>Admin</span><span class="count">Preview</span></a>
+        <button data-coming-soon="Settings"><span>Settings</span></button>
+      </nav>
+      <div class="sidebar-footer"><a href="/" target="_blank" rel="noopener">Guest site ↗</a><button id="logout" type="button">Sign out</button></div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div style="display:flex;align-items:center;gap:10px"><button id="mobileMenu" class="icon-btn mobile-menu" type="button" aria-label="Open menu">☰</button><div><h1>Financials</h1><div class="meta">Quoted booking economics from stored reservations</div></div></div>
+        <div class="top-actions"><span id="lastChecked" class="meta">Loading…</span><a class="btn btn-secondary" href="/owner-v1/reservations">Open Reservations ↗</a></div>
+      </header>
+
+      <div class="content">
+        <div class="section-title"><div><h2>Booking economics</h2><p>Month-to-date totals come from stored quotes on active stays checking in this month. Stripe payouts are not live; unverified payments stay pending.</p></div><span class="status-pill">Quotes &amp; payments</span></div>
+        <div id="moduleNotice" class="notice hidden"></div>
+        <div id="financialSummary" class="summary-grid"></div>
+
+        <div class="module-grid">
+          <section class="module-main">
+            <div class="toolbar-row"><div id="financialFilters" class="filter-row"></div><input id="financialSearch" class="search-box" placeholder="Search guest, booking ID, dates, status or payment…"></div>
+            <div id="financialList"></div>
+          </section>
+          <aside class="module-side">
+            <div class="card quick-card">
+              <div class="card-head"><div><h3>What these numbers are</h3><p>Built from existing booking records</p></div></div>
+              <div class="list compact-list">
+                <div class="list-row"><div><strong>Quoted totals</strong><span>Latest quote stored on each reservation</span></div></div>
+                <div class="list-row"><div><strong>Expected payout</strong><span>Lodging plus cleaning from that quote. Taxes are listed separately.</span></div></div>
+                <div class="list-row"><div><strong>Stripe</strong><span id="stripeNote">Verification is not live. Pending means no verified payment event yet.</span></div></div>
+              </div>
+              <div class="split-metrics" style="grid-template-columns:1fr 1fr;margin-top:14px">
+                <div class="mini"><b id="sideQuoted">0</b><span>With quotes</span></div>
+                <div class="mini"><b id="sideMissing">0</b><span>Missing quote</span></div>
+                <div class="mini"><b id="sideVerified">0</b><span>Stripe verified</span></div>
+                <div class="mini"><b id="sidePending">0</b><span>Stripe pending</span></div>
+              </div>
+              <div class="widget-footer"><a class="btn btn-primary" href="/owner-v1/reservations">Review a booking</a></div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/assets/js/owner-shell.js"></script>
+  <script src="/assets/js/financials-v1.js"></script>
+</body>
+</html>

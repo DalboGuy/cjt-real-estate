@@ -54,6 +54,8 @@ function renderFinancials(f){
   document.getElementById('mtdGross').textContent=money(f.mtd_gross);
   document.getElementById('mtdPayout').textContent=money(f.mtd_expected_payout);
   document.getElementById('financialRecords').textContent=f.records||0;
+  document.getElementById('stripeVerified').textContent=f.stripe_verified||0;
+  document.getElementById('stripePending').textContent=f.stripe_pending||0;
 }
 function renderPricing(p,d){
   document.getElementById('pricingSeasons').textContent=d?.seasons?.length||'—';
