@@ -278,6 +278,7 @@
   $('continueToReview')?.addEventListener('click',()=>{
     if(!bookingForm.reportValidity())return;
     const details=collectGuestFields();
+    paintBookingSummary();
     paintReview(details);
     showRequestStep('review');
   });
