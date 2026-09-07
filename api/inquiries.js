@@ -16,10 +16,15 @@ module.exports=async function(req,res){
     await expireHolds();
     const body=typeof req.body==='string'?JSON.parse(req.body||'{}'):(req.body||{});
     const guest_name=clean(body.name,120),guest_email=clean(body.email,180),guest_phone=clean(body.phone,60),notes=clean(body.message,2000);
+    const trip_type=clean(body.tripType,80);
+    const bringing_pet=body.bringingPet===true||body.bringingPet==='true'||body.bringingPet==='yes';
+    const pet_details=bringing_pet?clean(body.petDetails,1000):'';
+    const planning_event=body.planningEvent===true||body.planningEvent==='true'||body.planningEvent==='yes';
+    const event_details=planning_event?clean(body.eventDetails,1000):'';
     const checkin=clean(body.checkin,10),checkout=clean(body.checkout,10),guests=Number(body.guests);
     const catalog=await loadPricingCatalog();
     const maxGuests=Number(catalog.maxGuests||14);
-    if(!guest_name||!guest_email.includes('@')||!validDate(checkin)||!validDate(checkout)||!Number.isInteger(guests)||guests<1||guests>maxGuests){
+    if(!guest_name||!guest_email.includes('@')||!trip_type||!validDate(checkin)||!validDate(checkout)||!Number.isInteger(guests)||guests<1||guests>maxGuests){
       return res.status(400).json({error:'invalid_request',message:`Please complete all required booking fields. Maximum overnight occupancy is ${maxGuests} guests.`});
     }
     if(checkout<=checkin) return res.status(400).json({error:'invalid_dates',message:'Check-out must be after check-in.'});
@@ -50,8 +55,16 @@ module.exports=async function(req,res){
     let rows;
     try{
       rows=await sql`
-        INSERT INTO reservations (id,guest_name,guest_email,guest_phone,guests,notes,checkin,checkout,status,hold_expires_at)
-        VALUES (${id},${guest_name},${guest_email},${guest_phone||null},${guests},${notes||null},${checkin}::date,${checkout}::date,'inquiry_hold',now()+interval '24 hours')
+        INSERT INTO reservations (
+          id,guest_name,guest_email,guest_phone,guests,notes,
+          trip_type,bringing_pet,pet_details,planning_event,event_details,
+          checkin,checkout,status,hold_expires_at
+        )
+        VALUES (
+          ${id},${guest_name},${guest_email},${guest_phone||null},${guests},${notes||null},
+          ${trip_type},${bringing_pet},${pet_details||null},${planning_event},${event_details||null},
+          ${checkin}::date,${checkout}::date,'inquiry_hold',NULL
+        )
         RETURNING id,checkin::text,checkout::text,status,hold_expires_at
       `;
     }catch(e){
@@ -64,9 +77,9 @@ module.exports=async function(req,res){
       }
       throw e;
     }
-    await sql`INSERT INTO booking_events (reservation_id,event_type,actor,metadata) VALUES (${id},'inquiry_created','guest',${JSON.stringify({guests,quote})}::jsonb)`;
+    await sql`INSERT INTO booking_events (reservation_id,event_type,actor,metadata) VALUES (${id},'inquiry_created','guest',${JSON.stringify({guests,tripType:trip_type,bringingPet:bringing_pet,planningEvent:planning_event,quote})}::jsonb)`;
     res.setHeader('Cache-Control','no-store');
-    return res.status(201).json({reservation:rows[0],quote,message:'Your dates and quoted total are temporarily held for 24 hours while CJT reviews your request.'});
+    return res.status(201).json({reservation:rows[0],quote,message:'Your dates are reserved while CJT reviews your request and remain unavailable until an owner releases them.'});
   }catch(e){
     console.error('inquiry error',e);
     return res.status(500).json({error:'booking_unavailable',message:'We could not place the hold. Please contact CJT Realty directly.'});
