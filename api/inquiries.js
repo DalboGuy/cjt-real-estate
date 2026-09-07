@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const { db, ensureSchema, expireHolds } = require('../lib/db');
-const { getOtaBlockedDates, eachDate } = require('../lib/availability');
+const { getOtaBlockedDates, eachDate, toYmd } = require('../lib/availability');
+const { sendGuestHoldEmail } = require('../lib/email');
 
 function clean(v,max=500){return String(v||'').trim().slice(0,max);}
 function validDate(v){return /^\d{4}-\d{2}-\d{2}$/.test(String(v||''));}
@@ -51,8 +52,31 @@ module.exports=async function(req,res){
       throw e;
     }
     await sql`INSERT INTO booking_events (reservation_id,event_type,actor,metadata) VALUES (${id},'inquiry_created','guest',${JSON.stringify({guests})}::jsonb)`;
+    const reservation={
+      ...rows[0],
+      checkin:toYmd(rows[0].checkin),
+      checkout:toYmd(rows[0].checkout)
+    };
+    let email={attempted:false,sent:false,skipped:true};
+    try{
+      email=await sendGuestHoldEmail({
+        to:guest_email,
+        name:guest_name,
+        id:reservation.id,
+        checkin:reservation.checkin,
+        checkout:reservation.checkout,
+        expiresAt:reservation.hold_expires_at
+      });
+    }catch(e){
+      console.error('guest confirmation email error',e);
+      email={attempted:true,sent:false};
+    }
     res.setHeader('Cache-Control','no-store');
-    return res.status(201).json({reservation:rows[0],message:'Your dates are temporarily held for 24 hours while CJT reviews your request.'});
+    return res.status(201).json({
+      reservation,
+      email,
+      message:'Your dates are temporarily held for 24 hours while CJT reviews your request. This is not a confirmed reservation, and no payment was collected.'
+    });
   }catch(e){
     console.error('inquiry error',e);
     return res.status(500).json({error:'booking_unavailable',message:'We could not place the hold. Please contact CJT directly.'});

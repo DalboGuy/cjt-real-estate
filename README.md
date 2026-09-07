@@ -1,90 +1,49 @@
-# cjt-real-estate
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CJT Real Estate Holdings LLC</title>
-  <style>
-    body { margin: 0; font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-    header { background: #0d3b66; color: #fff; padding: 60px 20px; text-align: center; }
-    header h1 { margin: 0; font-size: 3em; }
-    header p { font-size: 1.2em; margin-top: 10px; }
-    nav { text-align: center; background: #f4f4f4; padding: 10px; }
-    nav a { margin: 0 15px; text-decoration: none; color: #0d3b66; font-weight: bold; }
-    section { padding: 40px 20px; max-width: 1000px; margin: auto; }
-    .portfolio img { max-width: 100%; height: auto; border-radius: 5px; }
-    .team-grid { display: flex; gap: 20px; flex-wrap: wrap; }
-    .team-member { flex: 1; min-width: 250px; background: #f9f9f9; padding: 20px; border-radius: 8px; }
-    footer { text-align: center; background: #0d3b66; color: white; padding: 20px; }
-  </style>
-</head>
-<body>
-  <header>
-    <h1>CJT Real Estate Holdings LLC</h1>
-    <p>Strategic Investments. Quality Properties. Lasting Value.</p>
-  </header>
+# Sand & Sea Manor booking site
 
-  <nav>
-    <a href="#about">About</a>
-    <a href="#portfolio">Portfolio</a>
-    <a href="#services">Services</a>
-    <a href="#team">Team</a>
-    <a href="#contact">Contact</a>
-  </nav>
+Direct-booking page for **Sand & Sea Manor** (1720 Avenue M, Galveston) at [cjtbookingpage.vercel.app](https://cjtbookingpage.vercel.app).
 
-  <section id="about">
-    <h2>About Us</h2>
-    <p>CJT Real Estate Holdings LLC is a Texas-based real estate investment group focused on acquiring, renovating, and managing high-potential residential properties. Our mission is to deliver long-term value through strategic decision-making and a hands-on approach to real estate investing.</p>
-  </section>
+Stack: static HTML + Vercel serverless functions + Neon Postgres. Airbnb, VRBO, and Booking.com iCal feeds stay in sync with the public calendar.
 
-  <section id="portfolio">
-    <h2>Recent Projects</h2>
-    <div class="portfolio">
-      <img src="https://via.placeholder.com/800x400" alt="Property Example" />
-      <p>1720 Avenue M, Galveston, TX – Renovated and furnished for short-term rental, now active on Airbnb.</p>
-    </div>
-  </section>
+## How a hold works
 
-  <section id="services">
-    <h2>Our Services</h2>
-    <ul>
-      <li>Residential Property Acquisition</li>
-      <li>Full Renovation & Repositioning</li>
-      <li>Short-Term Rental Conversions</li>
-      <li>Flip & Resell Strategies</li>
-      <li>Long-Term Investment Holdings</li>
-    </ul>
-  </section>
+1. A guest picks dates and submits `/api/inquiries`.
+2. If the nights are free on OTA calendars **and** in Neon, the API inserts an `inquiry_hold` for **24 hours**.
+3. That hold is **not** a confirmed reservation. No payment is collected on the site.
+4. Active holds (`inquiry_hold`, `hold_verified`, `contract_sent`, `contract_signed`, `confirmed`) appear immediately as blocked dates on `GET /api/calendar`.
+5. CJT uses the owner portal to maintain the hold, send the agreement, and mark the deposit. Only then is the stay confirmed.
 
-  <section id="team">
-    <h2>Our Team</h2>
-    <div class="team-grid">
-      <div class="team-member">
-        <h3>Chris Sanders</h3>
-        <p>Co-Founder and Acquisition Strategist</p>
-      </div>
-      <div class="team-member">
-        <h3>Joel Bailey</h3>
-        <p>Co-Founder and Financial Planner</p>
-      </div>
-      <div class="team-member">
-        <h3>Travis Ethredge</h3>
-        <p>Co-Founder and Construction Manager</p>
-      </div>
-    </div>
-  </section>
+## APIs
 
-  <section id="contact">
-    <h2>Contact Us</h2>
-    <p>Email: <a href="mailto:info@cjtinvestments.com">info@cjtinvestments.com</a></p>
-    <p>Phone: (123) 456-7890</p>
-  </section>
+| Path | Purpose |
+| --- | --- |
+| `GET /api/calendar` | Combined blocked dates (OTA iCal + Neon holds). Not CDN-cached. |
+| `POST /api/inquiries` | Place a 24-hour inquiry hold. |
+| `GET /direct-bookings.ics` | iCal feed of direct holds for OTA export. |
+| `/api/owner` | Owner portal session and reservation workflow. |
 
-  <footer>
-    <p>&copy; 2025 CJT Real Estate Holdings LLC. All rights reserved.</p>
-  </footer>
-</body>
-</html>
+## Environment variables
 
-<!-- Booking V2 preview redeploy after owner portal secret configuration -->
+Set these in the Vercel project (Production **and** Preview):
+
+| Variable | Required | Purpose |
+| --- | --- | --- |
+| `DATABASE_URL` | Yes | Neon pooled connection string. Used by inquiries, calendar, owner portal, and the direct iCal feed. |
+| `OWNER_PORTAL_PASSCODE` | Owner portal | Shared passcode for `/owner`. |
+| `BOOKING_COM_ICAL_URL` | Recommended | Booking.com iCal URL. Airbnb and VRBO URLs are already in code. |
+| `RESEND_API_KEY` | For guest email | [Resend](https://resend.com) API key. If missing, holds still succeed; email is skipped and logged. |
+| `FROM_EMAIL` | For guest email | Verified Resend from-address, e.g. `Sand & Sea Manor <bookings@yourdomain.com>`. `RESEND_FROM_EMAIL` is also accepted. |
+
+### Guest confirmation email
+
+After a successful hold, `POST /api/inquiries` attempts a plain-text confirmation via Resend. The hold still returns **201** if send fails or if email is not configured.
+
+```
+RESEND_API_KEY=re_...
+FROM_EMAIL=Sand & Sea Manor <bookings@yourdomain.com>
+```
+
+## Local notes
+
+This is a static site; `npm run build` is not required. APIs run as Vercel serverless functions.
+
+The corporate landing page HTML is kept in `cjt_real_estate_site.html`.

@@ -5,6 +5,16 @@
     { "source": "/direct-bookings.ics", "destination": "/api/direct-bookings" },
     { "source": "/bookingcom.ics", "destination": "/api/direct-bookings?bookingcom=1" }
   ],
+  "headers": [
+    {
+      "source": "/api/calendar",
+      "headers": [
+        { "key": "Cache-Control", "value": "private, no-store, no-cache, max-age=0, must-revalidate" },
+        { "key": "CDN-Cache-Control", "value": "no-store" },
+        { "key": "Vercel-CDN-Cache-Control", "value": "no-store" }
+      ]
+    }
+  ],
   "functions": {
     "api/calendar.js": { "maxDuration": 10 },
     "api/direct-bookings.js": { "maxDuration": 10 },
