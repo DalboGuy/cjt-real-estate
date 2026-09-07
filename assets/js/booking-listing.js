@@ -13,8 +13,10 @@
     [...source.children].forEach(card=>target.appendChild(card.cloneNode(true)));
   }
   function hydrateAmenitiesModal(){
-    const source=document.querySelector('.amenity-directory'),target=$('amenitiesModalGrid');
-    if(!source||!target||target.children.length)return;
+    const target=$('amenitiesModalGrid');
+    if(!target||target.children.length)return;
+    const source=document.querySelector('#amenities [data-amenities-source], .amenity-directory:not(#amenitiesModalGrid)');
+    if(!source)return;
     [...source.children].forEach(column=>target.appendChild(column.cloneNode(true)));
   }
 
