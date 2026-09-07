@@ -1,8 +1,9 @@
 const crypto=require('crypto');
 const { db, ensureSchema, expireHolds }=require('../lib/db');
 const {previewPasswordFreeActive}=require('../lib/preview-access');
-const {ownerAdjustedQuote}=require('../lib/pricing');
+const {ownerAdjustedQuote,normalizeOwnerQuote}=require('../lib/pricing');
 const {paymentSnapshot}=require('../lib/payments');
+const {getOtaBlockedDates, listOwnerConnections, FEED_ENV_BY_SOURCE, MAX_OWNER_CALENDARS, urlHostHint}=require('../lib/availability');
 
 function parseCookies(header=''){return Object.fromEntries(header.split(';').map(v=>v.trim()).filter(Boolean).map(v=>{const i=v.indexOf('=');return [decodeURIComponent(v.slice(0,i)),decodeURIComponent(v.slice(i+1))];}));}
 function hash(v){return crypto.createHash('sha256').update(v).digest('hex');}
@@ -54,7 +55,7 @@ module.exports=async function(req,res){
         ORDER BY CASE WHEN r.status IN ('released','expired','cancelled') THEN 1 ELSE 0 END, r.checkin ASC, r.created_at DESC
         LIMIT 250
       `;
-      const reservationsWithPayments=await Promise.all(reservations.map(async reservation=>({...reservation,payment:await paymentSnapshot(sql,reservation.id)})));
+      const reservationsWithPayments=await Promise.all(reservations.map(async reservation=>({...reservation,quote:normalizeOwnerQuote(reservation.quote),payment:await paymentSnapshot(sql,reservation.id)})));
       return res.status(200).json({reservations:reservationsWithPayments,temporaryPasswordFree:previewPasswordFreeActive(req)});
     }
 
@@ -123,6 +124,66 @@ module.exports=async function(req,res){
       await sql`INSERT INTO booking_events(reservation_id,event_type,actor) VALUES (${id},${eventType},'owner')`;
       return res.status(200).json({ok:true});
     }
+
+
+
+    if(req.method==='POST'&&body.action==='calendar_feeds_status'){
+      const connections=await listOwnerConnections();
+      const feeds=connections.map(row=>({
+        id:Number(row.id),
+        label:row.label,
+        configured:true,
+        origin:'owner',
+        hostHint:urlHostHint(row.feed_url),
+        updatedAt:row.updated_at
+      }));
+      const envFeeds=[];
+      for(const [name, envName] of Object.entries(FEED_ENV_BY_SOURCE)){
+        const url=String(process.env[envName]||'').trim();
+        if(!url) continue;
+        envFeeds.push({ name, configured:true, origin:'env', hostHint:urlHostHint(url) });
+      }
+      let liveSources=[];
+      try{
+        const live=await getOtaBlockedDates();
+        liveSources=live.sources||[];
+      }catch(e){
+        liveSources=[{name:'ota',ok:false,error:e.message,missingEnv:e.missingEnv}];
+      }
+      return res.status(200).json({
+        feeds,
+        envFeeds,
+        maxOwnerCalendars:MAX_OWNER_CALENDARS,
+        ownerCount:feeds.length,
+        liveSources,
+        checkedAt:new Date().toISOString()
+      });
+    }
+
+    if(req.method==='POST'&&body.action==='calendar_feeds_save'){
+      const label=String(body.label||'').trim().slice(0,80);
+      const feedUrl=String(body.feedUrl||'').trim();
+      if(!label) return res.status(400).json({error:'missing_label',message:'Give this calendar a short name.'});
+      if(!/^https:\/\//i.test(feedUrl)) return res.status(400).json({error:'invalid_feed_url',message:'Use a full https:// iCal URL.'});
+      const existing=await sql`SELECT count(*)::int AS n FROM calendar_connections`;
+      if((existing[0]?.n||0)>=MAX_OWNER_CALENDARS){
+        return res.status(409).json({error:'calendar_limit',message:`You can connect up to ${MAX_OWNER_CALENDARS} calendars.`});
+      }
+      const rows=await sql`
+        INSERT INTO calendar_connections(label, feed_url, updated_at, updated_by)
+        VALUES (${label}, ${feedUrl}, now(), 'owner')
+        RETURNING id, label, updated_at
+      `;
+      return res.status(200).json({ok:true, feed:{id:Number(rows[0].id), label:rows[0].label, hostHint:urlHostHint(feedUrl), origin:'owner'}});
+    }
+
+    if(req.method==='POST'&&body.action==='calendar_feeds_clear'){
+      const id=Number(body.id);
+      if(!Number.isInteger(id)||id<1) return res.status(400).json({error:'invalid_id'});
+      await sql`DELETE FROM calendar_connections WHERE id=${id}`;
+      return res.status(200).json({ok:true, id});
+    }
+
     return res.status(405).json({error:'method_not_allowed'});
   }catch(e){console.error('owner api error',e);return res.status(500).json({error:'owner_api_error'});}
 };
