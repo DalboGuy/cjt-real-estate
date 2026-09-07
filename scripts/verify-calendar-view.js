@@ -6,7 +6,11 @@ const {
   countsTowardOccupancy,
   reservationStatusBucket,
   monthBounds,
+  yearBounds,
+  dayBounds,
   weekBounds,
+  viewRangeBounds,
+  normalizeView,
   addDays,
   DEFAULT_SETTINGS,
   settingsFromRow,
@@ -137,6 +141,13 @@ assert.strictEqual(addDays('2026-09-30', 1), '2026-10-01');
 const week = weekBounds('2026-09-10');
 assert.strictEqual(week.start, '2026-09-06');
 assert.strictEqual(week.end, '2026-09-13');
+assert.deepStrictEqual(yearBounds(2026), { start: '2026-01-01', end: '2027-01-01' });
+assert.deepStrictEqual(dayBounds('2026-09-10'), { start: '2026-09-10', end: '2026-09-11' });
+assert.strictEqual(normalizeView('year'), 'year');
+assert.strictEqual(normalizeView('DAY'), 'day');
+assert.strictEqual(normalizeView('nope'), 'month');
+assert.deepStrictEqual(viewRangeBounds('year', { year: 2026, month: 9, focusDate: '2026-09-10' }), yearBounds(2026));
+assert.deepStrictEqual(viewRangeBounds('day', { year: 2026, month: 9, focusDate: '2026-09-10' }), dayBounds('2026-09-10'));
 
 assert.deepStrictEqual(settingsFromRow(null), { ...DEFAULT_SETTINGS });
 assert.strictEqual(settingsFromRow({ prep_buffer_enabled: true, show_guest_names: false, show_guest_contact: true }).prepBufferEnabled, true);
@@ -177,6 +188,36 @@ const weekSnap = snapshotFromInputs({
 assert.strictEqual(weekSnap.view, 'week');
 assert.strictEqual(weekSnap.range.weekStart, '2026-09-06');
 assert.strictEqual(weekSnap.occupancy.viewedWeek.booked, 3);
+assert.ok(weekSnap.occupancy.viewedYear);
+assert.ok(weekSnap.occupancy.viewedDay);
+
+const yearSnap = snapshotFromInputs({
+  ota: { events: otaEvents, sources: [] },
+  reservations,
+  entries,
+  settings: DEFAULT_SETTINGS
+}, { year: 2026, month: 9, view: 'year', focusDate: '2026-09-10' });
+assert.strictEqual(yearSnap.view, 'year');
+assert.strictEqual(yearSnap.range.yearStart, '2026-01-01');
+assert.strictEqual(yearSnap.range.yearEnd, '2027-01-01');
+assert.strictEqual(yearSnap.occupancy.viewedYear.total, 365);
+assert.ok(yearSnap.events.some((e) => e.reservationId === 'DB-1'));
+assert.ok(yearSnap.nights['2026-09-01']);
+assert.strictEqual(yearSnap.nights['2025-12-31'], undefined);
+
+const daySnap = snapshotFromInputs({
+  ota: { events: otaEvents, sources: [] },
+  reservations,
+  entries,
+  settings: DEFAULT_SETTINGS
+}, { year: 2026, month: 9, view: 'day', focusDate: '2026-09-10' });
+assert.strictEqual(daySnap.view, 'day');
+assert.strictEqual(daySnap.range.dayStart, '2026-09-10');
+assert.strictEqual(daySnap.range.dayEnd, '2026-09-11');
+assert.strictEqual(daySnap.occupancy.viewedDay.total, 1);
+assert.strictEqual(daySnap.occupancy.viewedDay.booked, 1);
+assert.ok(daySnap.nights['2026-09-10']);
+assert.strictEqual(daySnap.nights['2026-09-01'], undefined);
 
 expectThrow(() => {
   throw new Error('No calendar feeds configured');
@@ -248,6 +289,29 @@ assert.deepStrictEqual(
 assert.ok(viewSnap.events.some((e) => e.channel === 'owner_stay'));
 assert.ok(viewSnap.events.some((e) => e.channel === 'manual_block'));
 assert.ok(!viewSnap.sync.sources.some((s) => s.channel === 'owner_stay' || s.channel === 'manual_block'));
+
+for (const extraView of ['year', 'day']) {
+  const extraViewSnap = snapshotFromInputs({
+    ota: { events: otaEvents, sources: [{ kind: 'ical', name: 'airbnb', label: 'airbnb', channel: 'airbnb', ok: true, count: 2, origin: 'env', hostHint: 'example.test', duplicateOf: null, error: null }] },
+    reservations,
+    entries,
+    settings: DEFAULT_SETTINGS
+  }, { year: 2026, month: 9, view: extraView, focusDate: '2026-09-10', syncMode: 'view', checkedAt: at });
+  const extraRefreshSnap = snapshotFromInputs({
+    ota: { events: otaEvents, sources: [{ kind: 'ical', name: 'airbnb', label: 'airbnb', channel: 'airbnb', ok: true, count: 2, origin: 'env', hostHint: 'example.test', duplicateOf: null, error: null }] },
+    reservations,
+    entries,
+    settings: DEFAULT_SETTINGS
+  }, { year: 2026, month: 9, view: extraView, focusDate: '2026-09-10', syncMode: 'full_refresh', checkedAt: at });
+  assert.strictEqual(extraViewSnap.view, extraView);
+  assert.strictEqual(extraRefreshSnap.sync.mode, 'full_refresh');
+  assert.strictEqual(extraViewSnap.sourceHealth, undefined);
+  assert.deepStrictEqual(
+    { ...extraViewSnap, sync: { ...extraViewSnap.sync, mode: null } },
+    { ...extraRefreshSnap, sync: { ...extraRefreshSnap.sync, mode: null } },
+    `calendar_sync ${extraView} payload matches calendar_view except sync.mode`
+  );
+}
 
 const missing = buildOwnerSyncPayload({
   reservations,
