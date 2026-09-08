@@ -9,9 +9,14 @@
   const quoteResult=document.getElementById('quoteResult');
   const settingsForm=document.getElementById('settingsForm');
   const seasonForm=document.getElementById('seasonForm');
+  const discountForm=document.getElementById('discountForm');
+  const overrideForm=document.getElementById('overrideForm');
+  const costPolicyForm=document.getElementById('costPolicyForm');
   const WEEKDAY_NAMES=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   let pricing=null;
   let editingSeasonId=null;
+  let importFile=null;
+  let importCsv='';
   const seasonFilters={year:'all',months:'near',q:''};
   const filterYear=document.getElementById('filterYear');
   const filterMonths=document.getElementById('filterMonths');
@@ -272,6 +277,52 @@
     if(d.source==='fallback')showNotice('The published schedule is still using built-in defaults. Save settings or add a season to write it into Neon. After that, this page is the only write path.','err');
     else if(notice.classList.contains('err')&&/built-in defaults/i.test(notice.textContent))showNotice('');
     applyPricingContext(d);
+    renderDiscounts(d.discounts||[]);
+    renderOverrides(d.overrides||[]);
+    fillCostPolicy(document.getElementById('costChannel')?.value||'direct');
+  }
+
+  function ruleDates(rule){
+    if(!rule.start&&!rule.end)return 'Any stay date';
+    return `${rule.start?date(rule.start):'Any date'} – ${rule.end?date(rule.end):'No end'}`;
+  }
+
+  function renderDiscounts(rules){
+    const list=document.getElementById('discountList');
+    if(!list)return;
+    if(!rules.length){list.innerHTML='<div class="empty">No discounts saved. Base and override rates are unchanged.</div>';return}
+    list.innerHTML=rules.map(rule=>{
+      const amount=rule.discountType==='fixed'?money(rule.value):`${Number(rule.value)}%`;
+      const weekdays=(rule.eligibleWeekdays||[]).map(day=>WEEKDAY_NAMES[Number(day)]?.slice(0,3)).filter(Boolean).join(', ');
+      return `<div class="rule-row"><div><strong>${esc(rule.name)} · ${esc(amount)}</strong><span>${esc(rule.channel)} · ${esc(rule.minimumNights)}+ nights${weekdays?` · ${esc(weekdays)}`:''} · ${esc(ruleDates(rule))}</span></div><div class="row-actions"><button class="btn-tiny" type="button" data-edit-discount="${esc(rule.id)}">Edit</button><button class="btn-tiny danger" type="button" data-delete-discount="${esc(rule.id)}">Delete</button></div></div>`;
+    }).join('');
+  }
+
+  function renderOverrides(rules){
+    const list=document.getElementById('overrideList');
+    if(!list)return;
+    if(!rules.length){list.innerHTML='<div class="empty">No overrides saved. Seasonal rates remain in control.</div>';return}
+    list.innerHTML=rules.map(rule=>`<div class="rule-row"><div><strong>${esc(rule.name)} · ${money(rule.nightlyRate)}/night</strong><span>${esc(rule.channel)} · ${esc(ruleDates(rule))}${rule.minNights?` · ${esc(rule.minNights)}-night minimum`:''}</span></div><div class="row-actions"><button class="btn-tiny" type="button" data-edit-override="${esc(rule.id)}">Edit</button><button class="btn-tiny danger" type="button" data-delete-override="${esc(rule.id)}">Delete</button></div></div>`).join('');
+  }
+
+  function weekdayNumbers(value){
+    const names={sun:0,sunday:0,mon:1,monday:1,tue:2,tues:2,tuesday:2,wed:3,wednesday:3,thu:4,thur:4,thurs:4,thursday:4,fri:5,friday:5,sat:6,saturday:6};
+    return [...new Set(String(value||'').toLowerCase().split(/[|,; ]+/).filter(Boolean).map(item=>/^\d$/.test(item)?Number(item):names[item]).filter(day=>Number.isInteger(day)&&day>=0&&day<=6))].sort();
+  }
+
+  function resetDiscount(){discountForm?.reset();document.getElementById('discountId').value='';document.getElementById('discountMinimumNights').value='7';setStatus(document.getElementById('discountStatus'),'')}
+  function fillDiscount(rule){
+    document.getElementById('discountId').value=rule.id||'';document.getElementById('discountName').value=rule.name||'';document.getElementById('discountChannel').value=rule.channel||'all';document.getElementById('discountType').value=rule.discountType||'percent';document.getElementById('discountValue').value=rule.value||'';document.getElementById('discountMinimumNights').value=rule.minimumNights||1;document.getElementById('discountMaximumNights').value=rule.maximumNights||'';document.getElementById('discountStart').value=rule.start||'';document.getElementById('discountEnd').value=rule.end||'';document.getElementById('discountWeekdays').value=(rule.eligibleWeekdays||[]).map(day=>WEEKDAY_NAMES[Number(day)]?.slice(0,3)).filter(Boolean).join(' ');discountForm.scrollIntoView({behavior:'smooth',block:'start'});
+  }
+  function resetOverride(){overrideForm?.reset();document.getElementById('overrideId').value='';setStatus(document.getElementById('overrideStatus'),'')}
+  function fillOverride(rule){
+    document.getElementById('overrideId').value=rule.id||'';document.getElementById('overrideName').value=rule.name||'';document.getElementById('overrideChannel').value=rule.channel||'all';document.getElementById('overrideStart').value=rule.start||'';document.getElementById('overrideEnd').value=rule.end||'';document.getElementById('overrideRate').value=rule.nightlyRate||'';document.getElementById('overrideMinimumNights').value=rule.minNights||'';overrideForm.scrollIntoView({behavior:'smooth',block:'start'});
+  }
+
+  function fillCostPolicy(channel){
+    const policy=(pricing?.costPolicies||[]).find(row=>row.channel===channel)||{channel,monthlyOperatingCost:0,cleaningCost:pricing?.cleaningFee||0,channelFeeRate:0,minimumContribution:0,mode:'monitor'};
+    document.getElementById('costMode').value=policy.mode||'monitor';document.getElementById('monthlyOperatingCost').value=policy.monthlyOperatingCost??0;document.getElementById('cleaningCost').value=policy.cleaningCost??0;document.getElementById('channelFeeRate').value=Math.round(Number(policy.channelFeeRate||0)*10000)/100;document.getElementById('minimumContribution').value=policy.minimumContribution??0;
+    const badge=document.getElementById('costModeBadge');badge.textContent=policy.mode||'monitor';badge.className=`policy-mode ${policy.mode==='enforce'?'enforce':''}`;
   }
 
   function addIsoDays(iso,days){
@@ -331,14 +382,68 @@
   function renderQuote(q){
     const s=q.paymentSchedule||{};
     const schedule=s.mode==='split'?`<strong>Split payment</strong>${money(s.dueAtBooking)} due at booking · ${money(s.remainingBalance)} due ${esc(s.balanceDueDateLabel||'before arrival')}.`:`<strong>Full payment</strong>${money(s.dueAtBooking||q.total)} due at booking.`;
-    quoteResult.innerHTML=`<div class="meta">${esc(q.nights)} nights · ${esc(q.guests)} guests</div><dl class="quote-grid"><dt>Lodging</dt><dd>${money(q.lodgingSubtotal)}</dd><dt>Cleaning fee</dt><dd>${money(q.cleaningFee)}</dd><dt>Tax</dt><dd>${money(q.taxes)}</dd><dt class="quote-total">Total</dt><dd class="quote-total">${money(q.total)}</dd></dl><div class="schedule">${schedule}</div>`;
+    const adjustment=q.pricingAdjustments||{};
+    const discount=adjustment.discount?`<dt>Discount · ${esc(adjustment.discount.name)}</dt><dd>−${money(adjustment.discount.amount)}</dd>`:'';
+    const overrides=(adjustment.overrides||[]).length?`<dt>Overrides</dt><dd>${esc(adjustment.overrides.map(item=>`${item.name} (${item.nights})`).join(', '))}</dd>`:'';
+    const guard=q.costGuard;
+    const guardCopy=guard?`<div class="cost-explanation ${guard.atRisk?'risk':''}"><strong>${esc(q.channel)} cost floor · ${esc(guard.mode)}</strong><br>Allocated operating cost ${money(guard.allocatedOperatingCost)} · required lodging ${money(guard.requiredLodging)} · projected contribution ${money(guard.projectedContribution)}.${guard.applied?' Floor applied to this preview.':guard.atRisk?' Below floor; monitor mode did not change the quote.':' Floor clears.'}</div>`:'';
+    quoteResult.innerHTML=`<div class="meta">${esc(q.nights)} nights · ${esc(q.guests)} guests · ${esc(q.channel||'direct')}</div><dl class="quote-grid">${overrides}${discount}<dt>Lodging</dt><dd>${money(q.lodgingSubtotal)}</dd><dt>Cleaning fee</dt><dd>${money(q.cleaningFee)}</dd><dt>Tax</dt><dd>${money(q.taxes)}</dd><dt class="quote-total">Total</dt><dd class="quote-total">${money(q.total)}</dd></dl>${guardCopy}<div class="schedule">${schedule}</div>`;
     quoteResult.classList.remove('hidden');
   }
 
   document.getElementById('quoteForm').addEventListener('submit',async e=>{
     e.preventDefault();quoteResult.classList.remove('hidden');quoteResult.innerHTML='<div class="meta">Calculating…</div>';
-    const params=new URLSearchParams({checkin:document.getElementById('quoteCheckin').value,checkout:document.getElementById('quoteCheckout').value,guests:document.getElementById('quoteGuests').value});
-    try{const r=await fetch(`/api/quote?${params}`,{cache:'no-store'}),d=await r.json().catch(()=>({}));if(!r.ok){quoteResult.innerHTML=quoteError({code:d.error||d.code,message:d.message||'The quote could not be calculated.'});return}renderQuote(d.quote)}catch(error){quoteResult.innerHTML=quoteError({code:'quote_unavailable',message:error.message})}
+    const payload={action:'preview_quote',checkin:document.getElementById('quoteCheckin').value,checkout:document.getElementById('quoteCheckout').value,guests:Number(document.getElementById('quoteGuests').value),channel:document.getElementById('quoteChannel').value};
+    try{const d=await postPricing(payload);renderQuote(d.quote)}catch(error){quoteResult.innerHTML=quoteError({code:error.code,message:error.message})}
+  });
+
+  discountForm?.addEventListener('submit',async e=>{
+    e.preventDefault();const status=document.getElementById('discountStatus');setStatus(status,'Saving…');
+    try{const data=await postPricing({action:'save_discount',id:document.getElementById('discountId').value||undefined,name:document.getElementById('discountName').value,channel:document.getElementById('discountChannel').value,discountType:document.getElementById('discountType').value,value:Number(document.getElementById('discountValue').value),minimumNights:Number(document.getElementById('discountMinimumNights').value),maximumNights:document.getElementById('discountMaximumNights').value||null,start:document.getElementById('discountStart').value||null,end:document.getElementById('discountEnd').value||null,eligibleWeekdays:weekdayNumbers(document.getElementById('discountWeekdays').value)});renderPricing(data);resetDiscount();setStatus(status,'Discount saved and verified.','ok');showNotice('Discount saved. Use Test a quote to verify which eligible offer wins.','ok')}catch(error){setStatus(status,error.message,'err');showNotice(error.message,'err')}
+  });
+  document.getElementById('discountReset')?.addEventListener('click',resetDiscount);
+  document.getElementById('discountList')?.addEventListener('click',async e=>{
+    const edit=e.target.closest('[data-edit-discount]'),del=e.target.closest('[data-delete-discount]');
+    if(edit){const rule=(pricing.discounts||[]).find(item=>String(item.id)===edit.dataset.editDiscount);if(rule)fillDiscount(rule);return}
+    if(del&&confirm('Delete this discount?')){try{const data=await postPricing({action:'delete_discount',id:del.dataset.deleteDiscount});renderPricing(data);showNotice('Discount deleted.','ok')}catch(error){showNotice(error.message,'err')}}
+  });
+
+  overrideForm?.addEventListener('submit',async e=>{
+    e.preventDefault();const status=document.getElementById('overrideStatus');setStatus(status,'Saving…');
+    try{const data=await postPricing({action:'save_override',id:document.getElementById('overrideId').value||undefined,name:document.getElementById('overrideName').value,channel:document.getElementById('overrideChannel').value,start:document.getElementById('overrideStart').value,end:document.getElementById('overrideEnd').value,nightlyRate:Number(document.getElementById('overrideRate').value),minNights:document.getElementById('overrideMinimumNights').value||null});renderPricing(data);resetOverride();setStatus(status,'Override saved and verified.','ok');showNotice('Date override saved. Test an affected stay before relying on it.','ok')}catch(error){setStatus(status,error.message,'err');showNotice(error.message,'err')}
+  });
+  document.getElementById('overrideReset')?.addEventListener('click',resetOverride);
+  document.getElementById('overrideList')?.addEventListener('click',async e=>{
+    const edit=e.target.closest('[data-edit-override]'),del=e.target.closest('[data-delete-override]');
+    if(edit){const rule=(pricing.overrides||[]).find(item=>String(item.id)===edit.dataset.editOverride);if(rule)fillOverride(rule);return}
+    if(del&&confirm('Delete this override?')){try{const data=await postPricing({action:'delete_override',id:del.dataset.deleteOverride});renderPricing(data);showNotice('Pricing override deleted.','ok')}catch(error){showNotice(error.message,'err')}}
+  });
+
+  document.getElementById('costChannel')?.addEventListener('change',e=>fillCostPolicy(e.target.value));
+  costPolicyForm?.addEventListener('submit',async e=>{
+    e.preventDefault();const status=document.getElementById('costStatus');setStatus(status,'Saving…');
+    try{const data=await postPricing({action:'save_cost_policy',channel:document.getElementById('costChannel').value,mode:document.getElementById('costMode').value,monthlyOperatingCost:Number(document.getElementById('monthlyOperatingCost').value),cleaningCost:Number(document.getElementById('cleaningCost').value),channelFeeRate:Number(document.getElementById('channelFeeRate').value),minimumContribution:Number(document.getElementById('minimumContribution').value)});renderPricing(data);setStatus(status,`${document.getElementById('costChannel').value} cost policy saved.`,'ok');showNotice('Cost policy saved. Monitor mode does not change public guest prices.','ok')}catch(error){setStatus(status,error.message,'err');showNotice(error.message,'err')}
+  });
+
+  async function readImportFile(){
+    importFile=document.getElementById('pricingCsv').files[0]||null;
+    if(!importFile)throw new Error('Choose a CSV file first.');
+    if(importFile.size>500000)throw new Error('Pricing CSV must be 500 KB or smaller.');
+    importCsv=await importFile.text();return importCsv;
+  }
+  function renderImportPreview(result){
+    const box=document.getElementById('importPreview');box.classList.remove('hidden');
+    const rows=result.rows||[];
+    box.innerHTML=`<div class="report-meta"><strong>${esc(result.fileName||'Pricing file')}</strong><span>${esc(result.validCount||0)} of ${esc(result.rowCount||0)} rows valid</span></div><div class="pricing-table-wrap"><table class="pricing-table"><thead><tr><th>Row</th><th>Type</th><th>Name</th><th>Channel</th><th>Result</th></tr></thead><tbody>${rows.map(row=>`<tr><td>${esc(row.rowNumber)}</td><td>${esc(row.recordType||'—')}</td><td>${esc(row.data?.name||'—')}</td><td>${esc(row.data?.channel||'—')}</td><td class="${row.valid?'':'import-error'}">${row.valid?'Ready':esc((row.errors||[]).join('; '))}</td></tr>`).join('')}</tbody></table></div>`;
+    document.getElementById('confirmImport').disabled=!result.ok;
+  }
+  document.getElementById('previewImport')?.addEventListener('click',async()=>{
+    const status=document.getElementById('importStatus');setStatus(status,'Reading and validating…');
+    try{await readImportFile();const result=await postPricing({action:'preview_import',fileName:importFile.name,csv:importCsv});renderImportPreview(result);setStatus(status,result.ok?'Preview ready. Review every row, then confirm.':'Fix the highlighted rows before importing.',result.ok?'ok':'err')}catch(error){setStatus(status,error.message,'err');document.getElementById('confirmImport').disabled=true}
+  });
+  document.getElementById('confirmImport')?.addEventListener('click',async()=>{
+    const status=document.getElementById('importStatus'),button=document.getElementById('confirmImport');button.disabled=true;setStatus(status,'Importing validated rows…');
+    try{const data=await postPricing({action:'commit_import',fileName:importFile.name,csv:importCsv});renderPricing(data);setStatus(status,data.message||'Pricing file imported.','ok');showNotice(data.message||'Pricing file imported and saved.','ok')}catch(error){setStatus(status,error.message,'err');showNotice(error.message,'err')}finally{button.disabled=false}
   });
 
   settingsForm.addEventListener('submit',async e=>{

@@ -1,0 +1,4 @@
+record_type,name,channel,start_date,end_date,discount_type,value,minimum_nights,maximum_nights,eligible_weekdays,nightly_rate,active
+discount,Midweek direct,direct,2026-09-01,2026-12-31,percent,15,2,4,Mon|Tue|Wed|Thu,,yes
+discount,Extended stay,all,,,percent,10,7,,,,yes
+override,Thanksgiving,all,2026-11-25,2026-11-29,,,,,,850,yes
