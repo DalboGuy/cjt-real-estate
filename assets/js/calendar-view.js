@@ -29,6 +29,7 @@
   let drawerDate=null;
   let editingEntryId=null;
   let savingNotes=false;
+  let showAllUpcoming=false;
 
   const noticeEl=document.getElementById('moduleNotice');
   const mount=document.getElementById('calendarMount');
@@ -319,6 +320,12 @@
       statusEl.innerHTML=statuses.map(([id,label])=>`<button class="filter-btn ${statusFilter===id?'active':''}" data-status="${id}" type="button">${esc(label)}</button>`).join('');
       statusEl.querySelectorAll('[data-status]').forEach(btn=>btn.onclick=()=>{statusFilter=btn.dataset.status;render();});
     }
+    const active=document.getElementById('activeFilterSummary');
+    if(active){
+      const channelLabel=channels.find(([id])=>id===channelFilter)?.[1]||'All channels';
+      const statusText=statuses.find(([id])=>id===statusFilter)?.[1]||'All statuses';
+      active.textContent=`${channelLabel} · ${statusText}`;
+    }
   }
 
   function occupancyForCurrentView(){
@@ -417,6 +424,46 @@
     if(!rows.length){el.classList.add('hidden');el.textContent='';return;}
     el.classList.remove('hidden');
     el.textContent=`${rows.length} overlapping night${rows.length===1?'':'s'} — two sources claim the same date. ${rows.slice(0,6).map(r=>r.date).join(', ')}${rows.length>6?'…':''}`;
+  }
+
+  function renderAttention(){
+    const el=document.getElementById('calendarAttention');
+    if(!el||!snapshot)return;
+    const sync=snapshot.sync||{};
+    const sources=sync.sources||[];
+    const failed=sources.filter(source=>source.ok===false&&!source.duplicateOf);
+    const syncOk=deriveSyncOk(sync);
+    const conflicts=(snapshot.conflicts||[]).filter(row=>{
+      const night=snapshot.nights?.[row.date];
+      if(!night)return false;
+      const map=eventsById();
+      return (night.eventIds||[]).some(id=>eventVisible(map.get(id)||{}));
+    });
+    const today=snapshot.range?.today||'';
+    const upcoming=(snapshot.upcoming||[])
+      .filter(ev=>eventVisible(ev)&&ev.statusBucket!=='cancelled'&&ev.end>today)
+      .sort((a,b)=>a.start.localeCompare(b.start)||a.end.localeCompare(b.end));
+    const next=upcoming[0];
+    const healthTitle=syncOk?'Sources healthy':`${failed.length||1} source issue${(failed.length||1)===1?'':'s'}`;
+    const healthDetail=syncOk
+      ? `${sources.filter(source=>source.ok!==false).length} connected source${sources.length===1?'':'s'} checked`
+      : (sync.configError?.message||failed.map(source=>source.label||source.name).slice(0,2).join(', ')||'Open connections to review');
+    const conflictTitle=conflicts.length?`${conflicts.length} overlap${conflicts.length===1?'':'s'} to review`:'No overlaps detected';
+    const conflictDetail=conflicts.length?conflicts.slice(0,3).map(row=>row.date).join(', '):'No two sources claim the same visible night';
+    const nextTitle=next?`Next: ${next.label}`:'No upcoming activity';
+    const nextDetail=next?`${fmt(next.start)} → ${fmt(next.end)} · ${next.nights} night${next.nights===1?'':'s'}`:'No stay or block appears in the loaded horizon';
+    const cards=[
+      {kind:syncOk?'good':'danger',icon:syncOk?'OK':'!',title:healthTitle,detail:healthDetail,action:'Connections',command:'connections'},
+      {kind:conflicts.length?'danger':'good',icon:conflicts.length?'!':'OK',title:conflictTitle,detail:conflictDetail,action:conflicts.length?'Inspect':'Calendar',date:conflicts[0]?.date},
+      {kind:next?.statusBucket==='hold'?'warn':'good',icon:next?.statusBucket==='hold'?'!':'→',title:nextTitle,detail:nextDetail,action:next?'Open':'Calendar',date:next?.start}
+    ];
+    el.innerHTML=cards.map(card=>`<button class="cal-attention-item ${card.kind}" type="button" ${card.command?`data-attention-command="${esc(card.command)}"`:''} ${card.date?`data-attention-date="${esc(card.date)}"`:''}>
+      <span class="cal-attention-icon">${esc(card.icon)}</span>
+      <span class="cal-attention-copy"><strong>${esc(card.title)}</strong><span>${esc(card.detail)}</span></span>
+      <span class="cal-attention-action">${esc(card.action)} →</span>
+    </button>`).join('');
+    el.querySelectorAll('[data-attention-command="connections"]').forEach(button=>button.addEventListener('click',openConnectionsPanel));
+    el.querySelectorAll('[data-attention-date]').forEach(button=>button.addEventListener('click',()=>openDrawer(button.getAttribute('data-attention-date'))));
   }
 
   function nightEvents(date){
@@ -832,9 +879,35 @@
       if(start) start.value=date;
       if(end) end.value=addDays(date,1);
     }
-    document.getElementById('blockFormCard')?.scrollIntoView({behavior:'smooth',block:'center'});
-    document.getElementById('blockForm')?.scrollIntoView({behavior:'smooth',block:'center'});
+    openBlockDrawer();
     start?.focus();
+  }
+
+  function openBlockDrawer(){
+    const panel=document.getElementById('blockDrawer');
+    const backdrop=document.getElementById('utilityBackdrop');
+    panel?.classList.remove('hidden');
+    panel?.setAttribute('aria-hidden','false');
+    backdrop?.classList.remove('hidden');
+    document.body.classList.add('cal-modal-open');
+  }
+
+  function closeBlockDrawer(){
+    const panel=document.getElementById('blockDrawer');
+    const backdrop=document.getElementById('utilityBackdrop');
+    panel?.classList.add('hidden');
+    panel?.setAttribute('aria-hidden','true');
+    backdrop?.classList.add('hidden');
+    document.body.classList.remove('cal-modal-open');
+    document.getElementById('openBlockForm')?.focus();
+  }
+
+  function openConnectionsPanel(){
+    const panel=document.getElementById('calendarConnections');
+    if(!panel)return;
+    panel.open=true;
+    panel.scrollIntoView({behavior:'smooth',block:'start'});
+    panel.querySelector('summary')?.focus();
   }
 
   async function removeEntry(id){
@@ -855,12 +928,24 @@
     const el=document.getElementById('upcomingList');
     if(!el||!snapshot)return;
     const rows=(snapshot.upcoming||[]).filter(eventVisible);
-    if(!rows.length){el.innerHTML='<div class="empty">No upcoming stays or blocks.</div>';return;}
-    el.innerHTML=rows.map(ev=>{
+    const count=document.getElementById('upcomingCount');
+    const toggle=document.getElementById('toggleUpcoming');
+    if(count)count.textContent=String(rows.length);
+    if(!rows.length){
+      el.innerHTML='<div class="empty">No upcoming stays or blocks.</div>';
+      toggle?.classList.add('hidden');
+      return;
+    }
+    const visible=showAllUpcoming?rows:rows.slice(0,6);
+    el.innerHTML=visible.map(ev=>{
       const extra=ev.statusBucket==='hold'?` · ${statusLabel('hold')}`:(ev.occupancy?'':' · not in occupancy');
       return `<div class="list-row" data-open="${esc(ev.start)}"><div><strong>${esc(ev.label)}</strong><span>${esc(ev.start)} → ${esc(ev.end)} · ${esc(ev.nights)} night${ev.nights===1?'':'s'}${extra}</span></div><span class="badge ${ev.statusBucket==='hold'?'warn':''}">${esc(ev.channel)}</span></div>`;
     }).join('');
     el.querySelectorAll('[data-open]').forEach(row=>row.addEventListener('click',()=>openDrawer(row.getAttribute('data-open'))));
+    if(toggle){
+      toggle.classList.toggle('hidden',rows.length<=6);
+      toggle.textContent=showAllUpcoming?'Show next 6':`Show all ${rows.length}`;
+    }
   }
 
   function summaryRange(){
@@ -919,6 +1004,7 @@
     renderOccupancy();
     renderSync();
     renderConflicts();
+    renderAttention();
     renderGrid();
     renderUpcoming();
   }
@@ -1057,6 +1143,19 @@
   document.getElementById('viewDay')?.addEventListener('click',()=>switchView('day'));
   document.getElementById('syncCalendars')?.addEventListener('click',()=>syncCalendars());
   document.getElementById('openBlockForm')?.addEventListener('click',()=>fillForm(snapshot?.range?.today||null,'manual_block'));
+  document.getElementById('openConnections')?.addEventListener('click',openConnectionsPanel);
+  document.getElementById('closeBlockForm')?.addEventListener('click',closeBlockDrawer);
+  document.getElementById('utilityBackdrop')?.addEventListener('click',closeBlockDrawer);
+  document.getElementById('clearCalendarFilters')?.addEventListener('click',()=>{
+    channelFilter='all';
+    statusFilter='all';
+    showAllUpcoming=false;
+    render();
+  });
+  document.getElementById('toggleUpcoming')?.addEventListener('click',()=>{
+    showAllUpcoming=!showAllUpcoming;
+    renderUpcoming();
+  });
   document.getElementById('copySummary')?.addEventListener('click',async()=>{
     try{
       await navigator.clipboard.writeText(monthSummaryText());
@@ -1070,6 +1169,10 @@
   drawerBackdrop?.addEventListener('click',closeDrawer);
   document.addEventListener('keydown',e=>{
     if(e.key!=='Escape') return;
+    if(!document.getElementById('blockDrawer')?.classList.contains('hidden')){
+      closeBlockDrawer();
+      return;
+    }
     if(editingEntryId){
       closeEditNotes();
       clearDrawerNotice();
@@ -1102,6 +1205,7 @@
       e.target.reset();
       const saved=kind==='owner_stay'?'Owner stay saved':'Manual block saved';
       showNotice(overlap.length?`${saved}. Overlaps an existing guest stay or OTA block.`:saved, overlap.length?7000:4500);
+      closeBlockDrawer();
       await load().catch(()=>{});
     }catch(err){
       if(err.message==='unauthorized'){clearFailedChrome('Sign in to view Calendar.',{unauthorized:true});return;}
