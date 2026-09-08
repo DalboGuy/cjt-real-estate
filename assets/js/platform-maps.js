@@ -98,7 +98,7 @@
     if (updateHistory && window.history?.pushState) window.history.pushState(null, '', selector);
     schedule(() => {
       target.scrollIntoView?.({ behavior: reducedMotion() ? 'auto' : 'smooth', block: 'start' });
-      target.querySelector?.('summary')?.focus?.({ preventScroll: true });
+      if (target.matches('details')) target.querySelector?.('summary')?.focus?.({ preventScroll: true });
     });
     return target;
   }
