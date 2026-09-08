@@ -4,7 +4,7 @@ Status: **Living architecture and delivery ledger**
 
 Portal route: `/admin-v1/maps`
 
-Current version: **2.0 — audited 2026-09-07**
+Current version: **2.1 — audited 2026-09-08**
 
 Audit baseline: `reorg/platform-v1` at `ccc45667eb5f5727f5a3f8c8be22a0c9a7b793a1` (merged PR #95)
 Map rebuild issue: [#96](https://github.com/DalboGuy/cjt-real-estate/issues/96)
@@ -21,6 +21,21 @@ Platform Maps is the visual operating blueprint for the CJT short-term-rental pl
 4. **Data lineage:** which UI, route, rule, table, provider, response, and failure state participate.
 
 The map is also the current omission ledger. A capability must not disappear merely because it is not yet built.
+
+## Reading and navigation rules
+
+- Every in-map jump opens the selected domain and top-aligns its heading below the sticky controls.
+- A persistent Back to top control appears after the first part of the page.
+- Search, importance, and build-state filters work together; Reset restores the complete map.
+- Domain importance is independent of maturity. A P0 domain can be partially built, and a P2 domain can be complete.
+
+## Importance hierarchy
+
+| Priority | Meaning | Domains |
+| --- | --- | --- |
+| P0 · Protect | Failure can double-book inventory, expose records, or write to the wrong environment | Guest request, Availability & Calendar, Identity & Permissions, Deployment & Data Safety |
+| P1 · Convert & collect | Turns demand into an approved, accurately priced, auditable stay | Owner lifecycle, Pricing & Quote, Financials, Contracts & Payments |
+| P2 · Operate & scale | Reduces daily friction and improves management and growth | Communications, Documents & Tasks, Navigation & Context, Guest Listing Content |
 
 ## Product rules that apply everywhere
 
@@ -89,7 +104,7 @@ Vercel `Ready` proves that an artifact built. It does not prove the user story, 
 | 01 | Guest Request-to-Book | Built foundation | Guest UI, persistence, owner read, and owner-card presentation are present; desktop/mobile/data E2E open | Active | `/booking-v2.html` | `/api/calendar`, `/api/quote`, `/api/inquiries`; `lib/inquiry-create.js` | `reservations`, `booking_events` | 2-guest and 14-guest Preview journey; prove trip/pet/event guest → owner |
 | 02 | Availability & Owner Calendar | Built core; UX needs reorganization | Code coverage present; source/mobile/owner acceptance open | Active | `/owner-v1/calendar` + guest date picker | `/api/calendar`, `/api/owner`; `lib/availability.js`, `lib/calendar-view.js` | `calendar_connections`, `owner_calendar_entries`, `owner_calendar_settings`, `reservations` | Reorganize dashboard; verify source health and all views |
 | 03 | Owner Booking Lifecycle | Partial | Transition tests and trip/pet/event owner presentation are present; full booking-cycle acceptance open | Active | `/owner-v1/reservations` | `/api/owner`; `lib/booking-transitions.js` | `reservations`, `booking_events` | Guest → owner acceptance; then decide contract/payment/confirmation order |
-| 04 | Pricing & Quote | Partial | Save and quote code present; complete widget/save acceptance open | Active | `/owner-v1/pricing` | `/api/pricing`, `/api/quote`; `lib/pricing-store.js`, `lib/pricing.js` | `pricing_settings`, `pricing_seasons`, quote events | Verify saves/errors; define file-import and profitability model |
+| 04 | Pricing & Quote | Partial | Settings/seasons and quote path present; discounts/overrides not wired; complete save acceptance open | Active | `/owner-v1/pricing` | `/api/pricing`, `/api/quote`; `lib/pricing-store.js`, `lib/pricing.js` | `pricing_settings`, `pricing_seasons`, quote events; dormant legacy pricing records | Verify saves/errors; approve precedence, file-import, and profitability model |
 | 05 | Financials | Built dashboard; partial source coverage | Unit tests present; authenticated Preview smoke open | Needs review | `/owner-v1/financials` | `/api/financials`; `lib/financials.js` | `booking_financials`, direct quote/payment events | Stable booking links; add approved cost/channel model later |
 | 06 | Communications | Partial | Existing hub operations; automatic intake not verified/built | Deferred | `/owner-v1/communications` | `/api/communications` | `communications_messages` | Choose and verify ingestion before claiming unified inbox |
 | 07 | Contracts & Payments | OpenSign partial; Stripe parked | OpenSign/payment unit tests exist; provider E2E and product sequence open | Parked/decision | Owner Booking + confirmation page | `/api/opensign`, `/api/payments`; `lib/opensign.js`, `lib/payments.js` | `reservations`, `booking_events` | Decide sequence; link signed file; separately resume payments |
@@ -151,9 +166,19 @@ Illegal or stale transitions return 409 with `invalid_transition` or `not_update
 - A quote is calculated server-side, itemized night by night, and depends on healthy availability.
 - An accepted request stores the exact quote snapshot so later catalog edits do not rewrite history.
 - Owner quote adjustments recalculate supported totals and are blocked after payment activity begins.
-- File upload/import is not built.
-- Operating-cost, host-site fee, discount, and margin optimization are not built.
+- A standalone default base-rate field/action is not built; current date coverage comes from published season rows.
+- The reconciled database contains `pricing_overrides`, and legacy `site_config` includes `midweek_offer`, `long_stay_offer`, and `pricing_rules`, but the current pricing editor/API/quote engine does **not** consume those records.
+- File upload/import is not built. A safe version needs a canonical CSV/XLSX template, dry-run preview, row-level errors, collision policy, and atomic publish step.
+- Operating-cost, host-site fee, discount floor, and margin optimization are not built.
 - Outbound OTA price publishing is not built.
+
+Proposed rule order for future pricing work (not current behavior):
+
+1. Choose the nightly source: approved base fallback, season/event rate, then date override.
+2. Resolve eligible offers: midweek, extended stay, coupon, and channel discount; explicitly decide stacking versus best-offer-only.
+3. Enforce an approved floor using net revenue after channel/transaction fees, allocated operating cost, and minimum contribution margin.
+4. Add fees and taxes once through the server-side quote engine.
+5. Store the exact inputs, applied rules, savings, floor result, and total in the booking snapshot.
 
 ### 05 — Financials
 
@@ -261,6 +286,7 @@ Payment path is parked:
 | Capability | Current gap | Precondition before build |
 | --- | --- | --- |
 | Pricing file import | No CSV/XLSX schema, preview, validation, row-error, or atomic save workflow | Approve a canonical template and collision policy |
+| Discounts and date overrides | Legacy records/config exist, but the active editor/API/quote path does not consume them | Approve base fallback, precedence, eligibility, stacking, and audit snapshot rules |
 | Cost / host-site discount engine | No operating-cost, channel fee, discount, contribution margin, or break-even records | Approve formulas, fee sources, and which costs allocate per night/stay/month |
 | Owner profile | Contact, photo, and identity presentation incomplete | Approve fields and visibility |
 | Two-way channel management | iCal blocks availability only; no outbound rates/inventory | Select channel manager/API and authority rules |

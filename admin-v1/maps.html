@@ -62,7 +62,7 @@
             <span class="map-eyebrow">CJT operating blueprint</span>
             <h2 id="mapTitle">See the whole platform.<br>Drill into any handoff.</h2>
             <p>Start with the business journey, then open a domain to see its workflow, source of truth, API calls, database writes, failure behavior, and next gate.</p>
-            <div class="map-meta"><span class="status-pill">Version 2.0</span><span class="status-pill">Audited Sep 7, 2026</span><span class="status-pill">Baseline ccc4566</span><span class="status-pill">Branch reorg/platform-v1</span></div>
+            <div class="map-meta"><span class="status-pill">Version 2.1</span><span class="status-pill">Audited Sep 8, 2026</span><span class="status-pill">Baseline ccc4566</span><span class="status-pill">Branch reorg/platform-v1</span></div>
           </div>
           <div class="map-hero-aside" aria-label="Map scope">
             <span>Mapped now</span>
@@ -79,10 +79,23 @@
           <article><span class="decision-icon">05</span><div><strong>Preview is isolated</strong><small>Preview must fail closed before it can use the known Production database host.</small></div></article>
         </section>
 
+        <section class="priority-panel card" aria-labelledby="priorityTitle">
+          <div class="map-section-head">
+            <div><span class="map-kicker">Importance hierarchy</span><h3 id="priorityTitle">Protect first. Convert second. Operate third.</h3><p>Priority describes business impact, not build status. Select a tier to narrow the map and top-align the matching systems.</p></div>
+            <span class="map-chip map-chip-truth">Decision order</span>
+          </div>
+          <div class="priority-lanes" aria-label="Filter by importance">
+            <button class="priority-lane priority-p0" type="button" data-priority-filter="p0" data-scroll-target="#domainAtlas" aria-pressed="false"><span>P0 · Protect</span><strong>Bookings, inventory, identity, data safety</strong><small>A failure can double-book dates, expose records, or write to the wrong environment.</small></button>
+            <button class="priority-lane priority-p1" type="button" data-priority-filter="p1" data-scroll-target="#domainAtlas" aria-pressed="false"><span>P1 · Convert &amp; collect</span><strong>Lifecycle, pricing, financials, contracts</strong><small>These systems turn demand into an approved, accurately priced, auditable stay.</small></button>
+            <button class="priority-lane priority-p2" type="button" data-priority-filter="p2" data-scroll-target="#domainAtlas" aria-pressed="false"><span>P2 · Operate &amp; scale</span><strong>Messages, documents, navigation, listing</strong><small>These systems reduce daily friction and make the platform easier to manage and grow.</small></button>
+          </div>
+        </section>
+
         <section class="map-controls" aria-label="Map controls">
           <label class="map-search"><span>Find a route, table, feature, or gap</span><input id="mapSearch" type="search" placeholder="Try “pricing”, “booking_events”, or “missing”…" autocomplete="off"></label>
+          <label class="map-select"><span>Importance</span><select id="mapPriorityFilter"><option value="all">All priorities</option><option value="p0">P0 · Protect</option><option value="p1">P1 · Convert &amp; collect</option><option value="p2">P2 · Operate &amp; scale</option></select></label>
           <label class="map-select"><span>Build state</span><select id="mapStatusFilter"><option value="all">All states</option><option value="built">Built</option><option value="partial">Partial</option><option value="planned">Planned</option><option value="parked">Parked</option></select></label>
-          <div class="map-control-actions"><button id="expandAllMaps" class="btn btn-secondary" type="button">Expand all</button><button id="collapseAllMaps" class="btn btn-secondary" type="button">Collapse all</button></div>
+          <div class="map-control-actions"><button id="clearMapFilters" class="btn btn-secondary" type="button">Reset</button><button id="expandAllMaps" class="btn btn-secondary" type="button">Expand</button><button id="collapseAllMaps" class="btn btn-secondary" type="button">Collapse</button></div>
           <p id="mapResults" class="map-results" role="status" aria-live="polite">12 domains shown</p>
         </section>
 
@@ -135,28 +148,34 @@
           </table></div>
         </section>
 
-        <section class="domain-atlas" aria-labelledby="atlasTitle">
+        <section id="domainAtlas" class="domain-atlas" aria-labelledby="atlasTitle">
           <aside class="domain-index">
-            <div><span class="map-kicker">Level 2 · Domains</span><h3 id="atlasTitle">Jump to a system</h3><p>Open one at a time or expand everything for a full audit.</p></div>
+            <div><span class="map-kicker">Level 2 · Domains</span><h3 id="atlasTitle">Jump to a system</h3><p>Every jump opens and top-aligns its destination. The current system stays highlighted.</p></div>
             <nav aria-label="Platform domains">
-              <a href="#domain-booking"><span>01</span>Guest request</a>
-              <a href="#domain-calendar"><span>02</span>Availability &amp; Calendar</a>
-              <a href="#domain-lifecycle"><span>03</span>Owner lifecycle</a>
-              <a href="#domain-pricing"><span>04</span>Pricing &amp; Quote</a>
-              <a href="#domain-financials"><span>05</span>Financials</a>
-              <a href="#domain-communications"><span>06</span>Communications</a>
-              <a href="#domain-contracts"><span>07</span>Contracts &amp; Payments</a>
-              <a href="#domain-documents"><span>08</span>Documents &amp; Tasks</a>
-              <a href="#domain-identity"><span>09</span>Identity &amp; Permissions</a>
-              <a href="#domain-navigation"><span>10</span>Navigation &amp; Context</a>
-              <a href="#domain-deployment"><span>11</span>Deployment &amp; Data Safety</a>
-              <a href="#domain-listing"><span>12</span>Guest Listing Content</a>
-              <a href="#delivery-ledger"><span>→</span>Missing &amp; next</a>
+              <div class="domain-index-group"><b>P0 · Protect</b>
+                <a href="#domain-booking"><span>01</span>Guest request</a>
+                <a href="#domain-calendar"><span>02</span>Availability &amp; Calendar</a>
+                <a href="#domain-identity"><span>09</span>Identity &amp; Permissions</a>
+                <a href="#domain-deployment"><span>11</span>Deployment &amp; Data Safety</a>
+              </div>
+              <div class="domain-index-group"><b>P1 · Convert &amp; collect</b>
+                <a href="#domain-lifecycle"><span>03</span>Owner lifecycle</a>
+                <a href="#domain-pricing"><span>04</span>Pricing &amp; Quote</a>
+                <a href="#domain-financials"><span>05</span>Financials</a>
+                <a href="#domain-contracts"><span>07</span>Contracts &amp; Payments</a>
+              </div>
+              <div class="domain-index-group"><b>P2 · Operate &amp; scale</b>
+                <a href="#domain-communications"><span>06</span>Communications</a>
+                <a href="#domain-documents"><span>08</span>Documents &amp; Tasks</a>
+                <a href="#domain-navigation"><span>10</span>Navigation &amp; Context</a>
+                <a href="#domain-listing"><span>12</span>Guest Listing Content</a>
+              </div>
+              <div class="domain-index-group"><b>Delivery</b><a href="#delivery-ledger"><span>→</span>Missing &amp; next</a></div>
             </nav>
           </aside>
 
           <div class="domain-stack">
-            <details id="domain-booking" class="domain-card" data-domain data-state="built partial" open>
+            <details id="domain-booking" class="domain-card" data-domain data-state="built partial" data-priority="p0" open>
               <summary>
                 <span class="domain-number">01</span><span class="domain-title"><strong>Guest Request-to-Book</strong><small>Public listing → guarded quote → durable date lock → owner review</small></span>
                 <span class="domain-status"><i class="map-chip map-chip-built">Build: Built</i><i class="map-chip map-chip-review">Acceptance: Open</i><i class="map-chip map-chip-active">Active</i></span><span class="domain-caret" aria-hidden="true">⌄</span>
@@ -185,7 +204,7 @@
               </div>
             </details>
 
-            <details id="domain-calendar" class="domain-card" data-domain data-state="built partial">
+            <details id="domain-calendar" class="domain-card" data-domain data-state="built partial" data-priority="p0">
               <summary>
                 <span class="domain-number">02</span><span class="domain-title"><strong>Availability &amp; Owner Calendar</strong><small>External calendars + direct locks + owner blocks on one operational view</small></span>
                 <span class="domain-status"><i class="map-chip map-chip-built">Core: Built</i><i class="map-chip map-chip-review">UX: Needs review</i><i class="map-chip map-chip-active">Active</i></span><span class="domain-caret" aria-hidden="true">⌄</span>
@@ -214,7 +233,7 @@
               </div>
             </details>
 
-            <details id="domain-lifecycle" class="domain-card" data-domain data-state="partial built">
+            <details id="domain-lifecycle" class="domain-card" data-domain data-state="partial built" data-priority="p1">
               <summary>
                 <span class="domain-number">03</span><span class="domain-title"><strong>Owner Booking Lifecycle</strong><small>One reservation, several independent business facts</small></span>
                 <span class="domain-status"><i class="map-chip map-chip-partial">Build: Partial</i><i class="map-chip map-chip-review">Acceptance: Open</i><i class="map-chip map-chip-active">Active</i></span><span class="domain-caret" aria-hidden="true">⌄</span>
@@ -245,7 +264,7 @@
               </div>
             </details>
 
-            <details id="domain-pricing" class="domain-card" data-domain data-state="partial built planned">
+            <details id="domain-pricing" class="domain-card" data-domain data-state="partial built planned" data-priority="p1">
               <summary>
                 <span class="domain-number">04</span><span class="domain-title"><strong>Pricing &amp; Quote Engine</strong><small>Owner-managed seasons → server quote → immutable booking snapshot</small></span>
                 <span class="domain-status"><i class="map-chip map-chip-partial">Build: Partial</i><i class="map-chip map-chip-review">Verify saves</i><i class="map-chip map-chip-active">Active</i></span><span class="domain-caret" aria-hidden="true">⌄</span>
@@ -262,19 +281,39 @@
                   <article><span>Source of truth</span><strong>Neon pricing settings and seasons; the stored request snapshot for an existing booking</strong></article>
                   <article><span>Owner feedback</span><strong>Saved/failed status exists for settings and seasons; quote tester uses the guest engine</strong></article>
                   <article><span>Protection</span><strong>Overlapping seasons rejected; unpublished dates and unhealthy inventory cannot quote</strong></article>
-                  <article><span>Next gate</span><strong>Verify every save/edit/delete state and reconcile owner pricing UX with business goals</strong></article>
+                  <article><span>Next gate</span><strong>Verify every save/edit/delete state, then approve discount and override precedence before expanding the engine</strong></article>
                 </div>
+                <section class="capability-board" aria-labelledby="pricingCapabilitiesTitle">
+                  <div class="capability-head"><div><span class="map-kicker">Pricing control stack</span><h4 id="pricingCapabilitiesTitle">What can be changed today—and what still needs a rule</h4></div><span class="map-chip map-chip-partial">Mixed maturity</span></div>
+                  <div class="capability-grid">
+                    <article data-capability-state="built"><span class="capability-state">Built</span><strong>Fees &amp; quote settings</strong><small>Cleaning, tax, capacity, published-through date, weekend-day definition, deposit percentage, and split threshold save through <code>/api/pricing</code>.</small></article>
+                    <article data-capability-state="built"><span class="capability-state">Built</span><strong>Season and event rates</strong><small>Named date bands store weekday rate, weekend rate, and minimum nights. Overlap is rejected.</small></article>
+                    <article data-capability-state="partial"><span class="capability-state">Partial</span><strong>Base pricing</strong><small>Every quoteable date is priced by a season. There is no separate default base-rate field or dedicated “Save base pricing” action yet.</small></article>
+                    <article data-capability-state="dormant"><span class="capability-state">Present, not wired</span><strong>Date overrides</strong><small><code>pricing_overrides</code> exists in the reconciled database, but the current pricing editor, API, and quote path do not consume it.</small></article>
+                    <article data-capability-state="dormant"><span class="capability-state">Present, not wired</span><strong>Midweek &amp; extended-stay offers</strong><small>Legacy <code>midweek_offer</code>, <code>long_stay_offer</code>, and <code>pricing_rules</code> config keys were found; the active quote engine does not apply them.</small></article>
+                    <article data-capability-state="built"><span class="capability-state">Built</span><strong>Reservation adjustment</strong><small>An owner can replace the lodging subtotal on an open direct reservation; supported totals are recalculated and the change is stored as an event.</small></article>
+                    <article data-capability-state="planned"><span class="capability-state">Not built</span><strong>Pricing file import</strong><small>CSV/XLSX upload still needs a template, dry-run preview, row errors, conflict policy, and atomic publish step.</small></article>
+                    <article data-capability-state="planned"><span class="capability-state">Not built</span><strong>Cost-aware channel discounts</strong><small>Monthly operating costs, per-stay allocation, host-site fees, discount scenarios, floor price, contribution margin, and break-even are not modeled.</small></article>
+                  </div>
+                </section>
+                <details class="trace"><summary>Decision needed · Quote precedence before discounts and overrides</summary><div class="precedence-grid">
+                  <article><b>1</b><div><strong>Choose a nightly source</strong><span>Base fallback, season/event rate, then an approved date-specific override.</span></div></article>
+                  <article><b>2</b><div><strong>Apply eligible offers</strong><span>Define whether midweek, extended stay, coupons, and channel discounts stack or compete.</span></div></article>
+                  <article><b>3</b><div><strong>Enforce the floor</strong><span>Compare net revenue after channel/transaction fees with allocated operating cost and minimum margin.</span></div></article>
+                  <article><b>4</b><div><strong>Add fees and tax</strong><span>Calculate the guest-facing all-in total from one server-side rule set.</span></div></article>
+                  <article><b>5</b><div><strong>Snapshot the result</strong><span>Store inputs, applied rules, savings, floor check, and exact total on the booking event.</span></div></article>
+                </div><p class="map-note">This is the proposed decision order—not current quote behavior. Approve the stacking and floor rules before implementation.</p></details>
                 <details class="trace"><summary>Level 4 · Pricing data lineage</summary><div class="table-scroll"><table class="map-table"><thead><tr><th>Boundary</th><th>Input</th><th>Write / result</th><th>Consumer</th><th>Evidence</th></tr></thead><tbody>
                   <tr><td>Settings save</td><td>Cleaning, tax, capacity, horizon, weekend days, payment split</td><td><code>pricing_settings</code></td><td>Quote engine and Owner Pricing summary</td><td><code>api/pricing.js</code><br><code>lib/pricing-store.js</code></td></tr>
                   <tr><td>Season save</td><td>Name, inclusive date band, weekday/weekend rate, minimum stay</td><td><code>pricing_seasons</code></td><td>Night-by-night quote</td><td><code>assets/js/pricing-v1.js</code></td></tr>
                   <tr><td>Quote</td><td>Dates, guests, live availability, current catalog</td><td>Itemized server response</td><td>Guest UI, owner tester, inquiry snapshot</td><td><code>lib/pricing.js</code><br><code>lib/quote-breakdown.js</code></td></tr>
                   <tr><td>Owner adjustment</td><td>Lodging subtotal on an open reservation</td><td>Recalculated quote event</td><td>Owner Booking + future payment</td><td><code>api/owner.js</code></td></tr>
                 </tbody></table></div></details>
-                <div class="gap-callout"><strong>Not built yet</strong><span>Pricing-file upload/import, discount rules against total operating cost by host/channel, and outbound OTA price publishing. These require an approved template and profitability model before coding.</span></div>
+                <div class="gap-callout"><strong>Important boundary</strong><span>Nothing in the map activates dormant offers or overrides. Pricing-file upload/import, cost-aware host-site discounts, and outbound OTA price publishing remain unbuilt until their contracts are approved.</span></div>
               </div>
             </details>
 
-            <details id="domain-financials" class="domain-card" data-domain data-state="built partial planned">
+            <details id="domain-financials" class="domain-card" data-domain data-state="built partial planned" data-priority="p1">
               <summary>
                 <span class="domain-number">05</span><span class="domain-title"><strong>Financial Data &amp; Reporting</strong><small>Direct quote facts + imported OTA values → honest owner reporting</small></span>
                 <span class="domain-status"><i class="map-chip map-chip-built">Dashboard: Built</i><i class="map-chip map-chip-partial">Data: Partial</i><i class="map-chip map-chip-review">Acceptance: Open</i></span><span class="domain-caret" aria-hidden="true">⌄</span>
@@ -303,7 +342,7 @@
               </div>
             </details>
 
-            <details id="domain-communications" class="domain-card" data-domain data-state="partial planned parked">
+            <details id="domain-communications" class="domain-card" data-domain data-state="partial planned parked" data-priority="p2">
               <summary>
                 <span class="domain-number">06</span><span class="domain-title"><strong>Guest Communications</strong><small>One review surface; official source threads remain authoritative</small></span>
                 <span class="domain-status"><i class="map-chip map-chip-partial">Build: Partial</i><i class="map-chip map-chip-parked">Automation: Deferred</i></span><span class="domain-caret" aria-hidden="true">⌄</span>
@@ -331,7 +370,7 @@
               </div>
             </details>
 
-            <details id="domain-contracts" class="domain-card" data-domain data-state="partial parked planned">
+            <details id="domain-contracts" class="domain-card" data-domain data-state="partial parked planned" data-priority="p1">
               <summary>
                 <span class="domain-number">07</span><span class="domain-title"><strong>Contracts &amp; Payments</strong><small>Provider integrations exist in code; operating sequence is not yet accepted</small></span>
                 <span class="domain-status"><i class="map-chip map-chip-partial">OpenSign: Partial</i><i class="map-chip map-chip-parked">Stripe: Parked</i></span><span class="domain-caret" aria-hidden="true">⌄</span>
@@ -357,7 +396,7 @@
               </div>
             </details>
 
-            <details id="domain-documents" class="domain-card" data-domain data-state="partial planned">
+            <details id="domain-documents" class="domain-card" data-domain data-state="partial planned" data-priority="p2">
               <summary>
                 <span class="domain-number">08</span><span class="domain-title"><strong>Documents &amp; Tasks</strong><small>Operations foundations with two different maturity levels</small></span>
                 <span class="domain-status"><i class="map-chip map-chip-planned">Documents: Planned</i><i class="map-chip map-chip-partial">Tasks: Partial</i></span><span class="domain-caret" aria-hidden="true">⌄</span>
@@ -382,7 +421,7 @@
               </div>
             </details>
 
-            <details id="domain-identity" class="domain-card" data-domain data-state="partial built planned">
+            <details id="domain-identity" class="domain-card" data-domain data-state="partial built planned" data-priority="p0">
               <summary>
                 <span class="domain-number">09</span><span class="domain-title"><strong>Identity &amp; Permissions</strong><small>Secure-by-default login foundation; multi-property authorization deferred</small></span>
                 <span class="domain-status"><i class="map-chip map-chip-built">Auth: Built</i><i class="map-chip map-chip-partial">Recovery: Partial</i><i class="map-chip map-chip-planned">Roles: Planned</i></span><span class="domain-caret" aria-hidden="true">⌄</span>
@@ -411,7 +450,7 @@
               </div>
             </details>
 
-            <details id="domain-navigation" class="domain-card" data-domain data-state="built partial">
+            <details id="domain-navigation" class="domain-card" data-domain data-state="built partial" data-priority="p2">
               <summary>
                 <span class="domain-number">10</span><span class="domain-title"><strong>Navigation &amp; Shared Context</strong><small>Persistent wayfinding with cross-page filters and record context</small></span>
                 <span class="domain-status"><i class="map-chip map-chip-built">Shell: Built</i><i class="map-chip map-chip-partial">Deep links: Partial</i><i class="map-chip map-chip-review">UX review open</i></span><span class="domain-caret" aria-hidden="true">⌄</span>
@@ -439,7 +478,7 @@
               </div>
             </details>
 
-            <details id="domain-deployment" class="domain-card" data-domain data-state="partial built planned">
+            <details id="domain-deployment" class="domain-card" data-domain data-state="partial built planned" data-priority="p0">
               <summary>
                 <span class="domain-number">11</span><span class="domain-title"><strong>Vercel, Neon &amp; Deployment Safety</strong><small>Git branch → Preview artifact → isolated data → explicit production cutover</small></span>
                 <span class="domain-status"><i class="map-chip map-chip-built">Preview guard: Built</i><i class="map-chip map-chip-partial">Cutover: Pending</i></span><span class="domain-caret" aria-hidden="true">⌄</span>
@@ -469,7 +508,7 @@
               </div>
             </details>
 
-            <details id="domain-listing" class="domain-card" data-domain data-state="partial planned">
+            <details id="domain-listing" class="domain-card" data-domain data-state="partial planned" data-priority="p2">
               <summary>
                 <span class="domain-number">12</span><span class="domain-title"><strong>Guest Listing Content</strong><small>Property story, photos, rooms, amenities, reviews, map, and local discovery</small></span>
                 <span class="domain-status"><i class="map-chip map-chip-partial">Build: Partial</i><i class="map-chip map-chip-review">Visual acceptance open</i></span><span class="domain-caret" aria-hidden="true">⌄</span>
@@ -500,7 +539,7 @@
           </div>
         </section>
 
-        <section id="delivery-ledger" class="delivery-ledger card" data-domain data-state="partial planned parked" aria-labelledby="deliveryTitle">
+        <section id="delivery-ledger" class="delivery-ledger card" data-domain data-state="partial planned parked" data-priority="p0 p1 p2" aria-labelledby="deliveryTitle">
           <div class="map-section-head"><div><span class="map-kicker">Build status &amp; omissions</span><h3 id="deliveryTitle">What happens next—and what was easy to forget</h3><p>This ledger separates the active sequence from parked decisions and later platform work.</p></div><span class="map-chip map-chip-review">Living queue</span></div>
           <div class="delivery-columns">
             <article><div class="delivery-heading"><span class="delivery-dot active"></span><h4>Active sequence</h4></div><ol>
@@ -516,6 +555,7 @@
             </ul></article>
             <article><div class="delivery-heading"><span class="delivery-dot missing"></span><h4>Missing capabilities</h4></div><ul>
               <li><strong>Pricing file import</strong><span>No CSV/XLSX upload contract or preview-before-save pipeline yet.</span></li>
+              <li><strong>Discounts &amp; date overrides</strong><span>Legacy records exist, but the current pricing editor and quote engine do not apply them; stacking and floor rules remain unapproved.</span></li>
               <li><strong>Cost / host-site discount model</strong><span>No operating-cost, channel-fee, discount, or margin engine yet.</span></li>
               <li><strong>Owner profile</strong><span>Contact/photo/identity presentation has not been completed.</span></li>
               <li><strong>Two-way channel management</strong><span>No outbound OTA rates, inventory, or unified messaging.</span></li>
@@ -530,6 +570,7 @@
 
         <noscript><p class="notice">Interactive search and expand controls require JavaScript. Every domain and data-lineage table remains available through the native disclosure controls above.</p></noscript>
       </div>
+      <button id="mapBackToTop" class="map-back-top" type="button" aria-label="Back to top" hidden>↑ Top</button>
     </main>
   </div>
 
