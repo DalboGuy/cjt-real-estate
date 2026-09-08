@@ -7,8 +7,16 @@ const {
   updatePricingSettings,
   createPricingSeason,
   updatePricingSeason,
-  deletePricingSeason
+  deletePricingSeason,
+  savePricingOverride,
+  deletePricingOverride,
+  savePricingDiscount,
+  deletePricingDiscount,
+  savePricingCostPolicy,
+  commitPricingImport
 }=require('../lib/pricing-store');
+const {previewPricingImport}=require('../lib/pricing-import');
+const {quoteStayWithCatalog}=require('../lib/pricing');
 
 function parseCookies(header=''){
   return Object.fromEntries(header.split(';').map(v=>v.trim()).filter(Boolean).map(v=>{
@@ -73,6 +81,42 @@ module.exports=async function(req,res){
     if(action==='delete_season'){
       const {catalog,deleted}=await deletePricingSeason(body.id);
       return sendCatalog(res,catalog,{ok:true,deleted});
+    }
+    if(action==='save_override'){
+      const {catalog,id}=await savePricingOverride(body);
+      return sendCatalog(res,catalog,{ok:true,id,message:'Pricing override saved.'});
+    }
+    if(action==='delete_override'){
+      const {catalog,deleted}=await deletePricingOverride(body.id);
+      return sendCatalog(res,catalog,{ok:true,deleted,message:'Pricing override deleted.'});
+    }
+    if(action==='save_discount'){
+      const {catalog,id}=await savePricingDiscount(body);
+      return sendCatalog(res,catalog,{ok:true,id,message:'Discount saved.'});
+    }
+    if(action==='delete_discount'){
+      const {catalog,deleted}=await deletePricingDiscount(body.id);
+      return sendCatalog(res,catalog,{ok:true,deleted,message:'Discount deleted.'});
+    }
+    if(action==='save_cost_policy'){
+      const catalog=await savePricingCostPolicy(body);
+      return sendCatalog(res,catalog,{ok:true,message:`${body.channel} cost policy saved.`});
+    }
+    if(action==='preview_import'){
+      const csv=String(body.csv||'');
+      if(csv.length>500000)return res.status(413).json({error:'import_too_large',message:'Pricing CSV must be 500 KB or smaller.'});
+      return res.status(200).json(previewPricingImport(csv,body.fileName));
+    }
+    if(action==='commit_import'){
+      const csv=String(body.csv||'');
+      if(csv.length>500000)return res.status(413).json({error:'import_too_large',message:'Pricing CSV must be 500 KB or smaller.'});
+      const {catalog,replayed,importId,preview}=await commitPricingImport(csv,body.fileName);
+      return sendCatalog(res,catalog,{ok:true,replayed,importId,importedRows:preview.rowCount,message:replayed?'This exact file was already imported. No duplicate rules were added.':`${preview.rowCount} pricing rules imported.`});
+    }
+    if(action==='preview_quote'){
+      const catalog=await loadPricingCatalog({allowFallback:false,fresh:true});
+      const quote=quoteStayWithCatalog(catalog,body.checkin,body.checkout,body.guests,{channel:body.channel,includeInternal:true});
+      return res.status(200).json({ok:true,quote});
     }
     return res.status(400).json({error:'invalid_action',message:'Unknown pricing action.'});
   }catch(e){
