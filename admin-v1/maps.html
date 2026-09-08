@@ -10,13 +10,15 @@
   <link rel="stylesheet" href="/assets/css/maps.css">
 </head>
 <body>
+  <a class="owner-skip-link" href="#mapMain">Skip to platform map</a>
+
   <section id="loginShell" class="login-shell hidden">
     <div class="login-card">
       <div class="brand" style="color:var(--cjt-ink)">CJT REALTY<small style="color:var(--cjt-muted)">Administration</small></div>
       <h1>Platform Maps</h1>
-      <p>Use the current Owner passcode as a temporary bridge, or sign in with a named account.</p>
-      <form id="loginForm"><input id="passcode" type="password" placeholder="Owner passcode" required><button class="btn btn-primary" type="submit">Sign in</button></form>
-      <div id="loginMsg" class="login-msg"></div>
+      <p>Sign in to review the platform architecture and delivery ledger.</p>
+      <form id="loginForm"><label for="passcode">Owner passcode</label><input id="passcode" type="password" placeholder="Owner passcode" autocomplete="current-password" required><button class="btn btn-primary" type="submit">Sign in</button></form>
+      <div id="loginMsg" class="login-msg" aria-live="polite"></div>
       <div class="widget-footer"><a class="btn btn-secondary" href="/login-v1?return=/admin-v1/maps">Named login</a></div>
     </div>
   </section>
@@ -25,187 +27,514 @@
   <div id="adminApp" class="owner-app hidden">
     <aside id="ownerSidebar" class="sidebar">
       <div class="brand">CJT REALTY<small>Administration</small></div>
-      <div class="property-chip"><strong>Platform Administration</strong><span>Living architecture & data-flow map</span></div>
+      <div class="property-chip"><strong>Platform Administration</strong><span>Architecture, truth, and delivery</span></div>
       <nav class="nav" aria-label="Admin Portal">
         <a href="/admin-v1"><span>Admin Dashboard</span></a>
-        <a href="/admin-v1/users"><span>Users & Access</span><span class="count">Live</span></a>
+        <a href="/admin-v1/users"><span>Users &amp; Access</span><span class="count">Live</span></a>
         <button data-coming-soon="Properties"><span>Properties</span><span class="count">Planned</span></button>
-        <button data-coming-soon="Roles & Permissions"><span>Roles & Permissions</span><span class="count">Planned</span></button>
+        <button data-coming-soon="Roles & Permissions"><span>Roles &amp; Permissions</span><span class="count">Planned</span></button>
         <div class="nav-section">Automation</div>
         <button data-coming-soon="Integrations"><span>Integrations</span><span class="count">Planned</span></button>
-        <a href="/owner-v1/documents"><span>Documents & Cloud</span></a>
+        <a href="/owner-v1/documents"><span>Documents &amp; Cloud</span></a>
         <button data-coming-soon="Notifications"><span>Notifications</span><span class="count">Planned</span></button>
         <div class="nav-section">Architecture</div>
-        <a class="active" href="/admin-v1/maps"><span>Platform Maps</span><span class="count">Live</span></a>
+        <a class="active" href="/admin-v1/maps" aria-current="page"><span>Platform Maps</span><span class="count">v2</span></a>
         <div class="nav-section">Security</div>
         <a href="/admin-v1/audit"><span>Audit Log</span><span class="count">Live</span></a>
         <a href="/admin-v1/sessions"><span>Sessions</span><span class="count">Live</span></a>
         <div class="nav-section">System</div>
-        <button data-coming-soon="System & Data"><span>System & Data</span><span class="count">Planned</span></button>
+        <button data-coming-soon="System & Data"><span>System &amp; Data</span><span class="count">Planned</span></button>
       </nav>
       <div class="sidebar-footer"><a href="/owner-v1">Owner Portal</a><a href="/account-v1">My Account</a><button id="logout" type="button">Sign out</button></div>
     </aside>
 
-    <main class="main">
+    <main id="mapMain" class="main">
       <header class="topbar">
-        <div style="display:flex;align-items:center;gap:10px"><button id="mobileMenu" class="icon-btn mobile-menu" type="button" aria-label="Open menu">☰</button><div><h1>Platform Maps</h1><div class="meta">Where information starts, where it goes, where it lives and where action happens</div></div></div>
+        <div class="map-topbar-start"><button id="mobileMenu" class="icon-btn mobile-menu" type="button" aria-label="Open menu">☰</button><div><h1>Platform Maps</h1><div class="meta">Operating blueprint · source of truth · build status</div></div></div>
         <div class="top-actions"><a class="btn btn-secondary" href="/admin-v1">Admin Dashboard</a></div>
       </header>
 
-      <div class="content">
-        <div class="section-title">
-          <div><h2>CJT Data Flow Map</h2><p>Read left-to-right or top-to-bottom: source → intake → normalize → store/index → portal → action.</p><div class="map-meta"><span class="status-pill">Version 1.6</span><span class="status-pill">Updated Sep 5, 2026</span><span class="status-pill">Branch: reorg/platform-v1</span></div></div>
-          <span class="status-pill">Living documentation</span>
-        </div>
+      <div class="content maps-page">
         <div id="moduleNotice" class="notice hidden"></div>
 
-        <section class="card map-card" style="margin-bottom:16px">
-          <div class="card-head"><div><h3>How to read these maps</h3><p>Color identifies the kind of system. Build status is shown separately.</p></div><span class="badge good">Legend</span></div>
-          <div class="legend-grid">
-            <div class="legend-card public"><strong>Public / Guest</strong><span>Website and guest entry points.</span></div>
-            <div class="legend-card owner"><strong>Owner Portal</strong><span>Daily operating screens.</span></div>
-            <div class="legend-card admin"><strong>Admin</strong><span>Configuration and governance.</span></div>
-            <div class="legend-card account"><strong>Account</strong><span>Login and personal access.</span></div>
-            <div class="legend-card external"><strong>External</strong><span>Airbnb, Vrbo, Gmail, Houfy, tawk.to, cloud providers.</span></div>
-            <div class="legend-card data"><strong>CJT Data</strong><span>Neon records and relationships.</span></div>
-            <div class="legend-card cloud"><strong>Cloud File</strong><span>Authoritative document file.</span></div>
-            <div class="legend-card"><strong>Core Application</strong><span>Vercel APIs and business logic.</span></div>
+        <section class="map-hero" aria-labelledby="mapTitle">
+          <div class="map-hero-copy">
+            <span class="map-eyebrow">CJT operating blueprint</span>
+            <h2 id="mapTitle">See the whole platform.<br>Drill into any handoff.</h2>
+            <p>Start with the business journey, then open a domain to see its workflow, source of truth, API calls, database writes, failure behavior, and next gate.</p>
+            <div class="map-meta"><span class="status-pill">Version 2.0</span><span class="status-pill">Audited Sep 7, 2026</span><span class="status-pill">Baseline ccc4566</span><span class="status-pill">Branch reorg/platform-v1</span></div>
           </div>
-          <div class="flow-key"><span><b>→</b> data/system flow</span><span><b>↔</b> sync</span><span><b>⇢</b> human handoff</span><span><b>···→</b> planned flow</span><span><span class="badge good">Built</span> working</span><span><span class="badge warn">Partial</span> in progress / needs review</span><span><span class="badge">Deferred</span> deferred</span><span><span class="badge">Planned</span> planned</span></div>
+          <div class="map-hero-aside" aria-label="Map scope">
+            <span>Mapped now</span>
+            <strong>12 domains</strong>
+            <small>Platform → domain → workflow → data lineage</small>
+          </div>
         </section>
 
-        <nav class="map-toolbar">
-          <a href="#overall">Overall Intake</a><a href="#communications">Communications</a><a href="#reservations">Reservations</a><a href="#documents">Documents</a><a href="#truth">Source of Truth</a><a href="#identity">Identity</a><a href="#navigation">Navigation</a><a href="#security-scope">Security</a><a href="#temporary-preview-access">Preview Access</a><a href="#direct-booking-engine">Direct Booking</a><a href="#guest-listing-experience">Guest Listing</a><a href="#roadmap">Build State</a>
-        </nav>
-
-        <section id="overall" class="card map-card" style="margin-bottom:16px">
-          <div class="card-head"><div><h3>1 · Overall Intake Path</h3><p>The common pattern for information entering CJT.</p></div><span class="badge good">Core model</span></div>
-          <div class="map-board"><div class="map-root"><div class="map-row">
-            <div class="flow-stage source"><strong>External Sources</strong><span>OTA · Gmail · website · chat · cloud folders</span></div><div class="map-arrow">→</div>
-            <div class="flow-stage"><strong>Intake</strong><span>Receive / fetch / detect</span></div><div class="map-arrow">→</div>
-            <div class="flow-stage"><strong>Normalize</strong><span>Type · property · guest · reservation</span></div><div class="map-arrow">→</div>
-            <div class="flow-stage store"><strong>Store / Index</strong><span>Neon records + cloud pointers</span></div><div class="map-arrow">→</div>
-            <div class="flow-stage portal"><strong>Portal</strong><span>Owner / Admin / Account</span></div><div class="map-arrow manual">⇢</div>
-            <div class="flow-stage action"><strong>Action</strong><span>CJT action or provider handoff</span></div>
-          </div><div class="flow-note">CJT is the organizing and operating layer. If an outside provider remains authoritative, CJT hands the final action back to that provider.</div></div></div>
+        <section class="decision-rail" aria-label="Rules that apply everywhere">
+          <article><span class="decision-icon">01</span><div><strong>Dates stay locked</strong><small>A request blocks inventory until an owner explicitly releases it.</small></div></article>
+          <article><span class="decision-icon">02</span><div><strong>Availability fails closed</strong><small>An unhealthy required feed means unknown inventory—not open nights.</small></div></article>
+          <article><span class="decision-icon">03</span><div><strong>Facts stay separate</strong><small>Approval, contract, payment, confirmation, and date lock are independent.</small></div></article>
+          <article><span class="decision-icon">04</span><div><strong>Stripe is parked</strong><small>Payment code exists, but payment testing and activation remain on hold.</small></div></article>
+          <article><span class="decision-icon">05</span><div><strong>Preview is isolated</strong><small>Preview must fail closed before it can use the known Production database host.</small></div></article>
         </section>
 
-        <section id="communications" class="card map-card" style="margin-bottom:16px">
-          <div class="card-head"><div><h3>2 · Guest Communications Flow</h3><p>Messages become one organized inbox while official OTA threads remain the reply location where required.</p></div><span class="badge warn">Partial</span><a class="card-link" href="/owner-v1/communications">Open Communications ↗</a></div>
-          <div class="map-board"><div class="map-root">
-            <div class="map-row"><div class="map-node external"><strong>Airbnb / Vrbo</strong><span>Guest message + thread URL</span></div><div class="map-node external"><strong>Booking.com / Houfy</strong><span>After message sources are verified</span></div><div class="map-node external built"><strong>tawk.to</strong><span>Direct website chat</span></div><div class="map-node external"><strong>Gmail</strong><span>Message intake</span></div></div>
-            <div class="map-arrow">↓</div><div class="map-node core"><strong>Communications Intake</strong><span>detect → parse → de-duplicate → normalize</span></div>
-            <div class="map-arrow">↓</div><div class="map-node data built"><strong>Neon Message Record</strong><span>platform · thread · guest · reservation · read/status</span></div>
-            <div class="map-arrow">↓</div><div class="map-node owner built"><strong>Owner → Communications</strong><span>search · filter · review · context</span></div>
-            <div class="map-arrow manual">⇢</div><div class="map-row"><div class="map-node external built"><strong>Official OTA Thread</strong><span>reply location for now</span></div><div class="map-node external built"><strong>Gmail / tawk.to</strong><span>reply where appropriate</span></div></div>
-          </div></div>
+        <section class="map-controls" aria-label="Map controls">
+          <label class="map-search"><span>Find a route, table, feature, or gap</span><input id="mapSearch" type="search" placeholder="Try “pricing”, “booking_events”, or “missing”…" autocomplete="off"></label>
+          <label class="map-select"><span>Build state</span><select id="mapStatusFilter"><option value="all">All states</option><option value="built">Built</option><option value="partial">Partial</option><option value="planned">Planned</option><option value="parked">Parked</option></select></label>
+          <div class="map-control-actions"><button id="expandAllMaps" class="btn btn-secondary" type="button">Expand all</button><button id="collapseAllMaps" class="btn btn-secondary" type="button">Collapse all</button></div>
+          <p id="mapResults" class="map-results" role="status" aria-live="polite">12 domains shown</p>
         </section>
 
-        <section id="reservations" class="card map-card" style="margin-bottom:16px">
-          <div class="card-head"><div><h3>3 · Reservation Flow</h3><p>Booking data drives operations, money, messages, documents and calendar visibility.</p></div><span class="badge warn">Partial</span><a class="card-link" href="/owner-v1/reservations">Open Reservations ↗</a></div>
-          <div class="map-board"><div class="map-root">
-            <div class="map-row"><div class="map-node external"><strong>OTA / Houfy Booking</strong><span>Channel reservation source</span></div><div class="map-node public built"><strong>Direct Booking</strong><span>CJT website / inquiry lifecycle</span></div></div>
-            <div class="map-arrow">↓</div><div class="map-node core"><strong>Reservation Intake / Lifecycle</strong><span>dates · guest · channel · hold · contract · deposit · status</span></div>
-            <div class="map-arrow">↓</div><div class="map-node data built"><strong>Reservation Record</strong><span>canonical CJT operating record</span></div>
-            <div class="map-arrow">↓</div><div class="map-row"><div class="map-node owner built"><strong>Reservations</strong></div><div class="map-node owner progress"><strong>Calendar</strong><span>Deferred</span></div><div class="map-node owner progress"><strong>Financials</strong><span>Deferred</span></div><div class="map-node owner progress"><strong>Communications</strong><span>Partial</span></div><div class="map-node owner progress"><strong>Documents</strong><span>Deferred</span></div></div>
-          </div></div>
+        <section id="platform-overview" class="map-overview card" aria-labelledby="overviewTitle">
+          <div class="map-section-head">
+            <div><span class="map-kicker">Level 1 · Platform</span><h3 id="overviewTitle">One operating system, six handoff zones</h3><p>This is the fastest way to understand the product. Select any zone to jump to the matching domain detail.</p></div>
+            <span class="map-chip map-chip-truth">System view</span>
+          </div>
+          <div class="system-flow" aria-label="Platform data flow">
+            <a class="system-node node-external" href="#domain-listing"><span>Sources</span><strong>Guests, OTAs, owners, providers</strong><small>Questions, dates, bookings, rates, messages, documents</small></a>
+            <a class="system-node node-public" href="#domain-booking"><span>Experience</span><strong>Guest booking page</strong><small>Listing, availability, quote, request</small></a>
+            <a class="system-node node-core" href="#domain-calendar"><span>Core rules</span><strong>Validate and normalize</strong><small>Availability, pricing, conflicts, transitions</small></a>
+            <a class="system-node node-data" href="#domain-deployment"><span>Records</span><strong>Neon operating data</strong><small>Reservations, events, calendars, pricing, money</small></a>
+            <a class="system-node node-owner" href="#domain-lifecycle"><span>Operations</span><strong>Owner Portal</strong><small>Review, decide, schedule, report, act</small></a>
+            <a class="system-node node-handoff" href="#domain-contracts"><span>Final handoff</span><strong>External provider action</strong><small>OTA thread, OpenSign, cloud; Stripe parked</small></a>
+          </div>
+
+          <div class="map-levels" aria-label="Map detail levels">
+            <article><b>1</b><div><strong>Platform</strong><span>How the whole product connects.</span></div></article>
+            <article><b>2</b><div><strong>Domain</strong><span>Who owns a business capability.</span></div></article>
+            <article><b>3</b><div><strong>Workflow</strong><span>What happens from trigger to outcome.</span></div></article>
+            <article><b>4</b><div><strong>Data lineage</strong><span>Exact route, rule, table, and failure.</span></div></article>
+          </div>
+
+          <details class="map-explainer">
+            <summary>How status is measured</summary>
+            <div class="status-model">
+              <article><strong>Build</strong><span>Is implementation present: Built, Partial, or Planned?</span></article>
+              <article><strong>Environment</strong><span>Where does it exist: code, Preview, or Production?</span></article>
+              <article><strong>Verification</strong><span>What evidence exists: code tests, browser smoke, or end-to-end?</span></article>
+              <article><strong>Acceptance</strong><span>Has Joel reviewed the actual desktop/mobile experience?</span></article>
+              <article><strong>Delivery</strong><span>Is the lane Active, Parked, Blocked, or Deferred?</span></article>
+            </div>
+            <p class="map-note">A Vercel “Ready” badge proves the deployment built. It does not prove the feature works or that the owner accepted it.</p>
+          </details>
         </section>
 
-        <section id="documents" class="card map-card" style="margin-bottom:16px">
-          <div class="card-head"><div><h3>4 · Cloud Document Intake</h3><p>Hands-off intake is preferred. CJT organizes files without becoming the primary file warehouse.</p></div><span class="badge">Deferred</span><a class="card-link" href="/owner-v1/documents">Open Documents ↗</a></div>
-          <div class="map-board"><div class="map-root">
-            <div class="map-row"><div class="map-node external"><strong>Email Attachment</strong></div><div class="map-node external"><strong>Signed Agreement</strong></div><div class="map-node external"><strong>Generated Report</strong></div><div class="map-node external"><strong>Watched Cloud Folder</strong></div></div>
-            <div class="map-arrow">↓</div><div class="map-row"><div class="flow-stage"><strong>Detect</strong></div><div class="map-arrow">→</div><div class="flow-stage"><strong>Classify</strong><span>type · property · reservation · vendor · period</span></div><div class="map-arrow">→</div><div class="flow-stage cloud"><strong>Cloud Storage</strong><span>authoritative file</span></div><div class="map-arrow">→</div><div class="flow-stage store"><strong>CJT Index</strong><span>metadata · cloud ID · tags · relationships</span></div></div>
-            <div class="map-arrow">↓</div><div class="map-row"><div class="map-node owner progress"><strong>Documents</strong><span>Deferred</span></div><div class="map-node owner progress"><strong>Reservations</strong><span>Partial</span></div><div class="map-node owner progress"><strong>Financials</strong><span>Deferred</span></div><div class="map-node owner progress"><strong>Maintenance</strong><span>Deferred</span></div></div>
-          </div></div>
-        </section>
-
-        <section id="truth" class="card map-card" style="margin-bottom:16px">
-          <div class="card-head"><div><h3>5 · Source of Truth</h3><p>Where the authoritative record lives versus where CJT presents it.</p></div></div>
-          <div style="overflow:auto"><table class="truth-table">
-            <tr><th>Information</th><th>Authoritative source</th><th>CJT role</th><th>Final action</th></tr>
-            <tr><td>OTA guest message</td><td>Official OTA thread / received email</td><td>Index + operational context</td><td>Official OTA thread for now</td></tr>
-            <tr><td>Direct website chat</td><td>tawk.to</td><td>Surface/link context</td><td>tawk.to</td></tr>
-            <tr><td>Direct reservation lifecycle</td><td>CJT reservation record</td><td>System of record</td><td>CJT</td></tr>
-            <tr><td>External booking</td><td>Booking channel + CJT normalized record</td><td>Consolidated operating view</td><td>Depends on action</td></tr>
-            <tr><td>Documents</td><td>Connected cloud storage</td><td>Index, tag, relate, search</td><td>Cloud file / CJT context</td></tr>
-            <tr><td>Users / roles / sessions</td><td>CJT</td><td>System of record</td><td>Admin / Account</td></tr>
+        <section class="truth-panel card" aria-labelledby="truthTitle">
+          <div class="map-section-head"><div><span class="map-kicker">Authority</span><h3 id="truthTitle">Where the truth actually lives</h3><p>CJT can organize an outside record without pretending to own it.</p></div><span class="map-chip map-chip-truth">Pinned reference</span></div>
+          <div class="table-scroll"><table class="map-table truth-table">
+            <thead><tr><th>Business fact</th><th>Authoritative source</th><th>CJT responsibility</th><th>Final action</th></tr></thead>
+            <tbody>
+              <tr><td>Direct booking lifecycle</td><td><code>reservations</code> + <code>booking_events</code></td><td>System of record and operating history</td><td>Owner Portal / CJT APIs</td></tr>
+              <tr><td>Availability</td><td>OTA calendars + active CJT locks + owner entries</td><td>Merge, de-duplicate, protect, and present</td><td>Channel for OTA; CJT for direct/manual</td></tr>
+              <tr><td>Direct pricing</td><td><code>pricing_settings</code> + <code>pricing_seasons</code></td><td>Server-side quote and stored snapshot</td><td>CJT Pricing</td></tr>
+              <tr><td>Booking money</td><td>Stored direct quote/payment events or imported OTA financial row</td><td>Report only supported values; never invent fees or NOI</td><td>CJT for direct; channel for OTA settlement</td></tr>
+              <tr><td>OTA conversation</td><td>Official OTA thread / source email</td><td>Index and provide operating context</td><td>Official OTA thread for now</td></tr>
+              <tr><td>Documents</td><td>Chosen cloud provider</td><td>Future metadata index and relationships</td><td>Cloud file with CJT context</td></tr>
+            </tbody>
           </table></div>
         </section>
 
-        <section id="identity" class="card map-card" style="margin-bottom:16px">
-          <div class="card-head"><div><h3>6 · Identity & Access Flow</h3><p>Identity determines which property and administrative data a user can reach.</p></div><span class="badge warn">Partial</span></div>
-          <div class="map-board"><div class="map-root">
-            <div class="map-row"><div class="map-node account built"><strong>Named Login</strong><span>email + password · 5 character minimum</span></div><div class="map-node account progress"><strong>Password Recovery</strong><span>Built foundation; delivery hook remains configuration-dependent</span></div><div class="map-node external progress"><strong>Invitations</strong><span>Deferred</span></div></div>
-            <div class="map-arrow">↓</div><div class="map-node core"><strong>Authentication</strong><span>verify identity → user-aware session</span></div>
-            <div class="map-arrow">↓</div><div class="map-row"><div class="map-node data built"><strong>owner_users</strong></div><div class="map-node data built"><strong>owner_sessions</strong></div><div class="map-node data progress"><strong>user_property_access</strong><span>Deferred</span></div></div>
-            <div class="map-arrow">↓</div><div class="map-row"><div class="map-node owner built"><strong>Owner Portal</strong></div><div class="map-node admin progress"><strong>Admin Portal</strong></div><div class="map-node account built"><strong>Account Center</strong></div></div>
-          </div></div>
-        </section>
+        <section class="domain-atlas" aria-labelledby="atlasTitle">
+          <aside class="domain-index">
+            <div><span class="map-kicker">Level 2 · Domains</span><h3 id="atlasTitle">Jump to a system</h3><p>Open one at a time or expand everything for a full audit.</p></div>
+            <nav aria-label="Platform domains">
+              <a href="#domain-booking"><span>01</span>Guest request</a>
+              <a href="#domain-calendar"><span>02</span>Availability &amp; Calendar</a>
+              <a href="#domain-lifecycle"><span>03</span>Owner lifecycle</a>
+              <a href="#domain-pricing"><span>04</span>Pricing &amp; Quote</a>
+              <a href="#domain-financials"><span>05</span>Financials</a>
+              <a href="#domain-communications"><span>06</span>Communications</a>
+              <a href="#domain-contracts"><span>07</span>Contracts &amp; Payments</a>
+              <a href="#domain-documents"><span>08</span>Documents &amp; Tasks</a>
+              <a href="#domain-identity"><span>09</span>Identity &amp; Permissions</a>
+              <a href="#domain-navigation"><span>10</span>Navigation &amp; Context</a>
+              <a href="#domain-deployment"><span>11</span>Deployment &amp; Data Safety</a>
+              <a href="#domain-listing"><span>12</span>Guest Listing Content</a>
+              <a href="#delivery-ledger"><span>→</span>Missing &amp; next</a>
+            </nav>
+          </aside>
 
-        <section id="navigation" class="card map-card" style="margin-bottom:16px">
-          <div class="card-head"><div><h3>7 · Portal Navigation Flow</h3><p>The user can always return to the left navigation without using the browser Back button.</p></div><span class="badge good">Built</span></div>
-          <div class="map-board"><div class="map-root">
-            <div class="map-node owner built"><strong>Current Module</strong><span>Dashboard, Reservations, Documents, Admin, etc.</span></div>
-            <div class="map-arrow">↓</div><div class="map-row"><div class="flow-stage portal"><strong>Menu › Flyout</strong><span>persistent left-edge return control when pane is hidden</span></div><div class="map-arrow">→</div><div class="flow-stage portal"><strong>Sliding Left Pane</strong><span>scrollable module list · active item kept visible</span></div></div>
-            <div class="map-arrow">↓</div><div class="map-node owner built"><strong>Select Module</strong><span>working route or clear Under construction page</span></div>
-            <div class="flow-note">Desktop: the pane can collapse and reopen. Mobile: the same control opens the slide-out drawer. The browser Back button is not required to get back to portal navigation.</div>
-          </div></div>
-        </section>
+          <div class="domain-stack">
+            <details id="domain-booking" class="domain-card" data-domain data-state="built partial" open>
+              <summary>
+                <span class="domain-number">01</span><span class="domain-title"><strong>Guest Request-to-Book</strong><small>Public listing → guarded quote → durable date lock → owner review</small></span>
+                <span class="domain-status"><i class="map-chip map-chip-built">Build: Built</i><i class="map-chip map-chip-review">Acceptance: Open</i><i class="map-chip map-chip-active">Active</i></span><span class="domain-caret" aria-hidden="true">⌄</span>
+              </summary>
+              <div class="domain-body">
+                <div class="workflow" aria-label="Guest request workflow">
+                  <div class="workflow-node node-public"><span>UI</span><strong>Dates, guests, trip, pets, event</strong><small><code>/booking-v2.html</code></small></div>
+                  <div class="workflow-node node-core"><span>Read</span><strong>Check calendar + quote</strong><small><code>GET /api/calendar</code> · <code>GET /api/quote</code></small></div>
+                  <div class="workflow-node node-core"><span>Write</span><strong>Recheck under one date lock</strong><small><code>POST /api/inquiries</code></small></div>
+                  <div class="workflow-node node-data"><span>Store</span><strong>Reservation + exact quote snapshot</strong><small><code>reservations</code> · <code>booking_events</code></small></div>
+                  <div class="workflow-node node-owner"><span>Outcome</span><strong>Owner review; nights remain closed</strong><small><code>/owner-v1/reservations</code></small></div>
+                </div>
+                <div class="domain-facts">
+                  <article><span>Source of truth</span><strong>Reservation row + append-only booking events</strong></article>
+                  <article><span>Reads</span><strong>Published prices, OTA health, CJT reservations, owner blocks</strong></article>
+                  <article><span>Protection</span><strong>Fail-closed inventory, overlap constraint, advisory transaction, retry replay</strong></article>
+                  <article><span>Next gate</span><strong>Preview desktop/mobile E2E for 2 and 14 guests; prove the new fields survive guest → owner</strong></article>
+                </div>
+                <details class="trace"><summary>Level 4 · API and data lineage</summary><div class="table-scroll"><table class="map-table"><thead><tr><th>Boundary</th><th>Input / transform</th><th>Output / write</th><th>Failure behavior</th><th>Evidence</th></tr></thead><tbody>
+                  <tr><td>Guest UI</td><td>Name/contact, dates, 1–14 guests, optional trip/pet/event details</td><td>Normalized inquiry payload</td><td>Inline validation; no write</td><td><code>booking-v2.html</code><br><code>assets/js/booking-listing.js</code></td></tr>
+                  <tr><td>Availability + price</td><td>Date range and guest count</td><td>Healthy availability plus server quote</td><td>503 pauses inventory; 409 blocks occupied dates</td><td><code>api/calendar.js</code><br><code>api/quote.js</code></td></tr>
+                  <tr><td>Inquiry transaction</td><td>Validated payload and server quote</td><td>201 new request or 200 duplicate-safe replay</td><td>409 overlap; no partial reservation/event write</td><td><code>api/inquiries.js</code><br><code>lib/inquiry-create.js</code></td></tr>
+                  <tr><td>Neon</td><td>Canonical request and quote metadata</td><td><code>inquiry_hold</code> with <code>hold_expires_at=NULL</code></td><td>Constraint errors return controlled responses</td><td><code>lib/db.js</code><br><code>lib/date-conflicts.js</code></td></tr>
+                </tbody></table></div></details>
+                <div class="gap-callout"><strong>Latest handoff</strong><span>Guest UI, persistence, owner reads, and mobile-first owner booking presentation for trip/pet/event fields are now in code. End-to-end Preview acceptance remains open.</span></div>
+              </div>
+            </details>
 
-        <section id="security-scope" class="card map-card" style="margin-bottom:16px">
-          <div class="card-head"><div><h3>8 · Security Scope Decision</h3><p>Owner-directed security scope keeps property access expansion visible without treating deferred work as complete.</p></div><span class="badge">Recorded</span></div>
-          <div class="list">
-            <div class="list-row"><div><strong>1 · Property-scoped users &amp; permissions</strong><span>Assign users to properties and roles.</span></div><span class="badge">Deferred</span></div>
-            <div class="list-row"><div><strong>2 · Permission enforcement</strong><span>Role-aware navigation and API authorization.</span></div><span class="badge">Deferred</span></div>
-            <div class="list-row"><div><strong>3 · Invitations</strong><span>Email invitation and account activation.</span></div><span class="badge">Deferred</span></div>
-            <div class="list-row"><div><strong>4 · Password recovery</strong><span>One-time reset tokens, password replacement and session invalidation are built; automated delivery remains configuration-dependent.</span></div><span class="badge warn">Partial</span></div>
-            <div class="list-row"><div><strong>5 · Sessions &amp; audit</strong><span>Named-account session review/revocation and shared audit events.</span></div><span class="badge good">Built</span></div>
+            <details id="domain-calendar" class="domain-card" data-domain data-state="built partial">
+              <summary>
+                <span class="domain-number">02</span><span class="domain-title"><strong>Availability &amp; Owner Calendar</strong><small>External calendars + direct locks + owner blocks on one operational view</small></span>
+                <span class="domain-status"><i class="map-chip map-chip-built">Core: Built</i><i class="map-chip map-chip-review">UX: Needs review</i><i class="map-chip map-chip-active">Active</i></span><span class="domain-caret" aria-hidden="true">⌄</span>
+              </summary>
+              <div class="domain-body">
+                <div class="workflow" aria-label="Availability workflow">
+                  <div class="workflow-node node-external"><span>Sources</span><strong>Airbnb, Vrbo, Booking.com, owner iCal</strong><small>Protected env + <code>calendar_connections</code></small></div>
+                  <div class="workflow-node node-core"><span>Normalize</span><strong>Fetch, parse, classify, de-duplicate</strong><small><code>lib/availability.js</code></small></div>
+                  <div class="workflow-node node-core"><span>Guard</span><strong>Compute sourceHealth</strong><small>Healthy, empty, or fail-closed</small></div>
+                  <div class="workflow-node node-data"><span>Merge</span><strong>OTA nights + direct locks + owner entries</strong><small>Checkout remains exclusive</small></div>
+                  <div class="workflow-node node-owner"><span>Surfaces</span><strong>Guest picker + Month/Week/Year/Day</strong><small>Sync, blocks, stays, notes, turnover</small></div>
+                </div>
+                <div class="domain-facts">
+                  <article><span>Source of truth</span><strong>Channel calendars for OTA stays; CJT for direct requests and manual entries</strong></article>
+                  <article><span>Writes</span><strong><code>calendar_connections</code>, <code>owner_calendar_entries</code>, <code>owner_calendar_settings</code></strong></article>
+                  <article><span>Protection</span><strong>Required feed failure returns unknown inventory; owner blocks conflict with booking locks</strong></article>
+                  <article><span>Next gate</span><strong>Reorganize calendar dashboard, verify source health, mobile controls, and real sync states</strong></article>
+                </div>
+                <details class="trace"><summary>Level 4 · API and data lineage</summary><div class="table-scroll"><table class="map-table"><thead><tr><th>Boundary</th><th>Reads</th><th>Produces</th><th>Failure behavior</th><th>Evidence</th></tr></thead><tbody>
+                  <tr><td>OTA intake</td><td>Required protected feed configuration + up to 10 owner-added HTTPS feeds</td><td>Normalized date spans and public-safe source labels</td><td>Timeout/config/parse error becomes unhealthy source</td><td><code>lib/availability.js</code></td></tr>
+                  <tr><td>Public calendar</td><td>OTA spans + locking reservations + owner blocks</td><td><code>blockedDates</code>, <code>sources</code>, <code>sourceHealth</code></td><td>503 with fail-closed health; empty list is not interpreted as open</td><td><code>api/calendar.js</code></td></tr>
+                  <tr><td>Owner view/sync</td><td>Requested view/date plus all calendar inputs</td><td>Month, week, year, or day snapshot; full-refresh metadata</td><td>Explicit source errors; UI must retain last honest state</td><td><code>api/owner.js</code><br><code>lib/calendar-view.js</code></td></tr>
+                  <tr><td>Manual entry</td><td>Kind, start, exclusive end, notes</td><td>Manual block or owner stay</td><td>409 on overlap; 1–180 nights only</td><td><code>lib/date-conflicts.js</code><br><code>lib/owner-calendar-entries.js</code></td></tr>
+                </tbody></table></div></details>
+                <div class="gap-callout"><strong>Not built</strong><span>Outbound OTA rate/availability control and proactive feed-health alerting. Current iCal is an availability exchange, not a two-way channel manager.</span></div>
+              </div>
+            </details>
+
+            <details id="domain-lifecycle" class="domain-card" data-domain data-state="partial built">
+              <summary>
+                <span class="domain-number">03</span><span class="domain-title"><strong>Owner Booking Lifecycle</strong><small>One reservation, several independent business facts</small></span>
+                <span class="domain-status"><i class="map-chip map-chip-partial">Build: Partial</i><i class="map-chip map-chip-review">Acceptance: Open</i><i class="map-chip map-chip-active">Active</i></span><span class="domain-caret" aria-hidden="true">⌄</span>
+              </summary>
+              <div class="domain-body">
+                <div class="fact-flow" aria-label="Independent booking facts">
+                  <article><span>Availability</span><strong>Locked</strong><small>From request until owner release</small></article>
+                  <article><span>Approval</span><strong>Requested / approved</strong><small>Approval preserves the lock</small></article>
+                  <article><span>Contract</span><strong>Not sent / sent / completed</strong><small>Explicit action; webhook when configured</small></article>
+                  <article><span>Payment</span><strong>Unverified / verified</strong><small>Separate event; Stripe parked</small></article>
+                  <article><span>Confirmation</span><strong>Unresolved product sequence</strong><small>Do not infer from locking alone</small></article>
+                </div>
+                <div class="domain-facts">
+                  <article><span>Source of truth</span><strong><code>reservations.status</code>, milestone timestamps, and <code>booking_events</code></strong></article>
+                  <article><span>Owner actions</span><strong>Accept, reject, maintain lock, send/mark contract, verify deposit, release dates</strong></article>
+                  <article><span>Protection</span><strong>Transition matrix rejects stale or illegal actions with 409</strong></article>
+                  <article><span>Next gate</span><strong>Guest → owner Preview acceptance, then the owner-approved contract/payment/confirmation sequence</strong></article>
+                </div>
+                <details class="trace"><summary>Level 4 · State transitions and records</summary><div class="table-scroll"><table class="map-table"><thead><tr><th>Owner action</th><th>Allowed from</th><th>Result</th><th>Date lock</th><th>Record</th></tr></thead><tbody>
+                  <tr><td>Accept request</td><td><code>inquiry_hold</code></td><td><code>hold_verified</code></td><td>Preserved</td><td><code>request_accepted</code> event</td></tr>
+                  <tr><td>Reject request</td><td>Open pre-confirmation states</td><td><code>released</code></td><td>Released</td><td><code>request_rejected</code> event</td></tr>
+                  <tr><td>Maintain lock</td><td><code>inquiry_hold</code>, <code>hold_verified</code></td><td>Status unchanged</td><td>Preserved indefinitely</td><td><code>hold_maintained</code> event</td></tr>
+                  <tr><td>Contract sent/completed</td><td>Legal open states</td><td>Contract milestone state</td><td>Preserved</td><td>Contract event + provider metadata</td></tr>
+                  <tr><td>Deposit received</td><td>Open states with verified payment</td><td><code>confirmed</code></td><td>Preserved</td><td><code>deposit_received</code> event</td></tr>
+                  <tr><td>Release dates</td><td>Any date-locking state</td><td><code>released</code></td><td>Released</td><td><code>dates_released</code> event</td></tr>
+                </tbody></table></div></details>
+                <div class="gap-callout"><strong>Decision still open</strong><span>The product has not approved a final contract → payment → confirmation order. The map keeps those facts separate until Joel chooses the operating policy.</span></div>
+              </div>
+            </details>
+
+            <details id="domain-pricing" class="domain-card" data-domain data-state="partial built planned">
+              <summary>
+                <span class="domain-number">04</span><span class="domain-title"><strong>Pricing &amp; Quote Engine</strong><small>Owner-managed seasons → server quote → immutable booking snapshot</small></span>
+                <span class="domain-status"><i class="map-chip map-chip-partial">Build: Partial</i><i class="map-chip map-chip-review">Verify saves</i><i class="map-chip map-chip-active">Active</i></span><span class="domain-caret" aria-hidden="true">⌄</span>
+              </summary>
+              <div class="domain-body">
+                <div class="workflow" aria-label="Pricing workflow">
+                  <div class="workflow-node node-owner"><span>Owner input</span><strong>Settings + seasonal rate bands</strong><small><code>/owner-v1/pricing</code></small></div>
+                  <div class="workflow-node node-core"><span>Validate</span><strong>Dates, overlaps, rates, minimum stay</strong><small><code>POST /api/pricing</code></small></div>
+                  <div class="workflow-node node-data"><span>Store</span><strong>Published pricing catalog</strong><small><code>pricing_settings</code> · <code>pricing_seasons</code></small></div>
+                  <div class="workflow-node node-core"><span>Calculate</span><strong>Nightly rates + cleaning + tax + schedule</strong><small><code>GET /api/quote</code></small></div>
+                  <div class="workflow-node node-data"><span>Snapshot</span><strong>Exact accepted request quote</strong><small><code>booking_events.metadata.quote</code></small></div>
+                </div>
+                <div class="domain-facts">
+                  <article><span>Source of truth</span><strong>Neon pricing settings and seasons; the stored request snapshot for an existing booking</strong></article>
+                  <article><span>Owner feedback</span><strong>Saved/failed status exists for settings and seasons; quote tester uses the guest engine</strong></article>
+                  <article><span>Protection</span><strong>Overlapping seasons rejected; unpublished dates and unhealthy inventory cannot quote</strong></article>
+                  <article><span>Next gate</span><strong>Verify every save/edit/delete state and reconcile owner pricing UX with business goals</strong></article>
+                </div>
+                <details class="trace"><summary>Level 4 · Pricing data lineage</summary><div class="table-scroll"><table class="map-table"><thead><tr><th>Boundary</th><th>Input</th><th>Write / result</th><th>Consumer</th><th>Evidence</th></tr></thead><tbody>
+                  <tr><td>Settings save</td><td>Cleaning, tax, capacity, horizon, weekend days, payment split</td><td><code>pricing_settings</code></td><td>Quote engine and Owner Pricing summary</td><td><code>api/pricing.js</code><br><code>lib/pricing-store.js</code></td></tr>
+                  <tr><td>Season save</td><td>Name, inclusive date band, weekday/weekend rate, minimum stay</td><td><code>pricing_seasons</code></td><td>Night-by-night quote</td><td><code>assets/js/pricing-v1.js</code></td></tr>
+                  <tr><td>Quote</td><td>Dates, guests, live availability, current catalog</td><td>Itemized server response</td><td>Guest UI, owner tester, inquiry snapshot</td><td><code>lib/pricing.js</code><br><code>lib/quote-breakdown.js</code></td></tr>
+                  <tr><td>Owner adjustment</td><td>Lodging subtotal on an open reservation</td><td>Recalculated quote event</td><td>Owner Booking + future payment</td><td><code>api/owner.js</code></td></tr>
+                </tbody></table></div></details>
+                <div class="gap-callout"><strong>Not built yet</strong><span>Pricing-file upload/import, discount rules against total operating cost by host/channel, and outbound OTA price publishing. These require an approved template and profitability model before coding.</span></div>
+              </div>
+            </details>
+
+            <details id="domain-financials" class="domain-card" data-domain data-state="built partial planned">
+              <summary>
+                <span class="domain-number">05</span><span class="domain-title"><strong>Financial Data &amp; Reporting</strong><small>Direct quote facts + imported OTA values → honest owner reporting</small></span>
+                <span class="domain-status"><i class="map-chip map-chip-built">Dashboard: Built</i><i class="map-chip map-chip-partial">Data: Partial</i><i class="map-chip map-chip-review">Acceptance: Open</i></span><span class="domain-caret" aria-hidden="true">⌄</span>
+              </summary>
+              <div class="domain-body">
+                <div class="workflow" aria-label="Financial reporting workflow">
+                  <div class="workflow-node node-data"><span>Direct</span><strong>Stored quote + payment events</strong><small><code>reservations</code> · <code>booking_events</code></small></div>
+                  <div class="workflow-node node-external"><span>OTA</span><strong>Owner-entered/imported financial facts</strong><small><code>booking_financials</code></small></div>
+                  <div class="workflow-node node-core"><span>Rules</span><strong>Range, channel, occupancy, ADR, payout</strong><small><code>lib/financials.js</code></small></div>
+                  <div class="workflow-node node-core"><span>API</span><strong>One filtered report contract</strong><small><code>GET /api/financials</code></small></div>
+                  <div class="workflow-node node-owner"><span>Surface</span><strong>KPIs, trends, mix, bookings</strong><small><code>/owner-v1/financials</code></small></div>
+                </div>
+                <div class="domain-facts">
+                  <article><span>Source of truth</span><strong>Stored values only; direct and OTA records intentionally remain distinguishable</strong></article>
+                  <article><span>Meaning</span><strong>Owner Booking Revenue is before operating expenses—not net income or NOI</strong></article>
+                  <article><span>Protection</span><strong>Unknown values render as dashes; occupancy excludes owner stays and manual blocks</strong></article>
+                  <article><span>Next gate</span><strong>Authenticated Preview smoke and stable links from a booking to its financial detail</strong></article>
+                </div>
+                <details class="trace"><summary>Level 4 · Financial lineage</summary><div class="table-scroll"><table class="map-table"><thead><tr><th>Metric/fact</th><th>Reads</th><th>Rule</th><th>Known limitation</th></tr></thead><tbody>
+                  <tr><td>Gross revenue</td><td>Direct quote total or OTA gross</td><td>Use stored value only</td><td>Missing OTA amounts remain unknown</td></tr>
+                  <tr><td>Owner booking revenue</td><td>Direct lodging + cleaning or stored OTA payout</td><td>Before operating expenses</td><td>Not profit / NOI</td></tr>
+                  <tr><td>Occupancy</td><td>Guest-occupied nights in selected period</td><td>Guest nights ÷ calendar nights, America/Chicago</td><td>Requires reliable stay coverage</td></tr>
+                  <tr><td>Payment state</td><td>Stripe-related booking events</td><td>Report verified stored event only</td><td>Stripe parked; refunds not stored</td></tr>
+                </tbody></table></div></details>
+                <div class="gap-callout"><strong>Missing business engine</strong><span>The $6,368.21 monthly operating-cost model, cost per rental duration, host-site fees, discount scenarios, and resulting margin are not yet represented in the database or Financials API.</span></div>
+              </div>
+            </details>
+
+            <details id="domain-communications" class="domain-card" data-domain data-state="partial planned parked">
+              <summary>
+                <span class="domain-number">06</span><span class="domain-title"><strong>Guest Communications</strong><small>One review surface; official source threads remain authoritative</small></span>
+                <span class="domain-status"><i class="map-chip map-chip-partial">Build: Partial</i><i class="map-chip map-chip-parked">Automation: Deferred</i></span><span class="domain-caret" aria-hidden="true">⌄</span>
+              </summary>
+              <div class="domain-body">
+                <div class="workflow" aria-label="Communications workflow">
+                  <div class="workflow-node node-external"><span>Sources</span><strong>OTA notices, Gmail, tawk.to</strong><small>External authority</small></div>
+                  <div class="workflow-node node-core"><span>Intake</span><strong>Detect, classify, de-duplicate</strong><small>Automation not connected</small></div>
+                  <div class="workflow-node node-data"><span>Index</span><strong>Normalized message context</strong><small><code>communications_messages</code></small></div>
+                  <div class="workflow-node node-owner"><span>Review</span><strong>Search, filter, read, archive</strong><small><code>/owner-v1/communications</code></small></div>
+                  <div class="workflow-node node-handoff"><span>Reply</span><strong>Open official OTA thread</strong><small>tawk.to for direct website chat</small></div>
+                </div>
+                <div class="domain-facts">
+                  <article><span>Source of truth</span><strong>Official OTA thread or received email; CJT stores the operating index</strong></article>
+                  <article><span>Writes</span><strong>Read/unread and open/archive state in <code>communications_messages</code></strong></article>
+                  <article><span>Protection</span><strong>No automated real guest message is sent from this build</strong></article>
+                  <article><span>Next gate</span><strong>Choose and verify an ingestion path before claiming a unified inbox</strong></article>
+                </div>
+                <details class="trace"><summary>Level 4 · Communications lineage</summary><div class="table-scroll"><table class="map-table"><thead><tr><th>Boundary</th><th>Current behavior</th><th>Missing behavior</th><th>Evidence</th></tr></thead><tbody>
+                  <tr><td>Source intake</td><td>Gmail labels/filter design documented; existing hub rows can be reviewed</td><td>No automatic Gmail/OTA → Neon ingestion</td><td><code>docs/CURRENT-STATE-2026-09-05.md</code></td></tr>
+                  <tr><td>Owner API</td><td>Authenticated list/count; mark read/unread; archive/reopen</td><td>No send/reply API</td><td><code>api/communications.js</code></td></tr>
+                  <tr><td>Reply</td><td>Open provider or Gmail link where appropriate</td><td>No verified safe cross-OTA relay</td><td><code>assets/js/communications-v1.js</code></td></tr>
+                  <tr><td>Direct chat</td><td>tawk.to remains website chat authority</td><td>No canonical conversation merge with OTA records</td><td><code>booking-v2.html</code></td></tr>
+                </tbody></table></div></details>
+              </div>
+            </details>
+
+            <details id="domain-contracts" class="domain-card" data-domain data-state="partial parked planned">
+              <summary>
+                <span class="domain-number">07</span><span class="domain-title"><strong>Contracts &amp; Payments</strong><small>Provider integrations exist in code; operating sequence is not yet accepted</small></span>
+                <span class="domain-status"><i class="map-chip map-chip-partial">OpenSign: Partial</i><i class="map-chip map-chip-parked">Stripe: Parked</i></span><span class="domain-caret" aria-hidden="true">⌄</span>
+              </summary>
+              <div class="domain-body">
+                <div class="split-workflows">
+                  <div><h4>Contract fact</h4><div class="workflow compact" aria-label="Contract workflow"><div class="workflow-node node-owner"><span>Owner</span><strong>Explicit “contract sent”</strong></div><div class="workflow-node node-core"><span>Server</span><strong>Build verified provider request</strong></div><div class="workflow-node node-external"><span>OpenSign</span><strong>Email + completion webhook</strong></div><div class="workflow-node node-data"><span>CJT</span><strong>Contract event/status</strong></div></div></div>
+                  <div><h4>Payment fact</h4><div class="workflow compact" aria-label="Payment workflow"><div class="workflow-node node-owner"><span>Decision</span><strong>Payment remains on hold</strong></div><div class="workflow-node node-core muted-node"><span>Code</span><strong>Checkout + verify primitives</strong></div><div class="workflow-node node-external muted-node"><span>Stripe</span><strong>Not enabled or tested</strong></div><div class="workflow-node node-data muted-node"><span>CJT</span><strong>Payment events when resumed</strong></div></div></div>
+                </div>
+                <div class="domain-facts">
+                  <article><span>Contract authority</span><strong>OpenSign document plus verified webhook; CJT records provider identifiers/events</strong></article>
+                  <article><span>Payment authority</span><strong>Stripe only after server verification; never trust browser-provided amounts</strong></article>
+                  <article><span>Protection</span><strong>Provider failure must not mark the milestone complete</strong></article>
+                  <article><span>Next gate</span><strong>Decide sequence, connect signed-file indexing, then separately authorize payment testing</strong></article>
+                </div>
+                <details class="trace"><summary>Level 4 · Provider boundaries</summary><div class="table-scroll"><table class="map-table"><thead><tr><th>Boundary</th><th>Trigger</th><th>Verification</th><th>CJT write</th><th>Status</th></tr></thead><tbody>
+                  <tr><td>OpenSign send</td><td>Owner applies <code>contract_sent</code></td><td>Required provider config + returned document id</td><td>Contract event metadata + status</td><td>Partial / configuration-dependent</td></tr>
+                  <tr><td>OpenSign complete</td><td><code>POST /api/opensign</code></td><td>Webhook HMAC + linked document id</td><td><code>contract_signed</code></td><td>Code tested; Preview acceptance open</td></tr>
+                  <tr><td>Stripe checkout</td><td>Server action from stored quote</td><td>Server-derived amount</td><td>Checkout event</td><td>Parked</td></tr>
+                  <tr><td>Stripe complete</td><td>Signed webhook / verified session</td><td>Provider signature and matching reservation</td><td>Payment event; confirmation path exists</td><td>Parked / sequence unresolved</td></tr>
+                </tbody></table></div></details>
+                <div class="gap-callout"><strong>Not complete</strong><span>Signed agreement file indexing, cancellation/refund workflow, guest notification, and the final approval/contract/payment/confirmation operating policy.</span></div>
+              </div>
+            </details>
+
+            <details id="domain-documents" class="domain-card" data-domain data-state="partial planned">
+              <summary>
+                <span class="domain-number">08</span><span class="domain-title"><strong>Documents &amp; Tasks</strong><small>Operations foundations with two different maturity levels</small></span>
+                <span class="domain-status"><i class="map-chip map-chip-planned">Documents: Planned</i><i class="map-chip map-chip-partial">Tasks: Partial</i></span><span class="domain-caret" aria-hidden="true">⌄</span>
+              </summary>
+              <div class="domain-body">
+                <div class="split-workflows">
+                  <div><h4>Document intent</h4><div class="workflow compact"><div class="workflow-node node-external"><span>Intake</span><strong>Email, signed agreement, report, upload</strong></div><div class="workflow-node node-core"><span>Classify</span><strong>Property, booking, vendor, type</strong></div><div class="workflow-node node-handoff"><span>File</span><strong>Authoritative cloud object</strong></div><div class="workflow-node node-data"><span>Index</span><strong>CJT metadata + relationships</strong></div></div></div>
+                  <div><h4>Task foundation</h4><div class="workflow compact"><div class="workflow-node node-owner"><span>Owner</span><strong>Filter or create a task</strong></div><div class="workflow-node node-core"><span>API</span><strong>Inspect deployed task schema</strong></div><div class="workflow-node node-data"><span>Store</span><strong>Use compatible <code>tasks</code> columns</strong></div><div class="workflow-node node-owner"><span>Surface</span><strong>Assignee, due, status</strong></div></div></div>
+                </div>
+                <div class="domain-facts">
+                  <article><span>Document source of truth</span><strong>Future chosen cloud provider; CJT should store links and metadata, not duplicate files</strong></article>
+                  <article><span>Task source of truth</span><strong>Deployment-dependent <code>tasks</code> table when present</strong></article>
+                  <article><span>Protection</span><strong>Task API fails clearly if a compatible operations table is unavailable</strong></article>
+                  <article><span>Next gate</span><strong>Choose cloud/storage model and define one durable tasks schema</strong></article>
+                </div>
+                <details class="trace"><summary>Level 4 · Current implementation</summary><div class="table-scroll"><table class="map-table"><thead><tr><th>Surface</th><th>Current state</th><th>Data path</th><th>Gap</th></tr></thead><tbody>
+                  <tr><td>Documents</td><td>Planning page only</td><td>No production index/write route</td><td>Storage provider, schema, intake, permissions, and linked UI</td></tr>
+                  <tr><td>Tasks list</td><td>UI/API foundation</td><td><code>GET /api/owner-tasks</code> → dynamic table mapping</td><td>Schema ownership and full edit/complete lifecycle</td></tr>
+                  <tr><td>Task create</td><td>Safe compatibility write</td><td><code>POST /api/owner-tasks</code></td><td>Acceptance against actual Preview table</td></tr>
+                  <tr><td>Reservation link</td><td>Not canonical</td><td>No stable document/task relationship yet</td><td>IDs and cross-module navigation</td></tr>
+                </tbody></table></div></details>
+              </div>
+            </details>
+
+            <details id="domain-identity" class="domain-card" data-domain data-state="partial built planned">
+              <summary>
+                <span class="domain-number">09</span><span class="domain-title"><strong>Identity &amp; Permissions</strong><small>Secure-by-default login foundation; multi-property authorization deferred</small></span>
+                <span class="domain-status"><i class="map-chip map-chip-built">Auth: Built</i><i class="map-chip map-chip-partial">Recovery: Partial</i><i class="map-chip map-chip-planned">Roles: Planned</i></span><span class="domain-caret" aria-hidden="true">⌄</span>
+              </summary>
+              <div class="domain-body">
+                <div class="workflow" aria-label="Identity workflow">
+                  <div class="workflow-node node-account"><span>Entry</span><strong>Named login or temporary owner passcode bridge</strong></div>
+                  <div class="workflow-node node-core"><span>Verify</span><strong>Password hash + server session</strong><small><code>/api/auth</code> · <code>/api/owner</code></small></div>
+                  <div class="workflow-node node-data"><span>Store</span><strong>Users, 12-hour sessions, reset tokens</strong></div>
+                  <div class="workflow-node node-core"><span>Authorize</span><strong>Owner/admin route guard</strong></div>
+                  <div class="workflow-node node-owner"><span>Audit</span><strong>Session review/revoke + event trail</strong></div>
+                </div>
+                <div class="domain-facts">
+                  <article><span>Source of truth</span><strong><code>owner_users</code>, <code>owner_sessions</code>, reset tokens, and audit log</strong></article>
+                  <article><span>Default</span><strong>Owner APIs require authentication; open-by-default draft PRs remain unsafe</strong></article>
+                  <article><span>Protection</span><strong>HttpOnly Secure SameSite session cookie; session expiry/revocation</strong></article>
+                  <article><span>Next gate</span><strong>Configure recovery delivery; later design invitations and property-scoped permissions</strong></article>
+                </div>
+                <details class="trace"><summary>Level 4 · Identity records and gaps</summary><div class="table-scroll"><table class="map-table"><thead><tr><th>Capability</th><th>Route / record</th><th>State</th><th>Important boundary</th></tr></thead><tbody>
+                  <tr><td>Login/bootstrap/change password</td><td><code>/api/auth</code> · <code>owner_users</code></td><td>Built</td><td>Password minimum is currently 5 characters</td></tr>
+                  <tr><td>Sessions</td><td><code>/api/sessions</code> · <code>owner_sessions</code></td><td>Built</td><td>Named user can review/revoke; admin scope exists</td></tr>
+                  <tr><td>Password recovery</td><td><code>/api/password-recovery</code></td><td>Partial</td><td>Delivery hook is configuration-dependent</td></tr>
+                  <tr><td>Property access / invitations</td><td>Migration foundations only</td><td>Deferred</td><td>No claim of enforced multi-property permissions</td></tr>
+                </tbody></table></div></details>
+                <div class="gap-callout"><strong>Guardrail</strong><span>Draft PRs #50 and #51 make authentication open by default and must not be merged as written.</span></div>
+              </div>
+            </details>
+
+            <details id="domain-navigation" class="domain-card" data-domain data-state="built partial">
+              <summary>
+                <span class="domain-number">10</span><span class="domain-title"><strong>Navigation &amp; Shared Context</strong><small>Persistent wayfinding with cross-page filters and record context</small></span>
+                <span class="domain-status"><i class="map-chip map-chip-built">Shell: Built</i><i class="map-chip map-chip-partial">Deep links: Partial</i><i class="map-chip map-chip-review">UX review open</i></span><span class="domain-caret" aria-hidden="true">⌄</span>
+              </summary>
+              <div class="domain-body">
+                <div class="workflow" aria-label="Portal navigation workflow">
+                  <div class="workflow-node node-owner"><span>Start</span><strong>Dashboard KPI or current module</strong></div>
+                  <div class="workflow-node node-core"><span>Carry context</span><strong>Property, period, channel, status, booking ID</strong><small>URL query state</small></div>
+                  <div class="workflow-node node-owner"><span>Navigate</span><strong>Sidebar, mobile bottom bar, section links</strong></div>
+                  <div class="workflow-node node-owner"><span>Land</span><strong>Filtered destination + clear context chips</strong></div>
+                  <div class="workflow-node node-core"><span>Protect</span><strong>Warn before leaving unsaved work</strong></div>
+                </div>
+                <div class="domain-facts">
+                  <article><span>Source of truth</span><strong>URL context plus each destination API—not duplicated page-local business data</strong></article>
+                  <article><span>Shared component</span><strong><code>assets/js/owner-shell.js</code> mounts nav, chips, bottom bar, and dirty-state guard</strong></article>
+                  <article><span>Protection</span><strong>Visible links must open a real route; unfinished work routes to Under construction</strong></article>
+                  <article><span>Next gate</span><strong>Make booking/calendar/financial KPI-to-record paths consistent and verify on phones</strong></article>
+                </div>
+                <details class="trace"><summary>Level 4 · Navigation context contract</summary><div class="table-scroll"><table class="map-table"><thead><tr><th>Context</th><th>Examples</th><th>Consumers</th><th>Gap</th></tr></thead><tbody>
+                  <tr><td>Property</td><td><code>property=sand-sea-manor</code></td><td>All owner modules</td><td>Single property today; scoped permissions later</td></tr>
+                  <tr><td>Time</td><td><code>period</code>, <code>from</code>, <code>to</code>, <code>date</code></td><td>Calendar, Financials, Reservations</td><td>Not every destination applies every incoming range</td></tr>
+                  <tr><td>Business filter</td><td><code>channel</code>, <code>status</code>, <code>unread</code></td><td>Bookings, Messages, Financials</td><td>Needs full cross-module acceptance</td></tr>
+                  <tr><td>Record focus</td><td><code>booking</code>, <code>message</code>, <code>id</code></td><td>Booking/message detail</td><td>Stable direct links are incomplete across all modules</td></tr>
+                </tbody></table></div></details>
+              </div>
+            </details>
+
+            <details id="domain-deployment" class="domain-card" data-domain data-state="partial built planned">
+              <summary>
+                <span class="domain-number">11</span><span class="domain-title"><strong>Vercel, Neon &amp; Deployment Safety</strong><small>Git branch → Preview artifact → isolated data → explicit production cutover</small></span>
+                <span class="domain-status"><i class="map-chip map-chip-built">Preview guard: Built</i><i class="map-chip map-chip-partial">Cutover: Pending</i></span><span class="domain-caret" aria-hidden="true">⌄</span>
+              </summary>
+              <div class="domain-body">
+                <div class="workflow" aria-label="Deployment workflow">
+                  <div class="workflow-node node-core"><span>Git</span><strong>Feature branch + scoped PR</strong><small>No direct main work</small></div>
+                  <div class="workflow-node node-external"><span>Vercel</span><strong>Immutable Preview deployment</strong><small>Ready is build evidence only</small></div>
+                  <div class="workflow-node node-core"><span>Guard</span><strong>Resolve env target; reject unsafe scope</strong><small><code>lib/db.js</code></small></div>
+                  <div class="workflow-node node-data"><span>Neon</span><strong>Official Preview branch</strong><small>Separated from Production</small></div>
+                  <div class="workflow-node node-owner"><span>Gate</span><strong>Tests + browser evidence + owner acceptance</strong></div>
+                  <div class="workflow-node node-handoff"><span>Later</span><strong>Explicit production configuration and cutover</strong></div>
+                </div>
+                <div class="domain-facts">
+                  <article><span>Source of truth</span><strong>Git for code; Vercel deployment metadata for artifact; Neon branch for environment data</strong></article>
+                  <article><span>Preview rule</span><strong>Use explicit Preview target and override; never expose connection strings in UI or docs</strong></article>
+                  <article><span>Protection</span><strong>Known Production host rejected in Preview; Production requires two explicit opt-ins</strong></article>
+                  <article><span>Next gate</span><strong>Reverify env names/host hint and browser acceptance before any write test or promotion</strong></article>
+                </div>
+                <details class="trace"><summary>Level 4 · Environment guard contract</summary><div class="table-scroll"><table class="map-table"><thead><tr><th>Environment</th><th>Required intent</th><th>Fail-closed condition</th><th>Current delivery state</th></tr></thead><tbody>
+                  <tr><td>Local</td><td>Disposable/local or approved Preview database</td><td>Production opt-in is invalid</td><td>Developer-controlled</td></tr>
+                  <tr><td>Vercel Preview</td><td>Official <code>preview/reorg/platform-v1</code> Neon branch through the CJT override</td><td>Wrong target, production opt-in, missing URL, or known Production host</td><td>Guard landed; reverify each acceptance deploy</td></tr>
+                  <tr><td>Vercel Production</td><td>Production database plus explicit environment and opt-in labels</td><td>Either production guard is missing</td><td>Docs record configuration/cutover as pending</td></tr>
+                  <tr><td>Secrets</td><td>Vercel/Neon protected configuration only</td><td>Never print, commit, or display a full credential</td><td>Ongoing operational rule</td></tr>
+                </tbody></table></div></details>
+                <div class="gap-callout"><strong>Operational debt</strong><span>Obsolete Preview/Neon branch inventory, centralized runtime monitoring, error alerts, and a production cutover runbook still need final ownership and evidence.</span></div>
+              </div>
+            </details>
+
+            <details id="domain-listing" class="domain-card" data-domain data-state="partial planned">
+              <summary>
+                <span class="domain-number">12</span><span class="domain-title"><strong>Guest Listing Content</strong><small>Property story, photos, rooms, amenities, reviews, map, and local discovery</small></span>
+                <span class="domain-status"><i class="map-chip map-chip-partial">Build: Partial</i><i class="map-chip map-chip-review">Visual acceptance open</i></span><span class="domain-caret" aria-hidden="true">⌄</span>
+              </summary>
+              <div class="domain-body">
+                <div class="workflow" aria-label="Guest listing content workflow">
+                  <div class="workflow-node node-owner"><span>Editorial source</span><strong>Owner-approved facts + curated media</strong></div>
+                  <div class="workflow-node node-core"><span>Publish</span><strong>Static manifest, markup, and public image delivery</strong></div>
+                  <div class="workflow-node node-public"><span>Explore</span><strong>Gallery, rooms, amenities, reviews, map</strong></div>
+                  <div class="workflow-node node-public"><span>Decide</span><strong>Rules, cancellation, pets/events, booking card</strong></div>
+                  <div class="workflow-node node-core"><span>Convert</span><strong>Dates + quote + Request to Book</strong></div>
+                </div>
+                <div class="domain-facts">
+                  <article><span>Source of truth</span><strong>Owner-approved property facts; current published page is a repository snapshot</strong></article>
+                  <article><span>Current surface</span><strong>Six-photo collage, room collections, amenity groups, review summaries, map/aerial context</strong></article>
+                  <article><span>Protection</span><strong>No unsupported “all reviews” or property-fact claims; anonymous images must remain readable</strong></article>
+                  <article><span>Next gate</span><strong>Desktop/mobile/public acceptance and disposition of Explore Galveston PR #90</strong></article>
+                </div>
+                <details class="trace"><summary>Level 4 · Content lineage</summary><div class="table-scroll"><table class="map-table"><thead><tr><th>Content</th><th>Current source</th><th>Rendered by</th><th>Gap</th></tr></thead><tbody>
+                  <tr><td>Property facts / policies</td><td>Owner-approved repository content</td><td><code>booking-v2.html</code></td><td>Final fact-by-fact acceptance</td></tr>
+                  <tr><td>Photos / rooms</td><td>Curated public assets mapped from owner folders</td><td>Booking listing JS + gallery</td><td>Explicit ongoing publishing workflow</td></tr>
+                  <tr><td>Reviews</td><td>Owner-provided summaries + selected comments + Houfy feed</td><td>Summary cards and rails</td><td>Normalized multi-source freshness model</td></tr>
+                  <tr><td>Location</td><td>Embedded map + owner-selected aerials</td><td>Map/aerial presentation</td><td>Controlled marker and mobile acceptance</td></tr>
+                  <tr><td>Local discovery</td><td>Explore Galveston change in PR #90</td><td>Pending guest-page presentation</td><td>Owner visual approval before merge</td></tr>
+                </tbody></table></div></details>
+              </div>
+            </details>
           </div>
         </section>
 
-        <section id="temporary-preview-access" class="card map-card" style="margin-bottom:16px">
-          <div class="card-head"><div><h3>9 · Temporary Preview Access</h3><p>The requested password-free preview window was time-limited and is no longer active.</p></div><span class="badge">Auto-expired</span></div>
-          <div class="list">
-            <div class="list-row"><div><strong>Preview window</strong><span>Sep 5, 2026, 8:25–9:25 PM Central; preview GET/read access was temporarily allowed.</span></div><span class="badge">Expired</span></div>
-            <div class="list-row"><div><strong>Production</strong><span>Production authentication was unchanged.</span></div><span class="badge good">Protected</span></div>
-            <div class="list-row"><div><strong>Data-changing actions</strong><span>POST/write operations remained session-protected because preview data could still point at production.</span></div><span class="badge">Guardrail</span></div>
+        <section id="delivery-ledger" class="delivery-ledger card" data-domain data-state="partial planned parked" aria-labelledby="deliveryTitle">
+          <div class="map-section-head"><div><span class="map-kicker">Build status &amp; omissions</span><h3 id="deliveryTitle">What happens next—and what was easy to forget</h3><p>This ledger separates the active sequence from parked decisions and later platform work.</p></div><span class="map-chip map-chip-review">Living queue</span></div>
+          <div class="delivery-columns">
+            <article><div class="delivery-heading"><span class="delivery-dot active"></span><h4>Active sequence</h4></div><ol>
+              <li><strong>Guest → owner acceptance</strong><span>Verify request, indefinite lock, trip/pet/event display, and no Production write.</span></li>
+              <li><strong>Owner Calendar reorganization</strong><span>Make the calendar dashboard easier to scan, navigate, and act from.</span></li>
+              <li><strong>Booking-page visual acceptance</strong><span>Complete desktop, mobile, anonymous, content, and 14-guest evidence.</span></li>
+            </ol></article>
+            <article><div class="delivery-heading"><span class="delivery-dot parked"></span><h4>Parked decisions</h4></div><ul>
+              <li><strong>Stripe payment testing and activation</strong><span>Code exists; no test or live charge until explicitly resumed.</span></li>
+              <li><strong>Final booking sequence</strong><span>Choose the policy for approval, contract, payment, and confirmation.</span></li>
+              <li><strong>OpenSign auto-send</strong><span>Today it sends only on an explicit owner contract action.</span></li>
+              <li><strong>Production cutover</strong><span><code>reorg/platform-v1</code> stays separate from <code>main</code> until approved.</span></li>
+            </ul></article>
+            <article><div class="delivery-heading"><span class="delivery-dot missing"></span><h4>Missing capabilities</h4></div><ul>
+              <li><strong>Pricing file import</strong><span>No CSV/XLSX upload contract or preview-before-save pipeline yet.</span></li>
+              <li><strong>Cost / host-site discount model</strong><span>No operating-cost, channel-fee, discount, or margin engine yet.</span></li>
+              <li><strong>Owner profile</strong><span>Contact/photo/identity presentation has not been completed.</span></li>
+              <li><strong>Two-way channel management</strong><span>No outbound OTA rates, inventory, or unified messaging.</span></li>
+              <li><strong>Signed document index</strong><span>No cloud-linked agreement repository on each reservation.</span></li>
+              <li><strong>Cancellation/refund workflow</strong><span>Policy, money, date release, event, and message are not one verified operation.</span></li>
+              <li><strong>Multi-property authorization</strong><span>Roles, invitations, and property-scoped enforcement remain deferred.</span></li>
+              <li><strong>Operational monitoring</strong><span>No single alerting view for feed failures, API errors, and integration health.</span></li>
+            </ul></article>
           </div>
+          <div class="ledger-footer"><button id="copyMapSummary" class="btn btn-primary" type="button">Copy review summary</button><span id="copyMapStatus" aria-live="polite"></span><a href="/owner-v1" class="btn btn-secondary">Open Owner Portal</a><a href="/" class="btn btn-secondary" target="_blank" rel="noopener">Open Guest Page ↗</a></div>
         </section>
 
-        <section id="direct-booking-engine" class="card map-card" style="margin-bottom:16px">
-          <div class="card-head"><div><h3>10 · Direct Booking Engine</h3><p>Quote, inquiry hold and owner lifecycle controls are working; payment and final confirmation remain acceptance work.</p></div><span class="badge warn">Partial</span></div>
-          <div class="map-board"><div class="map-root">
-            <div class="map-row"><div class="map-node public built"><strong>Guest Booking Page</strong><span>listing → dates → guests</span></div><div class="map-arrow">→</div><div class="map-node core built"><strong>/api/quote</strong><span>seasonal rates · minimum stay · cleaning · tax · payment timing</span></div><div class="map-arrow">→</div><div class="map-node core built"><strong>/api/inquiries</strong><span>recheck → owner-locked request</span></div><div class="map-arrow">→</div><div class="map-node data built"><strong>reservations + booking_events</strong><span>booking record + quote snapshot</span></div><div class="map-arrow">→</div><div class="map-node owner built"><strong>Direct Booking Dashboard</strong><span>accept · adjust · release</span></div></div>
-            <div class="map-arrow">↓</div><div class="map-row"><div class="map-node owner progress"><strong>Agreement / Deposit Milestones</strong><span>lifecycle controls exist; contract workflow remains incomplete</span></div><div class="map-arrow planned">···→</div><div class="map-node external progress"><strong>Stripe Checkout</strong><span>next transactional connection</span></div><div class="map-arrow planned">···→</div><div class="map-node public progress"><strong>Guest Confirmation</strong><span>final confirmation remains planned</span></div></div>
-            <div class="flow-note">The approved capacity is 14 guests, but the existing production reservation constraint still requires an additive migration before 13–14 guest requests can complete.</div>
-          </div></div>
-        </section>
-
-        <section id="guest-listing-experience" class="card map-card" style="margin-bottom:16px">
-          <div class="card-head"><div><h3>11 · Guest Listing Experience</h3><p>Listing-first booking UI follows the documented v1.6 structure without claiming acceptance for unfinished image, content or map work.</p></div><span class="badge warn">Partial</span></div>
-          <div class="map-board"><div class="map-root">
-            <div class="map-row"><div class="map-node public progress"><strong>Owner-approved six-photo manifest</strong><span>static public assets are present; anonymous visual acceptance remains pending</span></div><div class="map-arrow">→</div><div class="map-node public progress"><strong>Bedroom Cards</strong><span>owner folder names and public image matches; publishing model remains a snapshot</span></div><div class="map-arrow">→</div><div class="map-node public progress"><strong>Amenity Directory</strong><span>Booking.com-style grouping; every item still needs verified property-fact acceptance</span></div><div class="map-arrow">→</div><div class="map-node external progress"><strong>Review Summaries</strong><span>owner-provided Airbnb / Booking.com summaries; normalized all-source model is incomplete</span></div><div class="map-arrow">→</div><div class="map-node public progress"><strong>Guest Review Rail</strong><span>selected comments exist; no all-sources claim</span></div><div class="map-arrow">→</div><div class="map-node external progress"><strong>Grounded Map + Aerials</strong><span>visual leader-line implementation; controlled marker acceptance remains open</span></div><div class="map-arrow">→</div><div class="map-node public progress"><strong>Book Now</strong><span>booking controls remain under acceptance review</span></div></div>
-            <div class="flow-note">This board deliberately does not describe the old four-photo collage as restored. Image delivery remains Partial / Needs review under Issue #12 and merged PR #14; amenities, review-source aggregation and map implementation remain Partial per the repair backlog.</div>
-          </div></div>
-        </section>
-
-        <section id="roadmap" class="card map-card">
-          <div class="card-head"><div><h3>12 · Build State</h3><p>Navigation, responsive layout and flow documentation move with the platform.</p></div><span class="badge good">Current</span></div>
-          <div class="summary-grid"><div class="summary-card"><span>Dashboard</span><b>Built</b></div><div class="summary-card"><span>Communications</span><b>Partial</b></div><div class="summary-card"><span>Reservations</span><b>Partial</b></div><div class="summary-card"><span>Accounts</span><b>Partial</b></div><div class="summary-card"><span>Navigation pane</span><b>Built</b></div><div class="summary-card"><span>Mobile layout</span><b>Built</b></div><div class="summary-card"><span>Other modules</span><b>Deferred</b></div></div>
-          <div class="list" style="margin-top:16px">
-            <div class="list-row"><div><strong>Mobile viewport</strong><span>Portal content, cards, modules and maps are clamped to the device width. Dense maps stack vertically and wide tables scroll inside their own card instead of widening the page.</span></div><span class="badge good">Built</span></div>
-            <div class="list-row"><div><strong>Navigation visibility</strong><span>The module list scrolls independently and the active item is kept in view.</span></div><span class="badge good">Built</span></div>
-            <div class="list-row"><div><strong>Navigation return</strong><span>Chevron hides the pane; persistent Menu › flyout restores it from the current page.</span></div><span class="badge good">Built</span></div>
-            <div class="list-row"><div><strong>No dead navigation</strong><span>Every visible navigation item opens a real route; unfinished routes say Under construction.</span></div><span class="badge good">Built</span></div>
-            <div class="list-row"><div><strong>Next</strong><span>Booking-page acceptance, image delivery review, verified amenities/reviews, map acceptance, then payment/confirmation and the 14-guest migration.</span></div><span class="badge warn">Partial</span></div>
-          </div>
-        </section>
+        <noscript><p class="notice">Interactive search and expand controls require JavaScript. Every domain and data-lineage table remains available through the native disclosure controls above.</p></noscript>
       </div>
     </main>
   </div>
 
   <script src="/assets/js/owner-shell.js"></script>
   <script src="/assets/js/static-auth.js"></script>
+  <script src="/assets/js/platform-maps.js"></script>
 </body>
 </html>
