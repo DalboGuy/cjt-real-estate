@@ -183,8 +183,7 @@
         <div class="booking-sidebar-stack">
           <div class="booking-card" id="bookingCard">
             <ol class="listing-flow-rail" aria-label="Booking steps">
-              <li data-listing-step="dates">Dates</li>
-              <li data-listing-step="guests">Guests</li>
+              <li data-listing-step="stay">Stay</li>
               <li data-listing-step="quote">Quote</li>
               <li data-listing-step="request">Request</li>
             </ol>
@@ -260,9 +259,7 @@
       </div>
       <div class="modal-body booking-flow-body">
         <ol class="booking-progress" aria-label="Request to book steps">
-          <li data-progress="dates">Dates</li>
-          <li data-progress="guests">Guests</li>
-          <li data-progress="quote">Quote</li>
+          <li data-progress="stay">Stay</li>
           <li data-progress="info">Your info</li>
           <li data-progress="review">Review</li>
           <li data-progress="done">Received</li>
@@ -271,9 +268,17 @@
         <form id="bookingForm" novalidate>
           <section id="guestDetailsStep" class="booking-step" data-step="info">
             <div class="booking-modal-grid">
+              <div class="field full guest-step-section">
+                <strong>Who is requesting the stay?</strong>
+                <span>We use this information only to review and respond to this request.</span>
+              </div>
               <div class="field"><label for="guestName">Name</label><input id="guestName" name="name" autocomplete="name" required></div>
               <div class="field"><label for="guestEmail">Email</label><input id="guestEmail" name="email" type="email" autocomplete="email" required></div>
               <div class="field full"><label for="guestPhone">Phone</label><input id="guestPhone" name="phone" type="tel" autocomplete="tel" required></div>
+              <div class="field full guest-step-section guest-step-section-secondary">
+                <strong>Tell us about the stay</strong>
+                <span>These questions are optional unless you select Yes for a pet or event.</span>
+              </div>
               <div class="field full">
                 <label for="tripType">Trip type <span class="optional-tag">Optional</span></label>
                 <select id="tripType" name="trip_type">
@@ -406,6 +411,9 @@
   <script src="/assets/js/booking-v2.js"></script>
   <script>
     var Tawk_API=Tawk_API||{},Tawk_LoadStart=new Date();
+    Tawk_API.onLoad=function(){
+      try{if(typeof Tawk_API.minimize==='function')Tawk_API.minimize()}catch(e){}
+    };
     (function(){var s1=document.createElement('script'),s0=document.getElementsByTagName('script')[0];s1.async=true;s1.src='https://embed.tawk.to/6a9c721ed0128c3449822367/1k1phrige';s1.charset='UTF-8';s1.setAttribute('crossorigin','*');s0.parentNode.insertBefore(s1,s0)})();
   </script>
 </body>

@@ -2,7 +2,8 @@
 .section-heading-row,.reviews-header-v3{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin-bottom:18px}.section-heading-row h2,.reviews-header-v3 h2{margin-bottom:5px}.section-kicker{color:var(--muted);font-size:.92rem;margin:0!important}.room-scroll-controls,.review-scroll-controls{display:flex;gap:8px;flex:0 0 auto}
 
 /* Restore the original pre-redesign photo mix while keeping the listing-style mosaic. */
-.v2-mosaic{grid-template-columns:2fr 1fr 1fr;grid-template-rows:245px 245px}.v2-mosaic .gallery-item:nth-of-type(2){grid-column:2}.v2-mosaic .gallery-item:nth-of-type(3){grid-column:3}.v2-mosaic .gallery-item:nth-of-type(4){grid-column:2}.v2-mosaic .gallery-item:nth-of-type(5){grid-column:3}
+.v2-mosaic{grid-template-columns:2fr 1fr 1fr;grid-template-rows:245px 245px}.v2-mosaic .gallery-item:nth-of-type(2){grid-column:2}.v2-mosaic .gallery-item:nth-of-type(3){grid-column:3}.v2-mosaic .gallery-item:nth-of-type(4){grid-column:2}.v2-mosaic .gallery-item:nth-of-type(5){grid-column:3}.v2-mosaic .gallery-item img{opacity:1;filter:none}
+#sleep,#amenities,#reviews,#location{scroll-margin-top:112px}
 
 /* Rating summaries live directly under the desktop booking controls. */
 .booking-sidebar-stack{position:sticky;top:96px;display:grid;gap:14px}.booking-sidebar-stack .booking-card{position:static}.desktop-source-summaries{display:grid;gap:12px}.mobile-source-summaries{display:none}.source-summary-card{border:1px solid var(--line);border-radius:16px;background:#fff;padding:16px;box-shadow:0 10px 28px rgba(13,43,49,.07)}.source-summary-brand{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:900;margin-bottom:10px}.source-summary-card p{font-size:.8rem;color:var(--muted);margin:7px 0 11px}.airbnb-favorite{display:flex;align-items:center;justify-content:center;gap:8px;padding:7px 4px 9px;border-bottom:1px solid var(--line)}.airbnb-favorite strong{font-size:1rem}.laurel{font-size:1.45rem;line-height:1;color:var(--ink)}.laurel.flip{transform:scaleX(-1)}.source-summary-score{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px;margin-top:12px}.source-summary-score>strong{font:500 1.85rem/1 Georgia,serif;color:var(--deep)}.source-summary-score>span{letter-spacing:.08em;font-size:.72rem}.source-summary-score>b{font-size:.78rem}.booking-score-line{display:flex;align-items:baseline;gap:4px;flex-wrap:wrap}.booking-score-line strong{font:600 2.1rem/1 Georgia,serif;color:#078a45}.booking-score-line span{font-size:1rem;color:var(--ink)}.booking-score-line b{font-size:1rem;margin-left:5px}.booking-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;border-top:1px solid var(--line);padding-top:10px}.booking-metrics span{text-align:center;font-size:.66rem;color:var(--muted)}.booking-metrics b{display:block;color:var(--ink);font-size:.95rem;margin-bottom:1px}
@@ -108,7 +109,7 @@ body.amenities-sheet-open .widget-visible{visibility:hidden!important;pointer-ev
 }
 
 /* Guest request-to-book flow (listing card + checkout steps) */
-.listing-flow-rail{display:flex;flex-wrap:wrap;gap:6px;list-style:none;margin:0 0 14px;padding:0}
+.listing-flow-rail{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;list-style:none;margin:0 0 16px;padding:0}
 .listing-flow-rail li{font-size:.68rem;font-weight:850;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);padding:4px 8px;border-radius:999px;background:var(--soft)}
 .listing-flow-rail li.is-current{background:var(--deep);color:#fff}
 .listing-flow-rail li.is-done{background:#e8f5ec;color:var(--deep)}
@@ -121,10 +122,16 @@ body.amenities-sheet-open .widget-visible{visibility:hidden!important;pointer-ev
 .booking-step-kicker{margin:0 0 2px;font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;font-weight:850;color:var(--muted)}
 .modal-back{width:38px;height:38px;border-radius:999px;border:1px solid var(--line);background:#fff;cursor:pointer;font-size:1.2rem;flex:0 0 auto}
 .modal-back[hidden]{display:none}
-.booking-progress{display:flex;flex-wrap:wrap;gap:6px;list-style:none;margin:0 0 16px;padding:0}
-.booking-progress li{font-size:.68rem;font-weight:850;letter-spacing:.03em;text-transform:uppercase;color:var(--muted);padding:5px 8px;border-radius:999px;background:var(--soft)}
+.booking-progress{counter-reset:booking-step;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;list-style:none;margin:0 0 18px;padding:0}
+.booking-progress li{counter-increment:booking-step;display:flex;align-items:center;gap:6px;min-width:0;font-size:.68rem;font-weight:850;letter-spacing:.02em;text-transform:uppercase;color:var(--muted);padding:7px 9px;border-radius:12px;background:var(--soft)}
+.booking-progress li::before{content:counter(booking-step);width:20px;height:20px;display:grid;place-items:center;flex:0 0 20px;border-radius:999px;background:#fff;border:1px solid var(--line);font-size:.64rem;color:var(--deep)}
 .booking-progress li.is-current{background:var(--deep);color:#fff}
+.booking-progress li.is-current::before{border-color:#fff;color:var(--deep)}
 .booking-progress li.is-done{background:#e8f5ec;color:var(--deep)}
+.guest-step-section{padding-bottom:10px;border-bottom:1px solid var(--line)}
+.guest-step-section-secondary{margin-top:4px}
+.guest-step-section strong{font:500 1.08rem/1.2 Georgia,serif;color:var(--deep)}
+.guest-step-section span{color:var(--muted);font-size:.78rem;line-height:1.4}
 .booking-step[hidden]{display:none!important}
 .field-hint{margin:6px 0 0;color:var(--muted);font-size:.78rem;line-height:1.4}
 .review-grid{display:grid;gap:14px}
@@ -160,7 +167,7 @@ body.amenities-sheet-open .widget-visible{visibility:hidden!important;pointer-ev
 @media(max-width:780px){
   .booking-flow-panel{width:100%;max-height:95vh}
   .booking-progress{gap:5px}
-  .booking-progress li{font-size:.62rem;padding:4px 6px}
+  .booking-progress li{display:grid;justify-items:center;gap:3px;text-align:center;font-size:.58rem;padding:6px 3px}
   .choice-field{padding:12px}
   .choice-pill{min-height:46px}
 }
@@ -186,4 +193,8 @@ body.amenities-sheet-open .widget-visible{visibility:hidden!important;pointer-ev
   .mobile-guest-stepper{display:flex}
   .guest-stepper-panel .stepper button,.mobile-guest-stepper .stepper button{width:44px;height:44px}
   .mobile-bookbar{align-items:flex-end}
+}
+@media(max-width:420px){
+  #sleep,#amenities,#reviews,#location{scroll-margin-top:88px}
+  .listing-flow-rail li{padding-inline:5px;text-align:center}
 }
