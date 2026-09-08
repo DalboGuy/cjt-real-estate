@@ -16,7 +16,9 @@ function requireText(source, value, label) {
   ['data-progress="review"', 'Review progress stage'],
   ['data-progress="done"', 'Received progress stage'],
   ['guest-step-section', 'guest information hierarchy'],
-  ["Tawk_API.minimize", 'initial support-widget minimization']
+  ["Tawk_API.minimize", 'initial support-widget minimization'],
+  ['Tawk_API.onChatMaximized', 'support-widget auto-open guard'],
+  ['setTimeout(cjtMinimizeSupport,1800)', 'support-widget delayed minimization']
 ].forEach(([value, label]) => requireText(html, value, label));
 
 [
