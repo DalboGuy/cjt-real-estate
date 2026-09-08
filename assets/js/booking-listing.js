@@ -153,11 +153,13 @@
   function paintListingSteps(){
     const hasDates=!!(selectedStart&&selectedEnd);
     const hasQuote=!!currentQuote;
-    const map={dates:hasDates,guests:true,quote:hasQuote,request:false};
+    const map={stay:hasDates,quote:hasQuote,request:false};
     document.querySelectorAll('[data-listing-step]').forEach(el=>{
       const key=el.dataset.listingStep;
       el.classList.toggle('is-done',!!map[key]);
-      el.classList.toggle('is-current',(key==='dates'&&!hasDates)||(key==='quote'&&hasDates&&!hasQuote)||(key==='request'&&hasDates&&hasQuote));
+      const current=(key==='stay'&&!hasDates)||(key==='quote'&&hasDates&&!hasQuote)||(key==='request'&&hasDates&&hasQuote);
+      el.classList.toggle('is-current',current);
+      if(current)el.setAttribute('aria-current','step');else el.removeAttribute('aria-current');
     });
   }
   function paintPrimaryCtas(){
@@ -416,10 +418,11 @@
     if(info)info.hidden=requestStep!=='info';
     if(review)review.hidden=requestStep!=='review';
     if(done)done.hidden=requestStep!=='done';
-    const order=['dates','guests','quote','info','review','done'];
+    const order=['stay','info','review','done'];
     document.querySelectorAll('.booking-progress [data-progress]').forEach(el=>{
       el.classList.toggle('is-current',el.dataset.progress===requestStep);
-      el.classList.toggle('is-done',order.indexOf(el.dataset.progress)<order.indexOf(requestStep)||['dates','guests','quote'].includes(el.dataset.progress));
+      el.classList.toggle('is-done',order.indexOf(el.dataset.progress)<order.indexOf(requestStep));
+      if(el.dataset.progress===requestStep)el.setAttribute('aria-current','step');else el.removeAttribute('aria-current');
     });
     const copy={
       info:{kicker:'Your info',title:'Guest information'},
