@@ -1,4 +1,6 @@
 const assert = require('assert');
+const fs = require('fs');
+const path = require('path');
 const {
   assembleEvents,
   buildNightMap,
@@ -329,5 +331,31 @@ const probe = buildOwnerSyncPayload({
 assert.strictEqual(probe.mode, 'probe');
 assert.ok(!probe.sources.some((s) => s.name === 'direct'), 'probe does not invent a Direct refresh');
 assert.strictEqual(probe.ok, true);
+
+const calendarHtml = fs.readFileSync(path.join(__dirname, '..', 'owner-v1', 'calendar.html'), 'utf8');
+const calendarJs = fs.readFileSync(path.join(__dirname, '..', 'assets', 'js', 'calendar-view.js'), 'utf8');
+const calendarCss = fs.readFileSync(path.join(__dirname, '..', 'assets', 'css', 'calendar-view.css'), 'utf8');
+for (const id of [
+  'calendarAttention',
+  'calendarFilters',
+  'clearCalendarFilters',
+  'openConnections',
+  'calendarConnections',
+  'blockDrawer',
+  'utilityBackdrop',
+  'toggleUpcoming'
+]) {
+  assert.ok(calendarHtml.includes(`id="${id}"`), `operations dashboard keeps #${id}`);
+}
+assert.ok(calendarHtml.includes('Availability control center'));
+assert.ok(calendarHtml.includes('aria-label="Calendar attention items"'));
+assert.ok(calendarJs.includes('function renderAttention()'));
+assert.ok(calendarJs.includes("channelFilter='all';"));
+assert.ok(calendarJs.includes('function openBlockDrawer()'));
+assert.ok(calendarJs.includes('function openConnectionsPanel()'));
+assert.ok(calendarJs.includes("rows.slice(0,6)"), 'upcoming rail is intentionally capped before Show all');
+assert.ok(calendarCss.includes('.cal-workspace{display:grid'));
+assert.ok(calendarCss.includes('@media(max-width:600px)'));
+assert.ok(calendarCss.includes('.cal-command-bar{position:static!important'), 'mobile command bar cannot obscure the calendar');
 
 console.log('verify-calendar-view: ok');
