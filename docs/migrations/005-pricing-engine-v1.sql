@@ -4,7 +4,7 @@
 
 BEGIN;
 
-CREATE TABLE IF NOT EXISTS pricing_overrides (
+CREATE TABLE IF NOT EXISTS pricing_override_rules (
   id bigserial PRIMARY KEY,
   property text NOT NULL DEFAULT 'Sand & Sea Manor',
   name text NOT NULL,
@@ -23,8 +23,8 @@ CREATE TABLE IF NOT EXISTS pricing_overrides (
   CONSTRAINT pricing_override_rate_valid CHECK (nightly_rate > 0 AND nightly_rate <= 20000),
   CONSTRAINT pricing_override_min_nights_valid CHECK (min_nights IS NULL OR min_nights BETWEEN 1 AND 30)
 );
-CREATE INDEX IF NOT EXISTS pricing_overrides_range_idx
-  ON pricing_overrides (property, channel, start_date, end_date);
+CREATE INDEX IF NOT EXISTS pricing_override_rules_range_idx
+  ON pricing_override_rules (property, channel, start_date, end_date);
 
 CREATE TABLE IF NOT EXISTS pricing_discounts (
   id bigserial PRIMARY KEY,

@@ -52,3 +52,7 @@ The additive Preview-first migration is `docs/migrations/005-pricing-engine-v1.s
 Application rollback leaves its tables dormant so pricing rules and import evidence
 remain recoverable. Destructive table removal is a separate, explicitly approved
 operation after export; it is never part of an automatic rollback.
+
+The range-based rules use `pricing_override_rules`. The existing single-date
+`pricing_overrides` table remains intact for compatibility with the legacy
+dashboard and is not rewritten by this workstream.
